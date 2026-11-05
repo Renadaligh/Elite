@@ -31,7 +31,7 @@ function Pages() {
             <GamesSection />
             <TournamentsSection />
             <ChampionsSection />
-            <SupportSection />
+            {/* <SupportSection /> */}
           </>
         )}
       </main>
