@@ -8,7 +8,7 @@ export const NAV: { href: string; key: keyof Dict }[] = [
   { href: '#tournaments', key: 'navTournaments' },
   { href: '#champions', key: 'navChampions' },
   // { href: '#community', key: 'navCommunity' }, // hidden for now
-  { href: '#support', key: 'navSupport' },
+  // { href: '#support', key: 'navSupport' }, // hidden for now
 ];
 
 /** Official site name per language. */
