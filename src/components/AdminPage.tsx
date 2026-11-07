@@ -4,6 +4,7 @@ import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
+import { ArrowIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
@@ -73,6 +74,7 @@ const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: '�
 
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
+const sel = `${inp} sel`;
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
 const gradBtn = { background: 'linear-gradient(135deg,#ff3347,#d90f26)', boxShadow: '0 8px 22px -8px rgba(235,40,60,.7)' };
@@ -298,7 +300,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={x('التاريخ')}><input type="date" className={inp} style={bd} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} required /></Field>
               <Field label={x('التصنيف')}>
-                <select className={inp} style={bd} value={f.tag} onChange={(e) => setF({ ...f, tag: e.target.value as NewsTag })}>
+                <select className={sel} style={bd} value={f.tag} onChange={(e) => setF({ ...f, tag: e.target.value as NewsTag })}>
                   {(Object.keys(TAG_AR) as NewsTag[]).map((g) => <option key={g} value={g}>{x(TAG_AR[g])}</option>)}
                 </select>
               </Field>
@@ -382,8 +384,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           <form onSubmit={save} className="grid gap-4">
             {pair('name', x('اسم البطولة'), 'Name')}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('اللعبة')}><select className={inp} style={bd} value={f.gameId} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
-              <Field label={x('النوع')}><select className={inp} style={bd} value={f.mode ?? 'solo'} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{x('فردي (Plato ID)')}</option><option value="team">{x('فرق (اسم الفريق + القائد + الأعضاء)')}</option></select></Field>
+              <Field label={x('اللعبة')}><select className={sel} style={bd} value={f.gameId} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
+              <Field label={x('النوع')}><select className={sel} style={bd} value={f.mode ?? 'solo'} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{x('فردي (Plato ID)')}</option><option value="team">{x('فرق (اسم الفريق + القائد + الأعضاء)')}</option></select></Field>
             </div>
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
             {pair('prize', x('الجائزة'), 'Prize', x('5,000 ريال'))}
@@ -443,7 +445,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           <SearchI className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
           <input className={`${inp} !ps-9`} style={bd} value={q} onChange={(e) => setQ(e.target.value)} placeholder={x('ابحث…')} />
         </div>
-        <select className={`${inp} !w-auto`} style={bd} value={tid} onChange={(e) => setTid(e.target.value)}>
+        <select className={`${sel} !w-auto`} style={bd} value={tid} onChange={(e) => setTid(e.target.value)}>
           <option value="all">{x('كل البطولات')}</option>
           {tournaments.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select>
@@ -513,7 +515,7 @@ function Login({ onDone }: { onDone: (key: string) => void }) {
         </label>
         {err && <p role="alert" className="mt-3 rounded-lg px-3 py-2 text-[.88rem] font-semibold" style={{ color: '#ff6b7a', background: 'rgba(255,77,94,.12)' }}>{err}</p>}
         <button type="submit" disabled={busy || !pw} className={`${btnP} mt-6 w-full !py-3 text-[1rem]`} style={gradBtn}>{busy ? x('جارٍ الدخول…') : x('دخول')}</button>
-        <a href="#/" className="mt-5 block text-center text-[.85rem]" style={{ color: 'var(--muted)' }}>← {x('العودة للموقع')}</a>
+        <a href="#/" className="mt-5 flex items-center justify-center gap-2 text-[.85rem]" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
       </form>
     </section>
   );
@@ -548,7 +550,7 @@ export default function AdminPage() {
           })}
         </nav>
         <div className="mt-auto flex flex-col gap-2 pt-6">
-          <a href="#/" className={btnG} style={bd}>← {x('العودة للموقع')}</a>
+          <a href="#/" className={btnG} style={bd}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
           <button type="button" onClick={logout} className={btnG} style={bd}><OutI className="h-4 w-4" />{x('تسجيل خروج')}</button>
         </div>
       </aside>

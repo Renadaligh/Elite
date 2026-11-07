@@ -6,7 +6,7 @@ import { CloseIcon, MenuIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'admin' }) {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('#top');
@@ -42,9 +42,9 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'adm
   const solid = scrolled || open;
   return (
     <header data-solid={solid} className="hdr fixed inset-x-0 top-0 z-50">
-      <div className="flex items-center justify-between gap-4 px-[clamp(1rem,4vw,3.5rem)] py-3 sm:py-4">
+      <div dir="ltr" className="flex items-center justify-between gap-4 px-[clamp(1rem,4vw,3.5rem)] py-3 sm:py-4">
         <BrandLockup />
-        <nav aria-label="Primary" className="hidden lg:block">
+        <nav dir={dir} aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-[clamp(1rem,2.2vw,2.1rem)]">
             {NAV.map((n) => {
               const on = active === n.href;

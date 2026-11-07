@@ -97,3 +97,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .hero-ink .hero-desc { color: rgba(12, 13, 20, .86); }
 .hero-ink .btn-glass { color: #0c0d14; background: rgba(255, 255, 255, .6); border-color: rgba(12, 13, 20, .28); }
 .hero-ink .btn-glass:hover { background: rgba(255, 255, 255, .85); }
+
+/* Dashboard selects: native arrow replaced by a chevron with proper room on the end side (flips in RTL) */
+.sel { -webkit-appearance: none; appearance: none; padding-inline-end: 2.6rem; background-repeat: no-repeat; background-position: right .95rem center; background-size: .8rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9b9c6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+[dir='rtl'] .sel { background-position: left .95rem center; }

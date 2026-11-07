@@ -1,6 +1,6 @@
 export type Lang = 'en' | 'ar';
 const en = {
-  brand: 'Elite', heroSub: 'The Elite community — games, tournaments, and players who play to win.', artAlt: 'A lone ninja on a snowy mountain ridge under the ELITE wordmark',
+  brand: 'Elite', heroSub: 'The community of Plato’s elite players', artAlt: 'A lone ninja on a snowy mountain ridge under the ELITE wordmark',
   navHome: 'Home', navNews: 'Latest News', navGames: 'Games', navTournaments: 'Tournaments', navChampions: 'Champions', navCommunity: 'Community', navSupport: 'Support Us',
   comSub: 'Join the Elite community — chat, team up and play together.', supSub: 'Help keep Elite growing.', supStoreTitle: 'Shop at Unlimited Blue, support Elite', supStoreText: 'Unlimited Blue is a store for custom products — 3D printing, engraving and laser engraving. Every order helps keep the community and its tournaments growing.', supStoreBtn: 'Visit the store', supF1: '3D printing', supF2: 'Engraving', supF3: 'Laser engraving', supNote: 'Opens the store in a new tab.',
   toTop: 'Back to top',
