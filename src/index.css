@@ -102,3 +102,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .sel { -webkit-appearance: none; appearance: none; padding-inline-end: 2.6rem; background-repeat: no-repeat; background-position: right .95rem center; background-size: .8rem;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9b9c6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
 [dir='rtl'] .sel { background-position: left .95rem center; }
+
+/* Scroll cue at the bottom-centre of the hero */
+.scroll-cue { display: grid; justify-items: center; align-items: start; width: 28px; height: 46px; padding-top: 8px; border: 2px solid rgba(255, 255, 255, .85); border-radius: 9999px; transition: border-color .2s; }
+.scroll-cue:hover { border-color: #ff4455; }
+.scroll-cue-dot { width: 4px; height: 9px; border-radius: 4px; background: #fff; animation: cue 1.7s ease-in-out infinite; }
+@keyframes cue { 0% { transform: translateY(0); opacity: 0; } 25% { opacity: 1; } 80% { transform: translateY(16px); opacity: 0; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .scroll-cue-dot { animation: none; } }
+
+/* "Major" badge on flagship tournaments */
+.major-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .18rem .6rem; border-radius: 9999px; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #ff3347, #d90f26); box-shadow: 0 6px 16px -8px rgba(235, 40, 60, .9); }

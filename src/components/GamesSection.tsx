@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
-import { GAMES, SHOW_EXAMPLE_GAMES, type Game } from '../data/games';
+import { SHOW_EXAMPLE_GAMES, type Game } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import { useI18n } from '../i18n/I18nProvider';
 import { ArrowIcon } from './icons';
 
@@ -31,6 +32,7 @@ function useWide() {
  *  Clicking the centre card fades the section out and opens the game page (#/games/<id>). */
 export default function GamesSection() {
   const { t, lang, dir } = useI18n();
+  const GAMES = useGames();
   const wide = useWide();
   const [index, setIndex] = useState(0);
   const [category, setCategory] = useState('all');
@@ -38,8 +40,8 @@ export default function GamesSection() {
     const found = new Map<string, { en: string; ar: string }>();
     GAMES.forEach((g) => found.set(g.genre.en, g.genre));
     return [...found.values()];
-  }, []);
-  const games = useMemo(() => category === 'all' ? GAMES : GAMES.filter(g => g.genre.en === category), [category]);
+  }, [GAMES]);
+  const games = useMemo(() => category === 'all' ? GAMES : GAMES.filter(g => g.genre.en === category), [category, GAMES]);
   const chooseCategory = (id: string) => { setCategory(id); setIndex(0); setLeaving(false); };
   const [leaving, setLeaving] = useState(false);
   const sign = dir === 'rtl' ? -1 : 1;

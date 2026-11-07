@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import RegisterDialog from './RegisterDialog';
 import { getGame } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import { useTournaments } from '../hooks/useTournaments';
 import { sortTournaments, statusOf, type Tournament, type TournamentStatus } from '../data/tournaments';
 import { useNow } from '../hooks/useNow';
@@ -81,9 +82,14 @@ function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   );
 }
 
+function MajorBadge() {
+  return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>Major</span>;
+}
+
 function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
+  useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#ff3347', '#3a0710'];
   return (
@@ -100,7 +106,7 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
       )}
       <div className={`relative grid grid-cols-1 gap-6 p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center ${x.image ? 'pt-32 lg:pt-8' : ''}`}>
         <div className="flex flex-col">
-          <div className="mb-3 flex flex-wrap items-center gap-3"><StatusPill s={s} />{g && <span className="text-[.85rem] font-semibold opacity-90">{g.name[lang]}</span>}</div>
+          <div className="mb-3 flex flex-wrap items-center gap-3"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{g && <span className="text-[.85rem] font-semibold opacity-90">{g.name[lang]}</span>}</div>
           <h3 className="text-[clamp(1.4rem,3vw,2.3rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">{x.name[lang]}</h3>
           <p className="mt-1.5 text-[.95rem] opacity-85">{fmt(x.startsAt)}</p>
           <Facts x={x} />
@@ -115,6 +121,7 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
 function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
+  useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#ff3347', '#3a0710'];
   return (
@@ -127,7 +134,7 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
       )}
       <div className="relative h-1.5" style={{ background: `linear-gradient(90deg, ${c[0]}, ${c[1]})` }} aria-hidden="true" />
       <div className={`relative flex min-w-0 flex-1 flex-col p-5 ${x.image ? 'pt-24' : ''}`}>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><StatusPill s={s} />{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
         <h3 className="text-[1.15rem] font-semibold leading-snug">{x.name[lang]}</h3>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time></p>
         <Facts x={x} />

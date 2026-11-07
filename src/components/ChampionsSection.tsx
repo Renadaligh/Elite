@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { getGame } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import { statusOf, type Tournament } from '../data/tournaments';
 import { useTournaments } from '../hooks/useTournaments';
 import { useI18n } from '../i18n/I18nProvider';
@@ -33,6 +34,7 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => (
 function ChampionCard({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const date = useDate();
+  useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#ff3347', '#4a0a12'];
   const winner = x.winner?.[lang] ?? '';
@@ -62,6 +64,7 @@ function ChampionCard({ x }: { x: Tournament }) {
 function ArchiveRow({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const date = useDate();
+  useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#ff3347', '#4a0a12'];
   const winner = x.winner?.[lang] ?? '';

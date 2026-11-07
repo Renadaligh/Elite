@@ -3,8 +3,10 @@ import { useHeroMotion } from '../hooks/useHeroMotion';
 import { usePointerParallax } from '../hooks/usePointerParallax';
 import ArtLayers from './ArtLayers';
 import HeroContent from './HeroContent';
+import { useI18n } from '../i18n/I18nProvider';
 
 export default function HeroSection() {
+  const { t } = useI18n();
   const heroRef = useRef<HTMLElement>(null);
   usePointerParallax(heroRef);
   useHeroMotion(heroRef);
@@ -29,6 +31,9 @@ export default function HeroSection() {
       </div>
       <div className="hero-veil pointer-events-none absolute inset-0 z-[8] opacity-0" style={{ background: 'var(--bg)' }} />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[9] h-[14%] bg-gradient-to-b from-transparent to-[var(--bg)]" />
+      <a href="#news" aria-label={t.scrollDown} className="scroll-cue absolute bottom-5 left-1/2 z-[11] -translate-x-1/2 sm:bottom-7">
+        <span className="scroll-cue-dot" />
+      </a>
     </section>
   );
 }

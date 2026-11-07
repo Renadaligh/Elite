@@ -35,7 +35,7 @@ const palette: Record<string, [string, string]> = {
 /** Local artwork shipped with the site (public/games/<id>.webp). */
 const art = (id: string) => `${import.meta.env.BASE_URL}games/${id}.webp`;
 const icon = (slug: string) => `https://plato-image-assets-prod.platocdn.com/games/${slug}/icon_${slug}.webp`;
-export const GAMES: Game[] = [
+const BASE_GAMES: Game[] = [
   { id: 'match-it', name: L('Match It', 'Match It'), genre: genres.Arcade, tagline: L('Match the tiles and clear the board.', 'طابق البلاطات وأفرغ اللوحة.'), overview: L('Match the tiles and clear the board.', 'طابق البلاطات وأفرغ اللوحة.'), colors: palette.Arcade, image: art('match-it'), tone: '#9227a2' },
   { id: 'poker', name: L('Poker', 'بوكر'), genre: genres.Card, tagline: L('Texas Hold’em poker with friends.', 'بوكر تكساس هولدم مع الأصدقاء.'), overview: L('Texas Hold’em poker with friends.', 'بوكر تكساس هولدم مع الأصدقاء.'), colors: palette.Card, image: art('poker'), tone: '#0a2292' },
   { id: 'ocho', name: L('Ocho', 'اوتشو'), genre: genres.Card, tagline: L('Match colors and numbers to empty your hand.', 'طابق الألوان والأرقام لتُنهي أوراقك أولًا.'), overview: L('Match colors and numbers to empty your hand.', 'طابق الألوان والأرقام لتُنهي أوراقك أولًا.'), colors: palette.Card, image: art('ocho'), tone: '#6424d1' },
@@ -93,4 +93,45 @@ export const GAMES: Game[] = [
   { id: 'deep-thots', name: L('Deep Thots', 'أفكار عميقة'), genre: genres.Social, tagline: L('Give unexpected answers to big questions.', 'أجب بإجابات طريفة عن أسئلة عميقة.'), overview: L('Give unexpected answers to big questions.', 'أجب بإجابات طريفة عن أسئلة عميقة.'), colors: palette.Social, image: icon('deep-thots') },
   { id: 'go', name: L('Go', 'غو'), genre: genres.Board, tagline: L('Control territory on the board.', 'سيطر على المساحات على لوحة غو.'), overview: L('Control territory on the board.', 'سيطر على المساحات على لوحة غو.'), colors: palette.Board, image: icon('go') },
 ];
+
+/* ---------- Dashboard-managed games (D1 table "games") merged over the built-in list ---------- */
+export const GENRE_KEYS = Object.keys(genres);
+export const genreLabel = (key: string): Localized => genres[key] ?? genres.Arcade;
+export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean }
+export type AdminGame = Game & { hidden: boolean; custom: boolean; genreKey: string };
+const keyOf = (genre: Localized) => GENRE_KEYS.find((k) => genres[k].en === genre.en) ?? 'Arcade';
+
+/** A row overrides the built-in game with the same id (empty field = keep default); other rows are custom games. */
+export function mergeGames(rows: GameRow[]): AdminGame[] {
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const list: AdminGame[] = BASE_GAMES.map((b) => {
+    const r = byId.get(b.id);
+    const gk = r?.genre && genres[r.genre] ? r.genre : keyOf(b.genre);
+    const tagline = { en: r?.tagline.en || b.tagline.en, ar: r?.tagline.ar || b.tagline.ar };
+    return {
+      ...b, genreKey: gk, genre: genres[gk], colors: gk === keyOf(b.genre) ? b.colors : palette[gk],
+      name: { en: r?.name.en || b.name.en, ar: r?.name.ar || b.name.ar }, tagline, overview: r?.tagline.en || r?.tagline.ar ? tagline : b.overview,
+      image: r?.image || b.image, tone: r?.image ? undefined : b.tone, hidden: !!r?.hidden, custom: false,
+    };
+  });
+  for (const r of rows) {
+    if (!r.custom || BASE_GAMES.some((b) => b.id === r.id)) continue;
+    const gk = genres[r.genre] ? r.genre : 'Arcade';
+    list.push({
+      id: r.id, genreKey: gk, genre: genres[gk], colors: palette[gk], name: { en: r.name.en || r.name.ar, ar: r.name.ar || r.name.en },
+      tagline: r.tagline, overview: r.tagline, image: r.image || undefined, hidden: r.hidden, custom: true,
+    });
+  }
+  return list;
+}
+
+/** The games the site shows. Replaced (new array) when the dashboard data loads; components subscribe through useGames(). */
+export let GAMES: Game[] = BASE_GAMES;
+const listeners = new Set<() => void>();
+export const subscribeGames = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
+export const getGamesSnapshot = () => GAMES;
+export function setGameRows(rows: GameRow[]) {
+  GAMES = mergeGames(rows).filter((x) => !x.hidden);
+  listeners.forEach((fn) => fn());
+}
 export const getGame = (id: string) => GAMES.find((g) => g.id === id);

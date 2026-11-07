@@ -19,6 +19,8 @@ export interface Tournament {
   slots: { filled: number; total: number };
   /** solo = one Plato ID; team = team name + captain + members. Default solo. */
   mode?: 'solo' | 'team';
+  /** major = a flagship tournament (gets a "Major" badge). Default regular. */
+  tier?: 'major' | 'regular';
   /** Optional external registration link. No link → no register button. */
   registerUrl?: string;
   /** Optional cover image (path under /public or full URL). Faded behind the text; no image → plain game-colour card. */

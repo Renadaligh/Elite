@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
-import { GAMES } from '../data/games';
+import { GENRE_KEYS, genreLabel, mergeGames, type AdminGame, type GameRow } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
@@ -10,7 +11,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
 type Reg = { id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
-type Tab = 'overview' | 'news' | 'tournaments' | 'regs';
+type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs';
 
 const KEY = 'elite-admin-key';
 const BASE = import.meta.env.BASE_URL;
@@ -46,6 +47,10 @@ const EN: Record<string, string> = {
   'تعذّر تحميل التسجيلات': 'Could not load registrations', 'البطولة': 'Tournament', 'الأعضاء': 'Members',
   'حذف هذا التسجيل؟': 'Delete this registration?', 'كل البطولات': 'All tournaments', 'تصدير CSV': 'Export CSV',
   'الفريق': 'Team', 'المقاعد': 'Slots', 'ابحث…': 'Search…',
+  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
+  'اسم اللعبة': 'Game name', 'الوصف القصير': 'Short description', 'التصنيف (نوع اللعبة)': 'Genre', 'صورة اللعبة': 'Game image', 'أركيد': 'Arcade', 'ألعاب لوحية': 'Board', 'ألعاب ورق': 'Card', 'اجتماعية': 'Social', 'رياضة': 'Sports', 'كلمات': 'Word',
+  'مخفية': 'Hidden', 'مضافة': 'Custom', 'مخصّصة': 'Edited', 'إخفاء من الموقع': 'Hide from the site', 'إظهار في الموقع': 'Show on the site', 'تعذّر تحميل الألعاب': 'Could not load games', 'حذف هذه اللعبة؟': 'Delete this game?',
+  'اترك أي حقل فارغاً ليرجع للافتراضي': 'Leave any field empty to restore its default', 'تحقق من اسم اللعبة': 'Check the game name', 'الفئة': 'Tier', 'عادية': 'Regular', 'بطولة كبرى (Major) — تظهر عليها شارة': 'Major tournament — shows a badge',
 };
 
 function useX() {
@@ -69,8 +74,9 @@ const OutI = (p: IP) => <svg {...ic} {...p}><path d="M14 4.5h4.5a1.5 1.5 0 0 1 1
 const SearchI = (p: IP) => <svg {...ic} {...p}><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>;
 const XI = (p: IP) => <svg {...ic} strokeWidth={2.2} {...p}><path d="M6 6l12 12M18 6 6 18" /></svg>;
 
-const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, regs: UsersI };
-const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', regs: 'التسجيلات' };
+const PadI = (p: IP) => <svg {...ic} {...p}><rect x="3" y="7" width="18" height="11" rx="4" /><path d="M8 10.5v4M6 12.5h4M15.5 11.5h.01M17.5 13.5h.01" /></svg>;
+const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI };
+const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات' };
 
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
@@ -317,12 +323,13 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 }
 
 /* ---------- Tournaments ---------- */
-const emptyT = (): Adm<Tournament> => ({ id: '', gameId: GAMES[0]?.id ?? '', name: { ar: '', en: '' }, format: { ar: '', en: '' }, prize: { ar: '', en: '' }, startsAt: '', endsAt: '', slots: { filled: 0, total: 16 }, mode: 'solo', registerUrl: '', image: '', winner: { ar: '', en: '' }, winnerImage: '', published: true });
+const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en: '' }, format: { ar: '', en: '' }, prize: { ar: '', en: '' }, startsAt: '', endsAt: '', slots: { filled: 0, total: 16 }, mode: 'solo', tier: 'regular', registerUrl: '', image: '', winner: { ar: '', en: '' }, winnerImage: '', published: true });
 const ST_TONE = { live: 'red', upcoming: 'amber', completed: 'gray' } as const;
 const ST_AR = { live: 'مباشرة', upcoming: 'قادمة', completed: 'منتهية' } as const;
 
 function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const { lang, x } = useX();
+  const GAMES = useGames();
   const [rows, setRows] = useState<Adm<Tournament>[]>([]);
   const [f, setF] = useState<Adm<Tournament> | null>(null);
   const [msg, setMsg] = useState('');
@@ -362,7 +369,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">Major</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
                 <div className="mt-1 text-[.8rem]" dir="ltr" style={{ color: 'var(--muted)', textAlign: lang === 'ar' ? 'right' : 'left' }}>{when(r.startsAt)}</div>
               </div>
               <div className="w-36">
@@ -384,7 +391,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           <form onSubmit={save} className="grid gap-4">
             {pair('name', x('اسم البطولة'), 'Name')}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('اللعبة')}><select className={sel} style={bd} value={f.gameId} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
+              <Field label={x('اللعبة')}><select className={sel} style={bd} value={f.gameId || GAMES[0]?.id || ''} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
+              <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">Major</option></select></Field>
               <Field label={x('النوع')}><select className={sel} style={bd} value={f.mode ?? 'solo'} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{x('فردي (Plato ID)')}</option><option value="team">{x('فرق (اسم الفريق + القائد + الأعضاء)')}</option></select></Field>
             </div>
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
@@ -400,6 +408,91 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('winner', x('الفائز (بعد الانتهاء)'), 'Winner')}
             <ImageField k={k} label={x('صورة الفائز (طولية 9:16، اختياري)')} value={f.winnerImage ?? ''} onChange={(v) => setF({ ...f, winnerImage: v })} />
             <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={f.published !== false} onChange={(e) => setF({ ...f, published: e.target.checked })} />{x('منشورة (تظهر في الموقع)')}</label>
+            <div className="flex gap-3 pt-2"><button className={btnP} style={gradBtn} type="submit">{x('حفظ')}</button><button type="button" className={btnG} style={bd} onClick={() => setF(null)}>{x('إلغاء')}</button></div>
+          </form>
+        </Drawer>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Games ---------- */
+type GForm = { id: string; custom: boolean; hidden: boolean; name: { ar: string; en: string }; tagline: { ar: string; en: string }; genre: string; image: string };
+
+function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const { lang, x } = useX();
+  const [rows, setRows] = useState<AdminGame[]>([]);
+  const [f, setF] = useState<GForm | null>(null);
+  const [msg, setMsg] = useState('');
+  const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => setRows(mergeGames(r))).catch(() => setMsg(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [load]);
+
+  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '' });
+  const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else setMsg(m); };
+
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    if (!f) return;
+    try {
+      await api(f.id ? `/games/${f.id}` : '/games', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
+      setF(null); setMsg(x('تم الحفظ')); load();
+    } catch (err) { fail(err, x('تحقق من اسم اللعبة')); }
+  }
+  async function toggle(g: AdminGame) {
+    try { await api(`/games/${g.id}`, { method: 'PUT', body: JSON.stringify({ ...toForm(g), hidden: !g.hidden }), key: k }); load(); } catch (err) { fail(err, x('تعذّر تحميل الألعاب')); }
+  }
+  async function del(g: AdminGame) {
+    if (!window.confirm(x('حذف هذه اللعبة؟'))) return;
+    await api(`/games/${g.id}`, { method: 'DELETE', key: k }).catch(() => undefined);
+    load();
+  }
+  const pairF = (name: 'name' | 'tagline', label: string, en: string, area = false) => f && (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label={lang === 'en' ? `${en} (Arabic)` : `${label} (عربي)`}>{area ? <textarea rows={2} className={inp} style={bd} value={f[name].ar} onChange={(e) => setF({ ...f, [name]: { ...f[name], ar: e.target.value } })} /> : <input className={inp} style={bd} value={f[name].ar} onChange={(e) => setF({ ...f, [name]: { ...f[name], ar: e.target.value } })} />}</Field>
+      <Field label={`${en} (English)`}>{area ? <textarea dir="ltr" rows={2} className={inp} style={bd} value={f[name].en} onChange={(e) => setF({ ...f, [name]: { ...f[name], en: e.target.value } })} /> : <input dir="ltr" className={inp} style={bd} value={f[name].en} onChange={(e) => setF({ ...f, [name]: { ...f[name], en: e.target.value } })} />}</Field>
+    </div>
+  );
+
+  return (
+    <div>
+      <PageHead title={`${x('الألعاب')} (${rows.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={<button className={btnP} style={gradBtn} onClick={() => { setMsg(''); setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '' }); }}>{x('+ لعبة جديدة')}</button>} />
+      {msg && <p role="status" className="mb-4 text-[.9rem]" style={{ color: 'var(--muted)' }}>{msg}</p>}
+      <div className="flex flex-col gap-2.5">
+        {rows.map((g) => (
+          <Card key={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 ${g.hidden ? 'opacity-60' : ''}`}>
+            <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` }}>
+              {g.image && <img src={g.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-bold">{g.name[lang] || g.name.ar || g.name.en}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[.8rem]" style={{ color: 'var(--muted)' }}>
+                <span>{genreLabel(g.genreKey)[lang]}</span>
+                {g.custom && <Badge tone="blue">{x('مضافة')}</Badge>}
+                {g.hidden && <Badge tone="gray">{x('مخفية')}</Badge>}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className={btnG} style={bd} onClick={() => { setMsg(''); setF(toForm(g)); }}>{x('تعديل')}</button>
+              {g.custom
+                ? <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(g)}>{x('حذف')}</button>
+                : <button className={btnG} style={bd} onClick={() => toggle(g)}>{g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}</button>}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {f && (
+        <Drawer title={x(f.id ? 'تعديل اللعبة' : 'لعبة جديدة')} onClose={() => setF(null)}>
+          <form onSubmit={save} className="grid gap-4">
+            {pairF('name', x('اسم اللعبة'), 'Name')}
+            {pairF('tagline', x('الوصف القصير'), 'Short description', true)}
+            <Field label={x('التصنيف (نوع اللعبة)')}>
+              <select className={sel} style={bd} value={f.genre} onChange={(e) => setF({ ...f, genre: e.target.value })}>
+                {GENRE_KEYS.map((gk) => <option key={gk} value={gk}>{genreLabel(gk)[lang]}</option>)}
+              </select>
+            </Field>
+            <ImageField k={k} label={x('صورة اللعبة')} value={f.image} onChange={(v) => setF({ ...f, image: v })} />
+            {!f.custom && <p className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{x('اترك أي حقل فارغاً ليرجع للافتراضي')}</p>}
             <div className="flex gap-3 pt-2"><button className={btnP} style={gradBtn} type="submit">{x('حفظ')}</button><button type="button" className={btnG} style={bd} onClick={() => setF(null)}>{x('إلغاء')}</button></div>
           </form>
         </Drawer>
@@ -570,6 +663,7 @@ export default function AdminPage() {
           {tab === 'overview' && <OverviewTab k={key} go={setTab} />}
           {tab === 'news' && <NewsTab k={key} onAuthFail={logout} />}
           {tab === 'tournaments' && <TournamentsTab k={key} onAuthFail={logout} />}
+          {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
         </main>
       </div>

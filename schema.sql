@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
   starts_at TEXT NOT NULL, ends_at TEXT NOT NULL,
   filled INTEGER NOT NULL DEFAULT 0, total INTEGER NOT NULL DEFAULT 1,
   mode TEXT NOT NULL DEFAULT 'solo',
+  tier TEXT NOT NULL DEFAULT 'regular',
   register_url TEXT NOT NULL DEFAULT '', image TEXT NOT NULL DEFAULT '',
   winner_en TEXT NOT NULL DEFAULT '', winner_ar TEXT NOT NULL DEFAULT '', winner_image TEXT NOT NULL DEFAULT '',
   published INTEGER NOT NULL DEFAULT 1
@@ -30,3 +31,16 @@ CREATE TABLE IF NOT EXISTS registrations (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE UNIQUE INDEX IF NOT EXISTS reg_unique ON registrations (tournament_id, lower(plato_id));
+-- Games managed from the dashboard. A row overrides a built-in game with the same id (empty text = keep the default),
+-- or adds a custom game (custom = 1). hidden = 1 hides the game from the site.
+CREATE TABLE IF NOT EXISTS games (
+  id TEXT PRIMARY KEY,
+  genre TEXT NOT NULL DEFAULT '',
+  name_en TEXT NOT NULL DEFAULT '', name_ar TEXT NOT NULL DEFAULT '',
+  tagline_en TEXT NOT NULL DEFAULT '', tagline_ar TEXT NOT NULL DEFAULT '',
+  image TEXT NOT NULL DEFAULT '',
+  hidden INTEGER NOT NULL DEFAULT 0,
+  custom INTEGER NOT NULL DEFAULT 0
+);
+-- Existing database? Add the tournament tier once:
+--   ALTER TABLE tournaments ADD COLUMN tier TEXT NOT NULL DEFAULT 'regular';

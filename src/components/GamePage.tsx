@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { getGame, SHOW_EXAMPLE_GAMES } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import { useTournaments } from '../hooks/useTournaments';
 import { statusOf, tournamentsForGame } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
@@ -23,6 +24,7 @@ const card = { background: 'var(--glass)', borderColor: 'var(--glass-b)' };
 /** Game details page (#/games/<id>). Optional sections disappear when the game has no data for them. */
 export default function GamePage({ id }: { id: string }) {
   const { t, lang } = useI18n();
+  useGames();
   const g = getGame(id);
   const { items: allTours } = useTournaments();
   const tours = g ? tournamentsForGame(allTours, g.id) : [];
