@@ -77,7 +77,7 @@ const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
 const gradBtn = { background: 'linear-gradient(135deg,#ff3347,#d90f26)', boxShadow: '0 8px 22px -8px rgba(235,40,60,.7)' };
 const btnG = 'inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-[.85rem] font-semibold transition hover:bg-[var(--glass)]';
-const cube = { WebkitMask: `url(${BASE}brand/cube.png) center / contain no-repeat`, mask: `url(${BASE}brand/cube.png) center / contain no-repeat` };
+const ninja = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no-repeat`, mask: `url(${BASE}brand/ninja.png) center / contain no-repeat` };
 
 /** Downscale big photos in the browser (max 1800px, WebP) before upload. GIFs and failures are sent as-is. */
 async function shrink(file: File): Promise<Blob> {
@@ -497,7 +497,7 @@ function Login({ onDone }: { onDone: (key: string) => void }) {
       <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#ff3347,transparent 70%)' }} />
       <form onSubmit={submit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
-          <span aria-hidden="true" className="inline-block h-9 w-8 bg-current" style={cube} />
+          <span aria-hidden="true" className="inline-block h-7 w-11 bg-current" style={ninja} />
         </div>
         <h1 className="mt-5 text-center text-[1.55rem] font-extrabold">{x('مرحباً بك')}</h1>
         <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>Elite · {x('لوحة التحكم')}</p>
@@ -533,7 +533,7 @@ export default function AdminPage() {
     <div className="min-h-[100svh] lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col border-e p-5 lg:flex" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
-          <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-5 w-[1.1rem] bg-current" style={cube} /></span>
+          <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-4 w-6 bg-current" style={ninja} /></span>
           <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Elite</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
         </div>
         <nav className="flex flex-col gap-1">
