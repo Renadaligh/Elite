@@ -5,14 +5,13 @@ import { statusOf, type Tournament } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import LanguageSwitcher from './LanguageSwitcher';
-import ThemeToggle from './ThemeToggle';
 
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
 type Reg = { id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
 type Tab = 'overview' | 'news' | 'tournaments' | 'regs';
 
-const KEY = 'plato-admin-key';
+const KEY = 'elite-admin-key';
 const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
@@ -76,7 +75,7 @@ const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: '�
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
-const gradBtn = { background: 'linear-gradient(135deg,#3b7bff,#2455e8)', boxShadow: '0 8px 22px -8px rgba(36,85,232,.7)' };
+const gradBtn = { background: 'linear-gradient(135deg,#ff3347,#d90f26)', boxShadow: '0 8px 22px -8px rgba(235,40,60,.7)' };
 const btnG = 'inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-[.85rem] font-semibold transition hover:bg-[var(--glass)]';
 const cube = { WebkitMask: `url(${BASE}brand/cube.png) center / contain no-repeat`, mask: `url(${BASE}brand/cube.png) center / contain no-repeat` };
 
@@ -138,7 +137,7 @@ const Card = ({ children, className = '' }: { children: ReactNode; className?: s
   <div className={`rounded-2xl border ${className}`} style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(10px)' }}>{children}</div>
 );
 function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray' | 'blue'; children: ReactNode }) {
-  const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#4d8dff' }[tone];
+  const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#ff4455' }[tone];
   return <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[.74rem] font-bold" style={{ color: c, background: `color-mix(in srgb, ${c} 15%, transparent)` }}><i className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />{children}</span>;
 }
 function PageHead({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) {
@@ -210,7 +209,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
               <div className="mt-4 text-[2.2rem] font-black leading-none">{s.value}</div>
               <div className="mt-1.5 text-[.9rem] font-semibold">{s.label}</div>
               <div className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{s.note}</div>
-              <div aria-hidden="true" className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full opacity-30 blur-2xl" style={{ background: '#3b7bff' }} />
+              <div aria-hidden="true" className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full opacity-30 blur-2xl" style={{ background: '#ff3347' }} />
             </Card>
           </button>
         ))}
@@ -366,7 +365,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </div>
               <div className="w-36">
                 <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.filled}/{r.slots.total}</span></div>
-                <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3b7bff,#2455e8)' }} /></div>
+                <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div>
               </div>
               <div className="flex gap-2">
                 <button className={btnG} style={bd} onClick={() => { setMsg(''); setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerImage: r.winnerImage ?? '' }); }}>{x('تعديل')}</button>
@@ -427,7 +426,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
     const lines = [head, ...shown.map((r) => [r.tournament_name, r.mode === 'team' ? 'فريق' : 'فردي', r.plato_id, r.team_name, r.members, r.lang, r.created_at])];
     const blob = new Blob(['﻿' + lines.map((l) => l.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = 'plato-registrations.csv'; a.click();
+    a.href = URL.createObjectURL(blob); a.download = 'elite-registrations.csv'; a.click();
     URL.revokeObjectURL(a.href);
   }
   async function del(id: number) {
@@ -494,14 +493,14 @@ function Login({ onDone }: { onDone: (key: string) => void }) {
 
   return (
     <section className="admin-bg relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-10">
-      <div className="absolute end-4 top-4 z-10 flex gap-2"><ThemeToggle /><LanguageSwitcher /></div>
-      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#3b7bff,transparent 70%)' }} />
+      <div className="absolute end-4 top-4 z-10 flex gap-2"><LanguageSwitcher /></div>
+      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#ff3347,transparent 70%)' }} />
       <form onSubmit={submit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
           <span aria-hidden="true" className="inline-block h-9 w-8 bg-current" style={cube} />
         </div>
         <h1 className="mt-5 text-center text-[1.55rem] font-extrabold">{x('مرحباً بك')}</h1>
-        <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>Plato AR · {x('لوحة التحكم')}</p>
+        <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>Elite · {x('لوحة التحكم')}</p>
 
         <label className="mt-7 flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('أدخل كلمة السر للمتابعة')}
           <span className="relative block">
@@ -535,7 +534,7 @@ export default function AdminPage() {
       <aside className="hidden flex-col border-e p-5 lg:flex" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-5 w-[1.1rem] bg-current" style={cube} /></span>
-          <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Plato AR</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
+          <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Elite</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
         </div>
         <nav className="flex flex-col gap-1">
           {tabs.map((id) => {
@@ -563,7 +562,7 @@ export default function AdminPage() {
             })}
           </div>
           <div className="hidden text-[.9rem] font-semibold lg:block" style={{ color: 'var(--muted)' }}>{x(TAB_LABEL[tab])}</div>
-          <div className="flex shrink-0 items-center gap-2"><ThemeToggle /><LanguageSwitcher /><button type="button" onClick={logout} className="pill lg:hidden" aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button></div>
+          <div className="flex shrink-0 items-center gap-2"><LanguageSwitcher /><button type="button" onClick={logout} className="pill lg:hidden" aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button></div>
         </header>
         <main className="mx-auto max-w-[68rem] px-4 py-8 sm:px-8">
           {tab === 'overview' && <OverviewTab k={key} go={setTab} />}

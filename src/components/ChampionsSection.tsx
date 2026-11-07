@@ -34,14 +34,14 @@ function ChampionCard({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const date = useDate();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#3b7bff', '#1a2a6b'];
+  const c = g?.colors ?? ['#ff3347', '#4a0a12'];
   const winner = x.winner?.[lang] ?? '';
   return (
-    <article className="group relative isolate aspect-[9/16] overflow-hidden rounded-3xl border shadow-[0_24px_50px_-26px_rgba(20,40,140,.7)] transition-transform duration-300 hover:-translate-y-1" style={{ borderColor: 'var(--glass-b)', background: `linear-gradient(160deg, ${c[0]}, ${c[1]})` }}>
+    <article className="group relative isolate aspect-[9/16] overflow-hidden rounded-3xl border shadow-[0_24px_50px_-26px_rgba(120,10,25,.7)] transition-transform duration-300 hover:-translate-y-1" style={{ borderColor: 'var(--glass-b)', background: `linear-gradient(160deg, ${c[0]}, ${c[1]})` }}>
       {x.winnerImage
         ? <img src={x.winnerImage} alt={winner} loading="lazy" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         : <span aria-hidden="true" className="absolute inset-0 -z-10 grid place-items-center font-display text-[9rem] font-black leading-none text-white/20 rtl:font-sans">{winner.trim().charAt(0).toUpperCase()}</span>}
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-[5] h-[58%]" style={{ background: 'linear-gradient(180deg, transparent, rgba(6,10,40,.78) 55%, rgba(6,10,40,.94))' }} />
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-[5] h-[58%]" style={{ background: 'linear-gradient(180deg, transparent, rgba(8,8,10,.78) 55%, rgba(8,8,10,.94))' }} />
       <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[.78rem] font-bold text-[#3a2600]" style={{ background: 'linear-gradient(135deg,#ffd54a,#ffb300)', boxShadow: '0 8px 18px -8px rgba(255,179,0,.9)' }}>
         <TrophyIcon className="h-3.5 w-3.5" />{t.chBadge}
       </span>
@@ -63,7 +63,7 @@ function ArchiveRow({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const date = useDate();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#3b7bff', '#1a2a6b'];
+  const c = g?.colors ?? ['#ff3347', '#4a0a12'];
   const winner = x.winner?.[lang] ?? '';
   return (
     <li className="flex items-center gap-4 rounded-2xl border p-3 pe-5" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>

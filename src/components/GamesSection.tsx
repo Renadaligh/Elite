@@ -96,8 +96,8 @@ export default function GamesSection() {
           const selected = category === id;
           return <button key={id} type="button" aria-pressed={selected} onClick={() => chooseCategory(id)}
             className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200"
-            style={{ borderColor: selected ? '#477aff' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
-              background: selected ? 'linear-gradient(115deg,#356dff,#254bba)' : 'var(--glass)' }}>
+            style={{ borderColor: selected ? '#ff4455' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
+              background: selected ? 'linear-gradient(115deg,#ff3347,#a30a1b)' : 'var(--glass)' }}>
             {c[lang]} <span className="ms-1 opacity-70">{i === 0 ? GAMES.length : GAMES.filter(g => g.genre.en === id).length}</span>
           </button>;
         })}
@@ -129,7 +129,7 @@ export default function GamesSection() {
                   if (o === 0) go(g); else setIndex(i);
                 }}>
                 {g.image ? <OfficialGameImage key={g.id} src={g.image} /> : <div className="gcard-art" />}
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(to top, rgba(5,9,28,.92) 0%,rgba(5,9,28,.7) 16%,rgba(5,9,28,.25) 40%,transparent 66%)'}} />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(to top, rgba(5,5,7,.92) 0%,rgba(5,5,7,.7) 16%,rgba(5,5,7,.25) 40%,transparent 66%)'}} />
                 <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-5">
                   <span className="text-[.78rem] font-semibold opacity-85">{g.genre[lang]}</span>
                   <div className="text-[clamp(1.15rem,1.8vw,1.55rem)] font-extrabold leading-tight">{g.name[lang]}</div>

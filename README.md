@@ -1,6 +1,6 @@
-# Plato AR
+# Elite
 
-الموقع الرسمي لمجتمع Plato AR (Plato | بالعربية) — منصة ألعاب وبطولات.
+الموقع الرسمي لمجتمع Elite (ايليت) — ألعاب وبطولات. ثيم داكن بالأبيض/الأسود مع الأحمر، وهيرو فيديو الجبال والننجا.
 React 18 · TypeScript · Tailwind CSS 3 · GSAP. عربي/إنجليزي (RTL).
 
 ```bash
@@ -10,7 +10,7 @@ npm run build    # type-check + production build (dist/)
 ```
 
 ## البنية
-- `src/components/` — أقسام الصفحة (Hero، الأخبار، الألعاب، البطولات، …) ونموذج التسجيل.
+- `src/components/` — أقسام الصفحة (Hero، الأخبار، الألعاب، البطولات، الأبطال، …) ونموذج التسجيل.
 - `src/i18n/translations.ts` — نصوص EN / AR (المفاتيح متطابقة في اللغتين).
 - `src/config/site.ts` — قائمة التنقل واسم الموقع (`BRAND`).
 - `functions/` — الـAPI (Cloudflare Pages Functions) للأخبار والبطولات والتسجيلات.
@@ -20,3 +20,7 @@ npm run build    # type-check + production build (dist/)
 
 ## النشر
 - Cloudflare Pages فقط (الـAPI يحتاج Functions): Build command `npm run build` · Output `dist`.
+
+## ملاحظات
+- الـ Hero: `src/components/HeroSection.tsx` + `ArtLayers.tsx` + `EliteWordmark.tsx`، والفيديو في `public/art/`.
+- «Plato ID» في نموذج التسجيل هو معرّف اللاعب داخل لعبة Plato، لذلك بقي اسمه.

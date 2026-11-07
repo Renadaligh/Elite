@@ -11,7 +11,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const setLang = useCallback((l: Lang) => {
     document.documentElement.lang = l;
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
-    try { localStorage.setItem('plato-lang', l); } catch { /* storage unavailable */ }
+    try { localStorage.setItem('elite-lang', l); } catch { /* storage unavailable */ }
     setLangState(l);
   }, []);
   const value = useMemo<Ctx>(() => ({ lang, dir: lang === 'ar' ? 'rtl' : 'ltr', t: translations[lang], setLang }), [lang, setLang]);

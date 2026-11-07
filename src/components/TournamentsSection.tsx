@@ -62,7 +62,7 @@ function Facts({ x }: { x: Tournament }) {
       <div><dt className="opacity-70">{t.tFormat}</dt><dd className="font-bold">{x.format[lang]}</dd></div>
       <div className="col-span-2">
         <dt className="flex justify-between opacity-70"><span>{t.tTeams}</span><span>{full ? t.tFull : `${x.slots.filled}/${x.slots.total}`}</span></dt>
-        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#3b7bff,#2455e8)' }} /></div></dd>
+        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div></dd>
       </div>
     </dl>
   );
@@ -85,7 +85,7 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#3b7bff', '#0f2a6b'];
+  const c = g?.colors ?? ['#ff3347', '#3a0710'];
   return (
     <article className="news-card on-art relative text-white md:mb-6" style={{ background: `linear-gradient(135deg, ${c[0]}, ${c[1]})`, border: 'none' }}>
       {x.image ? (
@@ -116,7 +116,7 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#3b7bff', '#0f2a6b'];
+  const c = g?.colors ?? ['#ff3347', '#3a0710'];
   return (
     <article className="news-card news-card-hover">
       {x.image && (
@@ -150,7 +150,7 @@ export default function TournamentsSection() {
   const list = tab === 'all' ? withStatus : withStatus.filter((r) => r.s === tab);
   const featured = tab !== 'completed' && list[0] && list[0].s !== 'completed' ? list[0] : null;
   const rest = featured ? list.slice(1) : list;
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3b7bff, #2455e8)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #ff3347, #d90f26)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
     <section id="tournaments" aria-labelledby="tournaments-title" className="scroll-mt-20 px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ background: 'var(--bg)' }}>

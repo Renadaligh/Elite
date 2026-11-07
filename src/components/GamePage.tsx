@@ -70,7 +70,7 @@ export default function GamePage({ id }: { id: string }) {
             <ol className="grid gap-3 md:grid-cols-2">
               {g.howToPlay.map((s, i) => (
                 <li key={i} className="flex items-start gap-4 rounded-2xl border p-4" style={card}>
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full font-bold text-white" style={{ background: 'linear-gradient(135deg, #3b7bff, #2455e8)' }}>{i + 1}</span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full font-bold text-white" style={{ background: 'linear-gradient(135deg, #ff3347, #d90f26)' }}>{i + 1}</span>
                   <span className="pt-1">{s[lang]}</span>
                 </li>
               ))}

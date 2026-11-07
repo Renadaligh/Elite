@@ -12,7 +12,7 @@ export const NAV: { href: string; key: keyof Dict }[] = [
 ];
 
 /** Official site name per language. */
-export const BRAND = { en: 'Plato AR', ar: 'Plato | بالعربية' } as const;
+export const BRAND = { en: 'Elite', ar: 'Elite' } as const;
 
 /** Social links shown in the footer. Leave a url empty to hide that icon (Instagram: add the link once the account exists). */
 export const SOCIALS = {

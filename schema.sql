@@ -1,4 +1,4 @@
--- Plato AR database (Cloudflare D1). Run once: npx wrangler d1 execute plato-db --remote --file=schema.sql
+-- Elite database (Cloudflare D1). Run once: npx wrangler d1 execute plato-db --remote --file=schema.sql
 CREATE TABLE IF NOT EXISTS news (
   id TEXT PRIMARY KEY,
   date TEXT NOT NULL,

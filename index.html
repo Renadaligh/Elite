@@ -3,63 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0d0e22" />
-  <title>Plato AR</title>
-  <link rel="icon" type="image/png" href="%BASE_URL%brand/cube.png" />
+  <meta name="theme-color" content="#050507" />
+  <title>Elite</title>
+  <link rel="icon" type="image/png" href="%BASE_URL%brand/favicon.png" />
   <script>
     try {
-      const lang = localStorage.getItem('plato-lang') || 'en';
+      const lang = localStorage.getItem('elite-lang') || 'en';
       document.documentElement.lang = lang;
       document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      const saved = localStorage.getItem('plato-theme');
-      const theme = saved === 'light' || saved === 'dark' ? saved : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-      document.documentElement.setAttribute('data-theme', theme);
-      if (theme === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f3f6ff');
     } catch (_) {}
   </script>
   <style>
-    html, body { margin: 0; min-height: 100%; background: #0d0e22; }
+    html, body { margin: 0; min-height: 100%; background: #050507; }
     #app-loader {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      background: #0d0e22;
-      isolation: isolate;
-      opacity: 1;
-      visibility: visible;
-      transition: opacity 850ms cubic-bezier(.22, 1, .36, 1), visibility 850ms;
+      position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: #050507; isolation: isolate;
+      opacity: 1; visibility: visible; transition: opacity 850ms cubic-bezier(.22, 1, .36, 1), visibility 850ms;
     }
-    html[data-theme='light'], html[data-theme='light'] body { background: #f3f6ff; }
-    html[data-theme='light'] #app-loader { background: #eef3ff; }
-    html[data-theme='light'] .app-loader-label { color: #0c1334; }
-    html[data-theme='light'] .app-loader-track { background: rgba(30, 50, 130, .14); }
-    html[data-theme='light'] .app-loader-glow { opacity: .3; }
     #app-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .app-loader-glows { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-    .app-loader-glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .52; animation: loader-drift 22s ease-in-out infinite alternate; }
-    .app-loader-glow:nth-child(1) { width: 46vw; height: 46vw; min-width: 360px; min-height: 360px; background: #2f5bff; top: -14vw; inset-inline-start: -8vw; }
-    .app-loader-glow:nth-child(2) { width: 42vw; height: 42vw; min-width: 310px; min-height: 310px; background: #7a4dff; top: 10vh; inset-inline-end: -10vw; animation-duration: 28s; }
-    .app-loader-glow:nth-child(3) { width: 30vw; height: 30vw; min-width: 250px; min-height: 250px; background: #ff9a5c; bottom: -12vw; inset-inline-end: 20vw; opacity: .3; animation-duration: 25s; }
-    @keyframes loader-drift { to { transform: translate(6vw, 4vh) scale(1.12); } }
-    .app-loader-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; width: min(240px, 68vw); }
-    .app-loader-label { color: #f3f2ff; font-family: Outfit, Poppins, system-ui, sans-serif; font-size: 15px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
-    .app-loader-label::after { display: inline-block; width: 22px; text-align: left; content: ''; animation: loader-dots 1.4s steps(4,end) infinite; }
-    @keyframes loader-dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75%,100% { content: '...'; } }
-    .app-loader-track { width: 100%; height: 4px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, .18); }
-    .app-loader-bar { height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, #65adff, #94aaff, #c4a7ff); box-shadow: 0 0 15px rgba(115,161,255,.7); animation: loader-sweep 1.6s ease-in-out infinite; }
+    .app-loader-glow { position: absolute; width: 60vw; height: 60vw; min-width: 340px; min-height: 340px; border-radius: 50%; background: #d90f26; filter: blur(110px); opacity: .22; top: 50%; left: 50%; translate: -50% -50%; animation: loader-drift 14s ease-in-out infinite alternate; }
+    @keyframes loader-drift { to { transform: scale(1.14); opacity: .12; } }
+    .app-loader-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 26px; width: min(240px, 68vw); }
+    .app-loader-mark { width: 150px; height: auto; color: #fff; }
+    .app-loader-track { width: 100%; height: 3px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, .14); }
+    .app-loader-bar { height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, #d90f26, #ff4455); box-shadow: 0 0 15px rgba(255, 68, 85, .7); animation: loader-sweep 1.6s ease-in-out infinite; }
     @keyframes loader-sweep { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
-    @media (max-width: 600px) {
-      #app-loader { background: radial-gradient(ellipse 95% 55% at 45% 24%, #132d83 0%, #111b52 42%, #0a102c 78%, #0b0d21 100%); }
-      html[data-theme='light'] #app-loader { background: linear-gradient(180deg, #e3edff, #f3f6ff); }
-      .app-loader-glow:nth-child(1) { width:115vw; height:115vw; top:-12vw; inset-inline-start:-18vw; background:#277dff; opacity:.56; filter:blur(85px); }
-      .app-loader-glow:nth-child(2) { width:95vw; height:95vw; top:28vh; inset-inline-end:-25vw; background:#1555d9; opacity:.25; filter:blur(95px); }
-      .app-loader-glow:nth-child(3) { background:#398aff; bottom:-8vw; opacity:.12; }
-    }
     @media (prefers-reduced-motion: reduce) {
-      .app-loader-glow, .app-loader-bar, .app-loader-label::after { animation: none; }
+      .app-loader-glow, .app-loader-bar { animation: none; }
       .app-loader-bar { transform: none; width: 100%; }
       #app-loader { transition-duration: .15s; }
     }
@@ -69,10 +39,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Ubuntu:wght@500&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 </head>
 <body>
-  <div id="app-loader" role="status" aria-label="Loading Plato" aria-live="polite">
-    <div class="app-loader-glows" aria-hidden="true"><span class="app-loader-glow"></span><span class="app-loader-glow"></span><span class="app-loader-glow"></span></div>
+  <div id="app-loader" role="status" aria-label="Loading Elite" aria-live="polite">
+    <div class="app-loader-glows" aria-hidden="true"><span class="app-loader-glow"></span></div>
     <div class="app-loader-content">
-      <span class="app-loader-label">Loading</span>
+      <svg class="app-loader-mark" viewBox="0 0 248 52" aria-hidden="true" focusable="false"><g fill="currentColor">
+        <rect x="0" y="0" width="52" height="13" /><rect x="0" y="19.5" width="52" height="13" /><rect x="0" y="39" width="52" height="13" />
+        <rect x="70" y="0" width="13" height="52" /><rect x="58" y="39" width="52" height="13" />
+        <rect x="116" y="0" width="13" height="52" />
+        <rect x="136" y="0" width="53" height="13" /><rect x="159" y="0" width="13" height="52" />
+        <rect x="196" y="0" width="52" height="13" /><rect x="196" y="19.5" width="52" height="13" /><rect x="196" y="39" width="52" height="13" />
+      </g></svg>
       <div class="app-loader-track" aria-hidden="true"><div class="app-loader-bar"></div></div>
     </div>
   </div>

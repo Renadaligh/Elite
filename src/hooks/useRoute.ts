@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 export type Route = { page: 'home' | 'news' | 'game' | 'admin'; id?: string; key: string };
 
-/** Hash routing keeps GitHub Pages happy (no server rewrites).
+/** Hash routing needs no server rewrites.
  *  #/news → all news · #/games/<id> → game page · anything else (#top, #games, …) → home. */
 function parse(): Route {
   const h = window.location.hash;
