@@ -29,12 +29,12 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   if (!v.name.en && !v.name.ar) return json({ error: 'invalid' }, 400);
   const base = (v.name.en || 'game').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'game';
   const id = `${base}-${crypto.randomUUID().slice(0, 4)}`;
-  const base = [id, v.genre || 'Arcade', v.name.en || v.name.ar, v.name.ar || v.name.en, v.tagline.en, v.tagline.ar, v.image, v.hidden];
+  const vals = [id, v.genre || 'Arcade', v.name.en || v.name.ar, v.name.ar || v.name.en, v.tagline.en, v.tagline.ar, v.image, v.hidden];
   try {
-    await env.DB.prepare('INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom,tournament_only) VALUES (?,?,?,?,?,?,?,?,1,?)').bind(...base, v.tournamentOnly).run();
+    await env.DB.prepare('INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom,tournament_only) VALUES (?,?,?,?,?,?,?,?,1,?)').bind(...vals, v.tournamentOnly).run();
   } catch {
     // Table not migrated yet (no "tournament_only" column): save without it.
-    await env.DB.prepare('INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom) VALUES (?,?,?,?,?,?,?,?,1)').bind(...base).run();
+    await env.DB.prepare('INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom) VALUES (?,?,?,?,?,?,?,?,1)').bind(...vals).run();
   }
   return json({ ok: true, id });
 };
