@@ -21,8 +21,9 @@ function Die({ rolling }: { rolling: boolean }) {
 }
 
 /** Same pick for everyone on a given day (Riyadh date). */
+const riyadhDay = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date());
 function todayIndex(n: number) {
-  const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date());
+  const day = riyadhDay();
   let h = 0;
   for (let i = 0; i < day.length; i++) h = (h * 31 + day.charCodeAt(i)) >>> 0;
   return h % n;
@@ -34,6 +35,7 @@ export default function GameOfDay({ games }: { games: Game[] }) {
   const [state, setState] = useState<'idle' | 'rolling' | 'open'>('idle');
   const [pick, setPick] = useState<Game | null>(null);
   const [random, setRandom] = useState(false);
+  const pickDay = useRef('');
   const timer = useRef<number>();
   const root = useRef<HTMLDivElement>(null);
   const sorted = [...games].sort((a, b) => a.id.localeCompare(b.id));
@@ -59,10 +61,11 @@ export default function GameOfDay({ games }: { games: Game[] }) {
     setRandom(again);
     setState('rolling');
     window.clearTimeout(timer.current);
+    pickDay.current = riyadhDay();
     timer.current = window.setTimeout(() => { setPick(g); setState('open'); }, reduce ? 0 : 1100);
   };
 
-  const onMain = () => { if (state === 'idle') { if (pick && !random) setState('open'); else roll(false); } else if (state === 'open') setState('idle'); };
+  const onMain = () => { if (state === 'idle') { if (pick && pickDay.current === riyadhDay()) setState('open'); else roll(false); } else if (state === 'open') setState('idle'); };
 
   return (
     <div ref={root} className="gotd mx-auto mt-5 w-max max-w-full md:absolute md:mt-0 md:top-[clamp(3rem,8vw,6rem)] md:end-[clamp(1.1rem,7vw,6.9rem)] md:z-30">

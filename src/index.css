@@ -178,3 +178,19 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 @keyframes die-idle { from { transform: rotateX(-24deg) rotateY(0deg); } to { transform: rotateX(-24deg) rotateY(360deg); } }
 @keyframes die-roll { from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to { transform: rotateX(360deg) rotateY(720deg) rotateZ(180deg); } }
 @media (prefers-reduced-motion: reduce) { .die-cube, .die-cube.is-rolling { animation: none; } .gotd-pop { animation: none; } }
+
+/* Game of the day: clearer on desktop */
+.gotd-btn { border-color: rgba(255, 68, 85, .55); background: color-mix(in srgb, #ff3347 10%, var(--glass)); box-shadow: 0 0 0 0 rgba(255, 51, 71, .35); animation: gotd-glow 2.8s ease-in-out infinite; }
+@keyframes gotd-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 51, 71, .0); } 50% { box-shadow: 0 0 22px 2px rgba(255, 51, 71, .28); } }
+@media (min-width: 768px) {
+  .gotd-btn { gap: 1.05rem; padding: .7rem 1.6rem .7rem .75rem; }
+  .gotd-btn small { font-size: .74rem; }
+  .gotd-btn b { font-size: 1.12rem; }
+  .die-scene { width: 3.6rem; height: 3.6rem; }
+  .die-cube { --s: 1.3rem; }
+  .die-face { padding: .32rem; }
+  .die-face i { width: .36rem; height: .36rem; }
+  .gotd-pop { width: 19rem; }
+  .gotd-cov { height: 10.5rem; }
+}
+@media (prefers-reduced-motion: reduce) { .gotd-btn { animation: none; } }
