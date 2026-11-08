@@ -203,8 +203,8 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
     return () => { window.removeEventListener('keydown', k); document.body.style.overflow = prev; };
   }, [onClose]);
   return (
-    <div className="backdrop-fade fixed inset-0 z-[90] flex justify-end bg-black/60 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <aside role="dialog" aria-modal="true" aria-label={title} className="drawer-in flex h-full w-full max-w-[34rem] flex-col border-s" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+    <div className="backdrop-fade fixed inset-0 z-[90] flex items-end justify-center bg-black/60 backdrop-blur-[2px] sm:items-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <aside role="dialog" aria-modal="true" aria-label={title} className="modal-in flex h-full w-full flex-col sm:h-auto sm:max-h-[90vh] sm:max-w-[42rem] sm:rounded-2xl sm:border sm:shadow-2xl" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
         <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--glass-b)' }}>
           <h2 className="text-[1.15rem] font-extrabold">{title}</h2>
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full border" style={{ borderColor: 'var(--glass-b)' }} aria-label="Close"><XI className="h-4 w-4" /></button>

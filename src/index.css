@@ -119,7 +119,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 @keyframes drawer-in { from { transform: translateX(2.5rem); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
-.admin-page { animation: pg-in .32s cubic-bezier(.22, 1, .36, 1) both; }
+.admin-page { animation: pg-in .32s cubic-bezier(.22, 1, .36, 1) backwards; } /* backwards, not both: a lingering transform would trap the fixed pop-ups inside the page */
 .backdrop-fade { animation: fade-in .2s ease-out both; }
 .drawer-in { animation: drawer-in .3s cubic-bezier(.22, 1, .36, 1) both; }
 [dir='rtl'] .drawer-in { animation-name: drawer-in-rtl; }
@@ -132,3 +132,10 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 @keyframes route-fade { from { opacity: 0; } to { opacity: 1; } }
 .route-fade { animation: route-fade .35s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .route-fade { animation: none; } }
+
+/* Dashboard forms: centred pop-up on desktop, full-screen sheet on phones */
+@keyframes sheet-up { from { transform: translateY(2rem); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes modal-pop { from { transform: translateY(12px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-in { animation: sheet-up .3s cubic-bezier(.22, 1, .36, 1) both; }
+@media (min-width: 640px) { .modal-in { animation-name: modal-pop; } }
+@media (prefers-reduced-motion: reduce) { .modal-in { animation: none; } }
