@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
 import { GENRE_KEYS, genreLabel, mergeGames, type AdminGame, type GameRow } from '../data/games';
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
@@ -47,6 +47,9 @@ const EN: Record<string, string> = {
   'تعذّر تحميل التسجيلات': 'Could not load registrations', 'البطولة': 'Tournament', 'الأعضاء': 'Members',
   'حذف هذا التسجيل؟': 'Delete this registration?', 'كل البطولات': 'All tournaments', 'تصدير CSV': 'Export CSV',
   'الفريق': 'Team', 'المقاعد': 'Slots', 'ابحث…': 'Search…',
+  'تم التحديث بنجاح': 'Updated successfully', 'تمت الإضافة بنجاح': 'Added successfully', 'تم الحذف بنجاح': 'Deleted successfully', 'تعذّر تنفيذ العملية': 'Action failed',
+  'تم إظهار اللعبة في الموقع': 'Game is now shown on the site', 'تم إخفاء اللعبة من الموقع': 'Game is now hidden from the site', 'تم رفع الصورة بنجاح': 'Image uploaded successfully', 'القائمة': 'Menu',
+  'كل الأنواع': 'All genres', 'لا توجد ألعاب مطابقة': 'No matching games',
   'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
   'اسم اللعبة': 'Game name', 'الوصف القصير': 'Short description', 'التصنيف (نوع اللعبة)': 'Genre', 'صورة اللعبة': 'Game image', 'أركيد': 'Arcade', 'ألعاب لوحية': 'Board', 'ألعاب ورق': 'Card', 'اجتماعية': 'Social', 'رياضة': 'Sports', 'كلمات': 'Word',
   'مخفية': 'Hidden', 'مضافة': 'Custom', 'مخصّصة': 'Edited', 'إخفاء من الموقع': 'Hide from the site', 'إظهار في الموقع': 'Show on the site', 'تعذّر تحميل الألعاب': 'Could not load games', 'حذف هذه اللعبة؟': 'Delete this game?',
@@ -56,6 +59,40 @@ const EN: Record<string, string> = {
 function useX() {
   const { lang } = useI18n();
   return { lang, x: (ar: string) => (lang === 'en' ? EN[ar] ?? ar : ar) };
+}
+
+
+/* ---------- Toasts (success / error notices) ---------- */
+type ToastItem = { id: number; text: string; kind: 'ok' | 'err' };
+type Toaster = { ok: (text: string) => void; err: (text: string) => void };
+const ToastCtx = createContext<Toaster>({ ok: () => undefined, err: () => undefined });
+const useToast = () => useContext(ToastCtx);
+
+function ToastHost({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<ToastItem[]>([]);
+  const seq = useRef(0);
+  const api2 = useMemo<Toaster>(() => {
+    const add = (kind: 'ok' | 'err') => (text: string) => {
+      const id = ++seq.current;
+      setItems((l) => [...l.slice(-2), { id, text, kind }]);
+      window.setTimeout(() => setItems((l) => l.filter((t) => t.id !== id)), kind === 'ok' ? 3200 : 5000);
+    };
+    return { ok: add('ok'), err: add('err') };
+  }, []);
+  return (
+    <ToastCtx.Provider value={api2}>
+      {children}
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-5 z-[120] flex flex-col items-center gap-2 px-4">
+        {items.map((t) => (
+          <div key={t.id} role={t.kind === 'err' ? 'alert' : 'status'} className="toast pointer-events-auto flex max-w-[26rem] items-center gap-3 rounded-2xl border px-4 py-3 text-[.92rem] font-semibold shadow-2xl"
+            style={{ background: 'var(--dialog)', borderColor: t.kind === 'ok' ? 'rgba(39,194,122,.55)' : 'rgba(255,77,94,.55)', color: 'var(--text)' }}>
+            <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[.8rem] font-black text-white" style={{ background: t.kind === 'ok' ? '#27c27a' : '#ff4d5e' }}>{t.kind === 'ok' ? '✓' : '!'}</span>
+            {t.text}
+          </div>
+        ))}
+      </div>
+    </ToastCtx.Provider>
+  );
 }
 
 const getKey = () => { try { return sessionStorage.getItem(KEY) ?? ''; } catch { return ''; } };
@@ -104,6 +141,7 @@ async function shrink(file: File): Promise<Blob> {
 /** Image field: choose a file from the computer (uploaded to R2) or paste a link/path. */
 function ImageField({ label, value, onChange, k, placeholder }: { label: string; value: string; onChange: (v: string) => void; k: string; placeholder?: string }) {
   const { x } = useX();
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   async function pick(file?: File) {
@@ -115,6 +153,7 @@ function ImageField({ label, value, onChange, k, placeholder }: { label: string;
       const res = await fetch('/api/upload', { method: 'POST', headers: { authorization: `Bearer ${k}` }, body: fd });
       if (!res.ok) throw new Error(String(res.status));
       onChange(((await res.json()) as { url: string }).url);
+      toast.ok(x('تم رفع الصورة بنجاح'));
     } catch (e) { setErr((e as Error).message === '500' ? x('التخزين غير مفعّل بعد (R2)') : x('فشل رفع الصورة')); }
     setBusy(false);
   }
@@ -164,8 +203,8 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
     return () => { window.removeEventListener('keydown', k); document.body.style.overflow = prev; };
   }, [onClose]);
   return (
-    <div className="fixed inset-0 z-[90] flex justify-end bg-black/60 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <aside role="dialog" aria-modal="true" aria-label={title} className="flex h-full w-full max-w-[34rem] flex-col border-s" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+    <div className="backdrop-fade fixed inset-0 z-[90] flex justify-end bg-black/60 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <aside role="dialog" aria-modal="true" aria-label={title} className="drawer-in flex h-full w-full max-w-[34rem] flex-col border-s" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
         <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--glass-b)' }}>
           <h2 className="text-[1.15rem] font-extrabold">{title}</h2>
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full border" style={{ borderColor: 'var(--glass-b)' }} aria-label="Close"><XI className="h-4 w-4" /></button>
@@ -255,8 +294,8 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const { lang, x } = useX();
   const [rows, setRows] = useState<Adm<NewsItem>[]>([]);
   const [f, setF] = useState<Adm<NewsItem> | null>(null);
-  const [msg, setMsg] = useState('');
-  const load = useCallback(() => { api<Adm<NewsItem>[]>('/news', { key: k }).then(setRows).catch(() => setMsg(x('تعذّر تحميل الأخبار'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toast = useToast();
+  const load = useCallback(() => { api<Adm<NewsItem>[]>('/news', { key: k }).then(setRows).catch(() => toast.err(x('تعذّر تحميل الأخبار'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
   async function save(e: FormEvent) {
@@ -264,19 +303,18 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
     if (!f) return;
     try {
       await api(f.id ? `/news/${f.id}` : '/news', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
-      setF(null); setMsg(x('تم الحفظ')); load();
-    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else setMsg(x('تحقق من التاريخ والعنوان')); }
+      setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
+    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(x('تحقق من التاريخ والعنوان')); }
   }
   async function del(id: string) {
     if (!window.confirm(x('حذف هذا الخبر؟'))) return;
-    await api(`/news/${id}`, { method: 'DELETE', key: k }).catch(() => undefined);
+    await api(`/news/${id}`, { method: 'DELETE', key: k }).then(() => toast.ok(x('تم الحذف بنجاح'))).catch(() => toast.err(x('تعذّر تنفيذ العملية')));
     load();
   }
 
   return (
     <div>
-      <PageHead title={`${x('الأخبار')} (${rows.length})`} sub={x('أضف وعدّل أخبار الموقع')} action={<button className={btnP} style={gradBtn} onClick={() => { setMsg(''); setF(emptyNews()); }}>{x('+ خبر جديد')}</button>} />
-      {msg && <p role="status" className="mb-4 text-[.9rem]" style={{ color: 'var(--muted)' }}>{msg}</p>}
+      <PageHead title={`${x('الأخبار')} (${rows.length})`} sub={x('أضف وعدّل أخبار الموقع')} action={<button className={btnP} style={gradBtn} onClick={() => { setF(emptyNews()); }}>{x('+ خبر جديد')}</button>} />
       <div className="flex flex-col gap-2.5">
         {rows.map((r) => (
           <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -288,7 +326,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </div>
             </div>
             <div className="flex gap-2">
-              <button className={btnG} style={bd} onClick={() => { setMsg(''); setF({ ...r, image: r.image ?? '', href: r.href ?? '' }); }}>{x('تعديل')}</button>
+              <button className={btnG} style={bd} onClick={() => { setF({ ...r, image: r.image ?? '', href: r.href ?? '' }); }}>{x('تعديل')}</button>
               <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(r.id)}>{x('حذف')}</button>
             </div>
           </Card>
@@ -332,8 +370,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   const GAMES = useGames();
   const [rows, setRows] = useState<Adm<Tournament>[]>([]);
   const [f, setF] = useState<Adm<Tournament> | null>(null);
-  const [msg, setMsg] = useState('');
-  const load = useCallback(() => { api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setRows).catch(() => setMsg(x('تعذّر تحميل البطولات'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toast = useToast();
+  const load = useCallback(() => { api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setRows).catch(() => toast.err(x('تعذّر تحميل البطولات'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
   const pair = (name: 'name' | 'format' | 'prize' | 'winner', label: string, en: string, ph = '') => f && (
@@ -348,20 +386,19 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
     if (!f) return;
     try {
       await api(f.id ? `/tournaments/${f.id}` : '/tournaments', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
-      setF(null); setMsg(x('تم الحفظ')); load();
-    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else setMsg(x('تحقق من الاسم وتاريخ البداية')); }
+      setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
+    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(x('تحقق من الاسم وتاريخ البداية')); }
   }
   async function del(id: string) {
     if (!window.confirm(x('حذف هذه البطولة؟'))) return;
-    await api(`/tournaments/${id}`, { method: 'DELETE', key: k }).catch(() => undefined);
+    await api(`/tournaments/${id}`, { method: 'DELETE', key: k }).then(() => toast.ok(x('تم الحذف بنجاح'))).catch(() => toast.err(x('تعذّر تنفيذ العملية')));
     load();
   }
   const now = Date.now();
 
   return (
     <div>
-      <PageHead title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={<button className={btnP} style={gradBtn} onClick={() => { setMsg(''); setF(emptyT()); }}>{x('+ بطولة جديدة')}</button>} />
-      {msg && <p role="status" className="mb-4 text-[.9rem]" style={{ color: 'var(--muted)' }}>{msg}</p>}
+      <PageHead title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={<button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button>} />
       <div className="flex flex-col gap-2.5">
         {rows.map((r) => {
           const st = statusOf(r, now);
@@ -377,7 +414,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <button className={btnG} style={bd} onClick={() => { setMsg(''); setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerImage: r.winnerImage ?? '' }); }}>{x('تعديل')}</button>
+                <button className={btnG} style={bd} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerImage: r.winnerImage ?? '' }); }}>{x('تعديل')}</button>
                 <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(r.id)}>{x('حذف')}</button>
               </div>
             </Card>
@@ -423,27 +460,31 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const { lang, x } = useX();
   const [rows, setRows] = useState<AdminGame[]>([]);
   const [f, setF] = useState<GForm | null>(null);
-  const [msg, setMsg] = useState('');
-  const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => setRows(mergeGames(r))).catch(() => setMsg(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [q, setQ] = useState('');
+  const [genre, setGenre] = useState('all');
+  const toast = useToast();
+  const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => setRows(mergeGames(r))).catch(() => toast.err(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
   const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '' });
-  const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else setMsg(m); };
+  const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err(m); };
+  const term = q.trim().toLowerCase();
+  const shown = rows.filter((g) => (genre === 'all' || g.genreKey === genre) && (!term || `${g.name.ar} ${g.name.en} ${g.tagline.ar} ${g.tagline.en}`.toLowerCase().includes(term)));
 
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!f) return;
     try {
       await api(f.id ? `/games/${f.id}` : '/games', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
-      setF(null); setMsg(x('تم الحفظ')); load();
+      setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
     } catch (err) { fail(err, x('تحقق من اسم اللعبة')); }
   }
   async function toggle(g: AdminGame) {
-    try { await api(`/games/${g.id}`, { method: 'PUT', body: JSON.stringify({ ...toForm(g), hidden: !g.hidden }), key: k }); load(); } catch (err) { fail(err, x('تعذّر تحميل الألعاب')); }
+    try { await api(`/games/${g.id}`, { method: 'PUT', body: JSON.stringify({ ...toForm(g), hidden: !g.hidden }), key: k }); toast.ok(x(g.hidden ? 'تم إظهار اللعبة في الموقع' : 'تم إخفاء اللعبة من الموقع')); load(); } catch (err) { fail(err, x('تعذّر تحميل الألعاب')); }
   }
   async function del(g: AdminGame) {
     if (!window.confirm(x('حذف هذه اللعبة؟'))) return;
-    await api(`/games/${g.id}`, { method: 'DELETE', key: k }).catch(() => undefined);
+    await api(`/games/${g.id}`, { method: 'DELETE', key: k }).then(() => toast.ok(x('تم الحذف بنجاح'))).catch(() => toast.err(x('تعذّر تنفيذ العملية')));
     load();
   }
   const pairF = (name: 'name' | 'tagline', label: string, en: string, area = false) => f && (
@@ -455,10 +496,20 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الألعاب')} (${rows.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={<button className={btnP} style={gradBtn} onClick={() => { setMsg(''); setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '' }); }}>{x('+ لعبة جديدة')}</button>} />
-      {msg && <p role="status" className="mb-4 text-[.9rem]" style={{ color: 'var(--muted)' }}>{msg}</p>}
+      <PageHead title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={<button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '' }); }}>{x('+ لعبة جديدة')}</button>} />
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="relative min-w-[14rem] flex-1">
+          <SearchI className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
+          <input className={`${inp} !ps-9`} style={bd} value={q} onChange={(e) => setQ(e.target.value)} placeholder={x('ابحث…')} />
+        </div>
+        <select className={`${sel} !w-auto`} style={bd} value={genre} onChange={(e) => setGenre(e.target.value)} aria-label={x('التصنيف (نوع اللعبة)')}>
+          <option value="all">{x('كل الأنواع')}</option>
+          {GENRE_KEYS.map((gk) => <option key={gk} value={gk}>{genreLabel(gk)[lang]}</option>)}
+        </select>
+      </div>
+      {!shown.length && <p className="py-10 text-center" style={{ color: 'var(--muted)' }}>{x('لا توجد ألعاب مطابقة')}</p>}
       <div className="flex flex-col gap-2.5">
-        {rows.map((g) => (
+        {shown.map((g) => (
           <Card key={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 ${g.hidden ? 'opacity-60' : ''}`}>
             <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` }}>
               {g.image && <img src={g.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
@@ -472,7 +523,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button className={btnG} style={bd} onClick={() => { setMsg(''); setF(toForm(g)); }}>{x('تعديل')}</button>
+              <button className={btnG} style={bd} onClick={() => { setF(toForm(g)); }}>{x('تعديل')}</button>
               {g.custom
                 ? <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(g)}>{x('حذف')}</button>
                 : <button className={btnG} style={bd} onClick={() => toggle(g)}>{g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}</button>}
@@ -509,8 +560,8 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const [rows, setRows] = useState<Reg[]>([]);
   const [tid, setTid] = useState('all');
   const [q, setQ] = useState('');
-  const [msg, setMsg] = useState('');
-  const load = useCallback(() => { api<Reg[]>('/registrations', { key: k }).then(setRows).catch((e: Error) => { if (e.message === '401') onAuthFail(); else setMsg(x('تعذّر تحميل التسجيلات')); }); }, [k, onAuthFail]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toast = useToast();
+  const load = useCallback(() => { api<Reg[]>('/registrations', { key: k }).then(setRows).catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل التسجيلات')); }); }, [k, onAuthFail]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
   const tournaments = useMemo(() => [...new Map(rows.map((r) => [r.tournament_id, r.tournament_name])).entries()], [rows]);
@@ -526,7 +577,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   }
   async function del(id: number) {
     if (!window.confirm(x('حذف هذا التسجيل؟'))) return;
-    await api(`/registrations/${id}`, { method: 'DELETE', key: k }).catch(() => undefined);
+    await api(`/registrations/${id}`, { method: 'DELETE', key: k }).then(() => toast.ok(x('تم الحذف بنجاح'))).catch(() => toast.err(x('تعذّر تنفيذ العملية')));
     load();
   }
 
@@ -543,7 +594,6 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           {tournaments.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select>
       </div>
-      {msg && <p role="status" className="mb-4 text-[.9rem]" style={{ color: 'var(--muted)' }}>{msg}</p>}
       <Card className="overflow-x-auto">
         <table className="w-full min-w-[42rem] text-[.88rem]">
           <thead><tr style={{ color: 'var(--muted)' }}>{[x('البطولة'), 'Plato ID', x('الفريق'), x('الأعضاء'), x('التاريخ'), ''].map((h, i) => <th key={i} className="px-4 py-3 text-start text-[.78rem] font-bold uppercase tracking-wide">{h}</th>)}</tr></thead>
@@ -619,13 +669,15 @@ export default function AdminPage() {
   const { x } = useX();
   const [key, setKey] = useState(getKey);
   const [tab, setTab] = useState<Tab>('overview');
+  const [menu, setMenu] = useState(false);
+  const pick = (id: Tab) => { setTab(id); setMenu(false); window.scrollTo({ top: 0 }); };
   const logout = useCallback(() => { try { sessionStorage.removeItem(KEY); } catch { /* ignore */ } setKey(''); }, []);
 
   if (!key) return <Login onDone={setKey} />;
 
   const tabs = Object.keys(TAB_LABEL) as Tab[];
   return (
-    <div className="min-h-[100svh] lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+    <ToastHost><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col border-e p-5 lg:flex" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-4 w-6 bg-current" style={ninja} /></span>
@@ -650,23 +702,43 @@ export default function AdminPage() {
 
       <div className="min-w-0">
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-8" style={{ background: 'var(--nav-solid)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(14px)' }}>
-          <div className="flex gap-1.5 overflow-x-auto lg:hidden">
-            {tabs.map((id) => {
-              const on = tab === id;
-              return <button key={id} type="button" onClick={() => setTab(id)} className="shrink-0 rounded-full border px-3.5 py-1.5 text-[.85rem] font-semibold" style={on ? { color: '#fff', borderColor: 'transparent', ...gradBtn } : { color: 'var(--muted)', borderColor: 'var(--glass-b)' }}>{x(TAB_LABEL[id])}</button>;
-            })}
+          <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+            <button type="button" onClick={() => setMenu((v) => !v)} aria-expanded={menu} aria-label={x('القائمة')} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border" style={bd}>
+              {menu ? <XI className="h-5 w-5" /> : <svg {...ic} strokeWidth={2.2} className="h-5 w-5" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>}
+            </button>
+            <span className="truncate text-[1rem] font-extrabold">{x(TAB_LABEL[tab])}</span>
           </div>
           <div className="hidden text-[.9rem] font-semibold lg:block" style={{ color: 'var(--muted)' }}>{x(TAB_LABEL[tab])}</div>
           <div className="flex shrink-0 items-center gap-2"><LanguageSwitcher /><button type="button" onClick={logout} className="pill lg:hidden" aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button></div>
         </header>
-        <main className="mx-auto max-w-[68rem] px-4 py-8 sm:px-8">
-          {tab === 'overview' && <OverviewTab k={key} go={setTab} />}
+        {menu && (
+          <div className="lg:hidden">
+            <div className="fixed inset-0 top-[4.1rem] z-20 bg-black/55 backdrop-fade" onClick={() => setMenu(false)} aria-hidden="true" />
+            <nav className="menu-pop fixed inset-x-3 top-[4.6rem] z-30 flex flex-col gap-1 rounded-2xl border p-2.5 shadow-2xl" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+              {tabs.map((id) => {
+                const I = TAB_ICON[id]; const on = tab === id;
+                return (
+                  <button key={id} type="button" aria-current={on ? 'page' : undefined} onClick={() => pick(id)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-start text-[1rem] font-semibold transition"
+                    style={on ? { color: '#fff', ...gradBtn } : { color: 'var(--text)' }}>
+                    <I className="h-5 w-5" />{x(TAB_LABEL[id])}
+                  </button>
+                );
+              })}
+              <div className="my-1 border-t" style={{ borderColor: 'var(--glass-b)' }} />
+              <a href="#/" className="flex items-center gap-3 rounded-xl px-4 py-3 text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-5 w-5 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+            </nav>
+          </div>
+        )}
+        <main className="mx-auto max-w-[68rem] px-4 py-6 sm:px-8 sm:py-8">
+          <div key={tab} className="admin-page">
+          {tab === 'overview' && <OverviewTab k={key} go={pick} />}
           {tab === 'news' && <NewsTab k={key} onAuthFail={logout} />}
           {tab === 'tournaments' && <TournamentsTab k={key} onAuthFail={logout} />}
           {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
+          </div>
         </main>
       </div>
-    </div>
+    </div></ToastHost>
   );
 }

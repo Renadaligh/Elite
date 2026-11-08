@@ -112,3 +112,23 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 
 /* "Major" badge on flagship tournaments */
 .major-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .18rem .6rem; border-radius: 9999px; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #ff3347, #d90f26); box-shadow: 0 6px 16px -8px rgba(235, 40, 60, .9); }
+
+/* Dashboard motion: tab changes, drawers, menu, toasts */
+@keyframes pg-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes drawer-in { from { transform: translateX(2.5rem); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+.admin-page { animation: pg-in .32s cubic-bezier(.22, 1, .36, 1) both; }
+.backdrop-fade { animation: fade-in .2s ease-out both; }
+.drawer-in { animation: drawer-in .3s cubic-bezier(.22, 1, .36, 1) both; }
+[dir='rtl'] .drawer-in { animation-name: drawer-in-rtl; }
+@keyframes drawer-in-rtl { from { transform: translateX(-2.5rem); opacity: 0; } to { transform: none; opacity: 1; } }
+.menu-pop { animation: pop-in .22s cubic-bezier(.22, 1, .36, 1) both; }
+.toast { animation: toast-in .3s cubic-bezier(.22, 1, .36, 1) both; }
+@media (prefers-reduced-motion: reduce) { .admin-page, .backdrop-fade, .drawer-in, .menu-pop, .toast { animation: none; } }
+
+/* Soft fade when switching between site pages (home / news / game) */
+@keyframes route-fade { from { opacity: 0; } to { opacity: 1; } }
+.route-fade { animation: route-fade .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .route-fade { animation: none; } }
