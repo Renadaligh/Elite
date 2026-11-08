@@ -194,3 +194,9 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
   .gotd-cov { height: 10.5rem; }
 }
 @media (prefers-reduced-motion: reduce) { .gotd-btn { animation: none; } }
+
+
+/* Tournament cards: faint Elite ninja mark in the bottom corner */
+.tour-ninja { position: absolute; z-index: 0; bottom: .8rem; inset-inline-end: .9rem; width: 4.6rem; height: 2.85rem; background: #fff; opacity: .16; pointer-events: none; }
+/* Champion card using the tournament's own image */
+.champ-card.has-img::before { background: var(--champ-bg) center / cover no-repeat; filter: saturate(.9) contrast(1.05) brightness(.8); }

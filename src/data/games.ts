@@ -20,6 +20,12 @@ export interface Game {
   mechanics?: Localized[];
   screenshots?: string[];
   videos?: { title: Localized; youtubeId?: string }[];
+  /** Short tip box on the game page. */
+  tip?: Localized;
+  /** Quick facts (header chips). */
+  players?: string;
+  minutes?: string;
+  level?: 'easy' | 'medium' | 'hard';
 }
 export const SHOW_EXAMPLE_GAMES = false;
 const L = (en: string, ar: string): Localized => ({ en, ar });
@@ -99,8 +105,28 @@ const BASE_GAMES: Game[] = [
 /* ---------- Dashboard-managed games (D1 table "games") merged over the built-in list ---------- */
 export const GENRE_KEYS = Object.keys(genres);
 export const genreLabel = (key: string): Localized => genres[key] ?? genres.Arcade;
-export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean; tournamentOnly?: boolean }
-export type AdminGame = Game & { hidden: boolean; custom: boolean; genreKey: string };
+/** Extra game-page content edited in the dashboard (stored as JSON in the games table). */
+export interface GameDetails { how: Localized; tip: Localized; video: string; players: string; minutes: string; level: string }
+export const emptyDetails = (): GameDetails => ({ how: { ar: '', en: '' }, tip: { ar: '', en: '' }, video: '', players: '', minutes: '', level: '' });
+/** YouTube link or bare id → id. */
+export const youtubeId = (v: string) => (v.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)?.[1] ?? (/^[\w-]{11}$/.test(v.trim()) ? v.trim() : ''));
+const split = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
+/** Fields of a game that come from its details row; empty details keep the built-in values. */
+function applyDetails(name: Localized, d: GameDetails | undefined, base: Partial<Game>): Partial<Game> {
+  if (!d) return base;
+  const out: Partial<Game> = { ...base };
+  const ar = split(d.how?.ar ?? ''), en = split(d.how?.en ?? '');
+  if (ar.length || en.length) out.howToPlay = Array.from({ length: Math.max(ar.length, en.length) }, (_, i) => ({ ar: ar[i] || en[i] || '', en: en[i] || ar[i] || '' }));
+  if (d.tip?.ar || d.tip?.en) out.tip = { ar: d.tip.ar || d.tip.en, en: d.tip.en || d.tip.ar };
+  if (d.players) out.players = d.players;
+  if (d.minutes) out.minutes = d.minutes;
+  if (d.level === 'easy' || d.level === 'medium' || d.level === 'hard') out.level = d.level;
+  const id = youtubeId(d.video ?? '');
+  if (id) out.videos = [{ title: name, youtubeId: id }];
+  return out;
+}
+export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean; tournamentOnly?: boolean; details?: GameDetails }
+export type AdminGame = Game & { hidden: boolean; custom: boolean; genreKey: string; details?: GameDetails };
 const keyOf = (genre: Localized) => GENRE_KEYS.find((k) => genres[k].en === genre.en) ?? 'Arcade';
 
 /** A row overrides the built-in game with the same id (empty field = keep default); other rows are custom games. */
@@ -110,17 +136,20 @@ export function mergeGames(rows: GameRow[]): AdminGame[] {
     const r = byId.get(b.id);
     const gk = r?.genre && genres[r.genre] ? r.genre : keyOf(b.genre);
     const tagline = { en: r?.tagline.en || b.tagline.en, ar: r?.tagline.ar || b.tagline.ar };
+    const name = { en: r?.name.en || b.name.en, ar: r?.name.ar || b.name.ar };
     return {
-      ...b, genreKey: gk, genre: genres[gk], colors: gk === keyOf(b.genre) ? b.colors : palette[gk],
-      name: { en: r?.name.en || b.name.en, ar: r?.name.ar || b.name.ar }, tagline, overview: r?.tagline.en || r?.tagline.ar ? tagline : b.overview,
+      ...b, ...applyDetails(name, r?.details, {}), details: r?.details, genreKey: gk, genre: genres[gk], colors: gk === keyOf(b.genre) ? b.colors : palette[gk],
+      name, tagline, overview: r?.tagline.en || r?.tagline.ar ? tagline : b.overview,
       image: r?.image || b.image, tone: r?.image ? undefined : b.tone, hidden: !!r?.hidden, custom: false, tournamentOnly: !!r?.tournamentOnly,
     };
   });
   for (const r of rows) {
     if (!r.custom || BASE_GAMES.some((b) => b.id === r.id)) continue;
     const gk = genres[r.genre] ? r.genre : 'Arcade';
+    const name = { en: r.name.en || r.name.ar, ar: r.name.ar || r.name.en };
     list.push({
-      id: r.id, genreKey: gk, genre: genres[gk], colors: palette[gk], name: { en: r.name.en || r.name.ar, ar: r.name.ar || r.name.en },
+      ...applyDetails(name, r.details, {}), details: r.details,
+      id: r.id, genreKey: gk, genre: genres[gk], colors: palette[gk], name,
       tagline: r.tagline, overview: r.tagline, image: r.image || undefined, hidden: r.hidden, custom: true, tournamentOnly: !!r.tournamentOnly,
     });
   }

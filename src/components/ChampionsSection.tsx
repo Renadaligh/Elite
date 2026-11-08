@@ -34,7 +34,7 @@ const useWinner = (x: Tournament) => {
   return { name: x.winner?.[lang] ?? '', isTeam, members: isTeam ? (x.winnerMembers ?? []).filter((m) => m.trim()) : [] };
 };
 
-/** One unified Elite card for every winner (no photo needed): mountains + ninja mark, solo/team badge, name, team members. */
+/** One unified Elite card for every winner. Background = the tournament's image, or the default mountains scene. Ninja mark, solo/team badge, name, team members. */
 function ChampionCard({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const date = useDate();
@@ -42,7 +42,7 @@ function ChampionCard({ x }: { x: Tournament }) {
   const g = getGame(x.gameId);
   const w = useWinner(x);
   return (
-    <article className="champ-card group" style={{ ['--champ-bg' as string]: `url(${BASE}art/hero-scene.webp)` }}>
+    <article className={`champ-card group ${x.image ? 'has-img' : ''}`} style={{ ['--champ-bg' as string]: x.image ? `url("${x.image}")` : `url(${BASE}art/hero-scene.webp)` }}>
       <div className="flex items-center justify-between">
         <span aria-hidden="true" className="inline-block h-[1.3rem] w-[2.1rem] bg-white" style={ninjaMask} />
         <span className={`champ-mode ${w.isTeam ? 'is-team' : ''}`}>{w.isTeam ? t.chTeam : t.chSolo}</span>

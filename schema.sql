@@ -41,9 +41,11 @@ CREATE TABLE IF NOT EXISTS games (
   image TEXT NOT NULL DEFAULT '',
   hidden INTEGER NOT NULL DEFAULT 0,
   custom INTEGER NOT NULL DEFAULT 0,
-  tournament_only INTEGER NOT NULL DEFAULT 0
+  tournament_only INTEGER NOT NULL DEFAULT 0,
+  details TEXT NOT NULL DEFAULT ''
 );
 -- Existing database? Add the tournament tier once:
 --   ALTER TABLE tournaments ADD COLUMN tier TEXT NOT NULL DEFAULT 'regular';
 --   ALTER TABLE games ADD COLUMN tournament_only INTEGER NOT NULL DEFAULT 0;
+--   ALTER TABLE games ADD COLUMN details TEXT NOT NULL DEFAULT '';
 --   ALTER TABLE tournaments ADD COLUMN winner_members TEXT NOT NULL DEFAULT '';
