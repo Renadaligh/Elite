@@ -57,8 +57,8 @@ export default function GamePage({ id }: { id: string }) {
   return (
     <article className="page-in relative isolate min-h-[100svh] overflow-x-clip" style={{ background: 'var(--bg)' }}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem]" style={{ background: `radial-gradient(ellipse 70% 22rem at 50% 0, color-mix(in srgb, ${tone} 26%, transparent), transparent)` }} />
-      <div className={`mx-auto max-w-[72rem] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(6.5rem,12vw,8.5rem)] ${WRAP}`}>
-        <div className="mb-6">{back}</div>
+      <div className={`mx-auto max-w-[72rem] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(8rem,14vw,11rem)] ${WRAP}`}>
+        <div className="mb-10">{back}</div>
 
         <header className="flex flex-col gap-6 border-b pb-8 sm:flex-row sm:items-center" style={{ borderColor: 'var(--glass-b)' }}>
           <span className="relative h-36 w-36 shrink-0 overflow-hidden rounded-3xl sm:h-44 sm:w-44" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, boxShadow: `0 20px 50px -22px ${tone}` }}>
