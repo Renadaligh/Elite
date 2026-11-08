@@ -3,12 +3,20 @@ import { getGamesSnapshot, setGameRows, subscribeGames, type GameRow } from '../
 import { api } from '../services/api';
 
 let started = false;
-/** Loads the dashboard-managed games once (the built-in list shows meanwhile / if the API is unavailable). */
+let last = '';
+const load = () => api<GameRow[]>('/games').then((rows) => {
+  const j = JSON.stringify(rows);
+  if (j !== last) { last = j; setGameRows(rows); } // only re-render when something changed
+});
+/** Loads the dashboard-managed games, then refreshes silently (every 30 s and when the tab becomes visible again), like news and tournaments. */
 export function useGames() {
   useEffect(() => {
     if (started) return;
     started = true;
-    api<GameRow[]>('/games').then(setGameRows).catch(() => { started = false; });
+    load().catch(() => { started = false; });
+    const tick = () => { if (document.visibilityState === 'visible') load().catch(() => undefined); };
+    window.setInterval(tick, 30_000);
+    document.addEventListener('visibilitychange', tick);
   }, []);
   return useSyncExternalStore(subscribeGames, getGamesSnapshot);
 }
