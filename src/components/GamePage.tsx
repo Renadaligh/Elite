@@ -61,8 +61,8 @@ export default function GamePage({ id }: { id: string }) {
         <div className="mb-10">{back}</div>
 
         <header className="flex flex-col gap-6 border-b pb-8 sm:flex-row sm:items-center" style={{ borderColor: 'var(--glass-b)' }}>
-          <span className="relative h-36 w-36 shrink-0 overflow-hidden rounded-3xl sm:h-44 sm:w-44" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, boxShadow: `0 20px 50px -22px ${tone}` }}>
-            {g.image && <img src={g.image} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+          <span className="relative aspect-[4/5] w-36 shrink-0 overflow-hidden rounded-3xl sm:w-44" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, boxShadow: `0 20px 50px -22px ${tone}` }}>
+            {g.image && <img src={g.image} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 22%' }} />}
           </span>
           <div className="min-w-0">
             <span className="inline-block rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: 'var(--glass-b)' }}>{g.genre[lang]}</span>
