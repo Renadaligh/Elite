@@ -5,10 +5,19 @@ import { parse } from './index';
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
   if (!isAdmin(request, env)) return denied();
   const v = parse(await body(request));
-  await env.DB.prepare(
-    'INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom) VALUES (?,?,?,?,?,?,?,?,?) ' +
-    'ON CONFLICT(id) DO UPDATE SET genre=excluded.genre,name_en=excluded.name_en,name_ar=excluded.name_ar,tagline_en=excluded.tagline_en,tagline_ar=excluded.tagline_ar,image=excluded.image,hidden=excluded.hidden',
-  ).bind(params.id, v.genre, v.name.en, v.name.ar, v.tagline.en, v.tagline.ar, v.image, v.hidden, v.custom).run();
+  const base = [params.id, v.genre, v.name.en, v.name.ar, v.tagline.en, v.tagline.ar, v.image, v.hidden, v.custom];
+  try {
+    await env.DB.prepare(
+      'INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom,tournament_only) VALUES (?,?,?,?,?,?,?,?,?,?) ' +
+      'ON CONFLICT(id) DO UPDATE SET genre=excluded.genre,name_en=excluded.name_en,name_ar=excluded.name_ar,tagline_en=excluded.tagline_en,tagline_ar=excluded.tagline_ar,image=excluded.image,hidden=excluded.hidden,tournament_only=excluded.tournament_only',
+    ).bind(...base, v.tournamentOnly).run();
+  } catch {
+    // Table not migrated yet (no "tournament_only" column): save without it.
+    await env.DB.prepare(
+      'INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom) VALUES (?,?,?,?,?,?,?,?,?) ' +
+      'ON CONFLICT(id) DO UPDATE SET genre=excluded.genre,name_en=excluded.name_en,name_ar=excluded.name_ar,tagline_en=excluded.tagline_en,tagline_ar=excluded.tagline_ar,image=excluded.image,hidden=excluded.hidden',
+    ).bind(...base).run();
+  }
   return json({ ok: true });
 };
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import { SHOW_EXAMPLE_GAMES, type Game } from '../data/games';
-import { useGames } from '../hooks/useGames';
+import { useSiteGames } from '../hooks/useGames';
+import GameOfDay from './GameOfDay';
 import { useI18n } from '../i18n/I18nProvider';
 import { ArrowIcon } from './icons';
 
@@ -32,7 +33,7 @@ function useWide() {
  *  Clicking the centre card fades the section out and opens the game page (#/games/<id>). */
 export default function GamesSection() {
   const { t, lang, dir } = useI18n();
-  const GAMES = useGames();
+  const GAMES = useSiteGames();
   const wide = useWide();
   const [index, setIndex] = useState(0);
   const [category, setCategory] = useState('all');
@@ -86,7 +87,7 @@ export default function GamesSection() {
   const active = games[index];
 
   return (
-    <section id="games" aria-labelledby="games-title" className="scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ background: 'var(--bg)' }}>
+    <section id="games" aria-labelledby="games-title" className="relative scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ background: 'var(--bg)' }}>
       <div className="mx-auto max-w-[40rem] text-center">
         <h2 id="games-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.gamesTitle}</h2>
         <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.gamesSub}</p>
@@ -104,6 +105,8 @@ export default function GamesSection() {
           </button>;
         })}
       </div>
+
+      <GameOfDay games={GAMES} />
 
       <div className={`gstage mt-7 ${leaving ? 'is-leaving' : ''}`}>
         <div role="region" aria-roledescription="carousel" aria-label={t.gamesTitle} tabIndex={0} onKeyDown={onKey}

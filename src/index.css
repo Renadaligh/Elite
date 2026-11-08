@@ -139,3 +139,42 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .modal-in { animation: sheet-up .3s cubic-bezier(.22, 1, .36, 1) both; }
 @media (min-width: 640px) { .modal-in { animation-name: modal-pop; } }
 @media (prefers-reduced-motion: reduce) { .modal-in { animation: none; } }
+
+/* Champions: one unified Elite winner card (mountains + ninja mark), no photos */
+.champ-card { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 27rem; padding: 1.25rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, .16); border-radius: .45rem; background: #0a0a0d; color: #fff; transition: border-color .25s, transform .3s; }
+.champ-card::before { content: ''; position: absolute; inset: 0; z-index: -2; background: var(--champ-bg) 18% 0 / auto 175% no-repeat; filter: grayscale(1) contrast(1.15) brightness(.75); }
+.champ-card::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(6, 6, 8, .1), rgba(6, 6, 8, .72) 38%, rgba(6, 6, 8, .97) 72%); }
+.champ-card:hover { border-color: #ff3347; transform: translateY(-4px); }
+.champ-mode { padding: .25rem .65rem; border: 1px solid #fff; font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #fff; }
+.champ-mode.is-team { background: #ff3347; border-color: #ff3347; }
+.champ-label { display: flex; align-items: center; gap: .65rem; font-size: .72rem; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: #ff4455; }
+.champ-label::before { content: ''; width: 1.75rem; height: 2px; background: #ff3347; }
+.champ-name { margin-top: .6rem; font-size: clamp(1.7rem, 2.6vw, 2.15rem); font-weight: 900; line-height: 1.04; letter-spacing: -.01em; text-transform: uppercase; overflow-wrap: anywhere; }
+.champ-members { margin-top: .75rem; display: flex; flex-direction: column; gap: .3rem; padding-inline-start: .65rem; border-inline-start: 2px solid #ff3347; }
+.champ-members li { font-size: .85rem; font-weight: 500; color: #e8e8ef; }
+.champ-meta { margin-top: 1rem; padding-top: .8rem; display: grid; gap: .2rem; border-top: 1px solid rgba(255, 255, 255, .22); font-size: .78rem; color: #b9b9c6; }
+:lang(ar) .champ-name, [dir='rtl'] .champ-name { text-transform: none; font-weight: 800; }
+:lang(ar) .champ-label, [dir='rtl'] .champ-label, [dir='rtl'] .champ-mode { letter-spacing: 0; }
+@media (prefers-reduced-motion: reduce) { .champ-card { transition: none; } .champ-card:hover { transform: none; } }
+
+/* Game of the day: 3D die + button + pop-up card */
+.gotd-btn { display: flex; align-items: center; gap: .85rem; padding: .5rem 1.15rem .5rem .55rem; border: 1px solid var(--glass-b); border-radius: 9999px; background: var(--glass); backdrop-filter: blur(14px); color: var(--text); transition: border-color .2s, transform .2s; }
+.gotd-btn:hover { border-color: #ff4455; transform: translateY(-1px); }
+.gotd-btn small { display: block; font-size: .66rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #ff4455; white-space: nowrap; }
+.gotd-btn b { display: block; margin-top: 1px; font-size: .9rem; font-weight: 700; white-space: nowrap; }
+[dir='rtl'] .gotd-btn small { letter-spacing: 0; }
+.gotd-pop { width: min(17rem, 100%); overflow: hidden; border: 1px solid var(--glass-b); border-radius: 1.25rem; background: var(--dialog); box-shadow: 0 30px 60px -20px #000; animation: pop-in .25s cubic-bezier(.22, 1, .36, 1) both; }
+.gotd-cov { height: 9.4rem; }
+.gotd-tag { font-size: .66rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #ff4455; }
+[dir='rtl'] .gotd-tag { letter-spacing: 0; }
+.die-scene { display: block; flex: none; width: 2.7rem; height: 2.7rem; display: grid; place-items: center; perspective: 380px; }
+.die-cube { --s: .98rem; position: relative; display: block; width: calc(var(--s) * 2); height: calc(var(--s) * 2); transform-style: preserve-3d; transform: rotateX(-24deg) rotateY(32deg); animation: die-idle 9s linear infinite; }
+.die-cube.is-rolling { animation: die-roll .55s linear infinite; }
+.die-face { position: absolute; inset: 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: .24rem; border-radius: .3rem; background: linear-gradient(135deg, #ff3347, #c80d22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+.die-face i { place-self: center; width: .26rem; height: .26rem; border-radius: 50%; background: #fff; }
+.die-f1 { transform: translateZ(var(--s)); } .die-f6 { transform: rotateY(180deg) translateZ(var(--s)); }
+.die-f2 { transform: rotateY(90deg) translateZ(var(--s)); } .die-f5 { transform: rotateY(-90deg) translateZ(var(--s)); }
+.die-f3 { transform: rotateX(90deg) translateZ(var(--s)); } .die-f4 { transform: rotateX(-90deg) translateZ(var(--s)); }
+@keyframes die-idle { from { transform: rotateX(-24deg) rotateY(0deg); } to { transform: rotateX(-24deg) rotateY(360deg); } }
+@keyframes die-roll { from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } to { transform: rotateX(360deg) rotateY(720deg) rotateZ(180deg); } }
+@media (prefers-reduced-motion: reduce) { .die-cube, .die-cube.is-rolling { animation: none; } .gotd-pop { animation: none; } }

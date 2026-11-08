@@ -11,6 +11,8 @@ export interface Game {
   tagline: Localized;
   colors: [string, string];
   image?: string;
+  /** Only for tournaments: hidden from the Games section and from Game of the day. */
+  tournamentOnly?: boolean;
   /** Dominant colour of the artwork; tints the page under the banner. */
   tone?: string;
   overview: Localized;
@@ -97,7 +99,7 @@ const BASE_GAMES: Game[] = [
 /* ---------- Dashboard-managed games (D1 table "games") merged over the built-in list ---------- */
 export const GENRE_KEYS = Object.keys(genres);
 export const genreLabel = (key: string): Localized => genres[key] ?? genres.Arcade;
-export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean }
+export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean; tournamentOnly?: boolean }
 export type AdminGame = Game & { hidden: boolean; custom: boolean; genreKey: string };
 const keyOf = (genre: Localized) => GENRE_KEYS.find((k) => genres[k].en === genre.en) ?? 'Arcade';
 
@@ -111,7 +113,7 @@ export function mergeGames(rows: GameRow[]): AdminGame[] {
     return {
       ...b, genreKey: gk, genre: genres[gk], colors: gk === keyOf(b.genre) ? b.colors : palette[gk],
       name: { en: r?.name.en || b.name.en, ar: r?.name.ar || b.name.ar }, tagline, overview: r?.tagline.en || r?.tagline.ar ? tagline : b.overview,
-      image: r?.image || b.image, tone: r?.image ? undefined : b.tone, hidden: !!r?.hidden, custom: false,
+      image: r?.image || b.image, tone: r?.image ? undefined : b.tone, hidden: !!r?.hidden, custom: false, tournamentOnly: !!r?.tournamentOnly,
     };
   });
   for (const r of rows) {
@@ -119,7 +121,7 @@ export function mergeGames(rows: GameRow[]): AdminGame[] {
     const gk = genres[r.genre] ? r.genre : 'Arcade';
     list.push({
       id: r.id, genreKey: gk, genre: genres[gk], colors: palette[gk], name: { en: r.name.en || r.name.ar, ar: r.name.ar || r.name.en },
-      tagline: r.tagline, overview: r.tagline, image: r.image || undefined, hidden: r.hidden, custom: true,
+      tagline: r.tagline, overview: r.tagline, image: r.image || undefined, hidden: r.hidden, custom: true, tournamentOnly: !!r.tournamentOnly,
     });
   }
   return list;

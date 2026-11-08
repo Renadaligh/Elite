@@ -28,7 +28,8 @@ export interface Tournament {
   /** Completed tournaments: who won. */
   winner?: Localized;
   /** Winner portrait (tall, ~9:16). Path under /public or full URL. */
-  winnerImage?: string;
+  /** Names of the winning team's members (team tournaments only). */
+  winnerMembers?: string[];
 }
 
 export type TournamentStatus = 'live' | 'upcoming' | 'completed';

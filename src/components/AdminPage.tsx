@@ -50,7 +50,8 @@ const EN: Record<string, string> = {
   'تم التحديث بنجاح': 'Updated successfully', 'تمت الإضافة بنجاح': 'Added successfully', 'تم الحذف بنجاح': 'Deleted successfully', 'تعذّر تنفيذ العملية': 'Action failed',
   'تم إظهار اللعبة في الموقع': 'Game is now shown on the site', 'تم إخفاء اللعبة من الموقع': 'Game is now hidden from the site', 'تم رفع الصورة بنجاح': 'Image uploaded successfully', 'القائمة': 'Menu',
   'كل الأنواع': 'All genres', 'لا توجد ألعاب مطابقة': 'No matching games',
-  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
+  'أسماء أعضاء الفريق الفائز (اسم في كل سطر)': 'Winning team members (one name per line)', 'أسماء أعضاء الفريق الفائز إجبارية': 'The winning team members\' names are required',
+  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'للبطولات فقط': 'Tournaments only', 'تظهر في': 'Shown in', 'الموقع والبطولات': 'Site & tournaments', 'البطولات فقط': 'Tournaments only', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
   'اسم اللعبة': 'Game name', 'الوصف القصير': 'Short description', 'التصنيف (نوع اللعبة)': 'Genre', 'صورة اللعبة': 'Game image', 'أركيد': 'Arcade', 'ألعاب لوحية': 'Board', 'ألعاب ورق': 'Card', 'اجتماعية': 'Social', 'رياضة': 'Sports', 'كلمات': 'Word',
   'مخفية': 'Hidden', 'مضافة': 'Custom', 'مخصّصة': 'Edited', 'إخفاء من الموقع': 'Hide from the site', 'إظهار في الموقع': 'Show on the site', 'تعذّر تحميل الألعاب': 'Could not load games', 'حذف هذه اللعبة؟': 'Delete this game?',
   'اترك أي حقل فارغاً ليرجع للافتراضي': 'Leave any field empty to restore its default', 'تحقق من اسم اللعبة': 'Check the game name', 'الفئة': 'Tier', 'عادية': 'Regular', 'بطولة كبرى (Major) — تظهر عليها شارة': 'Major tournament — shows a badge',
@@ -363,7 +364,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 }
 
 /* ---------- Tournaments ---------- */
-const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en: '' }, format: { ar: '', en: '' }, prize: { ar: '', en: '' }, startsAt: '', endsAt: '', slots: { filled: 0, total: 16 }, mode: 'solo', tier: 'regular', registerUrl: '', image: '', winner: { ar: '', en: '' }, winnerImage: '', published: true });
+const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en: '' }, format: { ar: '', en: '' }, prize: { ar: '', en: '' }, startsAt: '', endsAt: '', slots: { filled: 0, total: 16 }, mode: 'solo', tier: 'regular', registerUrl: '', image: '', winner: { ar: '', en: '' }, winnerMembers: [], published: true });
 const ST_TONE = { live: 'red', upcoming: 'amber', completed: 'gray' } as const;
 const ST_AR = { live: 'مباشرة', upcoming: 'قادمة', completed: 'منتهية' } as const;
 
@@ -386,6 +387,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!f) return;
+    if (f.mode === 'team' && (f.winner?.ar.trim() || f.winner?.en.trim()) && !(f.winnerMembers ?? []).some((m) => m.trim())) { toast.err(x('أسماء أعضاء الفريق الفائز إجبارية')); return; }
     try {
       await api(f.id ? `/tournaments/${f.id}` : '/tournaments', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
       setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
@@ -416,7 +418,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <button className={btnG} style={bd} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerImage: r.winnerImage ?? '' }); }}>{x('تعديل')}</button>
+                <button className={btnG} style={bd} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}>{x('تعديل')}</button>
                 <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(r.id)}>{x('حذف')}</button>
               </div>
             </Card>
@@ -445,7 +447,11 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             <Field label={x('رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)')}><input dir="ltr" className={inp} style={bd} value={f.registerUrl ?? ''} placeholder="https://…" onChange={(e) => setF({ ...f, registerUrl: e.target.value })} /></Field>
             <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={f.image ?? ''} onChange={(v) => setF({ ...f, image: v })} />
             {pair('winner', x('الفائز (بعد الانتهاء)'), 'Winner')}
-            <ImageField k={k} label={x('صورة الفائز (طولية 9:16، اختياري)')} value={f.winnerImage ?? ''} onChange={(v) => setF({ ...f, winnerImage: v })} />
+            {f.mode === 'team' && (
+              <Field label={`${x('أسماء أعضاء الفريق الفائز (اسم في كل سطر)')} *`}>
+                <textarea rows={4} dir="auto" className={inp} style={bd} value={(f.winnerMembers ?? []).join('\n')} placeholder={'Faisal\nSara\nOmar'} onChange={(e) => setF({ ...f, winnerMembers: e.target.value.split('\n') })} required={!!(f.winner?.ar.trim() || f.winner?.en.trim())} />
+              </Field>
+            )}
             <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={f.published !== false} onChange={(e) => setF({ ...f, published: e.target.checked })} />{x('منشورة (تظهر في الموقع)')}</label>
             <div className="flex gap-3 pt-2"><button className={btnP} style={gradBtn} type="submit">{x('حفظ')}</button><button type="button" className={btnG} style={bd} onClick={() => setF(null)}>{x('إلغاء')}</button></div>
           </form>
@@ -456,7 +462,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
 }
 
 /* ---------- Games ---------- */
-type GForm = { id: string; custom: boolean; hidden: boolean; name: { ar: string; en: string }; tagline: { ar: string; en: string }; genre: string; image: string };
+type GForm = { id: string; custom: boolean; hidden: boolean; name: { ar: string; en: string }; tagline: { ar: string; en: string }; genre: string; image: string; tournamentOnly: boolean };
 
 function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const { lang, x } = useX();
@@ -468,7 +474,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => setRows(mergeGames(r))).catch(() => toast.err(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
-  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '' });
+  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly });
   const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err(m); };
   const term = q.trim().toLowerCase();
   const shown = rows.filter((g) => (genre === 'all' || g.genreKey === genre) && (!term || `${g.name.ar} ${g.name.en} ${g.tagline.ar} ${g.tagline.en}`.toLowerCase().includes(term)));
@@ -498,7 +504,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={<button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '' }); }}>{x('+ لعبة جديدة')}</button>} />
+      <PageHead title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={<button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '', tournamentOnly: false }); }}>{x('+ لعبة جديدة')}</button>} />
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative min-w-[14rem] flex-1">
           <SearchI className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
@@ -522,6 +528,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
                 <span>{genreLabel(g.genreKey)[lang]}</span>
                 {g.custom && <Badge tone="blue">{x('مضافة')}</Badge>}
                 {g.hidden && <Badge tone="gray">{x('مخفية')}</Badge>}
+                {g.tournamentOnly && <Badge tone="amber">{x('للبطولات فقط')}</Badge>}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -542,6 +549,12 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
             <Field label={x('التصنيف (نوع اللعبة)')}>
               <select className={sel} style={bd} value={f.genre} onChange={(e) => setF({ ...f, genre: e.target.value })}>
                 {GENRE_KEYS.map((gk) => <option key={gk} value={gk}>{genreLabel(gk)[lang]}</option>)}
+              </select>
+            </Field>
+            <Field label={x('تظهر في')}>
+              <select className={sel} style={bd} value={f.tournamentOnly ? '1' : '0'} onChange={(e) => setF({ ...f, tournamentOnly: e.target.value === '1' })}>
+                <option value="0">{x('الموقع والبطولات')}</option>
+                <option value="1">{x('البطولات فقط')}</option>
               </select>
             </Field>
             <ImageField k={k} label={x('صورة اللعبة')} value={f.image} onChange={(v) => setF({ ...f, image: v })} />

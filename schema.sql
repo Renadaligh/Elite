@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
   mode TEXT NOT NULL DEFAULT 'solo',
   tier TEXT NOT NULL DEFAULT 'regular',
   register_url TEXT NOT NULL DEFAULT '', image TEXT NOT NULL DEFAULT '',
-  winner_en TEXT NOT NULL DEFAULT '', winner_ar TEXT NOT NULL DEFAULT '', winner_image TEXT NOT NULL DEFAULT '',
+  winner_en TEXT NOT NULL DEFAULT '', winner_ar TEXT NOT NULL DEFAULT '', winner_members TEXT NOT NULL DEFAULT '',
   published INTEGER NOT NULL DEFAULT 1
 );
 CREATE TABLE IF NOT EXISTS registrations (
@@ -40,7 +40,10 @@ CREATE TABLE IF NOT EXISTS games (
   tagline_en TEXT NOT NULL DEFAULT '', tagline_ar TEXT NOT NULL DEFAULT '',
   image TEXT NOT NULL DEFAULT '',
   hidden INTEGER NOT NULL DEFAULT 0,
-  custom INTEGER NOT NULL DEFAULT 0
+  custom INTEGER NOT NULL DEFAULT 0,
+  tournament_only INTEGER NOT NULL DEFAULT 0
 );
 -- Existing database? Add the tournament tier once:
 --   ALTER TABLE tournaments ADD COLUMN tier TEXT NOT NULL DEFAULT 'regular';
+--   ALTER TABLE games ADD COLUMN tournament_only INTEGER NOT NULL DEFAULT 0;
+--   ALTER TABLE tournaments ADD COLUMN winner_members TEXT NOT NULL DEFAULT '';

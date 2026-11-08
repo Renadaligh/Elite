@@ -24,37 +24,39 @@ function useDate() {
   };
 }
 
-const TrophyIcon = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
-    <path d="M8 4.5h8v5a4 4 0 0 1-8 0v-5Z" /><path d="M8 6.5H5a3 3 0 0 0 3 4M16 6.5h3a3 3 0 0 1-3 4M12 13.5v3.5M8.5 20h7M10 17h4" />
-  </svg>
-);
+const BASE = import.meta.env.BASE_URL;
+const ninjaMask = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no-repeat`, mask: `url(${BASE}brand/ninja.png) center / contain no-repeat` } as const;
 
-/** Tall winner card (portrait, 9:16 art). No portrait → a game-coloured card with the winner's initial. */
+/** Winner's name, plus the team members (team tournaments). */
+const useWinner = (x: Tournament) => {
+  const { lang } = useI18n();
+  const isTeam = x.mode === 'team';
+  return { name: x.winner?.[lang] ?? '', isTeam, members: isTeam ? (x.winnerMembers ?? []).filter((m) => m.trim()) : [] };
+};
+
+/** One unified Elite card for every winner (no photo needed): mountains + ninja mark, solo/team badge, name, team members. */
 function ChampionCard({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const date = useDate();
   useGames();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#ff3347', '#4a0a12'];
-  const winner = x.winner?.[lang] ?? '';
+  const w = useWinner(x);
   return (
-    <article className="group relative isolate aspect-[9/16] overflow-hidden rounded-3xl border shadow-[0_24px_50px_-26px_rgba(120,10,25,.7)] transition-transform duration-300 hover:-translate-y-1" style={{ borderColor: 'var(--glass-b)', background: `linear-gradient(160deg, ${c[0]}, ${c[1]})` }}>
-      {x.winnerImage
-        ? <img src={x.winnerImage} alt={winner} loading="lazy" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
-        : <span aria-hidden="true" className="absolute inset-0 -z-10 grid place-items-center font-display text-[9rem] font-black leading-none text-white/20 rtl:font-sans">{winner.trim().charAt(0).toUpperCase()}</span>}
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-[5] h-[58%]" style={{ background: 'linear-gradient(180deg, transparent, rgba(8,8,10,.78) 55%, rgba(8,8,10,.94))' }} />
-      <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[.78rem] font-bold text-[#3a2600]" style={{ background: 'linear-gradient(135deg,#ffd54a,#ffb300)', boxShadow: '0 8px 18px -8px rgba(255,179,0,.9)' }}>
-        <TrophyIcon className="h-3.5 w-3.5" />{t.chBadge}
-      </span>
-      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-        {g && <span className="mb-2 inline-block rounded-full border border-white/40 bg-black/25 px-2.5 py-0.5 text-[.74rem] font-semibold backdrop-blur-sm">{g.name[lang]}</span>}
-        <h3 dir="auto" className="font-display text-[clamp(1.5rem,2.4vw,2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{winner}</h3>
-        <p className="mt-1 text-[.92rem] text-white/85">{x.name[lang]}</p>
-        <p className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-white/25 pt-3 text-[.8rem] text-white/80">
-          <time dateTime={x.startsAt}>{date(x)}</time>
-          <span className="font-semibold text-[#ffd54a]">{t.chPrize}: {x.prize[lang]}</span>
-        </p>
+    <article className="champ-card group" style={{ ['--champ-bg' as string]: `url(${BASE}art/hero-scene.webp)` }}>
+      <div className="flex items-center justify-between">
+        <span aria-hidden="true" className="inline-block h-[1.3rem] w-[2.1rem] bg-white" style={ninjaMask} />
+        <span className={`champ-mode ${w.isTeam ? 'is-team' : ''}`}>{w.isTeam ? t.chTeam : t.chSolo}</span>
+      </div>
+      <div className="flex-1" />
+      <p className="champ-label">{t.chBadge}</p>
+      <h3 dir="auto" className="champ-name">{w.name}</h3>
+      {w.members.length > 0 && (
+        <ul className="champ-members">{w.members.map((m, i) => <li key={`${m}-${i}`} dir="auto">{m}</li>)}</ul>
+      )}
+      <div className="champ-meta">
+        <p className="text-[.95rem] font-bold text-white">{x.name[lang]}</p>
+        <p><time dateTime={x.startsAt}>{date(x)}</time>{g ? ` · ${g.name[lang]}` : ''}</p>
+        <p className="flex items-center justify-between gap-3"><span>{t.chPrize}</span><b className="text-white">{x.prize[lang]}</b></p>
       </div>
     </article>
   );
@@ -66,17 +68,18 @@ function ArchiveRow({ x }: { x: Tournament }) {
   const date = useDate();
   useGames();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#ff3347', '#4a0a12'];
-  const winner = x.winner?.[lang] ?? '';
+  const w = useWinner(x);
   return (
     <li className="flex items-center gap-4 rounded-2xl border p-3 pe-5" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
-      <span className="relative aspect-[9/16] h-16 shrink-0 overflow-hidden rounded-xl" style={{ background: `linear-gradient(160deg, ${c[0]}, ${c[1]})` }}>
-        {x.winnerImage
-          ? <img src={x.winnerImage} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-          : <span aria-hidden="true" className="grid h-full w-full place-items-center text-xl font-black text-white/70">{winner.trim().charAt(0).toUpperCase()}</span>}
+      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl" style={{ background: '#0a0a0d', border: '1px solid var(--glass-b)', color: '#fff' }}>
+        <span aria-hidden="true" className="inline-block h-4 w-7 bg-current" style={ninjaMask} />
       </span>
       <div className="min-w-0 flex-1">
-        <div dir="auto" className="truncate text-[1.05rem] font-bold">{winner}</div>
+        <div className="flex items-center gap-2">
+          <span dir="auto" className="truncate text-[1.05rem] font-bold">{w.name}</span>
+          <span className={`champ-mode shrink-0 !px-2 !py-0.5 !text-[.62rem] ${w.isTeam ? 'is-team' : ''}`}>{w.isTeam ? t.chTeam : t.chSolo}</span>
+        </div>
+        {w.members.length > 0 && <div dir="auto" className="truncate text-[.84rem]" style={{ color: 'var(--text)' }}>{w.members.join(' · ')}</div>}
         <div className="truncate text-[.88rem]" style={{ color: 'var(--muted)' }}>{x.name[lang]}{g ? ` · ${g.name[lang]}` : ''}</div>
       </div>
       <div className="hidden shrink-0 text-end text-[.82rem] sm:block" style={{ color: 'var(--muted)' }}>
