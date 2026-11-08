@@ -40,7 +40,9 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
     await env.DB.prepare('INSERT INTO tournaments (id,game_id,name_en,name_ar,format_en,format_ar,prize_en,prize_ar,starts_at,ends_at,filled,total,mode,register_url,image,winner_en,winner_ar,winner_image,published,tier) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(...vals, v.tier).run();
   } catch {
     // Database not migrated yet (no "tier" column): save without it.
+    try {
     await env.DB.prepare('INSERT INTO tournaments (id,game_id,name_en,name_ar,format_en,format_ar,prize_en,prize_ar,starts_at,ends_at,filled,total,mode,register_url,image,winner_en,winner_ar,winner_image,published) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(...vals).run();
+    } catch (e) { return json({ error: 'db', detail: String((e as Error).message).slice(0, 160) }, 500); }
   }
   return json({ ok: true, id });
 };

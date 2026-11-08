@@ -5,6 +5,11 @@ export async function api<T>(path: string, init: RequestInit & { key?: string } 
     ...rest,
     headers: { ...(rest.body ? { 'content-type': 'application/json' } : {}), ...(key ? { authorization: `Bearer ${key}` } : {}), ...headers },
   });
-  if (!res.ok) throw new Error(String(res.status));
+  if (!res.ok) {
+    const err = new Error(String(res.status)) as Error & { detail?: string };
+    try { const j = (await res.json()) as { detail?: string; error?: string };
+      err.detail = j.detail ?? j.error; } catch { /* no body */ }
+    throw err;
+  }
   return (await res.json()) as T;
 }

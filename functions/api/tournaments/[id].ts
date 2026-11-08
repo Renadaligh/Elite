@@ -10,7 +10,9 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
     await env.DB.prepare('UPDATE tournaments SET game_id=?,name_en=?,name_ar=?,format_en=?,format_ar=?,prize_en=?,prize_ar=?,starts_at=?,ends_at=?,filled=?,total=?,mode=?,register_url=?,image=?,winner_en=?,winner_ar=?,winner_image=?,published=?,tier=? WHERE id=?').bind(...vals, v.tier, params.id).run();
   } catch {
     // Database not migrated yet (no "tier" column): save without it.
+    try {
     await env.DB.prepare('UPDATE tournaments SET game_id=?,name_en=?,name_ar=?,format_en=?,format_ar=?,prize_en=?,prize_ar=?,starts_at=?,ends_at=?,filled=?,total=?,mode=?,register_url=?,image=?,winner_en=?,winner_ar=?,winner_image=?,published=? WHERE id=?').bind(...vals, params.id).run();
+    } catch (e) { return json({ error: 'db', detail: String((e as Error).message).slice(0, 160) }, 500); }
   }
   return json({ ok: true });
 };

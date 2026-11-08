@@ -67,6 +67,8 @@ type ToastItem = { id: number; text: string; kind: 'ok' | 'err' };
 type Toaster = { ok: (text: string) => void; err: (text: string) => void };
 const ToastCtx = createContext<Toaster>({ ok: () => undefined, err: () => undefined });
 const useToast = () => useContext(ToastCtx);
+/** Error text for a failed save: the usual hint plus the server's reason, so a real problem is visible instead of guessed. */
+const why = (err: unknown, base: string) => { const d = (err as { detail?: string }).detail; return d ? `${base} (${d})` : base; };
 
 function ToastHost({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
@@ -304,7 +306,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
     try {
       await api(f.id ? `/news/${f.id}` : '/news', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
       setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
-    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(x('تحقق من التاريخ والعنوان')); }
+    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تحقق من التاريخ والعنوان'))); }
   }
   async function del(id: string) {
     if (!window.confirm(x('حذف هذا الخبر؟'))) return;
@@ -387,7 +389,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
     try {
       await api(f.id ? `/tournaments/${f.id}` : '/tournaments', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
       setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
-    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(x('تحقق من الاسم وتاريخ البداية')); }
+    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تحقق من الاسم وتاريخ البداية'))); }
   }
   async function del(id: string) {
     if (!window.confirm(x('حذف هذه البطولة؟'))) return;
@@ -477,7 +479,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
     try {
       await api(f.id ? `/games/${f.id}` : '/games', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
       setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
-    } catch (err) { fail(err, x('تحقق من اسم اللعبة')); }
+    } catch (err) { fail(err, why(err, x('تحقق من اسم اللعبة'))); }
   }
   async function toggle(g: AdminGame) {
     try { await api(`/games/${g.id}`, { method: 'PUT', body: JSON.stringify({ ...toForm(g), hidden: !g.hidden }), key: k }); toast.ok(x(g.hidden ? 'تم إظهار اللعبة في الموقع' : 'تم إخفاء اللعبة من الموقع')); load(); } catch (err) { fail(err, x('تعذّر تحميل الألعاب')); }
