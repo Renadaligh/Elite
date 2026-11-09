@@ -31,18 +31,20 @@ const ninjaMask = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no
 const useWinner = (x: Tournament) => {
   const { lang } = useI18n();
   const isTeam = x.mode === 'team';
-  return { name: x.winner?.[lang] ?? '', isTeam, members: isTeam ? (x.winnerMembers ?? []).filter((m) => m.trim()) : [] };
+  return { name: x.winner?.[lang] ?? '', isTeam, members: isTeam ? (x.winnerMembers ?? []).flatMap((m) => m.split('|')).map((m) => m.trim()).filter(Boolean) : [] };
 };
 
 /** One unified Elite card for every winner. Background = the tournament's image, or the default mountains scene. Ninja mark, solo/team badge, name, team members. */
+const LIMIT = 8;
 function ChampionCard({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
+  const [open, setOpen] = useState(false);
   const date = useDate();
   useGames();
   const g = getGame(x.gameId);
   const w = useWinner(x);
   return (
-    <article className={`champ-card group ${x.image ? 'has-img' : ''}`} style={{ ['--champ-bg' as string]: x.image ? `url("${x.image}")` : `url(${BASE}art/hero-scene.webp)` }}>
+    <article className={`champ-card group ${x.image ? 'has-img' : ''}`} style={{ ['--champ-bg' as string]: x.image ? `url("${x.image}")` : `url(${BASE}art/hero-scene.webp)`, ['--champ-pos' as string]: x.imagePos || 'center' }}>
       <div className="flex items-center justify-between">
         <span aria-hidden="true" className="inline-block h-[1.3rem] w-[2.1rem] bg-white" style={ninjaMask} />
         <span className={`champ-mode ${w.isTeam ? 'is-team' : ''}`}>{w.isTeam ? t.chTeam : t.chSolo}</span>
@@ -51,7 +53,12 @@ function ChampionCard({ x }: { x: Tournament }) {
       <p className="champ-label">{t.chBadge}</p>
       <h3 dir="auto" className="champ-name">{w.name}</h3>
       {w.members.length > 0 && (
-        <ul className="champ-members">{w.members.map((m, i) => <li key={`${m}-${i}`} dir="auto">{m}</li>)}</ul>
+        <>
+          <ul className={`champ-members ${w.members.length > 3 ? 'is-grid' : ''}`}>{(open ? w.members : w.members.slice(0, LIMIT)).map((m, i) => <li key={`${m}-${i}`} dir="auto">{m}</li>)}</ul>
+          {w.members.length > LIMIT && (
+            <button type="button" className="champ-more" onClick={() => setOpen((v) => !v)}>{open ? t.chShowLess : `${t.chShowAll} (+${w.members.length - LIMIT})`}</button>
+          )}
+        </>
       )}
       <div className="champ-meta">
         <p className="text-[.95rem] font-bold text-white">{x.name[lang]}</p>

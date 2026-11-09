@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
   mode TEXT NOT NULL DEFAULT 'solo',
   tier TEXT NOT NULL DEFAULT 'regular',
   register_url TEXT NOT NULL DEFAULT '', image TEXT NOT NULL DEFAULT '',
-  winner_en TEXT NOT NULL DEFAULT '', winner_ar TEXT NOT NULL DEFAULT '', winner_members TEXT NOT NULL DEFAULT '',
+  winner_en TEXT NOT NULL DEFAULT '', winner_ar TEXT NOT NULL DEFAULT '', winner_members TEXT NOT NULL DEFAULT '', image_pos TEXT NOT NULL DEFAULT '',
   published INTEGER NOT NULL DEFAULT 1
 );
 CREATE TABLE IF NOT EXISTS registrations (
@@ -49,3 +49,4 @@ CREATE TABLE IF NOT EXISTS games (
 --   ALTER TABLE games ADD COLUMN tournament_only INTEGER NOT NULL DEFAULT 0;
 --   ALTER TABLE games ADD COLUMN details TEXT NOT NULL DEFAULT '';
 --   ALTER TABLE tournaments ADD COLUMN winner_members TEXT NOT NULL DEFAULT '';
+--   ALTER TABLE tournaments ADD COLUMN image_pos TEXT NOT NULL DEFAULT '';

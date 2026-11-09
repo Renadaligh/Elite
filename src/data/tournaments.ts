@@ -25,6 +25,8 @@ export interface Tournament {
   registerUrl?: string;
   /** Optional cover image (path under /public or full URL). Faded behind the text; no image → plain game-colour card. */
   image?: string;
+  /** Which part of the image the cards show, e.g. "35% 60%" (picked in the dashboard). */
+  imagePos?: string;
   /** Completed tournaments: who won. */
   winner?: Localized;
   /** Winner portrait (tall, ~9:16). Path under /public or full URL. */

@@ -71,8 +71,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 @media (min-width: 1024px) { .m-cont { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* Tournament cover image: sits behind the text and fades into the dark on the text side */
-.tour-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; }
-[dir='rtl'] .tour-img { object-position: 30% 50%; }
+.tour-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+
 .tour-fade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(var(--bg-rgb), 1) 0%, rgba(var(--bg-rgb), .93) 52%, rgba(var(--bg-rgb), .12) 100%); }
 @media (min-width: 1024px) {
   .tour-fade-h { background: linear-gradient(to right, rgba(var(--bg-rgb), .97) 0%, rgba(var(--bg-rgb), .88) 42%, rgba(var(--bg-rgb), .1) 100%); }
@@ -199,4 +199,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 /* Tournament cards: faint Elite ninja mark in the bottom corner */
 .tour-ninja { position: absolute; z-index: 0; bottom: .8rem; inset-inline-end: .9rem; width: 4.6rem; height: 2.85rem; background: #fff; opacity: .16; pointer-events: none; }
 /* Champion card using the tournament's own image */
-.champ-card.has-img::before { background: var(--champ-bg) center / cover no-repeat; filter: saturate(.9) contrast(1.05) brightness(.8); }
+.champ-card.has-img::before { background: var(--champ-bg) var(--champ-pos, center) / cover no-repeat; filter: saturate(.9) contrast(1.05) brightness(.8); }
+
+
+/* Champion card: many team members → compact two-column list (first 6, rest on tap), and a darker top so text stays readable on bright art */
+.champ-members.is-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem .9rem; }
+.champ-members.is-grid li { font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.champ-more { margin-top: .55rem; align-self: flex-start; padding: 0; border: 0; background: none; font-size: .78rem; font-weight: 700; color: #ff4455; cursor: pointer; }
+.champ-card.has-img::after { background: linear-gradient(180deg, rgba(6, 6, 8, .5), rgba(6, 6, 8, .7) 30%, rgba(6, 6, 8, .96) 62%); }

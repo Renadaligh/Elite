@@ -51,7 +51,7 @@ const EN: Record<string, string> = {
   'تم إظهار اللعبة في الموقع': 'Game is now shown on the site', 'تم إخفاء اللعبة من الموقع': 'Game is now hidden from the site', 'تم رفع الصورة بنجاح': 'Image uploaded successfully', 'القائمة': 'Menu',
   'كل الأنواع': 'All genres', 'لا توجد ألعاب مطابقة': 'No matching games',
   'أسماء أعضاء الفريق الفائز (اسم في كل سطر)': 'Winning team members (one name per line)', 'أسماء أعضاء الفريق الفائز إجبارية': 'The winning team members\' names are required',
-  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'صفحة اللعبة': 'Game page', 'طريقة اللعب (سطر لكل خطوة)': 'How to play (one line per step)', 'نصيحة': 'Tip', 'رابط فيديو الشرح (يوتيوب)': 'Explainer video (YouTube link)', 'عدد اللاعبين': 'Players', 'مدة الجولة (دقائق)': 'Round length (minutes)', 'المستوى': 'Level', 'سهلة': 'Easy', 'متوسطة': 'Medium', 'صعبة': 'Hard', 'للبطولات فقط': 'Tournaments only', 'تظهر في': 'Shown in', 'الموقع والبطولات': 'Site & tournaments', 'البطولات فقط': 'Tournaments only', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
+  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'كرت البطولة': 'Tournament card', 'الكرت الكبير': 'Featured card', 'اسحب الصورة لاختيار الجزء الظاهر في البطاقة': 'Drag the picture to choose which part shows on the card', 'إعادة للوسط': 'Reset to center', 'صفحة اللعبة': 'Game page', 'طريقة اللعب (سطر لكل خطوة)': 'How to play (one line per step)', 'نصيحة': 'Tip', 'رابط فيديو الشرح (يوتيوب)': 'Explainer video (YouTube link)', 'عدد اللاعبين': 'Players', 'مدة الجولة (دقائق)': 'Round length (minutes)', 'المستوى': 'Level', 'سهلة': 'Easy', 'متوسطة': 'Medium', 'صعبة': 'Hard', 'للبطولات فقط': 'Tournaments only', 'تظهر في': 'Shown in', 'الموقع والبطولات': 'Site & tournaments', 'البطولات فقط': 'Tournaments only', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
   'اسم اللعبة': 'Game name', 'الوصف القصير': 'Short description', 'التصنيف (نوع اللعبة)': 'Genre', 'صورة اللعبة': 'Game image', 'أركيد': 'Arcade', 'ألعاب لوحية': 'Board', 'ألعاب ورق': 'Card', 'اجتماعية': 'Social', 'رياضة': 'Sports', 'كلمات': 'Word',
   'مخفية': 'Hidden', 'مضافة': 'Custom', 'مخصّصة': 'Edited', 'إخفاء من الموقع': 'Hide from the site', 'إظهار في الموقع': 'Show on the site', 'تعذّر تحميل الألعاب': 'Could not load games', 'حذف هذه اللعبة؟': 'Delete this game?',
   'اترك أي حقل فارغاً ليرجع للافتراضي': 'Leave any field empty to restore its default', 'تحقق من اسم اللعبة': 'Check the game name', 'الفئة': 'Tier', 'عادية': 'Regular', 'بطولة كبرى (Major) — تظهر عليها شارة': 'Major tournament — shows a badge',
@@ -139,6 +139,55 @@ async function shrink(file: File): Promise<Blob> {
     const out = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/webp', 0.88));
     return out && out.size < file.size ? out : file;
   } catch { return file; }
+}
+
+/** Position picker: drag the picture inside a card-shaped frame to choose which part the cards show (same in Arabic and English). */
+function FocusPicker({ src, pos, onChange }: { src: string; pos: string; onChange: (p: string) => void }) {
+  const { x } = useX();
+  const [ratio, setRatio] = useState(16 / 9);
+  const [px, py] = (pos || '50% 50%').split(' ').map((n) => parseFloat(n));
+  const drag = useRef<{ x: number; y: number; px: number; py: number; w: number; h: number } | null>(null);
+  const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)));
+  const frames = [
+    { key: 'card', label: x('كرت البطولة'), w: 15, h: 16 },
+    { key: 'wide', label: x('الكرت الكبير'), w: 28, h: 8.5 },
+  ];
+  function down(e: React.PointerEvent<HTMLDivElement>, w: number, h: number) {
+    const r = e.currentTarget.getBoundingClientRect();
+    drag.current = { x: e.clientX, y: e.clientY, px: px || 50, py: py || 50, w: r.width, h: r.height };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    void w; void h;
+  }
+  function move(e: React.PointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    if (!d) return;
+    // object-fit: cover → the image overflows the frame on one axis only; dragging by that overflow moves the position 0→100%.
+    const scale = Math.max(d.w / (ratio * 1000), d.h / 1000);
+    const ow = ratio * 1000 * scale - d.w, oh = 1000 * scale - d.h;
+    const nx = ow > 1 ? d.px - ((e.clientX - d.x) / ow) * 100 : d.px;
+    const ny = oh > 1 ? d.py - ((e.clientY - d.y) / oh) * 100 : d.py;
+    onChange(`${clamp(nx)}% ${clamp(ny)}%`);
+  }
+  return (
+    <div className="flex flex-col gap-2 text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>
+      <span>{x('اسحب الصورة لاختيار الجزء الظاهر في البطاقة')}</span>
+      <div className="flex flex-wrap items-end gap-4">
+        {frames.map((f) => (
+          <div key={f.key} className="flex flex-col gap-1">
+            <div
+              dir="ltr" onPointerDown={(e) => down(e, f.w, f.h)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}
+              className="relative cursor-grab touch-none select-none overflow-hidden rounded-xl border active:cursor-grabbing" style={{ width: `${f.w}rem`, maxWidth: '100%', aspectRatio: `${f.w} / ${f.h}`, borderColor: 'var(--glass-b)' }}
+            >
+              <img src={src} alt="" draggable={false} onLoad={(e) => setRatio(e.currentTarget.naturalWidth / Math.max(1, e.currentTarget.naturalHeight))} className="pointer-events-none h-full w-full object-cover" style={{ objectPosition: `${px}% ${py}%` }} />
+              <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(6,6,8,.95) 0%, rgba(6,6,8,.55) 50%, rgba(6,6,8,.1) 100%)' }} />
+            </div>
+            <span className="text-[.74rem] font-medium">{f.label}</span>
+          </div>
+        ))}
+      </div>
+      {pos && pos !== '50% 50%' && <button type="button" className="self-start text-[.8rem] font-semibold" style={{ color: '#ff6b7a' }} onClick={() => onChange('')}>{x('إعادة للوسط')}</button>}
+    </div>
+  );
 }
 
 /** Image field: choose a file from the computer (uploaded to R2) or paste a link/path. */
@@ -446,6 +495,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             </div>
             <Field label={x('رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)')}><input dir="ltr" className={inp} style={bd} value={f.registerUrl ?? ''} placeholder="https://…" onChange={(e) => setF({ ...f, registerUrl: e.target.value })} /></Field>
             <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={f.image ?? ''} onChange={(v) => setF({ ...f, image: v })} />
+            {f.image && <FocusPicker src={f.image} pos={f.imagePos ?? ''} onChange={(p) => setF({ ...f, imagePos: p })} />}
             {pair('winner', x('الفائز (بعد الانتهاء)'), 'Winner')}
             {f.mode === 'team' && (
               <Field label={`${x('أسماء أعضاء الفريق الفائز (اسم في كل سطر)')} *`}>

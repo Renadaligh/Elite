@@ -100,7 +100,7 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
     <article className="news-card on-art relative text-white md:mb-6" style={{ background: `linear-gradient(135deg, ${c[0]}, ${c[1]})`, border: 'none' }}>
       {x.image ? (
         <>
-          <img src={x.image} alt="" loading="lazy" decoding="async" className="tour-img" />
+          <img src={x.image} alt="" loading="lazy" decoding="async" className="tour-img" style={{ objectPosition: x.imagePos || undefined }} />
           <div aria-hidden="true" className="tour-fade tour-fade-h" />
         </>
       ) : (
@@ -133,7 +133,7 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
     <article className="news-card news-card-hover">
       {x.image && (
         <>
-          <img src={x.image} alt="" loading="lazy" decoding="async" className="tour-img" />
+          <img src={x.image} alt="" loading="lazy" decoding="async" className="tour-img" style={{ objectPosition: x.imagePos || undefined }} />
           <div aria-hidden="true" className="tour-fade" />
         </>
       )}
