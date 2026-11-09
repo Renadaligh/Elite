@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
-import { GENRE_KEYS, emptyDetails, genreLabel, mergeGames, type AdminGame, type GameDetails, type GameRow } from '../data/games';
+import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type AdminGame, type GameDetails, type GameRow } from '../data/games';
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
@@ -51,7 +51,7 @@ const EN: Record<string, string> = {
   'تم إظهار اللعبة في الموقع': 'Game is now shown on the site', 'تم إخفاء اللعبة من الموقع': 'Game is now hidden from the site', 'تم رفع الصورة بنجاح': 'Image uploaded successfully', 'القائمة': 'Menu',
   'كل الأنواع': 'All genres', 'لا توجد ألعاب مطابقة': 'No matching games',
   'أسماء أعضاء الفريق الفائز (اسم في كل سطر)': 'Winning team members (one name per line)', 'أسماء أعضاء الفريق الفائز إجبارية': 'The winning team members\' names are required',
-  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'كرت البطولة': 'Tournament card', 'الكرت الكبير': 'Featured card', 'اسحب الصورة لاختيار الجزء الظاهر في البطاقة': 'Drag the picture to choose which part shows on the card', 'إعادة للوسط': 'Reset to center', 'صفحة اللعبة': 'Game page', 'طريقة اللعب (سطر لكل خطوة)': 'How to play (one line per step)', 'نصيحة': 'Tip', 'رابط فيديو الشرح (يوتيوب)': 'Explainer video (YouTube link)', 'عدد اللاعبين': 'Players', 'مدة الجولة (دقائق)': 'Round length (minutes)', 'المستوى': 'Level', 'سهلة': 'Easy', 'متوسطة': 'Medium', 'صعبة': 'Hard', 'للبطولات فقط': 'Tournaments only', 'تظهر في': 'Shown in', 'الموقع والبطولات': 'Site & tournaments', 'البطولات فقط': 'Tournaments only', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
+  'الألعاب': 'Games', 'أضف وعدّل صور وأسماء الألعاب': 'Add games and edit their names and images', '+ لعبة جديدة': '+ New game', 'كرت البطولة': 'Tournament card', 'الكرت الكبير': 'Featured card', 'اسحب الصورة لاختيار الجزء الظاهر في البطاقة': 'Drag the picture to choose which part shows on the card', 'إعادة للوسط': 'Reset to center', 'لمحة عن اللعبة (حتى نصّين)': 'About the game (up to 2 texts)', 'مقاطع وفيديوهات (حتى 4 من يوتيوب)': 'Clips & videos (up to 4 from YouTube)', 'صور من اللعبة (حتى 4)': 'Game images (up to 4)', 'العنوان': 'Title', 'النص': 'Text', 'رابط المقطع': 'Video link', 'صورة': 'Image', 'للبطولات فقط': 'Tournaments only', 'تظهر في': 'Shown in', 'الموقع والبطولات': 'Site & tournaments', 'البطولات فقط': 'Tournaments only', 'لعبة جديدة': 'New game', 'تعديل اللعبة': 'Edit game',
   'اسم اللعبة': 'Game name', 'الوصف القصير': 'Short description', 'التصنيف (نوع اللعبة)': 'Genre', 'صورة اللعبة': 'Game image', 'أركيد': 'Arcade', 'ألعاب لوحية': 'Board', 'ألعاب ورق': 'Card', 'اجتماعية': 'Social', 'رياضة': 'Sports', 'كلمات': 'Word',
   'مخفية': 'Hidden', 'مضافة': 'Custom', 'مخصّصة': 'Edited', 'إخفاء من الموقع': 'Hide from the site', 'إظهار في الموقع': 'Show on the site', 'تعذّر تحميل الألعاب': 'Could not load games', 'حذف هذه اللعبة؟': 'Delete this game?',
   'اترك أي حقل فارغاً ليرجع للافتراضي': 'Leave any field empty to restore its default', 'تحقق من اسم اللعبة': 'Check the game name', 'الفئة': 'Tier', 'عادية': 'Regular', 'بطولة كبرى (Major) — تظهر عليها شارة': 'Major tournament — shows a badge',
@@ -524,8 +524,12 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => setRows(mergeGames(r))).catch(() => toast.err(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
-  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: { ...emptyDetails(), ...(g.details ?? {}) } });
-  const dset = (patch: Partial<GameDetails>) => setF((cur) => (cur ? { ...cur, details: { ...cur.details, ...patch } } : cur));
+  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: fullDetails(g.details) });
+  const ar = lang === 'en' ? 'Arabic' : 'عربي';
+  const setDet = (fn: (d: GameDetails) => GameDetails) => setF((cur) => (cur ? { ...cur, details: fn(cur.details) } : cur));
+  const setText = (i: number, p: Partial<GameDetails['texts'][number]>) => setDet((d) => ({ ...d, texts: d.texts.map((t, j) => (j === i ? { ...t, ...p } : t)) }));
+  const setVideo = (i: number, p: Partial<GameDetails['videos'][number]>) => setDet((d) => ({ ...d, videos: d.videos.map((v, j) => (j === i ? { ...v, ...p } : v)) }));
+  const setImg = (i: number, url: string) => setDet((d) => ({ ...d, images: d.images.map((u, j) => (j === i ? url : u)) }));
   const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err(m); };
   const term = q.trim().toLowerCase();
   const shown = rows.filter((g) => (genre === 'all' || g.genreKey === genre) && (!term || `${g.name.ar} ${g.name.en} ${g.tagline.ar} ${g.tagline.en}`.toLowerCase().includes(term)));
@@ -609,23 +613,29 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </select>
             </Field>
             <ImageField k={k} label={x('صورة اللعبة')} value={f.image} onChange={(v) => setF({ ...f, image: v })} />
-            <h4 className="-mb-1 mt-2 font-bold">{x('صفحة اللعبة')}</h4>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={`${x('طريقة اللعب (سطر لكل خطوة)')} — ${lang === 'en' ? 'Arabic' : 'عربي'}`}><textarea rows={5} className={inp} style={bd} value={f.details.how.ar} onChange={(e) => dset({ how: { ...f.details.how, ar: e.target.value } })} /></Field>
-              <Field label={`${x('طريقة اللعب (سطر لكل خطوة)')} — English`}><textarea dir="ltr" rows={5} className={inp} style={bd} value={f.details.how.en} onChange={(e) => dset({ how: { ...f.details.how, en: e.target.value } })} /></Field>
-              <Field label={`${x('نصيحة')} — ${lang === 'en' ? 'Arabic' : 'عربي'}`}><textarea rows={2} className={inp} style={bd} value={f.details.tip.ar} onChange={(e) => dset({ tip: { ...f.details.tip, ar: e.target.value } })} /></Field>
-              <Field label={`${x('نصيحة')} — English`}><textarea dir="ltr" rows={2} className={inp} style={bd} value={f.details.tip.en} onChange={(e) => dset({ tip: { ...f.details.tip, en: e.target.value } })} /></Field>
-            </div>
-            <Field label={x('رابط فيديو الشرح (يوتيوب)')}><input dir="ltr" className={inp} style={bd} placeholder="https://youtu.be/…" value={f.details.video} onChange={(e) => dset({ video: e.target.value })} /></Field>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field label={x('عدد اللاعبين')}><input dir="ltr" className={inp} style={bd} placeholder="1v1 / 2-4" value={f.details.players} onChange={(e) => dset({ players: e.target.value })} /></Field>
-              <Field label={x('مدة الجولة (دقائق)')}><input dir="ltr" className={inp} style={bd} inputMode="numeric" value={f.details.minutes} onChange={(e) => dset({ minutes: e.target.value })} /></Field>
-              <Field label={x('المستوى')}>
-                <select className={sel} style={bd} value={f.details.level} onChange={(e) => dset({ level: e.target.value })}>
-                  <option value="">—</option><option value="easy">{x('سهلة')}</option><option value="medium">{x('متوسطة')}</option><option value="hard">{x('صعبة')}</option>
-                </select>
-              </Field>
-            </div>
+            <h4 className="-mb-1 mt-3 font-bold">{x('لمحة عن اللعبة (حتى نصّين)')}</h4>
+            {f.details.texts.map((tx, i) => (
+              <div key={i} className="grid gap-3 rounded-xl border p-3" style={bd}>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label={`${x('العنوان')} ${i + 1} — ${ar}`}><input className={inp} style={bd} value={tx.title.ar} onChange={(e) => setText(i, { title: { ...tx.title, ar: e.target.value } })} /></Field>
+                  <Field label={`${x('العنوان')} ${i + 1} — English`}><input dir="ltr" className={inp} style={bd} value={tx.title.en} onChange={(e) => setText(i, { title: { ...tx.title, en: e.target.value } })} /></Field>
+                  <Field label={`${x('النص')} ${i + 1} — ${ar}`}><textarea rows={4} className={inp} style={bd} value={tx.body.ar} onChange={(e) => setText(i, { body: { ...tx.body, ar: e.target.value } })} /></Field>
+                  <Field label={`${x('النص')} ${i + 1} — English`}><textarea dir="ltr" rows={4} className={inp} style={bd} value={tx.body.en} onChange={(e) => setText(i, { body: { ...tx.body, en: e.target.value } })} /></Field>
+                </div>
+              </div>
+            ))}
+            <h4 className="-mb-1 mt-3 font-bold">{x('مقاطع وفيديوهات (حتى 4 من يوتيوب)')}</h4>
+            {f.details.videos.map((v, i) => (
+              <div key={i} className="grid gap-3 rounded-xl border p-3 sm:grid-cols-3" style={bd}>
+                <Field label={`${x('رابط المقطع')} ${i + 1}`}><input dir="ltr" className={inp} style={bd} placeholder="https://youtu.be/…" value={v.url} onChange={(e) => setVideo(i, { url: e.target.value })} /></Field>
+                <Field label={`${x('العنوان')} — ${ar}`}><input className={inp} style={bd} value={v.title.ar} onChange={(e) => setVideo(i, { title: { ...v.title, ar: e.target.value } })} /></Field>
+                <Field label={`${x('العنوان')} — English`}><input dir="ltr" className={inp} style={bd} value={v.title.en} onChange={(e) => setVideo(i, { title: { ...v.title, en: e.target.value } })} /></Field>
+              </div>
+            ))}
+            <h4 className="-mb-1 mt-3 font-bold">{x('صور من اللعبة (حتى 4)')}</h4>
+            {f.details.images.map((src, i) => (
+              <ImageField key={i} k={k} label={`${x('صورة')} ${i + 1}`} value={src} onChange={(v) => setImg(i, v)} />
+            ))}
             {!f.custom && <p className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{x('اترك أي حقل فارغاً ليرجع للافتراضي')}</p>}
             <div className="flex gap-3 pt-2"><button className={btnP} style={gradBtn} type="submit">{x('حفظ')}</button><button type="button" className={btnG} style={bd} onClick={() => setF(null)}>{x('إلغاء')}</button></div>
           </form>

@@ -16,16 +16,10 @@ export interface Game {
   /** Dominant colour of the artwork; tints the page under the banner. */
   tone?: string;
   overview: Localized;
-  howToPlay?: Localized[];
-  mechanics?: Localized[];
-  screenshots?: string[];
-  videos?: { title: Localized; youtubeId?: string }[];
-  /** Short tip box on the game page. */
-  tip?: Localized;
-  /** Quick facts (header chips). */
-  players?: string;
-  minutes?: string;
-  level?: 'easy' | 'medium' | 'hard';
+  /** Game page: up to 2 titled text blocks, 4 videos, 4 images (all edited in the dashboard). */
+  texts?: { title: Localized; body: Localized }[];
+  videos?: { title: Localized; youtubeId: string }[];
+  images?: string[];
 }
 export const SHOW_EXAMPLE_GAMES = false;
 const L = (en: string, ar: string): Localized => ({ en, ar });
@@ -105,24 +99,30 @@ const BASE_GAMES: Game[] = [
 /* ---------- Dashboard-managed games (D1 table "games") merged over the built-in list ---------- */
 export const GENRE_KEYS = Object.keys(genres);
 export const genreLabel = (key: string): Localized => genres[key] ?? genres.Arcade;
-/** Extra game-page content edited in the dashboard (stored as JSON in the games table). */
-export interface GameDetails { how: Localized; tip: Localized; video: string; players: string; minutes: string; level: string }
-export const emptyDetails = (): GameDetails => ({ how: { ar: '', en: '' }, tip: { ar: '', en: '' }, video: '', players: '', minutes: '', level: '' });
+/** Game-page content edited in the dashboard (stored as JSON in the games table). */
+export interface GameDetails { texts: { title: Localized; body: Localized }[]; videos: { title: Localized; url: string }[]; images: string[] }
+export const emptyDetails = (): GameDetails => ({
+  texts: [0, 1].map(() => ({ title: { ar: '', en: '' }, body: { ar: '', en: '' } })),
+  videos: [0, 1, 2, 3].map(() => ({ title: { ar: '', en: '' }, url: '' })),
+  images: ['', '', '', ''],
+});
+/** The dashboard form always shows every slot (2 texts, 4 videos, 4 images): fill the missing ones with empty slots. */
+export const fullDetails = (d?: Partial<GameDetails>): GameDetails => {
+  const e = emptyDetails();
+  return { texts: e.texts.map((t, i) => ({ ...t, ...(d?.texts?.[i] ?? {}) })), videos: e.videos.map((v, i) => ({ ...v, ...(d?.videos?.[i] ?? {}) })), images: e.images.map((_, i) => d?.images?.[i] ?? '') };
+};
 /** YouTube link or bare id → id. */
 export const youtubeId = (v: string) => (v.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)?.[1] ?? (/^[\w-]{11}$/.test(v.trim()) ? v.trim() : ''));
-const split = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
 /** Fields of a game that come from its details row; empty details keep the built-in values. */
-function applyDetails(name: Localized, d: GameDetails | undefined, base: Partial<Game>): Partial<Game> {
-  if (!d) return base;
-  const out: Partial<Game> = { ...base };
-  const ar = split(d.how?.ar ?? ''), en = split(d.how?.en ?? '');
-  if (ar.length || en.length) out.howToPlay = Array.from({ length: Math.max(ar.length, en.length) }, (_, i) => ({ ar: ar[i] || en[i] || '', en: en[i] || ar[i] || '' }));
-  if (d.tip?.ar || d.tip?.en) out.tip = { ar: d.tip.ar || d.tip.en, en: d.tip.en || d.tip.ar };
-  if (d.players) out.players = d.players;
-  if (d.minutes) out.minutes = d.minutes;
-  if (d.level === 'easy' || d.level === 'medium' || d.level === 'hard') out.level = d.level;
-  const id = youtubeId(d.video ?? '');
-  if (id) out.videos = [{ title: name, youtubeId: id }];
+function applyDetails(d: GameDetails | undefined): Partial<Game> {
+  if (!d) return {};
+  const out: Partial<Game> = {};
+  const texts = (d.texts ?? []).filter((t) => t.title.ar || t.title.en || t.body.ar || t.body.en).map((t) => ({ title: { ar: t.title.ar || t.title.en, en: t.title.en || t.title.ar }, body: { ar: t.body.ar || t.body.en, en: t.body.en || t.body.ar } }));
+  if (texts.length) out.texts = texts;
+  const videos = (d.videos ?? []).map((v) => ({ id: youtubeId(v.url ?? ''), t: v.title })).filter((v) => v.id).map((v) => ({ youtubeId: v.id, title: { ar: v.t.ar || v.t.en, en: v.t.en || v.t.ar } }));
+  if (videos.length) out.videos = videos;
+  const images = (d.images ?? []).filter(Boolean);
+  if (images.length) out.images = images;
   return out;
 }
 export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean; tournamentOnly?: boolean; details?: GameDetails }
@@ -138,7 +138,7 @@ export function mergeGames(rows: GameRow[]): AdminGame[] {
     const tagline = { en: r?.tagline.en || b.tagline.en, ar: r?.tagline.ar || b.tagline.ar };
     const name = { en: r?.name.en || b.name.en, ar: r?.name.ar || b.name.ar };
     return {
-      ...b, ...applyDetails(name, r?.details, {}), details: r?.details, genreKey: gk, genre: genres[gk], colors: gk === keyOf(b.genre) ? b.colors : palette[gk],
+      ...b, ...applyDetails(r?.details), details: r?.details, genreKey: gk, genre: genres[gk], colors: gk === keyOf(b.genre) ? b.colors : palette[gk],
       name, tagline, overview: r?.tagline.en || r?.tagline.ar ? tagline : b.overview,
       image: r?.image || b.image, tone: r?.image ? undefined : b.tone, hidden: !!r?.hidden, custom: false, tournamentOnly: !!r?.tournamentOnly,
     };
@@ -148,7 +148,7 @@ export function mergeGames(rows: GameRow[]): AdminGame[] {
     const gk = genres[r.genre] ? r.genre : 'Arcade';
     const name = { en: r.name.en || r.name.ar, ar: r.name.ar || r.name.en };
     list.push({
-      ...applyDetails(name, r.details, {}), details: r.details,
+      ...applyDetails(r.details), details: r.details,
       id: r.id, genreKey: gk, genre: genres[gk], colors: palette[gk], name,
       tagline: r.tagline, overview: r.tagline, image: r.image || undefined, hidden: r.hidden, custom: true, tournamentOnly: !!r.tournamentOnly,
     });

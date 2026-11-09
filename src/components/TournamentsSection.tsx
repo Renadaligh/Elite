@@ -69,7 +69,7 @@ function Facts({ x }: { x: Tournament }) {
   );
 }
 
-function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
+export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   if (s !== 'upcoming' || x.slots.filled >= x.slots.total) return null;
