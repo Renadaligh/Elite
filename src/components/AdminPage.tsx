@@ -3,6 +3,8 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type Adm
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
+import { MAX_PLAYERS, champion, generate, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import BracketView from './BracketView';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import { ArrowIcon } from './icons';
@@ -36,6 +38,12 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
+  'البراكت': 'Bracket', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
+  'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
+  'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
+  'لم تُحفظ التعديلات بعد': 'Unsaved changes', 'البث المباشر': 'Live stream', 'رابط البث (Twitch / YouTube / Kick)': 'Stream link (Twitch / YouTube / Kick)', 'تشغيل البث للزوار': 'Show the stream to visitors',
+  'إيقافه = لا شيء يظهر للزوار': 'Off = nothing is shown to visitors', 'الفائز بالبطولة': 'Tournament champion', 'أقصى عدد لاعبين': 'Max players', 'اللاعبون': 'Players',
   'حذف هذه البطولة؟': 'Delete this tournament?', 'بطولة جديدة': 'New tournament', 'تعديل البطولة': 'Edit tournament',
   'اسم البطولة': 'Tournament name', 'اللعبة': 'Game', 'النوع': 'Type', 'فردي (Plato ID)': 'Solo (Plato ID)',
   'فرق (اسم الفريق + القائد + الأعضاء)': 'Teams (team name + captain + members)', 'النظام': 'Format', 'فردي · أسرع لفة': 'Solo · Fastest lap',
@@ -121,6 +129,7 @@ const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: '�
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
 const sel = `${inp} sel`;
+const selCls = sel;
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
 const gradBtn = { background: 'linear-gradient(135deg,#ff3347,#d90f26)', boxShadow: '0 8px 22px -8px rgba(235,40,60,.7)' };
@@ -247,7 +256,7 @@ function PageHead({ title, sub, action }: { title: string; sub?: string; action?
     </div>
   );
 }
-function Drawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+function Drawer({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', k);
@@ -256,7 +265,7 @@ function Drawer({ title, onClose, children }: { title: string; onClose: () => vo
   }, [onClose]);
   return (
     <div className="backdrop-fade fixed inset-0 z-[90] flex items-end justify-center bg-black/60 backdrop-blur-[2px] sm:items-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <aside role="dialog" aria-modal="true" aria-label={title} className="modal-in flex h-full w-full flex-col sm:h-auto sm:max-h-[90vh] sm:max-w-[42rem] sm:rounded-2xl sm:border sm:shadow-2xl" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+      <aside role="dialog" aria-modal="true" aria-label={title} className={`modal-in flex h-full w-full flex-col sm:h-auto sm:max-h-[90vh] ${wide ? 'sm:max-w-[74rem]' : 'sm:max-w-[42rem]'} sm:rounded-2xl sm:border sm:shadow-2xl`} style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
         <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--glass-b)' }}>
           <h2 className="text-[1.15rem] font-extrabold">{title}</h2>
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full border" style={{ borderColor: 'var(--glass-b)' }} aria-label="Close"><XI className="h-4 w-4" /></button>
@@ -417,11 +426,97 @@ const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en:
 const ST_TONE = { live: 'red', upcoming: 'amber', completed: 'gray' } as const;
 const ST_AR = { live: 'مباشرة', upcoming: 'قادمة', completed: 'منتهية' } as const;
 
+/* ---------- Bracket + live stream (per tournament) ---------- */
+function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournament>; k: string; onClose: () => void; onAuthFail: () => void; onSaved: () => void }) {
+  const { lang, x } = useX();
+  const toast = useToast();
+  const [br, setBr] = useState<Bracket | null>(t0.bracket ?? null);
+  const [dirty, setDirty] = useState(false);
+  const [fmt, setFmt] = useState<BFormat>('single');
+  const [names, setNames] = useState('');
+  const [shuf, setShuf] = useState(false);
+  const [sel, setSel] = useState<string | null>(null);
+  const [url, setUrl] = useState(t0.streamUrl ?? '');
+  const [live, setLive] = useState(!!t0.streamLive);
+  const upd = (b: Bracket | null) => { setBr(b); setDirty(true); };
+
+  function create() {
+    const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
+    if (list.length < 2) { toast.err(x('أدخل لاعبَين على الأقل')); return; }
+    upd(generate(fmt, shuf ? shuffled(list) : list)); setSel(null);
+  }
+  function pick(m: BMatch, side: 'a' | 'b') {
+    if (!br) return;
+    setSel(m.id);
+    upd(setWinner(br, m.id, m.win === side ? undefined : side));
+  }
+  const m = br && sel ? br.matches.find((i) => i.id === sel) : undefined;
+  const R = br ? resolve(br) : null;
+
+  async function save() {
+    try {
+      await api(`/tournaments/${t0.id}/bracket`, { method: 'PUT', body: JSON.stringify({ bracket: br, streamUrl: url, streamLive: live }), key: k });
+      setDirty(false); toast.ok(x('تم حفظ البراكت')); onSaved();
+    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تعذّر تنفيذ العملية'))); }
+  }
+  const champ = br ? champion(br) : null;
+
+  return (
+    <Drawer wide title={`${x('إدارة البراكت والبث')} — ${t0.name[lang] || t0.name.ar || t0.name.en}`} onClose={onClose}>
+      <div className="grid min-w-0 grid-cols-1 gap-6 [&>*]:min-w-0">
+        <div className="rounded-xl border p-4" style={bd}>
+          <b className="mb-3 block">{x('البث المباشر')}</b>
+          <div className="grid gap-3">
+            <Field label={x('رابط البث (Twitch / YouTube / Kick)')}><input dir="ltr" className={inp} style={bd} value={url} placeholder="https://twitch.tv/…" onChange={(e) => { setUrl(e.target.value); setDirty(true); }} /></Field>
+            <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={live} onChange={(e) => { setLive(e.target.checked); setDirty(true); }} />{x('تشغيل البث للزوار')} <span style={{ color: 'var(--muted)' }}>· {x('إيقافه = لا شيء يظهر للزوار')}</span></label>
+          </div>
+        </div>
+
+        {!br ? (
+          <div className="grid gap-4 rounded-xl border p-4" style={bd}>
+            <b>{x('البراكت')}</b>
+            <Field label={x('نظام البراكت')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option></select></Field>
+            <Field label={`${x('اللاعبون (اسم في كل سطر، الأعلى = الأقوى)')} · ${x('أقصى عدد لاعبين')} ${MAX_PLAYERS}`}><textarea rows={8} dir="auto" className={inp} style={bd} value={names} onChange={(e) => setNames(e.target.value)} /></Field>
+            <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{x('خلط اللاعبين عشوائياً')}</label>
+            <div><button type="button" className={btnP} style={gradBtn} onClick={create}>{x('إنشاء البراكت')}</button></div>
+          </div>
+        ) : (
+          <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-3"><b>{x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green">🏆 {br.players[champ]}</Badge>}</div>
+            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} /></div>
+            {m && R && (
+              <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={bd}>
+                <b className="self-center">{m.id}</b>
+                <Field label={x('نتيجة المباراة (اختياري)')}>
+                  <div className="flex items-center gap-2" dir="ltr">
+                    <input className={`${inp} !w-16 text-center`} style={bd} maxLength={4} value={m.sa ?? ''} onChange={(e) => upd(setScore(br, m.id, e.target.value, m.sb ?? ''))} />
+                    <span>–</span>
+                    <input className={`${inp} !w-16 text-center`} style={bd} maxLength={4} value={m.sb ?? ''} onChange={(e) => upd(setScore(br, m.id, m.sa ?? '', e.target.value))} />
+                  </div>
+                </Field>
+                {m.win && <button type="button" className={btnG} style={bd} onClick={() => upd(setWinner(br, m.id, undefined))}>{x('تراجع (إلغاء الفائز)')}</button>}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3 border-t pt-4" style={bd}>
+          <button type="button" className={btnP} style={gradBtn} onClick={save}>{x('حفظ البراكت')}</button>
+          {br && <button type="button" className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { if (window.confirm(x('حذف البراكت وإعادة البدء؟'))) { upd(null); setSel(null); } }}>{x('حذف البراكت')}</button>}
+          <button type="button" className={btnG} style={bd} onClick={onClose}>{x('إلغاء')}</button>
+          {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}
+        </div>
+      </div>
+    </Drawer>
+  );
+}
+
 function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const { lang, x } = useX();
   const GAMES = useGames();
   const [rows, setRows] = useState<Adm<Tournament>[]>([]);
   const [f, setF] = useState<Adm<Tournament> | null>(null);
+  const [brT, setBrT] = useState<Adm<Tournament> | null>(null);
   const toast = useToast();
   const load = useCallback(() => { api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setRows).catch(() => toast.err(x('تعذّر تحميل البطولات'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
@@ -459,7 +554,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">Major</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">Major</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
                 <div className="mt-1 text-[.8rem]" dir="ltr" style={{ color: 'var(--muted)', textAlign: lang === 'ar' ? 'right' : 'left' }}>{when(r.startsAt)}</div>
               </div>
               <div className="w-36">
@@ -467,6 +562,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div>
               </div>
               <div className="flex gap-2">
+                <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('البراكت')}{r.bracket ? ' ✓' : ''}</button>
                 <button className={btnG} style={bd} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}>{x('تعديل')}</button>
                 <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(r.id)}>{x('حذف')}</button>
               </div>
@@ -476,6 +572,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
         {!rows.length && <Card className="p-8 text-center"><span style={{ color: 'var(--muted)' }}>{x('ما فيه بطولات بعد.')}</span></Card>}
       </div>
 
+      {brT && <BracketAdmin key={brT.id} t0={brT} k={k} onClose={() => setBrT(null)} onAuthFail={onAuthFail} onSaved={load} />}
       {f && (
         <Drawer title={x(f.id ? 'تعديل البطولة' : 'بطولة جديدة')} onClose={() => setF(null)}>
           <form onSubmit={save} className="grid gap-4">

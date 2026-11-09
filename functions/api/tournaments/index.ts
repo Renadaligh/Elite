@@ -1,11 +1,17 @@
 import { body, denied, isAdmin, json, newId, num, safeUrl, str, type Ctx } from '../../_lib';
 
-type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; published: number };
-const out = (r: Row) => ({
+type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number };
+/** The bracket is stored as JSON text; bad/empty text just means "no bracket". */
+const bracketOf = (s?: string) => { try { return s ? JSON.parse(s) : undefined; } catch { return undefined; } };
+const out = (r: Row, admin = false) => ({
   id: r.id, gameId: r.game_id, name: { en: r.name_en, ar: r.name_ar }, format: { en: r.format_en, ar: r.format_ar }, prize: { en: r.prize_en, ar: r.prize_ar },
   startsAt: r.starts_at, endsAt: r.ends_at, slots: { filled: r.filled, total: r.total }, mode: r.mode === 'team' ? 'team' : 'solo', tier: r.tier === 'major' ? 'major' : 'regular',
   registerUrl: r.register_url || undefined, image: r.image || undefined, imagePos: r.image_pos || undefined,
   winner: r.winner_en || r.winner_ar ? { en: r.winner_en || r.winner_ar, ar: r.winner_ar || r.winner_en } : undefined, winnerMembers: r.winner_members ? r.winner_members.split('\n') : undefined, published: !!r.published,
+  // Finished tournaments keep their bracket in the database for the dashboard only; visitors never get it.
+  bracket: admin || Date.now() <= Date.parse(r.ends_at) ? bracketOf(r.bracket) : undefined,
+  // The stream link is only public while the dashboard toggle is on.
+  streamLive: !!r.stream_live && !!r.stream_url, streamUrl: admin || (r.stream_live && r.stream_url) ? r.stream_url || undefined : undefined,
 });
 
 const pair = (v: unknown, max = 200) => { const o = (v ?? {}) as Record<string, unknown>; const en = str(o.en, max), ar = str(o.ar, max); return { en: en || ar, ar: ar || en }; };
@@ -31,7 +37,7 @@ export function parse(b: Record<string, unknown>) {
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const all = isAdmin(request, env);
   const { results } = await env.DB.prepare(`SELECT * FROM tournaments ${all ? '' : 'WHERE published = 1'} ORDER BY starts_at DESC`).all<Row>();
-  return json(results.map(out));
+  return json(results.map((r) => out(r, all)));
 };
 
 export const onRequestPost = async ({ request, env }: Ctx) => {

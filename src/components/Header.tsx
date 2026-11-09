@@ -5,7 +5,7 @@ import BrandLockup from './BrandLockup';
 import { CloseIcon, MenuIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
-export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'admin' }) {
+export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tournament' | 'admin' }) {
   const { t, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);

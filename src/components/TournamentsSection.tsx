@@ -72,6 +72,7 @@ function Facts({ x }: { x: Tournament }) {
 export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  if (s === 'live' && x.bracket) return <a href={`#/tournaments/${x.id}`} className="btn-primary mt-5 self-start">{t.tBracket} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   if (s !== 'upcoming' || x.slots.filled >= x.slots.total) return null;
   if (x.registerUrl) return <a href={x.registerUrl} target="_blank" rel="noopener noreferrer" className="btn-primary mt-5 self-start">{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   return (
