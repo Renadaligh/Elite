@@ -20,7 +20,7 @@ export interface BMatch {
   sb?: string;
   win?: 'a' | 'b';
 }
-export interface Bracket { format: BFormat; players: string[]; matches: BMatch[] }
+export interface Bracket { format: BFormat; players: string[]; matches: BMatch[]; /** id of the match being played right now (shown as LIVE) */ cur?: string }
 
 /** number = player index · 'bye' = empty seat · null = not decided yet. */
 export type Who = number | 'bye' | null;
@@ -105,8 +105,12 @@ export function setWinner(br: Bracket, id: string, side?: 'a' | 'b'): Bracket {
   const m0 = br.matches.find((m) => m.id === id);
   if (!m0) return br;
   const clear = m0.win !== side ? dependents(br, id) : new Set<string>();
-  return { ...br, matches: br.matches.map((m) => (m.id === id ? { ...m, win: side } : clear.has(m.id) ? { ...m, win: undefined, sa: undefined, sb: undefined } : m)) };
+  // A decided match is no longer "current" (and neither is one whose result was just cleared downstream).
+  const cur = br.cur === id && side ? undefined : br.cur;
+  return { ...br, cur: cur && !clear.has(cur) ? cur : undefined, matches: br.matches.map((m) => (m.id === id ? { ...m, win: side } : clear.has(m.id) ? { ...m, win: undefined, sa: undefined, sb: undefined } : m)) };
 }
+
+export const setCurrent = (br: Bracket, id?: string): Bracket => ({ ...br, cur: id });
 
 export function setScore(br: Bracket, id: string, sa: string, sb: string): Bracket {
   return { ...br, matches: br.matches.map((m) => (m.id === id ? { ...m, sa: sa || undefined, sb: sb || undefined } : m)) };

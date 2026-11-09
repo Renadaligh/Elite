@@ -3,7 +3,7 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type Adm
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, champion, generate, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, champion, generate, setCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -38,7 +38,7 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
-  'البراكت': 'Bracket', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'البراكت': 'Bracket', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
   'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
   'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
   'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
@@ -436,6 +436,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [names, setNames] = useState('');
   const [shuf, setShuf] = useState(false);
   const [sel, setSel] = useState<string | null>(null);
+  const [editP, setEditP] = useState(false);
   const [url, setUrl] = useState(t0.streamUrl ?? '');
   const [live, setLive] = useState(!!t0.streamLive);
   const upd = (b: Bracket | null) => { setBr(b); setDirty(true); };
@@ -449,6 +450,11 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     if (!br) return;
     setSel(m.id);
     upd(setWinner(br, m.id, m.win === side ? undefined : side));
+  }
+  const rename = (i: number, v: string) => br && upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
+  function rebuild() {
+    if (!br || !window.confirm(x('إعادة البناء تمسح النتائج الحالية. متأكد؟'))) return;
+    setNames(br.players.join('\n')); setFmt(br.format); upd(null); setSel(null); setEditP(false);
   }
   const m = br && sel ? br.matches.find((i) => i.id === sel) : undefined;
   const R = br ? resolve(br) : null;
@@ -484,6 +490,18 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green">🏆 {br.players[champ]}</Badge>}</div>
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} /></div>
+            <div className="rounded-xl border p-3" style={bd}>
+              <button type="button" className={btnG} style={bd} onClick={() => setEditP((v) => !v)}>{x('تعديل أسماء اللاعبين')} {editP ? '▲' : '▼'}</button>
+              {editP && (
+                <div className="mt-3 grid gap-3">
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {br.players.map((p, i) => <label key={i} className="flex items-center gap-2 text-[.8rem]"><span className="w-6 text-center" style={{ color: 'var(--muted)' }}>{i + 1}</span><input dir="auto" className={inp} style={bd} value={p} onChange={(e) => rename(i, e.target.value)} /></label>)}
+                  </div>
+                  <p className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{x('تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:')}</p>
+                  <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('تعديل القائمة وإعادة البناء')}</button></div>
+                </div>
+              )}
+            </div>
             {m && R && (
               <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={bd}>
                 <b className="self-center">{m.id}</b>
@@ -494,6 +512,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                     <input className={`${inp} !w-16 text-center`} style={bd} maxLength={4} value={m.sb ?? ''} onChange={(e) => upd(setScore(br, m.id, m.sa ?? '', e.target.value))} />
                   </div>
                 </Field>
+                {!m.win && typeof R.get(m.id)?.a === 'number' && typeof R.get(m.id)?.b === 'number' && <button type="button" className={btnP} style={gradBtn} onClick={() => upd(setCurrent(br, br.cur === m.id ? undefined : m.id))}>{br.cur === m.id ? x('إلغاء "المباراة الحالية"') : x('تحديد كالمباراة الحالية')}</button>}
                 {m.win && <button type="button" className={btnG} style={bd} onClick={() => upd(setWinner(br, m.id, undefined))}>{x('تراجع (إلغاء الفائز)')}</button>}
               </div>
             )}

@@ -24,7 +24,8 @@ function cleanBracket(v: unknown) {
       sa: txt(m.sa, 4) || undefined, sb: txt(m.sb, 4) || undefined, win: m.win === 'a' || m.win === 'b' ? m.win : undefined,
     });
   }
-  return { format: o.format, players, matches };
+  const cur = typeof o.cur === 'string' && matches.some((m) => m.id === o.cur) ? o.cur : undefined;
+  return { format: o.format, players, matches, cur };
 }
 
 /** Admin only. Body may hold any of: bracket (object, or null to remove it), streamUrl, streamLive. Only the given fields change. */

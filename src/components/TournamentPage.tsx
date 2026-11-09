@@ -6,6 +6,7 @@ import { useTournaments } from '../hooks/useTournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { ArrowIcon } from './icons';
 import BracketView from './BracketView';
+import { resolve } from '../data/bracket';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
 const ST = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' } as const;
@@ -31,6 +32,9 @@ export default function TournamentPage({ id }: { id: string }) {
   }
   const s = statusOf(x, Date.now());
   const g = getGame(x.gameId);
+  const cm = x.bracket?.cur && s !== 'completed' ? x.bracket.matches.find((m) => m.id === x.bracket!.cur && !m.win) : undefined;
+  const cr = cm && x.bracket ? resolve(x.bracket).get(cm.id) : undefined;
+  const pn = (w: unknown) => (typeof w === 'number' ? x.bracket!.players[w] : '');
   const embed = x.streamLive ? streamEmbed(x.streamUrl) : null;
   return (
     <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ background: 'var(--bg)' }}>
@@ -54,6 +58,12 @@ export default function TournamentPage({ id }: { id: string }) {
 
       <section aria-label={t.tBracketTitle}>
         <h2 className="mb-3 text-[1.2rem] font-extrabold">{t.tBracketTitle}</h2>
+        {cr && typeof cr.a === 'number' && typeof cr.b === 'number' && (
+          <p className="mb-4 inline-flex flex-wrap items-center gap-3 rounded-xl border px-4 py-2.5 text-[.95rem]" style={{ borderColor: '#ff3347', background: 'rgba(255,51,71,.1)' }}>
+            <span className="rounded px-2 py-0.5 text-[.65rem] font-extrabold tracking-wider text-white" style={{ background: '#ff3347' }}>{lang === 'ar' ? 'الآن' : 'LIVE'}</span>
+            <b>{pn(cr.a)}</b><span style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'ضد' : 'vs'}</span><b>{pn(cr.b)}</b>
+          </p>
+        )}
         {x.bracket && s !== 'completed' ? <BracketView bracket={x.bracket} />
           : <p className="rounded-2xl border px-5 py-6" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{t.tNoBracket}</p>}
       </section>

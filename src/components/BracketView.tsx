@@ -25,7 +25,8 @@ function Row({ name, state, score, win, lose, onClick }: { name: string; state: 
 }
 
 export default function BracketView({ bracket, onPick, selected }: Props) {
-  const { lang } = useI18n();
+  const { lang, dir } = useI18n();
+  const rtl = dir === 'rtl';
   const R = useMemo(() => resolve(bracket), [bracket]);
   const L = useMemo(() => layout(bracket), [bracket]);
   const champ = champion(bracket);
@@ -50,7 +51,7 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
           if (!('w' in s)) continue;
           const from = els.current.get(s.w); if (!from) continue;
           const fb = from.getBoundingClientRect();
-          const x1 = fb.right - o.left, y1 = fb.top + fb.height / 2 - o.top, x2 = tb.left - o.left, y2 = tb.top + tb.height / 2 - o.top, mx = (x1 + x2) / 2;
+          const x1 = (rtl ? fb.left : fb.right) - o.left, y1 = fb.top + fb.height / 2 - o.top, x2 = (rtl ? tb.right : tb.left) - o.left, y2 = tb.top + tb.height / 2 - o.top, mx = (x1 + x2) / 2;
           out.push({ d: `M${x1} ${y1} H${mx} V${y2} H${x2}`, on: R.get(s.w)?.win != null });
         }
       }
@@ -60,14 +61,15 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
     const ro = new ResizeObserver(calc); if (wrap.current) ro.observe(wrap.current);
     document.fonts?.ready.then(calc).catch(() => undefined);
     return () => ro.disconnect();
-  }, [bracket, R, lang]);
+  }, [bracket, R, lang, rtl]);
 
   const card = (m: BMatch) => {
     const r = R.get(m.id) as Resolved;
     const isBye = r.a === 'bye' || r.b === 'bye';
     const can = (w: Who) => !!onPick && typeof w === 'number' && !isBye;
     return (
-      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''}`}>
+      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${bracket.cur === m.id && !m.win ? 'is-cur' : ''}`}>
+        {bracket.cur === m.id && !m.win && <span className="br-live">{lang === 'ar' ? 'الآن' : 'LIVE'}</span>}
         <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} />
         <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} />
         {onPick && <span className="br-id">{m.id}</span>}
@@ -89,7 +91,7 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
   );
 
   return (
-    <div className="br-scroll" dir="ltr">
+    <div className="br-scroll" dir={dir}>
       <div className="br-wrap" ref={wrap}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
