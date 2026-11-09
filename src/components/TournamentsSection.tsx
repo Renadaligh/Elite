@@ -138,7 +138,7 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
       )}
       <NinjaMark />
       <div className={`relative flex min-w-0 flex-1 flex-col p-5 ${x.image ? 'pt-24' : ''}`}>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</span>{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
         <h3 className="text-[1.15rem] font-semibold leading-snug">{x.name[lang]}</h3>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time></p>
         <Facts x={x} />
