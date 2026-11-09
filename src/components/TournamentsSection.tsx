@@ -128,7 +128,6 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const fmt = useFmt();
   useGames();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#ff3347', '#3a0710'];
   return (
     <article className="news-card news-card-hover">
       {x.image && (
@@ -137,7 +136,6 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
           <div aria-hidden="true" className="tour-fade" />
         </>
       )}
-      <div className="relative h-1.5" style={{ background: `linear-gradient(90deg, ${c[0]}, ${c[1]})` }} aria-hidden="true" />
       <NinjaMark />
       <div className={`relative flex min-w-0 flex-1 flex-col p-5 ${x.image ? 'pt-24' : ''}`}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
