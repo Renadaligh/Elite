@@ -245,3 +245,12 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .br-live { display: block; padding: 1px 0; background: #ff3347; color: #fff; text-align: center; font-size: .6rem; font-weight: 800; letter-spacing: .1em; line-height: 1.3; }
 @keyframes br-pulse { 50% { box-shadow: 0 0 0 2px rgba(255,51,71,.2), 0 0 8px rgba(255,51,71,.15); } }
 @media (prefers-reduced-motion: reduce) { .br-match.is-cur { animation: none; } }
+
+.br-mobile { display: grid; gap: 12px; }
+.br-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.br-chip { flex: none; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--glass-b, rgba(255,255,255,.2)); background: var(--glass, rgba(255,255,255,.06)); color: var(--muted); font-size: .85rem; font-weight: 600; }
+.br-chip.on { color: #fff; background: linear-gradient(135deg, #ff3347, #d90f26); border-color: transparent; }
+.br-toggle { justify-self: start; margin-bottom: 8px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--glass-b, rgba(255,255,255,.2)); color: var(--muted); font-size: .8rem; }
+.br-list { display: grid; gap: 12px; }
+.br-list .br-match { width: 100%; }
+.br-list .br-row { padding: 12px 14px; font-size: .95rem; }

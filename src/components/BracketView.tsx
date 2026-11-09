@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { champion, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 
@@ -24,12 +24,33 @@ function Row({ name, state, score, win, lose, onClick }: { name: string; state: 
   );
 }
 
+function useNarrow() {
+  const q = '(max-width: 767px)';
+  const [n, setN] = useState(() => typeof window !== 'undefined' && window.matchMedia(q).matches);
+  useEffect(() => { const m = window.matchMedia(q); const on = () => setN(m.matches); m.addEventListener('change', on); return () => m.removeEventListener('change', on); }, []);
+  return n;
+}
+
 export default function BracketView({ bracket, onPick, selected }: Props) {
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
   const R = useMemo(() => resolve(bracket), [bracket]);
   const L = useMemo(() => layout(bracket), [bracket]);
   const champ = champion(bracket);
+  const narrow = useNarrow();
+  const [tree, setTree] = useState(false); // phone: user asked for the full tree
+  const showTree = !narrow || tree;
+  // Phone list view: pick a branch + round; opens on the round of the current match (else the first round still to play).
+  const playable = (m: BMatch) => { const r = R.get(m.id); return !!r && r.a !== 'bye' && r.b !== 'bye'; };
+  const start = useMemo(() => {
+    const open = bracket.matches.find((m) => m.id === bracket.cur && !m.win) ?? bracket.matches.find((m) => { const r = R.get(m.id); return !m.win && playable(m) && typeof r?.a === 'number' && typeof r?.b === 'number'; });
+    const last = L.final ?? L.winners[L.winners.length - 1]?.[0];
+    const m0 = open ?? last;
+    return { br: m0?.br ?? 'W', round: m0?.round ?? 1 };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [sbr, setSbr] = useState<'W' | 'L' | 'F'>(start.br);
+  const [srd, setSrd] = useState(start.round);
   const wrap = useRef<HTMLDivElement>(null);
   const els = useRef(new Map<string, HTMLElement>());
   const [lines, setLines] = useState<{ d: string; on: boolean }[]>([]);
@@ -61,7 +82,7 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
     const ro = new ResizeObserver(calc); if (wrap.current) ro.observe(wrap.current);
     document.fonts?.ready.then(calc).catch(() => undefined);
     return () => ro.disconnect();
-  }, [bracket, R, lang, rtl]);
+  }, [bracket, R, lang, rtl, showTree]);
 
   const card = (m: BMatch) => {
     const r = R.get(m.id) as Resolved;
@@ -90,8 +111,35 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
     </div>
   );
 
+  const branches: ('W' | 'L' | 'F')[] = bracket.format === 'double' ? ['W', 'L', 'F'] : ['W'];
+  const bname = (b: 'W' | 'L' | 'F') => (b === 'W' ? (bracket.format === 'double' ? (lang === 'ar' ? 'الفائزين' : 'Winners') : '') : b === 'L' ? (lang === 'ar' ? 'الخاسرين' : 'Losers') : (lang === 'ar' ? 'النهائي الكبير' : 'Grand final'));
+  const rounds = sbr === 'W' ? L.winners : sbr === 'L' ? L.losers : L.final ? [[L.final]] : [];
+  const ri = Math.max(0, rounds.findIndex((ms) => ms[0].round === srd));
+  const shown = (rounds[ri] ?? []).filter(playable);
+  const chip = (on: boolean, label: string, click: () => void, key: string) => (
+    <button key={key} type="button" onClick={click} className={`br-chip ${on ? 'on' : ''}`}>{label}</button>
+  );
+  const toggle = narrow && (
+    <button type="button" className="br-toggle" onClick={() => setTree((v) => !v)}>{tree ? (lang === 'ar' ? 'عرض بالجولات' : 'Round view') : (lang === 'ar' ? 'عرض الشجرة كاملة' : 'Full tree')}</button>
+  );
+
+  if (!showTree) {
+    return (
+      <div className="br-mobile" dir={dir}>
+        {toggle}
+        {branches.length > 1 && <div className="br-chips">{branches.map((b) => chip(sbr === b, bname(b), () => { setSbr(b); setSrd(b === 'W' ? 1 : b === 'L' ? 1 : 1); }, b))}</div>}
+        {sbr !== 'F' && <div className="br-chips">{rounds.map((ms) => chip(ms[0].round === rounds[ri]?.[0].round, roundName(lang, sbr as 'W' | 'L', ms[0].round, rounds.length), () => setSrd(ms[0].round), String(ms[0].round)))}</div>}
+        <div className="br-list">
+          {shown.length ? shown.map(card) : <p style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'ما فيه مباريات' : 'No matches'}</p>}
+        </div>
+        {champ !== null && <div className="br-champ"><span>🏆</span><b>{bracket.players[champ]}</b></div>}
+      </div>
+    );
+  }
+
   return (
     <div className="br-scroll" dir={dir}>
+      {toggle}
       <div className="br-wrap" ref={wrap}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
