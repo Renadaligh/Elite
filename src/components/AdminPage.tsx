@@ -3,7 +3,7 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type Adm
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, champion, generate, setCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -503,7 +503,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
               )}
             </div>
             {m && R && (
-              <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={bd}>
+              <div className="sticky bottom-0 z-10 flex flex-wrap items-end gap-3 rounded-xl border p-3 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>
                 <b className="self-center">{m.id}</b>
                 <Field label={x('نتيجة المباراة (اختياري)')}>
                   <div className="flex items-center gap-2" dir="ltr">
@@ -512,7 +512,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                     <input className={`${inp} !w-16 text-center`} style={bd} maxLength={4} value={m.sb ?? ''} onChange={(e) => upd(setScore(br, m.id, m.sa ?? '', e.target.value))} />
                   </div>
                 </Field>
-                {!m.win && typeof R.get(m.id)?.a === 'number' && typeof R.get(m.id)?.b === 'number' && <button type="button" className={btnP} style={gradBtn} onClick={() => upd(setCurrent(br, br.cur === m.id ? undefined : m.id))}>{br.cur === m.id ? x('إلغاء "المباراة الحالية"') : x('تحديد كالمباراة الحالية')}</button>}
+                {!m.win && typeof R.get(m.id)?.a === 'number' && typeof R.get(m.id)?.b === 'number' && <button type="button" className={btnP} style={gradBtn} onClick={() => upd(toggleCurrent(br, m.id))}>{isCurrent(br, m.id) ? x('إلغاء "المباراة الحالية"') : x('تحديد كالمباراة الحالية')}</button>}
                 {m.win && <button type="button" className={btnG} style={bd} onClick={() => upd(setWinner(br, m.id, undefined))}>{x('تراجع (إلغاء الفائز)')}</button>}
               </div>
             )}

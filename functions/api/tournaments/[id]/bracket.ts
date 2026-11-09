@@ -24,8 +24,10 @@ function cleanBracket(v: unknown) {
       sa: txt(m.sa, 4) || undefined, sb: txt(m.sb, 4) || undefined, win: m.win === 'a' || m.win === 'b' ? m.win : undefined,
     });
   }
-  const cur = typeof o.cur === 'string' && matches.some((m) => m.id === o.cur) ? o.cur : undefined;
-  return { format: o.format, players, matches, cur };
+  // Current matches: an array of known match ids (an old single string is accepted too).
+  const raw = Array.isArray(o.cur) ? o.cur : typeof o.cur === 'string' ? [o.cur] : [];
+  const cur = [...new Set(raw)].filter((c) => matches.some((m) => m.id === c)).slice(0, 16);
+  return { format: o.format, players, matches, cur: cur.length ? cur : undefined };
 }
 
 /** Admin only. Body may hold any of: bracket (object, or null to remove it), streamUrl, streamLive. Only the given fields change. */

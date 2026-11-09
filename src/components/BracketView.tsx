@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { champion, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
+import { champion, isCurrent, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
@@ -43,7 +43,7 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
   // Phone list view: pick a branch + round; opens on the round of the current match (else the first round still to play).
   const playable = (m: BMatch) => { const r = R.get(m.id); return !!r && r.a !== 'bye' && r.b !== 'bye'; };
   const start = useMemo(() => {
-    const open = bracket.matches.find((m) => m.id === bracket.cur && !m.win) ?? bracket.matches.find((m) => { const r = R.get(m.id); return !m.win && playable(m) && typeof r?.a === 'number' && typeof r?.b === 'number'; });
+    const open = bracket.matches.find((m) => isCurrent(bracket, m.id) && !m.win) ?? bracket.matches.find((m) => { const r = R.get(m.id); return !m.win && playable(m) && typeof r?.a === 'number' && typeof r?.b === 'number'; });
     const last = L.final ?? L.winners[L.winners.length - 1]?.[0];
     const m0 = open ?? last;
     return { br: m0?.br ?? 'W', round: m0?.round ?? 1 };
@@ -89,8 +89,8 @@ export default function BracketView({ bracket, onPick, selected }: Props) {
     const isBye = r.a === 'bye' || r.b === 'bye';
     const can = (w: Who) => !!onPick && typeof w === 'number' && !isBye;
     return (
-      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${bracket.cur === m.id && !m.win ? 'is-cur' : ''}`}>
-        {bracket.cur === m.id && !m.win && <span className="br-live">{lang === 'ar' ? 'الآن' : 'LIVE'}</span>}
+      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
+        {isCurrent(bracket, m.id) && !m.win && <span className="br-live">{lang === 'ar' ? 'الآن' : 'LIVE'}</span>}
         <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} />
         <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} />
         {onPick && <span className="br-id">{m.id}</span>}
