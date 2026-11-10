@@ -1,5 +1,5 @@
 import { currentUser, hex, sameOrigin } from '../../_auth';
-import { cleanBracket } from '../../_bracket';
+import { bracketStatus, cleanBracket } from '../../_bracket';
 import { body, denied, json, str, type Ctx } from '../../_lib';
 
 export const MAX_PER_USER = 20;
@@ -10,9 +10,9 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
   if (!u) return denied();
   const { results } = await env.DB.prepare('SELECT id, title, data, updated_at FROM user_brackets WHERE user_id = ? ORDER BY updated_at DESC').bind(u.id).all<{ id: string; title: string; data: string; updated_at: string }>();
   return json(results.map((r) => {
-    let format = 'single', players = 0;
-    try { const b = JSON.parse(r.data); format = b.format; players = b.players.length; } catch { /* keep defaults */ }
-    return { id: r.id, title: r.title, format, players, updatedAt: r.updated_at };
+    let format = 'single', players = 0, status = 'new';
+    try { const b = JSON.parse(r.data); format = b.format; players = b.players.length; status = bracketStatus(b); } catch { /* keep defaults */ }
+    return { id: r.id, title: r.title, format, players, status, updatedAt: r.updated_at };
   }));
 };
 

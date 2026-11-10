@@ -765,7 +765,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
         {shown.map((g, gi) => (
           <Fragment key={g.id}>
             {drag && sorting && drag.over === gi && drag.over !== rows.findIndex((r) => r.id === drag.id) && drag.over !== rows.findIndex((r) => r.id === drag.id) + 1 && <div className="h-1 rounded-full" style={{ background: '#ff3347' }} />}
-          <Card data-gid={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 ${g.hidden || drag?.id === g.id ? 'opacity-60' : ''} ${drag?.id === g.id ? 'scale-[.98]' : ''}`}>
+          <Card data-gid={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 max-sm:flex-nowrap max-sm:gap-2.5 ${g.hidden || drag?.id === g.id ? 'opacity-60' : ''} ${drag?.id === g.id ? 'scale-[.98]' : ''}`}>
             {sorting && (
               <button type="button" className="grid h-10 w-9 shrink-0 cursor-grab touch-none place-items-center rounded-lg border active:cursor-grabbing" style={bd} aria-label={x('اسحب لتغيير الترتيب')} title={x('اسحب لتغيير الترتيب')}
                 onPointerDown={(e) => dragStart(e, g)} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={dragEnd}
@@ -773,11 +773,11 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M5 7h14M5 12h14M5 17h14" /></svg>
               </button>
             )}
-            <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` }}>
+            <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl max-sm:h-12 max-sm:w-12" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` }}>
               {g.image && <img src={g.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="truncate font-bold">{g.name[lang] || g.name.ar || g.name.en}</div>
+              <div className="truncate font-bold max-sm:whitespace-normal max-sm:break-words max-sm:leading-snug">{g.name[lang] || g.name.ar || g.name.en}</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[.8rem]" style={{ color: 'var(--muted)' }}>
                 <span>{genreLabel(g.genreKey)[lang]}</span>
                 {g.custom && <Badge tone="blue">{x('مضافة')}</Badge>}
@@ -785,14 +785,14 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
                 {g.tournamentOnly && <Badge tone="amber">{x('للبطولات فقط')}</Badge>}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 max-sm:w-full">
-              <button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF(toForm(g)); }}><PenI className="h-4 w-4" /></button>
-              <button type="button" className={`${btnG} !px-3`} style={bd} onClick={() => toggle(g)} aria-label={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')} title={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}>
+            <div className="flex shrink-0 gap-2 max-sm:gap-1.5">
+              <button className={`${btnG} max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF(toForm(g)); }}><PenI className="h-4 w-4" /></button>
+              <button type="button" className={`${btnG} !px-3 max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={bd} onClick={() => toggle(g)} aria-label={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')} title={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}>
                 <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   {g.hidden ? <><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19.5C6.5 19.5 3 12 3 12a17.6 17.6 0 0 1 4.1-5.1M9.9 4.6A9.7 9.7 0 0 1 12 4.5c5.5 0 9 7.5 9 7.5a17.5 17.5 0 0 1-2.2 3.3M14.1 14.1a3 3 0 0 1-4.2-4.2" /><path d="m3 3 18 18" /></> : <><path d="M3 12s3.5-7.5 9-7.5S21 12 21 12s-3.5 7.5-9 7.5S3 12 3 12Z" /><circle cx="12" cy="12" r="3" /></>}
                 </svg>
               </button>
-              <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(g)}><TrashI className="h-4 w-4" /></button>
+              <button className={`${btnG} max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(g)}><TrashI className="h-4 w-4" /></button>
             </div>
           </Card>
           </Fragment>

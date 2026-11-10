@@ -8,7 +8,7 @@ import NewsPage from './components/NewsPage';
 import GamesSection from './components/GamesSection';
 import GamePage from './components/GamePage';
 import TournamentPage from './components/TournamentPage';
-import BracketToolPage from './components/BracketToolPage';
+import BracketStudio from './components/BracketStudio';
 import TournamentsSection from './components/TournamentsSection';
 import ChampionsSection from './components/ChampionsSection';
 import Footer from './components/Footer';
@@ -20,6 +20,7 @@ function Pages() {
   const route = useRoute();
   const firstKey = useRef(route.key); // the page the visitor landed on does not fade (the loader already covers it)
   if (route.page === 'admin') return <AdminPage />;
+  if (route.page === 'bracket') return <div key={route.key.startsWith('bracket:') ? 'studio' : route.key} className="st-root"><BracketStudio id={route.id} /></div>;
   return (
     <>
       <Header page={route.page} />
@@ -28,8 +29,6 @@ function Pages() {
           <NewsPage />
         ) : route.page === 'game' ? (
           <GamePage id={route.id ?? ''} />
-        ) : route.page === 'bracket' ? (
-          <BracketToolPage id={route.id} />
         ) : route.page === 'tournament' ? (
           <TournamentPage id={route.id ?? ''} />
         ) : (

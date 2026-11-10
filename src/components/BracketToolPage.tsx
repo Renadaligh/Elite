@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, type BFormat, type BMatch, type Bracket } from '../data/bracket';
-import { bracketBlob, downloadBlob } from '../data/bracketImage';
 import { useAuth, type AuthUser } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -14,7 +13,7 @@ const card = { background: 'var(--glass)', borderColor: 'var(--glass-b)' };
 const inp = 'w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-[.95rem] outline-none focus:border-[#ff3347]';
 const pill = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold disabled:opacity-60';
 
-const TXT = {
+export const TXT = {
   ar: {
     title: 'أداة البراكت', sub: 'سوِّ براكت لأي سيرفر أو مجتمع: خروج مغلوب أو مزدوج أو دوري أو سويسري. حدّث النتائج واحفظه كصورة أو شاركه.',
     name: 'اسم البطولة', namePh: 'مثلاً: كأس سيرفر الأصدقاء', format: 'النظام', single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', rr: 'دوري (كل لاعب ضد الكل)', swiss: 'سويسري', groups: 'مجموعات ثم إقصائيات', ffa: 'لوحة صدارة (الكل ضد الكل)', dbl: 'دوري مزدوج (ذهاب وإياب)', maxRr: `الدوري: الحد الأقصى ${MAX_RR}`, players: 'اللاعبون / الفرق (سطر لكل واحد، الأعلى = الأقوى)',
@@ -90,7 +89,7 @@ function Shell({ tx, user, onLogin, onLogout, children }: { tx: Tx; user: AuthUs
 interface Draft { title: string; names: string; fmt: BFormat; br: Bracket | null }
 const readDraft = (): Draft => { try { const d = JSON.parse(localStorage.getItem(DRAFT) ?? ''); if (d && typeof d.title === 'string') return d; } catch { /* none */ } return { title: '', names: '', fmt: 'single', br: null }; };
 
-function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth> }) {
+export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth> }) {
   const { lang } = useI18n();
   const init = useMemo(() => (id ? { title: '', names: '', fmt: 'single' as BFormat, br: null } : readDraft()), [id]);
   const [title, setTitle] = useState(init.title);
@@ -151,7 +150,7 @@ function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof
   function copyToEdit() {
     if (!br) return;
     try { localStorage.setItem(DRAFT, JSON.stringify({ title, names: br.players.join('\n'), fmt: br.format, br: { ...br, cur: undefined } })); } catch { /* ignore */ }
-    window.location.hash = '#/bracket';
+    window.location.hash = '#/bracket/new';
   }
 
   const m = br && sel ? br.matches.find((i) => i.id === sel) : undefined;
@@ -228,56 +227,17 @@ function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof
   );
 }
 
-function Mine({ tx, auth, onLogin }: { tx: Tx; auth: ReturnType<typeof useAuth>; onLogin: () => void }) {
-  type Row = { id: string; title: string; format: string; players: number; updatedAt: string };
-  const { lang } = useI18n();
-  const [rows, setRows] = useState<Row[] | null>(null);
-  const [flash, setFlash] = useState('');
-  const load = () => api<Row[]>('/brackets').then(setRows).catch(() => setRows([]));
-  useEffect(() => { if (auth.user) load(); }, [auth.user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const when = (iso: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
-  const say = (s: string) => { setFlash(s); window.setTimeout(() => setFlash(''), 2200); };
-  async function image(r: Row) {
-    try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: r.title, lang }), `${r.title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(tx.saveFail); }
-  }
-  async function del(r: Row) { if (!window.confirm(tx.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(`${base()}#/bracket/${r.id}`); say(tx.linkDone); } catch { say(`${base()}#/bracket/${r.id}`); } }
-
-  if (!auth.ready) return <p style={{ color: 'var(--muted)' }}>…</p>;
-  if (!auth.user) return (<div className="grid max-w-[28rem] gap-4"><p>{tx.needLogin}</p><div><button type="button" className="btn-primary" onClick={onLogin}>{tx.login}</button></div></div>);
-  return (
-    <div className="grid max-w-[52rem] gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-[1.4rem] font-extrabold">{tx.myTitle} {rows ? `(${rows.length})` : ''}</h2><a href="#/bracket" className="btn-primary">{tx.newOne}</a></div>
-      {flash && <p role="status" className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{flash}</p>}
-      {rows && !rows.length && <p className="rounded-2xl border px-5 py-6" style={{ ...card, color: 'var(--muted)' }}>{tx.empty}</p>}
-      {rows?.map((r) => (
-        <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4" style={card}>
-          <div className="min-w-0">
-            <b className="[overflow-wrap:anywhere]">{r.title}</b> <span className="ms-2 rounded-full px-2 py-0.5 text-[.7rem]" style={{ background: 'var(--glass-b)' }}>{(tx as unknown as Record<string, string>)[r.format] ?? tx.single}</span>
-            <div className="mt-1 text-[.8rem]" style={{ color: 'var(--muted)' }}>{r.players} {tx.players_n} · {when(r.updatedAt)}</div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <a href={`#/bracket/${r.id}`} className={pill} style={card}>{tx.open}</a>
-            <button type="button" className={pill} style={card} onClick={() => copy(r)}>{tx.link}</button>
-            <button type="button" className={pill} style={card} onClick={() => image(r)}>{tx.img}</button>
-            <button type="button" className={pill} style={{ ...card, color: '#ff6b7a' }} onClick={() => del(r)}>{tx.del}</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /** Public bracket tool: #/bracket (new) · #/bracket/<id> (a saved bracket: view, or edit if it is yours) · #/bracket/mine (my brackets). */
-export default function BracketToolPage({ id }: { id?: string }) {
+export default function BracketToolPage({ id, auth: given }: { id?: string; auth?: ReturnType<typeof useAuth> }) {
   const { lang } = useI18n();
   const tx = TXT[lang];
-  const auth = useAuth();
+  const own = useAuth();
+  const auth = given ?? own;
   const [login, setLogin] = useState(false);
   return (
     <Shell tx={tx} user={auth.user} onLogin={() => setLogin(true)} onLogout={auth.logout}>
-      {id === 'mine' ? <Mine tx={tx} auth={auth} onLogin={() => setLogin(true)} /> : <Editor key={`${id ?? 'new'}:${auth.user?.id ?? ''}`} id={id} tx={tx} auth={auth} />}
-      {login && <LoginModal tx={tx} providers={auth.providers} r={id === 'mine' ? 'mine' : 'tool'} onClose={() => setLogin(false)} />}
+      <Editor key={`${id ?? 'new'}:${auth.user?.id ?? ''}`} id={id} tx={tx} auth={auth} />
+      {login && <LoginModal tx={tx} providers={auth.providers} r="tool" onClose={() => setLogin(false)} />}
     </Shell>
   );
 }

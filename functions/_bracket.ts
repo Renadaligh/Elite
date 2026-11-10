@@ -82,3 +82,32 @@ export function cleanBracket(v: unknown) {
   }
   return out;
 }
+
+/** new = nothing entered yet · live = in progress · done = a champion exists. Used by the "my brackets" list. */
+export function bracketStatus(v: unknown): 'new' | 'live' | 'done' {
+  const b = v as { format?: string; matches?: Record<string, unknown>[]; fs?: string[][]; ko?: { matches: Record<string, unknown>[] }; opts?: { rounds?: number }; players?: unknown[] };
+  const ms = Array.isArray(b?.matches) ? b.matches : [];
+  const scored = (m: Record<string, unknown>) => m.sa !== undefined && m.sa !== '' && m.sb !== undefined && m.sb !== '';
+  const hasBye = (m: Record<string, unknown>) => [m.a, m.b].some((s) => (s as { bye?: boolean })?.bye);
+  const elimDone = (list: Record<string, unknown>[]) => {
+    const last = list.find((m) => m.br === 'F') ?? list.filter((m) => m.br === 'W').sort((x, y) => Number(y.round) - Number(x.round))[0];
+    return !!last?.win;
+  };
+  const f = b?.format;
+  if (f === 'single' || f === 'double') return elimDone(ms) ? 'done' : ms.some((m) => m.win) ? 'live' : 'new';
+  if (f === 'ffa') {
+    const fs = b.fs ?? [];
+    const any = fs.some((r) => r.some((c) => c !== ''));
+    return fs.length && fs.every((r) => (b.players ?? []).every((_, i) => r[i] !== '' && r[i] !== undefined)) ? 'done' : any ? 'live' : 'new';
+  }
+  if (f === 'groups') {
+    if (b.ko && elimDone(b.ko.matches)) return 'done';
+    return b.ko || ms.some(scored) ? 'live' : 'new';
+  }
+  const real = ms.filter((m) => !hasBye(m));
+  if (!real.length) return 'new';
+  const all = real.every(scored);
+  const rounds = new Set(ms.map((m) => m.round)).size;
+  if (all && (f === 'rr' || rounds >= (b.opts?.rounds ?? 1))) return 'done';
+  return real.some(scored) ? 'live' : 'new';
+}
