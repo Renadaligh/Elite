@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { champion, isCurrent, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
+import FfaView from './FfaView';
+import GroupsView from './GroupsView';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
 interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean }
@@ -33,7 +35,11 @@ function useNarrow() {
 }
 
 export default function BracketView(p: Props) {
-  return isLeague(p.bracket) ? <LeagueView bracket={p.bracket} onChange={p.onChange} live={p.live} /> : <TreeView {...p} />;
+  const b = p.bracket;
+  if (isLeague(b)) return <LeagueView bracket={b} onChange={p.onChange} live={p.live} />;
+  if (b.format === 'ffa') return <FfaView bracket={b} onChange={p.onChange} />;
+  if (b.format === 'groups') return <GroupsView bracket={b} onChange={p.onChange} live={p.live} />;
+  return <TreeView {...p} />;
 }
 
 function TreeView({ bracket, onPick, selected }: Props) {

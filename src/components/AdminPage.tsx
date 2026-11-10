@@ -3,8 +3,9 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type Adm
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, MAX_RR, defaultOpts, isLeague, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket, type LeagueOpts } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
+import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -39,7 +40,7 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
-  'البراكت': 'Bracket', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'البراكت': 'Bracket', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
   'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
   'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
   'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
@@ -116,6 +117,7 @@ const LockI = (p: IP) => <svg {...ic} {...p}><rect x="4.5" y="10.5" width="15" h
 const EyeI = (p: IP) => <svg {...ic} {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></svg>;
 const EyeOffI = (p: IP) => <svg {...ic} {...p}><path d="M4 4l16 16M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-3 3.8M6.2 7.6A15.7 15.7 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 3.6-.7" /></svg>;
 const TrashI = (p: IP) => <svg {...ic} {...p}><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.8 12.2a1.5 1.5 0 0 0 1.5 1.3h6.4a1.5 1.5 0 0 0 1.5-1.3L17.5 7M10 11v6M14 11v6" /></svg>;
+const PenI = (p: IP) => <svg {...ic} {...p}><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4Z" /><path d="M13.5 6.5l4 4" /></svg>
 const GridI = (p: IP) => <svg {...ic} {...p}><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></svg>;
 const NewsI = (p: IP) => <svg {...ic} {...p}><path d="M5 4.5h11a2 2 0 0 1 2 2V19a1.5 1.5 0 0 0 1.5 1.5H7A2.5 2.5 0 0 1 4.5 18V5A.5.5 0 0 1 5 4.5Z" /><path d="M8 9h7M8 12.5h7M8 16h4" /></svg>;
 const CupI = (p: IP) => <svg {...ic} {...p}><path d="M8 4.5h8v5a4 4 0 0 1-8 0v-5Z" /><path d="M8 6.5H5a3 3 0 0 0 3 4M16 6.5h3a3 3 0 0 1-3 4M12 13.5v3.5M8.5 20h7M10 17h4" /></svg>;
@@ -395,7 +397,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </div>
             </div>
             <div className="flex gap-2">
-              <button className={btnG} style={bd} onClick={() => { setF({ ...r, image: r.image ?? '', href: r.href ?? '' }); }}>{x('تعديل')}</button>
+              <button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, image: r.image ?? '', href: r.href ?? '' }); }}><PenI className="h-4 w-4" /></button>
               <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>
             </div>
           </Card>
@@ -443,7 +445,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [fmt, setFmt] = useState<BFormat>('single');
   const [names, setNames] = useState('');
   const [shuf, setShuf] = useState(false);
-  const [lo, setLo] = useState({ win: '1', draw: '0.5', loss: '0', rounds: '', double: false });
+  const [lo, setLo] = useState(fmtInit());
   const [sel, setSel] = useState<string | null>(null);
   const [editP, setEditP] = useState(false);
   const [url, setUrl] = useState(t0.streamUrl ?? '');
@@ -454,10 +456,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
     if (list.length < 2) { toast.err(x('أدخل لاعبَين على الأقل')); return; }
     if (fmt === 'rr' && list.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
-    const n = (v: string, d: number) => (v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : d);
-    const d = defaultOpts(fmt, list.length);
-    const opts: Partial<LeagueOpts> = { win: n(lo.win, 1), draw: n(lo.draw, 0.5), loss: n(lo.loss, 0), ...(fmt === 'swiss' ? { rounds: Math.min(12, Math.max(1, Math.round(n(lo.rounds, d.rounds ?? 1)))) } : {}), ...(fmt === 'rr' && lo.double ? { double: true } : {}) };
-    upd(generate(fmt, shuf ? shuffled(list) : list, isLeague({ format: fmt }) ? opts : undefined)); setSel(null);
+    upd(generate(fmt, shuf ? shuffled(list) : list, hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined)); setSel(null);
   }
   function pick(m: BMatch, side: 'a' | 'b') {
     if (!br) return;
@@ -494,23 +493,15 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         {!br ? (
           <div className="grid gap-4 rounded-xl border p-4" style={bd}>
             <b>{x('البراكت')}</b>
-            <Field label={x('نظام البراكت')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option><option value="rr">{x('دوري (كل لاعب ضد الكل)')}</option><option value="swiss">{x('سويسري')}</option></select></Field>
-            {isLeague({ format: fmt }) && (
-              <div className="grid gap-3 rounded-lg border p-3" style={bd}>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['win', 'draw', 'loss'] as const).map((k2) => <Field key={k2} label={x(k2 === 'win' ? 'نقاط الفوز' : k2 === 'draw' ? 'نقاط التعادل' : 'نقاط الخسارة')}><input dir="ltr" inputMode="decimal" className={inp} style={bd} value={lo[k2]} onChange={(e) => setLo({ ...lo, [k2]: e.target.value })} /></Field>)}
-                </div>
-                {fmt === 'swiss' && <Field label={x('عدد الجولات (فارغ = تلقائي)')}><input dir="ltr" inputMode="numeric" className={inp} style={bd} value={lo.rounds} placeholder={String(defaultOpts('swiss', names.split('\n').filter((q) => q.trim()).length).rounds)} onChange={(e) => setLo({ ...lo, rounds: e.target.value })} /></Field>}
-                {fmt === 'rr' && <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={lo.double} onChange={(e) => setLo({ ...lo, double: e.target.checked })} />{x('دوري مزدوج (ذهاب وإياب)')}</label>}
-              </div>
-            )}
+            <Field label={x('نظام البراكت')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option><option value="rr">{x('دوري (كل لاعب ضد الكل)')}</option><option value="swiss">{x('سويسري')}</option><option value="groups">{x('مجموعات ثم إقصائيات')}</option><option value="ffa">{x('لوحة صدارة (الكل ضد الكل)')}</option></select></Field>
+            <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={bd} border={bd} players={names.split('\n').filter((q) => q.trim()).length} />
             <Field label={`${x('اللاعبون (اسم في كل سطر، الأعلى = الأقوى)')} · ${x('أقصى عدد لاعبين')} ${fmt === 'rr' ? MAX_RR : MAX_PLAYERS}`}><textarea rows={8} dir="auto" className={inp} style={bd} value={names} onChange={(e) => setNames(e.target.value)} /></Field>
             <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{x('خلط اللاعبين عشوائياً')}</label>
             <div><button type="button" className={btnP} style={gradBtn} onClick={create}>{x('إنشاء البراكت')}</button></div>
           </div>
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
-            <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green">🏆 {br.players[champ]}</Badge>}</div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green">🏆 {br.players[champ]}</Badge>}</div>
             <BracketActions bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} live /></div>
             <div className="rounded-xl border p-3" style={bd}>
@@ -605,7 +596,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </div>
               <div className="flex gap-2">
                 <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('البراكت')}{r.bracket ? ' ✓' : ''}</button>
-                <button className={btnG} style={bd} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}>{x('تعديل')}</button>
+                <button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>
                 <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>
               </div>
             </Card>
@@ -795,7 +786,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 max-sm:w-full">
-              <button className={btnG} style={bd} onClick={() => { setF(toForm(g)); }}>{x('تعديل')}</button>
+              <button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF(toForm(g)); }}><PenI className="h-4 w-4" /></button>
               <button type="button" className={`${btnG} !px-3`} style={bd} onClick={() => toggle(g)} aria-label={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')} title={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}>
                 <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   {g.hidden ? <><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19.5C6.5 19.5 3 12 3 12a17.6 17.6 0 0 1 4.1-5.1M9.9 4.6A9.7 9.7 0 0 1 12 4.5c5.5 0 9 7.5 9 7.5a17.5 17.5 0 0 1-2.2 3.3M14.1 14.1a3 3 0 0 1-4.2-4.2" /><path d="m3 3 18 18" /></> : <><path d="M3 12s3.5-7.5 9-7.5S21 12 21 12s-3.5 7.5-9 7.5S3 12 3 12Z" /><circle cx="12" cy="12" r="3" /></>}

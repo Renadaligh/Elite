@@ -3,9 +3,9 @@ import { dropLastRound, isCurrent, leagueChampion, leagueRounds, nextSwissRound,
 import { useI18n } from '../i18n/I18nProvider';
 
 /** Round robin / swiss: standings table + one round at a time. With `onChange` (dashboard / tool) scores are typed straight into the cards. */
-interface Props { bracket: Bracket; onChange?: (b: Bracket) => void; live?: boolean }
+interface Props { bracket: Bracket; onChange?: (b: Bracket) => void; live?: boolean; /** highlight the top N rows (they qualify) */ advance?: number }
 
-export default function LeagueView({ bracket: br, onChange, live }: Props) {
+export default function LeagueView({ bracket: br, onChange, live, advance }: Props) {
   const { lang, dir } = useI18n();
   const ar = lang === 'ar';
   const rounds = leagueRounds(br);
@@ -50,7 +50,7 @@ export default function LeagueView({ bracket: br, onChange, live }: Props) {
 
   return (
     <div className="lg" dir={dir}>
-      {champ !== null && <div className="br-champ" style={{ marginTop: 0, marginBottom: 12 }}><span>🏆</span><b>{name(champ)}</b></div>}
+      {champ !== null && !advance && <div className="br-champ" style={{ marginTop: 0, marginBottom: 12 }}><span>🏆</span><b>{name(champ)}</b></div>}
       <div className="lg-table-wrap">
         <table className="lg-table">
           <thead><tr>
@@ -60,7 +60,7 @@ export default function LeagueView({ bracket: br, onChange, live }: Props) {
           </tr></thead>
           <tbody>
             {S.map((s, i) => (
-              <tr key={s.p} className={i === 0 && champ !== null ? 'is-top' : ''}>
+              <tr key={s.p} className={i === 0 && champ !== null && !advance ? 'is-top' : advance && i < advance ? 'is-adv' : ''}>
                 <td className="px-2 py-2 text-center" style={{ color: 'var(--muted)' }}>{i + 1}</td>
                 <td className="px-2 py-2 font-semibold">{name(s.p)}</td>
                 <td className="px-2 py-2 text-center">{s.played}</td><td className="px-2 py-2 text-center">{s.w}</td><td className="px-2 py-2 text-center">{s.d}</td><td className="px-2 py-2 text-center">{s.l}</td>

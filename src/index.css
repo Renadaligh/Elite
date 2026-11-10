@@ -269,3 +269,6 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .lg-draw { display: block; padding: 2px 0; text-align: center; font-size: .65rem; color: var(--muted); border-top: 1px solid var(--line, rgba(255,255,255,.1)); }
 .lg-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-b, rgba(255,255,255,.2)); font-size: .85rem; font-weight: 600; color: var(--muted); }
 .lg-btn.on { color: #fff; background: linear-gradient(135deg, #ff3347, #d90f26); border-color: transparent; }
+.lg-table tr.is-adv { background: rgba(39,194,122,.10); box-shadow: inset 3px 0 0 #27c27a; }
+[dir=rtl] .lg-table tr.is-adv { box-shadow: inset -3px 0 0 #27c27a; }
+.lg-scroll { overflow-x: auto; }

@@ -6,7 +6,7 @@ import { CloseIcon, MenuIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'admin' }) {
-  const { t, dir, lang } = useI18n();
+  const { t, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('#top');
@@ -59,9 +59,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
           </ul>
         </nav>
         <div className="flex items-center gap-2">
-          <a href="#/bracket" className="inline-flex h-10 items-center whitespace-nowrap rounded-full border px-3 text-[.74rem] font-bold text-white transition hover:brightness-125 sm:px-4 sm:text-[.88rem]" style={{ background: '#000', borderColor: '#ff3347' }}>
-            <span className="sm:hidden">{lang === 'ar' ? 'براكت تول' : 'Bracket Tool'}</span><span className="max-sm:hidden">{lang === 'ar' ? 'جرّب أداة البراكت' : 'Try Bracket Tool'}</span>
-          </a>
+          {/* Bracket tool entry hidden for now: <a href="#/bracket">Try Bracket Tool</a> */}
           <LanguageSwitcher />
           <button ref={burger} type="button" className="pill !px-0 lg:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t.closeMenu : t.menu}>
             {open ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}

@@ -5,7 +5,7 @@
  * A match has two slots. A slot is a player (index into `players`), the winner/loser of another match, or a bye.
  * Who plays whom is *derived* by resolve(), so advancing a winner only means storing `win` on one match.
  */
-export type BFormat = 'single' | 'double' | 'rr' | 'swiss';
+export type BFormat = 'single' | 'double' | 'rr' | 'swiss' | 'ffa' | 'groups';
 export const isLeague = (b: { format: BFormat }) => b.format === 'rr' || b.format === 'swiss';
 export type Slot = { p: number } | { w: string } | { l: string } | { bye: true };
 export interface BMatch {
@@ -22,9 +22,11 @@ export interface BMatch {
   win?: 'a' | 'b';
 }
 /** League formats (round robin / swiss): points per result (Challonge defaults 1 / 0.5 / 0), swiss round count, round robin home-and-away. */
-export interface LeagueOpts { win: number; draw: number; loss: number; rounds?: number; double?: boolean }
-export const defaultOpts = (format: BFormat, n: number): LeagueOpts => ({ win: 1, draw: 0.5, loss: 0, ...(format === 'swiss' ? { rounds: Math.max(1, Math.ceil(Math.log2(Math.max(2, n)))) } : {}) });
-export interface Bracket { opts?: LeagueOpts; format: BFormat; players: string[]; matches: BMatch[]; /** ids of the matches being played right now (shown as LIVE); several can run at once */ cur?: string[] }
+export interface LeagueOpts { win: number; draw: number; loss: number; rounds?: number; double?: boolean; /** groups: group count, how many advance per group, knockout type */ groups?: number; adv?: number; koFormat?: 'single' | 'double'; /** ffa: lower total is better (e.g. time / golf) */ low?: boolean }
+export const defaultOpts = (format: BFormat, n: number): LeagueOpts => ({ win: 1, draw: 0.5, loss: 0, ...(format === 'swiss' ? { rounds: Math.max(1, Math.ceil(Math.log2(Math.max(2, n)))) } : format === 'ffa' ? { rounds: 3 } : format === 'groups' ? { groups: n >= 12 ? 4 : 2, adv: 2, koFormat: 'single' as const } : {}) });
+/** Knockout stage of a groups tournament: `seed` = global player indexes in seed order; match slots index into `seed`. */
+export interface Knockout { format: 'single' | 'double'; seed: number[]; matches: BMatch[] }
+export interface Bracket { opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[]; /** ids of the matches being played right now (shown as LIVE); several can run at once */ cur?: string[] }
 
 /** number = player index · 'bye' = empty seat · null = not decided yet. */
 export type Who = number | 'bye' | null;
@@ -50,6 +52,8 @@ export function shuffled<T>(list: T[]): T[] {
 export function generate(format: BFormat, players: string[], opts?: Partial<LeagueOpts>): Bracket {
   const names = players.map((p) => p.trim()).filter(Boolean).slice(0, format === 'rr' ? MAX_RR : MAX_PLAYERS);
   const n = names.length;
+  if (format === 'ffa') return generateFfa(names, { ...defaultOpts('ffa', n), ...opts });
+  if (format === 'groups') return generateGroups(names, { ...defaultOpts('groups', n), ...opts });
   if (format === 'rr') return generateRR(names, { ...defaultOpts('rr', n), ...opts });
   if (format === 'swiss') return generateSwiss(names, { ...defaultOpts('swiss', n), ...opts });
   const size = pow2(n);
@@ -130,6 +134,8 @@ export function setScore(br: Bracket, id: string, sa: string, sb: string): Brack
 /** The tournament champion (winner of the last match), if decided. */
 export function champion(br: Bracket): number | null {
   if (isLeague(br)) return leagueChampion(br);
+  if (br.format === 'ffa') return ffaChampion(br);
+  if (br.format === 'groups') { const k = koSub(br); const w = k ? champion(k) : null; return w === null || !br.ko ? null : br.ko.seed[w]; }
   const last = br.matches.find((m) => m.br === 'F') ?? br.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0];
   const w = last ? resolve(br).get(last.id)?.win : null;
   return typeof w === 'number' ? w : null;
@@ -280,4 +286,128 @@ export function dropLastRound(br: Bracket): Bracket {
   const matches = br.matches.filter((m) => m.round !== last), ids = new Set(matches.map((m) => m.id));
   const cur = (br.cur ?? []).filter((c) => ids.has(c));
   return { ...br, matches, cur: cur.length ? cur : undefined };
+}
+
+
+/* ---------------- Leaderboard (free-for-all): everyone scores in every round ---------------- */
+function generateFfa(names: string[], opts: LeagueOpts): Bracket {
+  const rounds = Math.min(30, Math.max(1, Math.round(opts.rounds ?? 3)));
+  return { format: 'ffa', players: names, matches: [], opts: { ...opts, rounds }, fs: Array.from({ length: rounds }, () => names.map(() => '')) };
+}
+const num0 = (v: string | undefined) => (v !== undefined && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
+export interface FfaRow { p: number; total: number; played: number; best: number | null }
+export function ffaRows(br: Bracket): FfaRow[] {
+  const low = !!br.opts?.low;
+  const rows = br.players.map((_, p) => {
+    const vals = (br.fs ?? []).map((r) => num0(r[p])).filter((v): v is number => v !== null);
+    return { p, total: vals.reduce((a, b) => a + b, 0), played: vals.length, best: vals.length ? (low ? Math.min(...vals) : Math.max(...vals)) : null };
+  });
+  return rows.sort((a, b) => (low ? a.total - b.total : b.total - a.total) || (b.played - a.played) || a.p - b.p);
+}
+export const ffaDone = (br: Bracket) => !!br.fs?.length && br.fs.every((r) => br.players.every((_, p) => num0(r[p]) !== null));
+export const ffaChampion = (br: Bracket): number | null => (ffaDone(br) ? ffaRows(br)[0]?.p ?? null : null);
+export function setFfaScore(br: Bracket, round: number, p: number, v: string): Bracket {
+  return { ...br, fs: (br.fs ?? []).map((r, i) => (i === round ? r.map((x, j) => (j === p ? v.slice(0, 6) : x)) : r)) };
+}
+export function addFfaRound(br: Bracket): Bracket {
+  if ((br.fs?.length ?? 0) >= 30) return br;
+  return { ...br, fs: [...(br.fs ?? []), br.players.map(() => '')], opts: { ...(br.opts as LeagueOpts), rounds: (br.fs?.length ?? 0) + 1 } };
+}
+export function dropFfaRound(br: Bracket): Bracket {
+  if ((br.fs?.length ?? 0) < 2) return br;
+  return { ...br, fs: br.fs!.slice(0, -1), opts: { ...(br.opts as LeagueOpts), rounds: br.fs!.length - 1 } };
+}
+
+/* ---------------- Two stages: groups (round robin) then a knockout bracket ---------------- */
+export const MAX_GROUPS = 8;
+function generateGroups(names: string[], opts: LeagueOpts): Bracket {
+  const n = names.length;
+  const G = Math.min(MAX_GROUPS, Math.max(2, Math.floor(opts.groups ?? 2)), Math.max(2, Math.floor(n / 2)));
+  const adv = Math.max(1, Math.min(Math.floor(opts.adv ?? 2), Math.floor(n / G)));
+  const groups: number[][] = Array.from({ length: G }, () => []);
+  // snake seeding: strongest players are spread over the groups
+  for (let i = 0; i < n; i++) { const row = Math.floor(i / G), col = i % G; groups[row % 2 ? G - 1 - col : col].push(i); }
+  const matches: BMatch[] = [];
+  groups.forEach((members, g) => {
+    const rr = generateRR(members.map((i) => names[i]), { ...opts, double: false });
+    for (const m of rr.matches) {
+      const map = (sl: Slot): Slot => ('p' in sl ? { p: members[sl.p] } : sl);
+      matches.push({ ...m, id: `G${g + 1}${m.id}`, a: map(m.a), b: map(m.b) });
+    }
+  });
+  return { format: 'groups', players: names, groups, matches, opts: { ...opts, groups: G, adv, koFormat: opts.koFormat ?? 'single' } };
+}
+export const groupLabel = (g: number) => String.fromCharCode(65 + g);
+/** A group as its own little round robin (local player indexes) so the league table / cards can be reused. */
+export function groupSub(br: Bracket, g: number): Bracket {
+  const members = br.groups![g], local = new Map(members.map((p, i) => [p, i]));
+  const map = (sl: Slot): Slot => ('p' in sl ? { p: local.get(sl.p) ?? 0 } : sl);
+  const pre = `G${g + 1}`;
+  const matches = br.matches.filter((m) => m.id.startsWith(`${pre}R`)).map((m) => ({ ...m, a: map(m.a), b: map(m.b) }));
+  const ids = new Set(matches.map((m) => m.id));
+  const cur = (br.cur ?? []).filter((c) => ids.has(c));
+  return { format: 'rr', players: members.map((p) => br.players[p]), matches, opts: br.opts, cur: cur.length ? cur : undefined };
+}
+export function groupMerge(br: Bracket, g: number, sub: Bracket): Bracket {
+  const by = new Map(sub.matches.map((m) => [m.id, m]));
+  const ids = new Set(sub.matches.map((m) => m.id));
+  const cur = [...(br.cur ?? []).filter((c) => !ids.has(c)), ...(sub.cur ?? [])];
+  return { ...br, cur: cur.length ? cur : undefined, matches: br.matches.map((m) => { const x = by.get(m.id); return x ? { ...m, sa: x.sa, sb: x.sb } : m; }) };
+}
+export function groupRank(br: Bracket, g: number): number[] {
+  const members = br.groups![g];
+  return standings(groupSub(br, g)).map((s) => members[s.p]);
+}
+export const groupDone0 = (br: Bracket, g: number) => { const sb = groupSub(br, g); return sb.matches.every((m) => outcome(sb, m) !== null); };
+export const groupsDone = (br: Bracket) => br.groups!.every((_, g) => groupSub(br, g).matches.every((m) => outcome(groupSub(br, g), m) !== null));
+/** Knockout seeds: all group winners, then all runners-up, ... (so groupmates do not meet in round 1 when possible). */
+export function koSeed(br: Bracket): number[] {
+  const adv = br.opts?.adv ?? 2, ranks = br.groups!.map((_, g) => groupRank(br, g));
+  const seed: number[] = [];
+  for (let t = 0; t < adv; t++) for (const r of ranks) if (r[t] !== undefined) seed.push(r[t]);
+  return seed;
+}
+export function startKnockout(br: Bracket): Bracket | null {
+  if (br.format !== 'groups' || br.ko || !groupsDone(br)) return null;
+  const seed = koSeed(br);
+  if (seed.length < 2) return null;
+  const kf = br.opts?.koFormat ?? 'single';
+  const k = generate(kf, seed.map((_, i) => String(i)));
+  return { ...br, ko: { format: kf, seed, matches: k.matches } };
+}
+export function dropKnockout(br: Bracket): Bracket {
+  if (!br.ko) return br;
+  const ids = new Set(br.ko.matches.map((m) => m.id));
+  const cur = (br.cur ?? []).filter((c) => !ids.has(c));
+  return { ...br, ko: undefined, cur: cur.length ? cur : undefined };
+}
+/** The knockout as a normal bracket (names looked up from the seed), or null before it starts. */
+export function koSub(br: Bracket): Bracket | null {
+  if (!br.ko) return null;
+  const ids = new Set(br.ko.matches.map((m) => m.id));
+  const cur = (br.cur ?? []).filter((c) => ids.has(c));
+  return { format: br.ko.format, players: br.ko.seed.map((p) => br.players[p]), matches: br.ko.matches, cur: cur.length ? cur : undefined };
+}
+export function koMerge(br: Bracket, sub: Bracket): Bracket {
+  if (!br.ko) return br;
+  const ids = new Set(br.ko.matches.map((m) => m.id));
+  const cur = [...(br.cur ?? []).filter((c) => !ids.has(c)), ...(sub.cur ?? [])];
+  return { ...br, ko: { ...br.ko, matches: sub.matches }, cur: cur.length ? cur : undefined };
+}
+
+/** Matches being played right now, as names (for the tournament page banner). Works for every format. */
+export function liveMatches(br: Bracket): { a: string; b: string }[] {
+  const out: { a: string; b: string }[] = [];
+  const add = (b: Bracket) => {
+    const R = resolve(b);
+    for (const m of b.matches) {
+      if (!isCurrent(b, m.id) || outcome(b, m) !== null && isLeague(b)) continue;
+      const r = R.get(m.id);
+      if (!r || (!isLeague(b) && m.win) || typeof r.a !== 'number' || typeof r.b !== 'number') continue;
+      out.push({ a: b.players[r.a], b: b.players[r.b] });
+    }
+  };
+  if (br.format === 'groups') { br.groups!.forEach((_, g) => add(groupSub(br, g))); const k = koSub(br); if (k) add(k); }
+  else if (br.format !== 'ffa') add(br);
+  return out;
 }
