@@ -16,8 +16,8 @@ export default function HeroContent() {
           <span>{lang === 'ar' ? 'جرّب أداة البراكت' : 'Try the Bracket Tool'}</span>
         </a>
         <div className="hero-row">
-          <a href="#games" className="hero-sec">{t.navGames}</a>
-          <a href="#tournaments" className="hero-sec">{t.navTournaments}</a>
+          <a href="#games" className="hero-sec">{t.ctaGames}</a>
+          <a href="#tournaments" className="hero-sec">{t.ctaTournaments}</a>
         </div>
       </div>
     </div>

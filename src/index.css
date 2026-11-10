@@ -539,3 +539,8 @@ html.st-livepage, html.st-livepage body { background: transparent !important; } 
 .hero-main { padding-inline: 1.9rem; height: 3rem; }
 .hero-sec { padding-inline: .6rem; height: 2.7rem; font-size: .88rem; }
 @media (max-width: 480px) { .hero-main { height: 2.75rem; padding-inline: 1.5rem; font-size: .9rem; } .hero-sec { height: 2.5rem; font-size: .82rem; } .hero-cta { gap: 8px; } .hm-ic { width: 19px; height: 19px; } }
+/* hero buttons: each keeps its natural width, centred */
+.hero-cta { width: auto; justify-items: center; }
+.hero-row { grid-template-columns: auto auto; }
+.hero-sec { padding-inline: 1.1rem; }
+@media (max-width: 480px) { .hero-sec { padding-inline: .85rem; font-size: .8rem; } }
