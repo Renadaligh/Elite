@@ -4,6 +4,7 @@ import { parse } from './index';
 /** PUT = create or update the row for this id (overrides a built-in game, or edits a custom one). */
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
   if (!isAdmin(request, env)) return denied();
+  if (params.id.startsWith('__')) return json({ error: 'invalid' }, 400);
   const v = parse(await body(request));
   const base = [params.id, v.genre, v.name.en, v.name.ar, v.tagline.en, v.tagline.ar, v.image, v.hidden, v.custom];
   const head = 'INSERT INTO games (id,genre,name_en,name_ar,tagline_en,tagline_ar,image,hidden,custom';

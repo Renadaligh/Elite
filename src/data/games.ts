@@ -125,14 +125,16 @@ function applyDetails(d: GameDetails | undefined): Partial<Game> {
   if (images.length) out.images = images;
   return out;
 }
-export interface GameRow { id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean; tournamentOnly?: boolean; details?: GameDetails }
+export interface GameRow { /** order / deleted: only on the special '__meta' row (display order, deleted built-in games) */ order?: string[]; deleted?: string[]; id: string; genre: string; name: Localized; tagline: Localized; image: string; hidden: boolean; custom: boolean; tournamentOnly?: boolean; details?: GameDetails }
 export type AdminGame = Game & { hidden: boolean; custom: boolean; genreKey: string; details?: GameDetails };
 const keyOf = (genre: Localized) => GENRE_KEYS.find((k) => genres[k].en === genre.en) ?? 'Arcade';
 
 /** A row overrides the built-in game with the same id (empty field = keep default); other rows are custom games. */
 export function mergeGames(rows: GameRow[]): AdminGame[] {
   const byId = new Map(rows.map((r) => [r.id, r]));
-  const list: AdminGame[] = BASE_GAMES.map((b) => {
+  const meta = byId.get('__meta');
+  const gone = new Set(meta?.deleted ?? []);
+  const list: AdminGame[] = BASE_GAMES.filter((b) => !gone.has(b.id)).map((b) => {
     const r = byId.get(b.id);
     const gk = r?.genre && genres[r.genre] ? r.genre : keyOf(b.genre);
     const tagline = { en: r?.tagline.en || b.tagline.en, ar: r?.tagline.ar || b.tagline.ar };
@@ -153,7 +155,9 @@ export function mergeGames(rows: GameRow[]): AdminGame[] {
       tagline: r.tagline, overview: r.tagline, image: r.image || undefined, hidden: r.hidden, custom: true, tournamentOnly: !!r.tournamentOnly,
     });
   }
-  return list;
+  // Dashboard order (games not listed yet, e.g. newly added, keep their default place after the listed ones).
+  const pos = new Map((meta?.order ?? []).map((id, i) => [id, i]));
+  return list.sort((a, b) => (pos.get(a.id) ?? 1e6) - (pos.get(b.id) ?? 1e6));
 }
 
 /** The games the site shows. Replaced (new array) when the dashboard data loads; components subscribe through useGames(). */

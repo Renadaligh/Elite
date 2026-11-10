@@ -1,10 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
 import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type AdminGame, type GameDetails, type GameRow } from '../data/games';
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
 import { MAX_PLAYERS, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
+import BracketActions from './BracketActions';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import { ArrowIcon } from './icons';
@@ -38,7 +39,7 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
-  'البراكت': 'Bracket', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'البراكت': 'Bracket', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
   'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
   'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
   'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
@@ -139,6 +140,10 @@ const ninja = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no-rep
 /** Downscale big photos in the browser (max 1800px, WebP) before upload. GIFs and failures are sent as-is. */
 async function shrink(file: File): Promise<Blob> {
   if (file.type === 'image/gif' || !file.type.startsWith('image/')) return file;
+  // If resizing stalls on a phone, give up after 10 s and upload the original instead of hanging.
+  return Promise.race([shrinkNow(file), new Promise<Blob>((res) => window.setTimeout(() => res(file), 10000))]);
+}
+async function shrinkNow(file: File): Promise<Blob> {
   try {
     const bmp = await createImageBitmap(file);
     const r = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
@@ -211,11 +216,13 @@ function ImageField({ label, value, onChange, k, placeholder }: { label: string;
     try {
       const fd = new FormData();
       fd.append('file', await shrink(file), 'image');
-      const res = await fetch('/api/upload', { method: 'POST', headers: { authorization: `Bearer ${k}` }, body: fd });
+      const ac = new AbortController();
+      const timer = window.setTimeout(() => ac.abort(), 60000);
+      const res = await fetch('/api/upload', { method: 'POST', headers: { authorization: `Bearer ${k}` }, body: fd, signal: ac.signal }).finally(() => window.clearTimeout(timer));
       if (!res.ok) throw new Error(String(res.status));
       onChange(((await res.json()) as { url: string }).url);
       toast.ok(x('تم رفع الصورة بنجاح'));
-    } catch (e) { setErr((e as Error).message === '500' ? x('التخزين غير مفعّل بعد (R2)') : x('فشل رفع الصورة')); }
+    } catch (e) { const m = (e as Error).name === 'AbortError' ? 'timeout' : (e as Error).message; setErr(m === '500' ? x('التخزين غير مفعّل بعد (R2)') : m === 'timeout' ? x('انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية') : x('فشل رفع الصورة')); }
     setBusy(false);
   }
   return (
@@ -241,8 +248,8 @@ function ImageField({ label, value, onChange, k, placeholder }: { label: string;
 function Field({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return <label className={`flex flex-col gap-1.5 text-[.82rem] font-semibold ${wide ? 'sm:col-span-2' : ''}`} style={{ color: 'var(--muted)' }}>{label}{children}</label>;
 }
-const Card = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div className={`rounded-2xl border ${className}`} style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(10px)' }}>{children}</div>
+const Card = ({ children, className = '', ...rest }: { children: ReactNode; className?: string; 'data-gid'?: string }) => (
+  <div {...rest} className={`rounded-2xl border ${className}`} style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(10px)' }}>{children}</div>
 );
 function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray' | 'blue'; children: ReactNode }) {
   const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#ff4455' }[tone];
@@ -489,6 +496,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green">🏆 {br.players[champ]}</Badge>}</div>
+            <BracketActions bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} /></div>
             <div className="rounded-xl border p-3" style={bd}>
               <button type="button" className={btnG} style={bd} onClick={() => setEditP((v) => !v)}>{x('تعديل أسماء اللاعبين')} {editP ? '▲' : '▼'}</button>
@@ -636,8 +644,9 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const [f, setF] = useState<GForm | null>(null);
   const [q, setQ] = useState('');
   const [genre, setGenre] = useState('all');
+  const [gone, setGone] = useState<string[]>([]);
   const toast = useToast();
-  const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => setRows(mergeGames(r))).catch(() => toast.err(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => { setRows(mergeGames(r)); setGone(r.find((i) => i.id === '__meta')?.deleted ?? []); }).catch(() => toast.err(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
   const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: fullDetails(g.details) });
@@ -662,9 +671,66 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
     try { await api(`/games/${g.id}`, { method: 'PUT', body: JSON.stringify({ ...toForm(g), hidden: !g.hidden }), key: k }); toast.ok(x(g.hidden ? 'تم إظهار اللعبة في الموقع' : 'تم إخفاء اللعبة من الموقع')); load(); } catch (err) { fail(err, x('تعذّر تحميل الألعاب')); }
   }
   async function del(g: AdminGame) {
-    if (!window.confirm(x('حذف هذه اللعبة؟'))) return;
-    await api(`/games/${g.id}`, { method: 'DELETE', key: k }).then(() => toast.ok(x('تم الحذف بنجاح'))).catch(() => toast.err(x('تعذّر تنفيذ العملية')));
+    if (!window.confirm(x(g.custom ? 'حذف هذه اللعبة؟' : 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة'))) return;
+    try {
+      await api(`/games/${g.id}`, { method: 'DELETE', key: k });
+      if (!g.custom) await api('/games/meta', { method: 'PUT', body: JSON.stringify({ deleted: [...gone, g.id] }), key: k });
+      toast.ok(x('تم الحذف بنجاح'));
+    } catch (err) { fail(err, why(err, x('تعذّر تنفيذ العملية'))); }
     load();
+  }
+  async function restore() {
+    try { await api('/games/meta', { method: 'PUT', body: JSON.stringify({ deleted: [] }), key: k }); toast.ok(x('تمت الاستعادة')); load(); } catch (err) { fail(err, why(err, x('تعذّر تنفيذ العملية'))); }
+  }
+  /** Moves a game one place up/down in the full list and saves the new order. */
+  async function move(g: AdminGame, d: -1 | 1) {
+    const i = rows.findIndex((r) => r.id === g.id), j = i + d;
+    if (i < 0 || j < 0 || j >= rows.length) return;
+    const next = [...rows]; [next[i], next[j]] = [next[j], next[i]];
+    setRows(next);
+    try { await api('/games/meta', { method: 'PUT', body: JSON.stringify({ order: next.map((r) => r.id) }), key: k }); }
+    catch (err) { fail(err, why(err, x('تعذّر حفظ الترتيب'))); load(); }
+  }
+  const sorting = !term && genre === 'all';
+
+  // Drag & drop reorder (mouse and touch): grab the lines handle, drop where the red line shows.
+  const [drag, setDrag] = useState<{ id: string; over: number } | null>(null);
+  const dragRef = useRef<{ id: string; over: number; y: number } | null>(null);
+  const overAt = (y: number) => {
+    const els = [...document.querySelectorAll<HTMLElement>('[data-gid]')];
+    let over = els.length;
+    for (let i = 0; i < els.length; i++) { const r = els[i].getBoundingClientRect(); if (y < r.top + r.height / 2) { over = i; break; } }
+    return over;
+  };
+  const syncOver = () => { const d = dragRef.current; if (!d) return; const o = overAt(d.y); if (o !== d.over) { d.over = o; setDrag({ id: d.id, over: o }); } };
+  useEffect(() => {
+    if (!drag) return;
+    // keep scrolling while the finger/mouse is held near the top or bottom edge
+    const t = window.setInterval(() => {
+      const d = dragRef.current; if (!d) return;
+      const h = window.innerHeight;
+      const dy = d.y < 90 ? -16 : d.y > h - 90 ? 16 : 0;
+      if (dy) { let el: HTMLElement | null = document.querySelector<HTMLElement>(`[data-gid="${d.id}"]`)?.parentElement ?? null; while (el && !(el.scrollHeight > el.clientHeight + 4 && /(auto|scroll)/.test(getComputedStyle(el).overflowY))) el = el.parentElement; if (el) el.scrollBy(0, dy); else window.scrollBy(0, dy); syncOver(); }
+    }, 16);
+    return () => window.clearInterval(t);
+  }, [!!drag]); // eslint-disable-line react-hooks/exhaustive-deps
+  function dragStart(e: React.PointerEvent<HTMLButtonElement>, g: AdminGame) {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const i = rows.findIndex((r) => r.id === g.id);
+    dragRef.current = { id: g.id, over: i, y: e.clientY };
+    setDrag({ id: g.id, over: i });
+  }
+  function dragMove(e: React.PointerEvent<HTMLButtonElement>) { if (dragRef.current) { dragRef.current.y = e.clientY; syncOver(); } }
+  async function dragEnd() {
+    const d = dragRef.current; dragRef.current = null; setDrag(null);
+    if (!d) return;
+    const from = rows.findIndex((r) => r.id === d.id), to = d.over > from ? d.over - 1 : d.over;
+    if (from < 0 || to === from) return;
+    const next = [...rows]; const [item] = next.splice(from, 1); next.splice(to, 0, item);
+    setRows(next);
+    try { await api('/games/meta', { method: 'PUT', body: JSON.stringify({ order: next.map((r) => r.id) }), key: k }); }
+    catch (err) { fail(err, why(err, x('تعذّر حفظ الترتيب'))); load(); }
   }
   const pairF = (name: 'name' | 'tagline', label: string, en: string, area = false) => f && (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -686,10 +752,21 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           {GENRE_KEYS.map((gk) => <option key={gk} value={gk}>{genreLabel(gk)[lang]}</option>)}
         </select>
       </div>
+      {gone.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-3 text-[.85rem]" style={{ color: 'var(--muted)' }}><span>{x('ألعاب محذوفة')}: {gone.length}</span><button type="button" className={btnG} style={bd} onClick={restore}>{x('استعادة الألعاب المحذوفة')}</button></div>}
+      {!sorting && <p className="mb-3 text-[.8rem]" style={{ color: 'var(--muted)' }}>{x('لتغيير الترتيب امسح البحث واختر كل الأنواع')}</p>}
       {!shown.length && <p className="py-10 text-center" style={{ color: 'var(--muted)' }}>{x('لا توجد ألعاب مطابقة')}</p>}
       <div className="flex flex-col gap-2.5">
-        {shown.map((g) => (
-          <Card key={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 ${g.hidden ? 'opacity-60' : ''}`}>
+        {shown.map((g, gi) => (
+          <Fragment key={g.id}>
+            {drag && sorting && drag.over === gi && drag.over !== rows.findIndex((r) => r.id === drag.id) && drag.over !== rows.findIndex((r) => r.id === drag.id) + 1 && <div className="h-1 rounded-full" style={{ background: '#ff3347' }} />}
+          <Card data-gid={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 ${g.hidden || drag?.id === g.id ? 'opacity-60' : ''} ${drag?.id === g.id ? 'scale-[.98]' : ''}`}>
+            {sorting && (
+              <button type="button" className="grid h-10 w-9 shrink-0 cursor-grab touch-none place-items-center rounded-lg border active:cursor-grabbing" style={bd} aria-label={x('اسحب لتغيير الترتيب')} title={x('اسحب لتغيير الترتيب')}
+                onPointerDown={(e) => dragStart(e, g)} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={dragEnd}
+                onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); void move(g, -1); } else if (e.key === 'ArrowDown') { e.preventDefault(); void move(g, 1); } }}>
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M5 7h14M5 12h14M5 17h14" /></svg>
+              </button>
+            )}
             <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})` }}>
               {g.image && <img src={g.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
             </span>
@@ -702,14 +779,19 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
                 {g.tournamentOnly && <Badge tone="amber">{x('للبطولات فقط')}</Badge>}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-sm:w-full">
               <button className={btnG} style={bd} onClick={() => { setF(toForm(g)); }}>{x('تعديل')}</button>
-              {g.custom
-                ? <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(g)}>{x('حذف')}</button>
-                : <button className={btnG} style={bd} onClick={() => toggle(g)}>{g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}</button>}
+              <button type="button" className={`${btnG} !px-3`} style={bd} onClick={() => toggle(g)} aria-label={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')} title={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}>
+                <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  {g.hidden ? <><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19.5C6.5 19.5 3 12 3 12a17.6 17.6 0 0 1 4.1-5.1M9.9 4.6A9.7 9.7 0 0 1 12 4.5c5.5 0 9 7.5 9 7.5a17.5 17.5 0 0 1-2.2 3.3M14.1 14.1a3 3 0 0 1-4.2-4.2" /><path d="m3 3 18 18" /></> : <><path d="M3 12s3.5-7.5 9-7.5S21 12 21 12s-3.5 7.5-9 7.5S3 12 3 12Z" /><circle cx="12" cy="12" r="3" /></>}
+                </svg>
+              </button>
+              <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => del(g)}>{x('حذف')}</button>
             </div>
           </Card>
+          </Fragment>
         ))}
+        {drag && sorting && drag.over === rows.length && rows.findIndex((r) => r.id === drag.id) !== rows.length - 1 && <div className="h-1 rounded-full" style={{ background: '#ff3347' }} />}
       </div>
 
       {f && (

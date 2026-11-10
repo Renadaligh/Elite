@@ -1,8 +1,13 @@
 import { body, denied, json, isAdmin, safeUrl, str, type Ctx } from '../../_lib';
 
 type Row = { id: string; genre: string; name_en: string; name_ar: string; tagline_en: string; tagline_ar: string; image: string; hidden: number; custom: number; tournament_only?: number; details?: string };
+/** Special row (not a game) that keeps the dashboard's display order and the list of deleted built-in games. */
+export const META = '__meta';
+const ids = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((i): i is string => typeof i === 'string' && i.length > 0 && i.length <= 60 && !i.startsWith('__')))].slice(0, 400) : []);
+export function readMeta(j?: string) { try { const m = j ? JSON.parse(j) : {}; return { order: ids(m.order), deleted: ids(m.deleted) }; } catch { return { order: [] as string[], deleted: [] as string[] }; } }
+export const cleanMeta = (m: { order?: unknown; deleted?: unknown }) => ({ order: ids(m.order), deleted: ids(m.deleted) });
 const GENRES = ['Arcade', 'Board', 'Card', 'Social', 'Sports', 'Word'];
-const out = (r: Row) => ({
+const out = (r: Row) => r.id === META ? { id: META, genre: '', name: { en: '', ar: '' }, tagline: { en: '', ar: '' }, image: '', hidden: true, custom: false, ...readMeta(r.details) } : ({
   id: r.id, genre: r.genre, name: { en: r.name_en, ar: r.name_ar }, tagline: { en: r.tagline_en, ar: r.tagline_ar },
   image: r.image, hidden: !!r.hidden, custom: !!r.custom, tournamentOnly: !!r.tournament_only, details: readDetails(r.details),
 });
