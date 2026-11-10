@@ -14,7 +14,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 /** Members' area of the bracket tool: a real sign-in screen, then a dashboard (no site header). Public links (#/bracket/<id>) stay in the normal site layout for guests. */
 const S = {
   ar: {
-    tool: 'منظم البطولات', welcome: 'أهلاً بك في', welcome2: 'منظم البطولات', sub: 'سجّل دخولك لإنشاء بطولاتك وإدارتها وحفظها في حسابك.',
+    tool: 'أداة تنظيم البطولات', welcome: 'أهلاً بك في', welcome2: 'أداة تنظيم البطولات', sub: 'سجّل دخولك لإنشاء بطولاتك وإدارتها وحفظها في حسابك.',
     discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', twitch: 'Twitch', steam: 'Steam', orMail: 'أو بالبريد الإلكتروني', perks: 'ماذا ستحصل عليه',
     p1: 'بطولاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',

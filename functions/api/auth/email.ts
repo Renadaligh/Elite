@@ -3,7 +3,7 @@ import { body, json, str, type Ctx } from '../../_lib';
 
 const MAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 const T = {
-  ar: { subject: 'رابط الدخول إلى منظم البطولات', h: 'أهلاً بك في منظم البطولات', p: 'اضغط الزر لتسجيل الدخول. الرابط صالح 15 دقيقة ويعمل مرة واحدة.', b: 'تسجيل الدخول', x: 'إذا لم تطلب هذا الرابط تجاهل الرسالة.', dir: 'rtl' },
+  ar: { subject: 'رابط الدخول إلى أداة تنظيم البطولات', h: 'أهلاً بك في أداة تنظيم البطولات', p: 'اضغط الزر لتسجيل الدخول. الرابط صالح 15 دقيقة ويعمل مرة واحدة.', b: 'تسجيل الدخول', x: 'إذا لم تطلب هذا الرابط تجاهل الرسالة.', dir: 'rtl' },
   en: { subject: 'Your sign-in link for the Bracket Tool', h: 'Welcome to the Bracket Tool', p: 'Press the button to sign in. The link is valid for 15 minutes and works once.', b: 'Sign in', x: 'If you did not ask for this link, ignore this email.', dir: 'ltr' },
 } as const;
 

@@ -21,7 +21,7 @@ const en = {
 export type Dict = Record<keyof typeof en, string>;
 const ar: Dict = {
   brand: 'Elite', heroSub: 'مُجتمع نخبة لاعبي بلاتو', artAlt: 'ننجا وحيد على قمة جبل ثلجي أسفل شعار ELITE',
-  navBracket: 'منظم البطولات', navHome: 'الرئيسية', navNews: 'أخبار بلاتو', navGames: 'الألعاب', navTournaments: 'البطولات', navChampions: 'الأبطال', navCommunity: 'المجتمع', navSupport: 'ادعمنا',
+  navBracket: 'أداة تنظيم البطولات', navHome: 'الرئيسية', navNews: 'أخبار بلاتو', navGames: 'الألعاب', navTournaments: 'البطولات', navChampions: 'الأبطال', navCommunity: 'المجتمع', navSupport: 'ادعمنا',
   comSub: 'انضم إلى مجتمع Elite — تحدّث، كوّن فريقك، والعب مع الآخرين.', supStoreTitle: 'تسوّق من Unlimited Blue وادعم Elite', supStoreText: 'Unlimited Blue متجر للمنتجات المخصصة — طباعة ثلاثية الأبعاد، حفر، وحفر بالليزر. كل طلب يساهم في استمرار المجتمع وبطولاته.', supStoreBtn: 'زيارة المتجر', supF1: 'طباعة ثلاثية الأبعاد', supF2: 'حفر', supF3: 'حفر بالليزر', supNote: 'يفتح المتجر في تبويب جديد.', supSub: 'ساهم في استمرار نمو Elite.',
   toTop: 'العودة للأعلى', scrollDown: 'انزل لقسم الأخبار',
   newsTitle: 'أخبار بلاتو', newsSub: 'أحدث مستجدات مجتمع بلاتو العربي.', newsRead: 'اقرأ المزيد', newsEmpty: 'لا توجد أخبار حالياً — عد قريباً.', newsError: 'تعذّر تحميل الأخبار.', newsRetry: 'حاول مرة أخرى', newsAll: 'كل الأخبار', newsBack: 'العودة للرئيسية', newsFilter: 'تصفية حسب التصنيف', filterAll: 'الكل',  tagUpdate: 'تحديث', tagTournament: 'بطولة', tagCommunity: 'المجتمع', tagEvent: 'فعالية',
