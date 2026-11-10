@@ -23,7 +23,7 @@ const S = {
     mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
     edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
-    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
+    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
   },
   en: {
     tool: 'Bracket Tool', welcome: 'Welcome to the', welcome2: 'Bracket Tool', sub: 'Sign in to create, manage and save your tournaments in your account.',
@@ -35,7 +35,7 @@ const S = {
     mine: 'My brackets', fresh: 'New bracket', account: 'Account', toLight: 'Light mode', toDark: 'Dark mode', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
     edit: 'Open & edit', link: 'Copy link', copied: 'Link copied', img: 'Save as image', del: 'Delete', delAsk: 'Delete this bracket?', players: 'players', fail: 'Something went wrong',
-    backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
+    backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accMailT: 'Email sign-in', accMailP: 'You stay signed in for 30 days on this device. If you sign out or use another device or browser, ask for a new sign-in link on the sign-in screen (it arrives by email and works once).', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
   },
 } as const;
 type St = (typeof S)['ar'] | (typeof S)['en'];
@@ -270,6 +270,7 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
           <dt>{s.accJoined}</dt><dd>{joined}</dd>
         </dl>
       </section>
+      {user.provider === 'email' && <section className="st-box2"><h3>{s.accMailT}</h3><p>{s.accMailP}</p></section>}
       <section className="st-box2">
         <h3>{s.accUse}</h3>
         <p className="st-use"><b>{auth.count}</b> {s.accOf} {auth.max} · {s.count}</p>
@@ -305,8 +306,10 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
         <div className="st-side-bot">
           <div className="st-tools"><LanguageSwitcher /><ThemeBtn theme={theme} set={setTheme} s={s} /></div>
           <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{user.name.slice(0, 1)}</span>}<div><b>{user.name}</b><small>{user.provider}</small></div></div>
-          <a href="#top" className="st-logout st-site"><Ic d="site" />{s.back}</a>
-          <button type="button" className="st-logout" onClick={auth.logout}><Ic d="out" />{s.logout}</button>
+          <div className="st-acts">
+            <a href="#top" className="st-logout st-site" aria-label={s.back} title={s.back}><Ic d="site" />{s.back}</a>
+            <button type="button" className="st-logout" aria-label={s.logout} title={s.logout} onClick={auth.logout}><Ic d="out" />{s.logout}</button>
+          </div>
         </div>
       </aside>
       <main className="st-main">

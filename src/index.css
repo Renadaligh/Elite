@@ -433,7 +433,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .st-mail input:focus { border-color: #ff3347; } .st-mail input::placeholder { color: var(--s-dim); }
 .st-mail button[type=submit] { padding: 12px 16px; border-radius: 14px; font-weight: 700; color: var(--s-fg); background: linear-gradient(135deg,#ff3347,#d90f26); transition: transform .25s, opacity .2s; } .st-mail button[type=submit]:hover { transform: translateY(-2px); } .st-mail button:disabled { opacity: .6; }
 .st-err { color: #ffb02e; font-size: .84rem; } .st-ok { color: #27c27a; font-size: .9rem; line-height: 1.7; } .st-lnk { justify-self: start; color: var(--s-mut); font-size: .84rem; text-decoration: underline; }
-.st-login .st-form { overflow-y: auto; } .st-login .st-perks { margin-top: 0; }
+.st-login .st-perks { margin-top: 0; }
 .st-logout { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 4px; padding: 11px 14px; border-radius: 999px; border: 1px solid rgba(255,107,122,.55); color: #ff6b7a; font-weight: 700; font-size: .93rem; transition: background .2s, transform .25s; }
 .st-logout:hover { background: rgba(255,107,122,.13); transform: translateY(-1px); }
 .st-acc { display: grid; gap: 16px; max-width: 40rem; }
@@ -493,3 +493,49 @@ html.st-livepage, html.st-livepage body { background: transparent !important; } 
 [data-st=light] .st-row .bar { background: rgba(20,21,28,.08); } [data-st=light] .st-row.adv { background: rgba(39,194,122,.14); }
 [data-st=light] .st-dots button { background: rgba(20,21,28,.22); } [data-st=light] .st-dots button.on { background: #ff3347; }
 [data-st=light] .st-cap h2 { text-shadow: none; } [data-st=light] .st-cap p { color: #3b3f55; }
+.st-panel { overflow: clip; }
+@media (min-width: 1024px) { .st-panel { gap: 18px; padding-block: 28px; } .st-sub { margin-bottom: 20px; } }
+/* phone layout of the dashboard: logo + language/theme on top, tabs, then user + two round buttons */
+.st-acts { display: contents; }
+@media (max-width: 1023px) {
+  .st-side { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px 10px; padding: 14px 16px 12px; }
+  .st-side-top, .st-side-bot { display: contents; }
+  .st-side-top > a:first-child { grid-column: 1; grid-row: 1; justify-self: start; }
+  .st-side-top .st-tool { display: none; }
+  .st-side-top .st-nav { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 6px; width: auto; overflow-x: auto; margin-inline: -4px; padding: 2px 4px; scrollbar-width: none; }
+  .st-side-top .st-nav::-webkit-scrollbar { display: none; }
+  .st-side-top .st-nav a { flex: 1 0 auto; justify-content: center; padding: 10px 14px; }
+  .st-side-top .st-nav a:hover { transform: none; }
+  .st-tools { grid-column: 2; grid-row: 1; margin: 0; justify-self: end; }
+  .st-side-bot .st-me { grid-column: 1; grid-row: 3; margin: 0; flex: none; padding: 10px 12px; min-width: 0; }
+  .st-acts { grid-column: 2; grid-row: 3; display: flex; gap: 8px; }
+  .st-acts .st-logout { width: 44px; height: 44px; margin: 0; padding: 0; gap: 0; font-size: 0; flex: none; }
+  .st-side-bot .st-logout + .st-logout { margin-top: 0; }
+  .st-main { padding: 18px 16px 3rem; }
+  .st-top { margin-bottom: 16px; } .st-top h1 { font-size: 1.45rem; }
+  .st-new { padding: 10px 18px; font-size: .88rem; }
+  .st-stats { gap: 10px; margin-bottom: 20px; } .st-stat { padding: 14px 16px; } .st-stat b { font-size: 1.6rem; }
+  .st-acc { gap: 12px; } .st-box2 { padding: 18px; }
+}
+.st-hint { color: var(--s-dim, var(--muted)); font-size: .78rem; line-height: 1.7; }
+
+/* hero buttons: one column, same width and height, so the three line up */
+.hero-cta { display: grid; gap: 10px; width: min(23rem, 86vw); }
+.hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hero-main, .hero-sec { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 3.25rem; border-radius: 999px; font-size: .95rem; white-space: nowrap; transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s, background .25s, color .25s, border-color .25s; }
+.hero-main { position: relative; overflow: hidden; color: #fff; font-weight: 700; background: linear-gradient(135deg, #ff3347, #d90f26); box-shadow: 0 12px 30px -8px rgba(235,40,60,.65), inset 0 1px 0 rgba(255,255,255,.35); }
+.hero-main:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -8px rgba(235,40,60,.8), inset 0 1px 0 rgba(255,255,255,.4); }
+.hero-main:active, .hero-sec:active { transform: translateY(0) scale(.98); }
+.hero-main::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); transform: translateX(-120%); animation: hero-shine 4.5s ease-in-out 1.5s infinite; pointer-events: none; }
+@keyframes hero-shine { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+[dir=rtl] .hero-main::after { transform: translateX(120%); animation-name: hero-shine-r; } @keyframes hero-shine-r { 0%, 55% { transform: translateX(120%); } 100% { transform: translateX(-120%); } }
+.hm-ic { width: 21px; height: 21px; flex: none; }
+.hero-sec { font-weight: 600; color: #0c0d14; background: rgba(255,255,255,.55); border: 1px solid rgba(12,13,20,.2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.hero-sec:hover { background: #0c0d14; color: #fff; border-color: #0c0d14; transform: translateY(-2px); }
+@media (max-width: 480px) { .hero-main, .hero-sec { height: 3rem; font-size: .88rem; } .hero-main { font-size: .95rem; } }
+@media (prefers-reduced-motion: reduce) { .hero-main::after { animation: none; display: none; } }
+/* hero buttons: natural size; the two small ones share the red button's width */
+.hero-cta { width: fit-content; max-width: 92vw; gap: 9px; }
+.hero-main { padding-inline: 1.9rem; height: 3rem; }
+.hero-sec { padding-inline: .6rem; height: 2.7rem; font-size: .88rem; }
+@media (max-width: 480px) { .hero-main { height: 2.75rem; padding-inline: 1.5rem; font-size: .9rem; } .hero-sec { height: 2.5rem; font-size: .82rem; } .hero-cta { gap: 8px; } .hm-ic { width: 19px; height: 19px; } }
