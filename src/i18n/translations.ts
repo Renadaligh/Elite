@@ -1,7 +1,7 @@
 export type Lang = 'en' | 'ar';
 const en = {
   brand: 'Elite', heroSub: 'The community of Plato’s elite players', artAlt: 'A lone ninja on a snowy mountain ridge under the ELITE wordmark',
-  navHome: 'Home', navNews: 'Plato News', navGames: 'Games', navTournaments: 'Tournaments', navChampions: 'Champions', navCommunity: 'Community', navSupport: 'Support Us',
+  navBracket: 'Bracket tool', navHome: 'Home', navNews: 'Plato News', navGames: 'Games', navTournaments: 'Tournaments', navChampions: 'Champions', navCommunity: 'Community', navSupport: 'Support Us',
   comSub: 'Join the Elite community — chat, team up and play together.', supSub: 'Help keep Elite growing.', supStoreTitle: 'Shop at Unlimited Blue, support Elite', supStoreText: 'Unlimited Blue is a store for custom products — 3D printing, engraving and laser engraving. Every order helps keep the community and its tournaments growing.', supStoreBtn: 'Visit the store', supF1: '3D printing', supF2: 'Engraving', supF3: 'Laser engraving', supNote: 'Opens the store in a new tab.',
   toTop: 'Back to top', scrollDown: 'Scroll down to the news',
   newsTitle: 'Plato News', newsSub: 'The newest updates from the Plato Arabic Community.', newsRead: 'Read more', newsEmpty: 'No news yet — check back soon.', newsError: 'Could not load the news.', newsRetry: 'Try again', newsAll: 'All news', newsBack: 'Back to home', newsFilter: 'Filter by category', filterAll: 'All',  tagUpdate: 'Update', tagTournament: 'Tournament', tagCommunity: 'Community', tagEvent: 'Event',
@@ -21,7 +21,7 @@ const en = {
 export type Dict = Record<keyof typeof en, string>;
 const ar: Dict = {
   brand: 'Elite', heroSub: 'مُجتمع نخبة لاعبي بلاتو', artAlt: 'ننجا وحيد على قمة جبل ثلجي أسفل شعار ELITE',
-  navHome: 'الرئيسية', navNews: 'أخبار بلاتو', navGames: 'الألعاب', navTournaments: 'البطولات', navChampions: 'الأبطال', navCommunity: 'المجتمع', navSupport: 'ادعمنا',
+  navBracket: 'أداة البراكت', navHome: 'الرئيسية', navNews: 'أخبار بلاتو', navGames: 'الألعاب', navTournaments: 'البطولات', navChampions: 'الأبطال', navCommunity: 'المجتمع', navSupport: 'ادعمنا',
   comSub: 'انضم إلى مجتمع Elite — تحدّث، كوّن فريقك، والعب مع الآخرين.', supStoreTitle: 'تسوّق من Unlimited Blue وادعم Elite', supStoreText: 'Unlimited Blue متجر للمنتجات المخصصة — طباعة ثلاثية الأبعاد، حفر، وحفر بالليزر. كل طلب يساهم في استمرار المجتمع وبطولاته.', supStoreBtn: 'زيارة المتجر', supF1: 'طباعة ثلاثية الأبعاد', supF2: 'حفر', supF3: 'حفر بالليزر', supNote: 'يفتح المتجر في تبويب جديد.', supSub: 'ساهم في استمرار نمو Elite.',
   toTop: 'العودة للأعلى', scrollDown: 'انزل لقسم الأخبار',
   newsTitle: 'أخبار بلاتو', newsSub: 'أحدث مستجدات مجتمع بلاتو العربي.', newsRead: 'اقرأ المزيد', newsEmpty: 'لا توجد أخبار حالياً — عد قريباً.', newsError: 'تعذّر تحميل الأخبار.', newsRetry: 'حاول مرة أخرى', newsAll: 'كل الأخبار', newsBack: 'العودة للرئيسية', newsFilter: 'تصفية حسب التصنيف', filterAll: 'الكل',  tagUpdate: 'تحديث', tagTournament: 'بطولة', tagCommunity: 'المجتمع', tagEvent: 'فعالية',

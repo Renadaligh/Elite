@@ -8,6 +8,7 @@ import NewsPage from './components/NewsPage';
 import GamesSection from './components/GamesSection';
 import GamePage from './components/GamePage';
 import TournamentPage from './components/TournamentPage';
+import BracketToolPage from './components/BracketToolPage';
 import TournamentsSection from './components/TournamentsSection';
 import ChampionsSection from './components/ChampionsSection';
 import Footer from './components/Footer';
@@ -27,6 +28,8 @@ function Pages() {
           <NewsPage />
         ) : route.page === 'game' ? (
           <GamePage id={route.id ?? ''} />
+        ) : route.page === 'bracket' ? (
+          <BracketToolPage id={route.id} />
         ) : route.page === 'tournament' ? (
           <TournamentPage id={route.id ?? ''} />
         ) : (

@@ -53,3 +53,20 @@ CREATE TABLE IF NOT EXISTS games (
 --   ALTER TABLE tournaments ADD COLUMN bracket TEXT NOT NULL DEFAULT '';
 --   ALTER TABLE tournaments ADD COLUMN stream_url TEXT NOT NULL DEFAULT '';
 --   ALTER TABLE tournaments ADD COLUMN stream_live INTEGER NOT NULL DEFAULT 0;
+
+-- Visitor accounts + the public bracket tool (Discord / Google sign-in). New installs get these from this file;
+-- existing databases: run each CREATE below once in the D1 console (one statement at a time).
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY, provider TEXT NOT NULL, provider_id TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '', email TEXT NOT NULL DEFAULT '', avatar TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS users_provider ON users (provider, provider_id);
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS user_brackets (
+  id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL DEFAULT '', data TEXT NOT NULL,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS user_brackets_user ON user_brackets (user_id, updated_at);
