@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, type BFormat, type BMatch, type Bracket } from '../data/bracket';
-import { useAuth, type AuthUser } from '../hooks/useAuth';
+import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
 import BracketView from './BracketView';
+import EmailLogin from './EmailLogin';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
@@ -23,7 +24,7 @@ export const TXT = {
     discord: 'الدخول بحساب Discord', google: 'الدخول بحساب Google', none: 'تسجيل الدخول غير مفعّل بعد.', close: 'إغلاق',
     editPlayers: 'تعديل أسماء اللاعبين', rebuild: 'تعديل القائمة وإعادة البناء', rebuildAsk: 'إعادة البناء تمسح النتائج الحالية. متأكد؟', renameNote: 'تغيير الاسم يحافظ على النتائج.',
     notFound: 'البراكت غير موجود.', by: 'من', copy: 'انسخه لأعدّله', readonly: 'عرض فقط', unsaved: 'لم تُحفظ التعديلات بعد',
-    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البراكتات المحفوظة (20). احذف واحد قديم.', saveFail: 'تعذّر الحفظ',
+    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البراكتات المحفوظة (100). احذف واحد قديم.', private: 'هذا البراكت غير منشور. اطلب من صاحبه تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البراكت (عرض فقط).', shLive: 'رابط البث (OBS)', shLiveD: 'صفحة بخلفية شفافة تتحدث لحالها، تضيفها في OBS كـ Browser Source.', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البراكت أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
     myTitle: 'براكتاتي', newOne: '+ براكت جديد', empty: 'ما عندك براكتات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: '⬇ صورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟',
     needLogin: 'سجّل دخولك لتشوف براكتاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
   },
@@ -36,7 +37,7 @@ export const TXT = {
     discord: 'Continue with Discord', google: 'Continue with Google', none: 'Sign-in is not enabled yet.', close: 'Close',
     editPlayers: 'Edit player names', rebuild: 'Edit list & rebuild', rebuildAsk: 'Rebuilding clears the current results. Sure?', renameNote: 'Renaming keeps the results.',
     notFound: 'Bracket not found.', by: 'by', copy: 'Copy to edit', readonly: 'View only', unsaved: 'Unsaved changes',
-    loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (20). Delete an old one.', saveFail: 'Could not save',
+    loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Stream link (OBS)', shLiveD: 'A transparent, self-updating page. Add it in OBS as a Browser Source.', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
     myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: '⬇ Image', del: 'Delete', delAsk: 'Delete this bracket?',
     needLogin: 'Sign in to see your saved brackets.', players_n: 'players', hello: 'Hi',
   },
@@ -46,9 +47,10 @@ type Tx = (typeof TXT)['ar'] | (typeof TXT)['en'];
 const base = () => `${window.location.origin}${window.location.pathname}`;
 const loginNote = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('login');
 
-function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: { discord: boolean; google: boolean }; r: 'tool' | 'mine'; onClose: () => void }) {
+function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Providers; r: 'tool' | 'mine'; onClose: () => void }) {
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [onClose]);
-  const any = providers.discord || providers.google;
+  const any = Object.values(providers).some(Boolean);
+  const { lang } = useI18n();
   return (
     <div className="backdrop-fade fixed inset-0 z-[90] grid place-items-center bg-black/60 p-5 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div role="dialog" aria-modal="true" aria-label={tx.loginTitle} className="modal-in grid w-full max-w-[26rem] gap-3 rounded-2xl border p-7 text-center shadow-2xl" style={{ background: 'var(--dialog, #0b0b10)', borderColor: 'var(--glass-b)' }}>
@@ -56,6 +58,9 @@ function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: { discor
         <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.loginSub}</p>
         {providers.discord && <a href={`/api/auth/login/discord?r=${r}`} className="rounded-xl px-4 py-3 font-bold text-white" style={{ background: '#5865f2' }}>{tx.discord}</a>}
         {providers.google && <a href={`/api/auth/login/google?r=${r}`} className="rounded-xl bg-white px-4 py-3 font-bold text-[#222]">{tx.google}</a>}
+        {providers.twitch && <a href={`/api/auth/login/twitch?r=${r}`} className="rounded-xl px-4 py-3 font-bold text-white" style={{ background: '#9146ff' }}>{tx.twitch}</a>}
+        {providers.steam && <a href={`/api/auth/login/steam?r=${r}`} className="rounded-xl px-4 py-3 font-bold text-white" style={{ background: '#1b2838' }}>{tx.steam}</a>}
+        {providers.email && <><p className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{tx.orMail}</p><EmailLogin lang={lang} /></>}
         {!any && <p className="rounded-xl border px-4 py-3 text-[.9rem]" style={{ ...card, color: 'var(--muted)' }}>{tx.none}</p>}
         <button type="button" className={`${pill} justify-self-center`} style={card} onClick={onClose}>{tx.close}</button>
       </div>
@@ -100,7 +105,10 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
   const [sel, setSel] = useState<string | null>(null);
   const [owner, setOwner] = useState('');
   const [mine, setMine] = useState(!id);
-  const [state, setState] = useState<'load' | 'ok' | 'missing'>(id ? 'load' : 'ok');
+  const [state, setState] = useState<'load' | 'ok' | 'missing' | 'private'>(id ? 'load' : 'ok');
+  const [share, setShare] = useState(false);
+  const [live, setLive] = useState(false);
+  const [copied, setCopied] = useState('');
   const [login, setLogin] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [lo, setLo] = useState(fmtInit());
@@ -110,9 +118,9 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
 
   useEffect(() => {
     if (!id) return;
-    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean }>(`/brackets/${id}`)
-      .then((r) => { if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine); setState('ok'); })
-      .catch(() => setState('missing'));
+    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; share: boolean; live: boolean }>(`/brackets/${id}`)
+      .then((r) => { if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine); setShare(r.share); setLive(r.live); setState('ok'); })
+      .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
   // Guests keep their work in the browser, so signing in (a page round-trip) never loses it.
@@ -147,6 +155,15 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
     } catch (e) { setMsg((e as Error & { detail?: string }).detail === 'limit' ? tx.limit : tx.saveFail); }
     setBusy(false);
   }
+  async function flip(k: 'share' | 'live', on: boolean) {
+    if (!id) return;
+    (k === 'share' ? setShare : setLive)(on);
+    try { await api(`/brackets/${id}`, { method: 'PATCH', body: JSON.stringify({ [k]: on }) }); }
+    catch { (k === 'share' ? setShare : setLive)(!on); setMsg(tx.shFail); }
+  }
+  async function copyLink(key: string, link: string) {
+    try { await navigator.clipboard.writeText(link); setCopied(key); window.setTimeout(() => setCopied(''), 1800); } catch { window.prompt('', link); }
+  }
   function copyToEdit() {
     if (!br) return;
     try { localStorage.setItem(DRAFT, JSON.stringify({ title, names: br.players.join('\n'), fmt: br.format, br: { ...br, cur: undefined } })); } catch { /* ignore */ }
@@ -160,6 +177,8 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
 
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
+  if (state === 'private') return <p className="text-lg">{tx.private}</p>;
+  const viewUrl = `${base()}#/bracket/${id}`, liveUrl = `${base()}#/bracket/${id}/live`;
 
   return (
     <>
@@ -194,6 +213,24 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
           {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') ? tx.hintL : tx.hint}</p>}
           {champ !== null && <p className="text-[1rem]">🏆 <b>{br.players[champ]}</b></p>}
           <div className="rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} /></div>
+          {editable && (
+            <div className="st-share" style={card}>
+              <b>{tx.shTitle}</b>
+              {!id ? <p className="st-shn">{tx.shSave}</p> : (
+                <>
+                  {([['share', tx.shView, tx.shViewD, share, viewUrl], ['live', tx.shLive, tx.shLiveD, live, liveUrl]] as const).map(([k, t, d, on, link]) => (
+                    <div key={k} className="st-shr">
+                      <div className="st-shh">
+                        <div><span>{t}</span><small>{d}</small></div>
+                        <button type="button" role="switch" aria-checked={on} aria-label={t} className={`st-sw ${on ? 'on' : ''}`} onClick={() => flip(k, !on)}><i /></button>
+                      </div>
+                      {on && <div className="st-shl"><input readOnly dir="ltr" value={link} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink(k, link)}>{copied === k ? tx.shCopied : tx.shCopy}</button></div>}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
           {editable && m && R && (
             <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={card}>
               <b className="self-center">{m.id}</b>

@@ -6,6 +6,7 @@ export interface Env {
   IMAGES?: { put(key: string, value: Uint8Array, opts?: { httpMetadata?: { contentType?: string } }): Promise<unknown>; get(key: string): Promise<R2Obj | null> };
   ADMIN_PASSWORD?: string;
   DISCORD_CLIENT_ID?: string; DISCORD_CLIENT_SECRET?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string;
+  TWITCH_CLIENT_ID?: string; TWITCH_CLIENT_SECRET?: string; STEAM_API_KEY?: string; RESEND_API_KEY?: string; MAIL_FROM?: string;
 }
 export type Ctx = { request: Request; env: Env; params: Record<string, string> };
 

@@ -111,3 +111,6 @@ export function bracketStatus(v: unknown): 'new' | 'live' | 'done' {
   if (all && (f === 'rr' || rounds >= (b.opts?.rounds ?? 1))) return 'done';
   return real.some(scored) ? 'live' : 'new';
 }
+
+/** Saved brackets per signed-in visitor. */
+export const MAX_PER_USER = 100;

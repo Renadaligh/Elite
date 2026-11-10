@@ -3,10 +3,37 @@ import { champion, ffaChampion, ffaRows, groupLabel, groupSub, isCurrent, isLeag
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
 const CW = 210, CH = 62, RH = CH / 2, GX = 60, GY = 18, PAD = 36, HEAD = 96, FOOT = 56;
 
+/** Header-style brand mark (cube · plato | ninja) + site address, drawn at the bottom corner of every image. */
+const IMG: { cube?: HTMLImageElement; ninja?: HTMLImageElement } = {};
+const loadImg = (src: string) => new Promise<HTMLImageElement | undefined>((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(undefined); i.src = src; });
+async function preloadBrand() {
+  if (IMG.cube && IMG.ninja) return;
+  const b = import.meta.env.BASE_URL;
+  try { await document.fonts?.load('500 24px Ubuntu'); } catch { /* optional */ }
+  [IMG.cube, IMG.ninja] = await Promise.all([loadImg(`${b}brand/cube.png`), loadImg(`${b}brand/ninja.png`)]);
+}
+function brandMark(c: CanvasRenderingContext2D, W: number, cy: number, rtl: boolean, family: string) {
+  const ch = 26, nh = 18, gap = 8;
+  const cw = IMG.cube ? (ch * IMG.cube.width) / IMG.cube.height : 0, nw = IMG.ninja ? (nh * IMG.ninja.width) / IMG.ninja.height : 0;
+  c.save(); c.textBaseline = 'middle'; c.textAlign = 'left';
+  c.font = '500 24px Ubuntu, sans-serif'; const pw = c.measureText('plato').width;
+  c.font = `600 13px ${family}`; const uw = c.measureText('plato-ar.com').width;
+  const total = cw + (cw ? gap : 0) + pw + 10 + 1 + 10 + nw + 18 + uw;
+  let x = rtl ? PAD : W - PAD - total;
+  c.fillStyle = '#fff';
+  if (IMG.cube) { c.drawImage(IMG.cube, x, cy - ch / 2, cw, ch); x += cw + gap; }
+  c.font = '500 24px Ubuntu, sans-serif'; c.fillText('plato', x, cy + 1); x += pw + 10;
+  c.globalAlpha = 0.4; c.fillRect(x, cy - 11, 1, 22); c.globalAlpha = 1; x += 11;
+  if (IMG.ninja) { c.drawImage(IMG.ninja, x, cy - nh / 2, nw, nh); x += nw; }
+  x += 18; c.fillStyle = '#9aa0b8'; c.font = `600 13px ${family}`; c.fillText('plato-ar.com', x, cy + 1);
+  c.restore();
+}
+
 interface Opts { title: string; lang: 'ar' | 'en'; scale?: number }
 
 export async function bracketBlob(br: Bracket, o: Opts): Promise<Blob> {
   try { await document.fonts?.ready; } catch { /* fonts are optional */ }
+  await preloadBrand();
   if (isLeague(br)) return leagueBlob(br, o);
   if (br.format === 'ffa') return canvasBlob(ffaCanvas(br, o));
   if (br.format === 'groups') return groupsBlob(br, o);
@@ -104,7 +131,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
     txt(`🏆  ${br.players[champ]}`, rtl ? x + w : x, yy, al, w);
   }
   c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle';
-  txt('Elite · plato-ar.com', rtl ? PAD : W - PAD, H - 22, rtl ? 'left' : 'right', 260);
+  brandMark(c, W, H - 22, rtl, family);
   c.textAlign = 'start';
   return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('canvas'))), 'image/png'));
 }
@@ -218,7 +245,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     txt(`🏆  ${br.players[champ]}`, rtl ? x + w - 16 : x + 16, y + 23, 'start', w - 32);
   }
   c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle';
-  txt('Elite · plato-ar.com', rtl ? PAD : W - PAD, H - 26, rtl ? 'left' : 'right', 260);
+  brandMark(c, W, H - 26, rtl, family);
   c.textAlign = 'start';
   return cv;
 }
@@ -265,7 +292,7 @@ function tableCanvas(opts: { title: string; sub: string; lang: 'ar' | 'en'; scal
     c.restore(); c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,.14)'; rr(PAD, top, TW, th, 12); c.stroke();
   });
   if (opts.champ) { c.fillStyle = '#fff'; c.font = `800 15px ${family}`; c.textBaseline = 'middle'; txt(`🏆  ${opts.champ}`, rtl ? W - PAD : PAD, H - (opts.footer ? FOOT : 20) - 24, al, TW); }
-  if (opts.footer) { c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle'; txt('Elite · plato-ar.com', rtl ? PAD : W - PAD, H - 22, rtl ? 'left' : 'right', 260); }
+  if (opts.footer) { c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle'; brandMark(c, W, H - 22, rtl, family); }
   c.textAlign = 'start';
   return cv;
 }

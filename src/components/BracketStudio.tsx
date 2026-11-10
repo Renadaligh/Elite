@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { bracketBlob, downloadBlob } from '../data/bracketImage';
 import type { Bracket } from '../data/bracket';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, type Providers } from '../hooks/useAuth';
+import EmailLogin from './EmailLogin';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BrandLockup from './BrandLockup';
@@ -14,27 +15,27 @@ import LanguageSwitcher from './LanguageSwitcher';
 const S = {
   ar: {
     tool: 'أداة البراكت', welcome: 'أهلاً بك في', welcome2: 'أداة البراكت', sub: 'سجّل دخولك لإنشاء بطولاتك وإدارتها وحفظها في حسابك.',
-    discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', perks: 'ماذا ستحصل عليه',
+    discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', twitch: 'Twitch', steam: 'Steam', orMail: 'أو بالبريد الإلكتروني', perks: 'ماذا ستحصل عليه',
     p1: 'براكتاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',
     pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
-    none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.',
+    none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.', expired: 'انتهى الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.',
     mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
     edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
-    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
+    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
   },
   en: {
     tool: 'Bracket Tool', welcome: 'Welcome to the', welcome2: 'Bracket Tool', sub: 'Sign in to create, manage and save your tournaments in your account.',
-    discord: 'Continue with Discord', google: 'Continue with Google', perks: 'What you get',
+    discord: 'Continue with Discord', google: 'Continue with Google', twitch: 'Twitch', steam: 'Steam', orMail: 'or with your email', perks: 'What you get',
     p1: 'Your brackets saved in your account', p2: 'Single/double elimination, round robin, swiss, groups, leaderboard', p3: 'A ready-to-post image and a share link',
     fine: 'Signing in saves only your name and avatar from the account. We never post anything for you.', back: 'Back to the site',
     pl: 'Player', rr: 'Round robin', lb: 'Leaderboard', grp: 'Group', cP: 'P', cW: 'W', cD: 'D', cL: 'L', cPts: 'Pts', h1: 'Run your tournament', h2: 'the', h3: 'professional way', hp: 'Live bracket, standings that update themselves, and a shareable image in seconds.',
-    none: 'Sign-in is not enabled yet.', failed: 'Sign-in failed, please try again.', unavailable: 'This option is not enabled yet.',
+    none: 'Sign-in is not enabled yet.', failed: 'Sign-in failed, please try again.', unavailable: 'This option is not enabled yet.', expired: 'The link expired or was already used. Ask for a new one.',
     mine: 'My brackets', fresh: 'New bracket', account: 'Account', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
     edit: 'Open & edit', link: 'Copy link', copied: 'Link copied', img: 'Save as image', del: 'Delete', delAsk: 'Delete this bracket?', players: 'players', fail: 'Something went wrong',
-    backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
+    backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
   },
 } as const;
 type St = (typeof S)['ar'] | (typeof S)['en'];
@@ -51,6 +52,7 @@ const I = {
   pen: <><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4Z" /><path d="M13.5 6.5l4 4" /></>,
   link: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" />,
   img: <><rect x="3.5" y="4.5" width="17" height="15" rx="3" /><circle cx="9" cy="10" r="1.6" /><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5" /></>,
+  twitch: <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.43l-3 3v-3H6.857V1.714h13.714Z" fill="currentColor" stroke="none" />,
   trash: <path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.8 12.2a1.5 1.5 0 0 0 1.5 1.3h6.4a1.5 1.5 0 0 0 1.5-1.3L17.5 7M10 11v6M14 11v6" />,
 };
 const Ic = ({ d, c = 'h-[18px] w-[18px]' }: { d: keyof typeof I; c?: string }) => <svg viewBox="0 0 24 24" className={c} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{I[d]}</svg>;
@@ -129,7 +131,7 @@ function HeroStage({ s, k }: { s: St; k: number }) {
   );
 }
 
-function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; google: boolean } }) {
+function LoginScreen({ s, providers }: { s: St; providers: Providers }) {
   const { dir, lang } = useI18n();
   const heroRef = useRef<HTMLElement>(null);
   const [k, setK] = useState(1);
@@ -139,8 +141,8 @@ function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; g
     fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
   }, []);
   const n = note();
-  const any = providers.discord || providers.google;
-  const msg = n === 'failed' ? s.failed : n === 'unavailable' ? s.unavailable : '';
+  const any = Object.values(providers).some(Boolean);
+  const msg = n === 'failed' ? s.failed : n === 'unavailable' ? s.unavailable : n === 'expired' ? s.expired : '';
   const d = (i: number) => ({ '--d': `${i * 90}ms` }) as React.CSSProperties;
   return (
     <div className="st-login" dir={dir}>
@@ -155,12 +157,19 @@ function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; g
           {msg && <p role="alert" className="st-rise st-alert" style={d(2)}>{msg}</p>}
           {providers.discord && <a href="/api/auth/login/discord?r=tool" className="st-btn st-dc st-rise" style={d(3)}><span className="st-gl"><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="#fff" aria-hidden><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" /></svg></span>{s.discord}</a>}
           {providers.google && <a href="/api/auth/login/google?r=tool" className="st-btn st-gg st-rise" style={d(4)}><span className="st-gl st-g"><svg viewBox="0 0 18 18" className="h-[20px] w-[20px]" aria-hidden><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" /><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" /><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" /><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" /></svg></span>{s.google}</a>}
+          {(providers.twitch || providers.steam) && (
+            <div className="st-duo st-rise" style={d(5)}>
+              {providers.twitch && <a href="/api/auth/login/twitch?r=tool" className="st-btn st-tw"><svg viewBox="0 0 24 24" className="h-[19px] w-[19px]" fill="#fff" aria-hidden><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.43l-3 3v-3H6.857V1.714h13.714Z" /></svg>{s.twitch}</a>}
+              {providers.steam && <a href="/api/auth/login/steam?r=tool" className="st-btn st-sm"><svg viewBox="0 0 24 24" className="h-[20px] w-[20px]" fill="#fff" aria-hidden><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" /></svg>{s.steam}</a>}
+            </div>
+          )}
+          {providers.email && (<><div className="st-or st-rise" style={d(6)}>{s.orMail}</div><EmailLogin lang={lang} className="st-rise" /></>)}
           {!any && <p className="st-rise st-alert st-soft" style={d(3)}>{s.none}</p>}
-          <div className="st-or st-rise" style={d(5)}>{s.perks}</div>
-          <ul className="st-perks st-rise" style={d(6)}><li>{s.p1}</li><li>{s.p2}</li><li>{s.p3}</li></ul>
-          <p className="st-fine st-rise" style={d(7)}>{s.fine}</p>
+          <div className="st-or st-rise" style={d(7)}>{s.perks}</div>
+          <ul className="st-perks st-rise" style={d(8)}><li>{s.p1}</li><li>{s.p2}</li><li>{s.p3}</li></ul>
+          <p className="st-fine st-rise" style={d(9)}>{s.fine}</p>
         </div>
-        <a href="#top" className="st-back st-rise" style={d(8)}><span aria-hidden>{dir === 'rtl' ? '→' : '←'}</span> {s.back}</a>
+        <a href="#top" className="st-back st-rise" style={d(10)}><span aria-hidden>{dir === 'rtl' ? '→' : '←'}</span> {s.back}</a>
       </aside>
       <section className="st-hero" aria-hidden ref={heroRef}>
         <div className="st-grid" /><div className="st-glow a" /><div className="st-glow b" />
@@ -171,7 +180,7 @@ function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; g
   );
 }
 
-type Row = { id: string; title: string; format: string; players: number; status?: 'new' | 'live' | 'done'; updatedAt: string };
+type Row = { id: string; title: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string };
 
 function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -182,7 +191,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const say = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(''), 2200); };
   async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: r.title, lang }), `${r.title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(`${base()}#/bracket/${r.id}`); say(s.copied); } catch { say(`${base()}#/bracket/${r.id}`); } }
+  async function copy(r: Row) { if (!r.share) { say(s.needShare); return; } try { await navigator.clipboard.writeText(`${base()}#/bracket/${r.id}`); say(s.copied); } catch { say(`${base()}#/bracket/${r.id}`); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -215,6 +224,54 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   );
 }
 
+function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; lang: 'ar' | 'en' }) {
+  const user = auth.user!;
+  const [name, setName] = useState(user.name);
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const pct = Math.min(100, Math.round((auth.count / auth.max) * 100));
+  const joined = user.createdAt ? new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(user.createdAt)) : '–';
+  async function save() {
+    if (name.trim().length < 2) return;
+    setBusy(true);
+    try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ name: name.trim() }) }); auth.reload(); setMsg(s.accSaved); } catch { setMsg(s.fail); }
+    setBusy(false); window.setTimeout(() => setMsg(''), 2200);
+  }
+  async function wipe() {
+    if (!window.confirm(s.accAsk)) return;
+    try { await api('/auth/me', { method: 'DELETE' }); } catch { setMsg(s.fail); return; }
+    window.location.hash = '#/bracket'; auth.reload();
+  }
+  return (
+    <div className="st-acc">
+      <section className="st-box2">
+        <div className="st-prof">
+          {user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av big">{user.name.slice(0, 1)}</span>}
+          <div><b>{user.name}</b><p>{s.via} {user.provider}</p></div>
+        </div>
+        <label className="st-fld">{s.accName}
+          <span className="st-inl"><input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} /><button type="button" disabled={busy || name.trim() === user.name || name.trim().length < 2} onClick={save}>{s.accSave}</button></span>
+        </label>
+        <p role="status" className="st-flash" style={{ opacity: msg ? 1 : 0 }}>{msg || '·'}</p>
+        <dl className="st-dl">
+          {user.email && <><dt>{s.accEmail}</dt><dd dir="ltr">{user.email}</dd></>}
+          <dt>{s.accJoined}</dt><dd>{joined}</dd>
+        </dl>
+      </section>
+      <section className="st-box2">
+        <h3>{s.accUse}</h3>
+        <p className="st-use"><b>{auth.count}</b> {s.accOf} {auth.max} · {s.count}</p>
+        <div className="st-meter"><i style={{ width: `${pct}%` }} /></div>
+      </section>
+      <section className="st-box2 danger">
+        <h3>{s.accDanger}</h3>
+        <p>{s.accDangerP}</p>
+        <button type="button" className="st-out" onClick={wipe}>{s.accDel}</button>
+      </section>
+    </div>
+  );
+}
+
 function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>; s: St }) {
   const { lang, dir } = useI18n();
   const tx = TXT[lang];
@@ -237,8 +294,8 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
           <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{user.name.slice(0, 1)}</span>}<div><b>{user.name}</b><small>{user.provider}</small></div></div>
           <nav className="st-nav">
             <a href="#top"><Ic d="site" />{s.back}</a>
-            <a href="#/bracket" className="dng" onClick={(e) => { e.preventDefault(); auth.logout(); }}><Ic d="out" />{s.logout}</a>
           </nav>
+          <button type="button" className="st-logout" onClick={auth.logout}><Ic d="out" />{s.logout}</button>
         </div>
       </aside>
       <main className="st-main">
@@ -253,13 +310,7 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
               <div className="st-top"><h1>{title}</h1>{sec === 'mine' && <a href="#/bracket/new" className="st-new">{s.newBtn}</a>}</div>
               {sec === 'mine' && <Mine s={s} lang={lang} />}
               {sec === 'new' && <Editor key="new" tx={tx} auth={auth} />}
-              {sec === 'account' && (
-                <div className="st-account">
-                  {user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av big">{user.name.slice(0, 1)}</span>}
-                  <div><b>{user.name}</b><p>{s.via} {user.provider}</p></div>
-                  <button type="button" className="st-out" onClick={auth.logout}>{s.logout}</button>
-                </div>
-              )}
+              {sec === 'account' && <Account s={s} auth={auth} lang={lang} />}
             </>
           )}
         </div>

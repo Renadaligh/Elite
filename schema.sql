@@ -67,6 +67,14 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE TABLE IF NOT EXISTS user_brackets (
   id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL DEFAULT '', data TEXT NOT NULL,
-  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+  share INTEGER NOT NULL DEFAULT 0, live INTEGER NOT NULL DEFAULT 0
+);
+-- Existing databases (user_brackets already created): run these two, one at a time.
+--   ALTER TABLE user_brackets ADD COLUMN share INTEGER NOT NULL DEFAULT 0;
+--   ALTER TABLE user_brackets ADD COLUMN live INTEGER NOT NULL DEFAULT 0;
+-- Email sign-in links (one-time, 15 minutes):
+CREATE TABLE IF NOT EXISTS login_links (
+  token_hash TEXT PRIMARY KEY, email TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS user_brackets_user ON user_brackets (user_id, updated_at);
