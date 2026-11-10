@@ -187,11 +187,6 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   async function copyLink(key: string, link: string) {
     try { await navigator.clipboard.writeText(link); setCopied(key); window.setTimeout(() => setCopied(''), 1800); } catch { window.prompt('', link); }
   }
-  function copyToEdit() {
-    if (!br) return;
-    try { localStorage.setItem(DRAFT, JSON.stringify({ title, names: br.players.join('\n'), fmt: br.format, br: { ...br, cur: undefined } })); } catch { /* ignore */ }
-    window.location.hash = '#/bracket/new';
-  }
 
   const m = br && sel ? br.matches.find((i) => i.id === sel) : undefined;
   const R = br ? resolve(br) : null;
@@ -230,7 +225,6 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
             <div className="flex flex-wrap items-center gap-2.5">
               <BracketActions bracket={br} title={shownTitle} url={url} />
               {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#ff3347,#d90f26)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
-              {!editable && <button type="button" className={pill} style={card} onClick={copyToEdit}>{tx.copy}</button>}
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}

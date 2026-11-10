@@ -22,7 +22,7 @@ const S = {
     none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.', expired: 'انتهى الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.',
     mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
-    edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
+    limitMsg: 'وصلت الحد الأقصى من البراكتات (100)', dup: 'تكرار البراكت', dupSfx: '(نسخة)', dupOk: 'تم إنشاء نسخة', edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
     backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', avChange: 'تغيير الصورة', avAdd: 'رفع صورة', avRemove: 'حذف الصورة', avHint: 'صورة واحدة، تُصغَّر تلقائياً (خفيفة جداً).', avBad: 'اختر صورة PNG أو JPG أو WebP.', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
   },
   en: {
@@ -34,7 +34,7 @@ const S = {
     none: 'Sign-in is not enabled yet.', failed: 'Sign-in failed, please try again.', unavailable: 'This option is not enabled yet.', expired: 'The link expired or was already used. Ask for a new one.',
     mine: 'My brackets', fresh: 'New bracket', account: 'Account', toLight: 'Light mode', toDark: 'Dark mode', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
-    edit: 'Open & edit', link: 'Copy link', copied: 'Link copied', img: 'Save as image', del: 'Delete', delAsk: 'Delete this bracket?', players: 'players', fail: 'Something went wrong',
+    limitMsg: 'You reached the limit of brackets (100)', dup: 'Duplicate', dupSfx: '(copy)', dupOk: 'Copy created', edit: 'Open & edit', link: 'Copy link', copied: 'Link copied', img: 'Save as image', del: 'Delete', delAsk: 'Delete this bracket?', players: 'players', fail: 'Something went wrong',
     backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', avChange: 'Change photo', avAdd: 'Upload photo', avRemove: 'Remove photo', avHint: 'One photo, resized automatically (very light).', avBad: 'Pick a PNG, JPG or WebP image.', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accMailT: 'Email sign-in', accMailP: 'You stay signed in for 30 days on this device. If you sign out or use another device or browser, ask for a new sign-in link on the sign-in screen (it arrives by email and works once).', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
   },
 } as const;
@@ -46,6 +46,7 @@ const note = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '')
 const I = {
   list: <path d="M4 6h16M4 12h16M4 18h10" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  dup: <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></>,
   user: <><circle cx="12" cy="8" r="3.6" /><path d="M5 20a7 7 0 0 1 14 0" /></>,
   site: <><path d="M4 11.5 12 5l8 6.5" /><path d="M6 10.5V19h12v-8.5" /></>,
   out: <path d="M14 4.5h4.5A1.5 1.5 0 0 1 20 6v12a1.5 1.5 0 0 1-1.5 1.5H14M10 8l-4 4 4 4M6 12h10" />,
@@ -202,6 +203,13 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const when = (iso: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
   const say = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(''), 2200); };
   async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: r.title, lang }), `${r.title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
+  async function dup(r: Row) {
+    try {
+      const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`);
+      await api('/brackets', { method: 'POST', body: JSON.stringify({ title: `${r.title} ${s.dupSfx}`.slice(0, 60), bracket: d.bracket }) });
+      load(); say(s.dupOk);
+    } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
+  }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
   async function copy(r: Row) { if (!r.share) { say(s.needShare); return; } try { await navigator.clipboard.writeText(`${base()}#/view/${r.id}`); say(s.copied); } catch { say(`${base()}#/view/${r.id}`); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
@@ -224,6 +232,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
               <span className="st-meta">{(s.fmt as Record<string, string>)[r.format] ?? r.format} · {r.players} {s.players}</span>
               <div className="st-act">
                 <a href={`#/bracket/${r.id}`} title={s.edit} aria-label={s.edit}><Ic d="pen" /></a>
+                <button type="button" title={s.dup} aria-label={s.dup} onClick={() => dup(r)}><Ic d="dup" /></button>
                 <button type="button" title={s.link} aria-label={s.link} onClick={() => copy(r)}><Ic d="link" /></button>
                 <button type="button" title={s.img} aria-label={s.img} onClick={() => image(r)}><Ic d="img" /></button>
                 <button type="button" title={s.del} aria-label={s.del} className="dng" onClick={() => del(r)}><Ic d="trash" /></button>
