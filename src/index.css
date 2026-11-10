@@ -548,3 +548,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .st-avrow{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap}
 .st-avbig{width:4.5rem;height:4.5rem;border-radius:50%;background:var(--s-card2,#222);display:grid;place-items:center;font-weight:800;font-size:1.6rem;overflow:hidden;flex:none}
 .st-avbig img{width:100%;height:100%;object-fit:cover}
+
+.st-nf{max-width:34rem}
+@media (min-width:900px){
+  .st-nf{max-width:62rem;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);column-gap:1.75rem;align-items:start}
+  .st-nf>*{grid-column:1}
+  .st-nf>.st-nf-p{grid-column:2;grid-row:1/span 6;height:100%;grid-template-rows:auto 1fr}
+  .st-nf>.st-nf-p textarea{height:100%;min-height:20rem;resize:vertical}
+}
