@@ -573,3 +573,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 @media (max-width:1023px){.st-side-top > a:first-child{justify-content:flex-start}}
 /* stream player: smaller than the screen so the bracket underneath is visible (members' view and site tournaments) */
 .stream-box{max-width:calc(50svh*16/9);margin-inline:auto}
+
+/* bracket: fixed-width columns kept together and centred (no stretching across the whole page) */
+.br-wrap{width:max-content;min-width:0;margin-inline:auto}
+.br-main,.br-cols{width:auto}
+.br-col{flex:0 0 232px;min-width:232px}
+.br-final{flex:0 0 232px}
+.br-row{padding:10px 14px;font-size:.95rem}
+.br-col-body{gap:18px}
