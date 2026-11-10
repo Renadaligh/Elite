@@ -66,7 +66,7 @@ export async function signIn(request: Request, env: Env, provider: string, prof:
   const name = (prof.name || 'Player').slice(0, 60), email = prof.email.slice(0, 120), avatar = prof.avatar.slice(0, 300);
   const found = await env.DB.prepare('SELECT id FROM users WHERE provider = ? AND provider_id = ?').bind(provider, prof.id).first<{ id: string }>();
   const uid = found?.id ?? hex(8);
-  if (found) await env.DB.prepare('UPDATE users SET email = ?, avatar = ? WHERE id = ?').bind(email, avatar, uid).run();
+  if (found) await env.DB.prepare("UPDATE users SET email = ?, avatar = CASE WHEN avatar LIKE '/api/img/%' THEN avatar ELSE ? END WHERE id = ?").bind(email, avatar, uid).run(); // a photo the member uploaded is never replaced by the provider's
   else await env.DB.prepare('INSERT INTO users (id, provider, provider_id, name, email, avatar, created_at) VALUES (?,?,?,?,?,?,?)').bind(uid, provider, prof.id, name, email, avatar, new Date().toISOString()).run();
   const token = hex(24);
   await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?,?,?)').bind(await sha256(token), uid, Date.now() + DAYS * 86400000).run();

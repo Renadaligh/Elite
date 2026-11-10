@@ -23,7 +23,7 @@ const S = {
     mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
     edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
-    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
+    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', avChange: 'تغيير الصورة', avAdd: 'رفع صورة', avRemove: 'حذف الصورة', avHint: 'صورة واحدة، تُصغَّر تلقائياً (خفيفة جداً).', avBad: 'اختر صورة PNG أو JPG أو WebP.', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
   },
   en: {
     tool: 'Bracket Tool', welcome: 'Welcome to the', welcome2: 'Bracket Tool', sub: 'Sign in to create, manage and save your tournaments in your account.',
@@ -35,7 +35,7 @@ const S = {
     mine: 'My brackets', fresh: 'New bracket', account: 'Account', toLight: 'Light mode', toDark: 'Dark mode', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
     edit: 'Open & edit', link: 'Copy link', copied: 'Link copied', img: 'Save as image', del: 'Delete', delAsk: 'Delete this bracket?', players: 'players', fail: 'Something went wrong',
-    backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accMailT: 'Email sign-in', accMailP: 'You stay signed in for 30 days on this device. If you sign out or use another device or browser, ask for a new sign-in link on the sign-in screen (it arrives by email and works once).', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
+    backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', avChange: 'Change photo', avAdd: 'Upload photo', avRemove: 'Remove photo', avHint: 'One photo, resized automatically (very light).', avBad: 'Pick a PNG, JPG or WebP image.', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accMailT: 'Email sign-in', accMailP: 'You stay signed in for 30 days on this device. If you sign out or use another device or browser, ask for a new sign-in link on the sign-in screen (it arrives by email and works once).', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
   },
 } as const;
 type St = (typeof S)['ar'] | (typeof S)['en'];
@@ -249,6 +249,30 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
     try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ name: name.trim() }) }); auth.reload(); setMsg(s.accSaved); } catch { setMsg(s.fail); }
     setBusy(false); window.setTimeout(() => setMsg(''), 2200);
   }
+  async function pickPhoto(f: File | undefined) {
+    if (!f) return;
+    if (!/^image\/(png|jpe?g|webp)$/.test(f.type)) { setMsg(s.avBad); return; }
+    setBusy(true);
+    try {
+      const bmp = await createImageBitmap(f);
+      const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
+      const g = c.getContext('2d')!, m = Math.min(bmp.width, bmp.height);
+      g.drawImage(bmp, (bmp.width - m) / 2, (bmp.height - m) / 2, m, m, 0, 0, N, N);
+      let blob: Blob | null = await new Promise((ok) => c.toBlob(ok, 'image/webp', 0.82));
+      if (!blob || blob.type !== 'image/webp') blob = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.82));
+      if (!blob) throw new Error('x');
+      const fd = new FormData(); fd.append('file', blob, 'a');
+      const r = await fetch('/api/auth/avatar', { method: 'POST', body: fd, credentials: 'same-origin' });
+      if (!r.ok) throw new Error('x');
+      auth.reload(); setMsg(s.accSaved);
+    } catch { setMsg(s.fail); }
+    setBusy(false); window.setTimeout(() => setMsg(''), 2200);
+  }
+  async function dropPhoto() {
+    setBusy(true);
+    try { await api('/auth/avatar', { method: 'DELETE' }); auth.reload(); setMsg(s.accSaved); } catch { setMsg(s.fail); }
+    setBusy(false); window.setTimeout(() => setMsg(''), 2200);
+  }
   async function wipe() {
     if (!window.confirm(s.accAsk)) return;
     try { await api('/auth/me', { method: 'DELETE' }); } catch { setMsg(s.fail); return; }
@@ -260,6 +284,11 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
         <div className="st-prof">
           {user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av big">{user.name.slice(0, 1)}</span>}
           <div><b>{user.name}</b><p>{s.via} {user.provider}</p></div>
+        </div>
+        <div className="st-avrow">
+          <label className="st-out" style={{ cursor: 'pointer' }}>{user.avatar ? s.avChange : s.avAdd}<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={busy} onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ''; }} /></label>
+          {user.avatar.startsWith('/api/img/') && <button type="button" className="st-out" disabled={busy} onClick={dropPhoto}>{s.avRemove}</button>}
+          <small style={{ color: 'var(--s-mut)' }}>{s.avHint}</small>
         </div>
         <label className="st-fld">{s.accName}
           <span className="st-inl"><input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} /><button type="button" disabled={busy || name.trim() === user.name || name.trim().length < 2} onClick={save}>{s.accSave}</button></span>

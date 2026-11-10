@@ -1,26 +1,26 @@
 import { currentUser, sameOrigin } from '../../_auth';
 import { cleanBracket } from '../../_bracket';
-import { body, denied, json, str, type Ctx } from '../../_lib';
+import { body, denied, json, safeUrl, str, type Ctx } from '../../_lib';
 
-type Row = { id: string; user_id: string; title: string; data: string; owner: string | null; updated_at: string; share: number; live: number };
+type Row = { id: string; user_id: string; title: string; data: string; owner: string | null; updated_at: string; share: number; live: number; stream_url: string };
+const COLS = 'b.id, b.user_id, b.title, b.data, b.updated_at';
 async function load(env: Ctx['env'], id: string): Promise<Row | null> {
-  try { return await env.DB.prepare('SELECT b.id, b.user_id, b.title, b.data, b.updated_at, b.share, b.live, u.name AS owner FROM user_brackets b LEFT JOIN users u ON u.id = b.user_id WHERE b.id = ?').bind(id).first<Row>(); }
-  catch { // share/live columns not added yet: nothing is published
-    const r = await env.DB.prepare('SELECT b.id, b.user_id, b.title, b.data, b.updated_at, u.name AS owner FROM user_brackets b LEFT JOIN users u ON u.id = b.user_id WHERE b.id = ?').bind(id).first<Row>();
-    return r ? { ...r, share: 0, live: 0 } : null;
-  }
+  const q = (cols: string) => env.DB.prepare(`SELECT ${COLS}, ${cols}u.name AS owner FROM user_brackets b LEFT JOIN users u ON u.id = b.user_id WHERE b.id = ?`).bind(id).first<Row>();
+  try { return await q('b.share, b.live, b.stream_url, '); } catch { /* stream_url column not added yet */ }
+  try { const r = await q('b.share, b.live, '); return r ? { ...r, stream_url: '' } : null; } catch { /* share/live not added yet: nothing is published */ }
+  const r = await q(''); return r ? { ...r, share: 0, live: 0, stream_url: '' } : null;
 }
 
-/** The owner always sees it. Everyone else only if the owner published the link (`share`), or switched on the stream overlay (`?live=1`). */
+/** The owner always sees it. Everyone else only after the owner published the link (`share`). The stream link is public only while "live" is on. */
 export const onRequestGet = async ({ request, env, params }: Ctx) => {
   const r = await load(env, params.id);
   if (!r) return json({ error: 'not_found' }, 404);
   const u = await currentUser(request, env);
   const mine = !!u && u.id === r.user_id;
-  const asLive = new URL(request.url).searchParams.get('live') === '1';
-  if (!mine && !(asLive ? r.live : r.share)) return json({ error: 'private' }, 403);
+  if (!mine && !r.share) return json({ error: 'private' }, 403);
   let bracket = null; try { bracket = JSON.parse(r.data); } catch { /* corrupt row */ }
-  return json({ id: r.id, title: r.title, bracket, owner: r.owner ?? '', mine, share: !!r.share, live: !!r.live, updatedAt: r.updated_at });
+  const streamLive = !!r.live && !!r.stream_url;
+  return json({ id: r.id, title: r.title, bracket, owner: r.owner ?? '', mine, share: !!r.share, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
 };
 
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
@@ -36,7 +36,7 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
   return json({ ok: true });
 };
 
-/** Owner switches: publish the view link (`share`) and / or the stream overlay link (`live`). */
+/** Owner switches: publish the view link (`share`), the stream link (`streamUrl`) and whether the stream is on right now (`live`). */
 export const onRequestPatch = async ({ request, env, params }: Ctx) => {
   if (!sameOrigin(request)) return json({ error: 'forbidden' }, 403);
   const u = await currentUser(request, env);
@@ -45,6 +45,7 @@ export const onRequestPatch = async ({ request, env, params }: Ctx) => {
   const sets: string[] = [], vals: (number | string)[] = [];
   if (typeof b.share === 'boolean') { sets.push('share = ?'); vals.push(b.share ? 1 : 0); }
   if (typeof b.live === 'boolean') { sets.push('live = ?'); vals.push(b.live ? 1 : 0); }
+  if (typeof b.streamUrl === 'string') { sets.push('stream_url = ?'); vals.push(b.streamUrl.trim() ? safeUrl(b.streamUrl).slice(0, 300) : ''); }
   if (!sets.length) return json({ error: 'invalid' }, 400);
   try { await env.DB.prepare(`UPDATE user_brackets SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`).bind(...vals, params.id, u.id).run(); }
   catch { return json({ error: 'migrate' }, 500); } // run the ALTER TABLE statements from schema.sql

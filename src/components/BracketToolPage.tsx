@@ -1,3 +1,4 @@
+import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
@@ -24,7 +25,7 @@ export const TXT = {
     discord: 'الدخول بحساب Discord', google: 'الدخول بحساب Google', none: 'تسجيل الدخول غير مفعّل بعد.', close: 'إغلاق',
     editPlayers: 'تعديل أسماء اللاعبين', rebuild: 'تعديل القائمة وإعادة البناء', rebuildAsk: 'إعادة البناء تمسح النتائج الحالية. متأكد؟', renameNote: 'تغيير الاسم يحافظ على النتائج.',
     notFound: 'البراكت غير موجود.', by: 'من', copy: 'انسخه لأعدّله', readonly: 'عرض فقط', unsaved: 'لم تُحفظ التعديلات بعد',
-    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البراكتات المحفوظة (100). احذف واحد قديم.', private: 'هذا البراكت غير منشور. اطلب من صاحبه تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البراكت (عرض فقط).', shLive: 'رابط البث (OBS)', shLiveD: 'صفحة بخلفية شفافة تتحدث لحالها، تضيفها في OBS كـ Browser Source.', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البراكت أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
+    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البراكتات المحفوظة (100). احذف واحد قديم.', private: 'هذا البراكت غير منشور. اطلب من صاحبه تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البراكت (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البراكت في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shStreamOpen: 'افتح البث', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البراكت أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
     myTitle: 'براكتاتي', newOne: '+ براكت جديد', empty: 'ما عندك براكتات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: '⬇ صورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟',
     needLogin: 'سجّل دخولك لتشوف براكتاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
   },
@@ -37,7 +38,7 @@ export const TXT = {
     discord: 'Continue with Discord', google: 'Continue with Google', none: 'Sign-in is not enabled yet.', close: 'Close',
     editPlayers: 'Edit player names', rebuild: 'Edit list & rebuild', rebuildAsk: 'Rebuilding clears the current results. Sure?', renameNote: 'Renaming keeps the results.',
     notFound: 'Bracket not found.', by: 'by', copy: 'Copy to edit', readonly: 'View only', unsaved: 'Unsaved changes',
-    loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Stream link (OBS)', shLiveD: 'A transparent, self-updating page. Add it in OBS as a Browser Source.', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
+    loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Live stream (optional)', shLiveD: 'Your stream player shows above the bracket on the view page, only while "Live now" is on.', shStreamUrl: 'Your channel or stream link (Twitch / YouTube / Kick)', shStreamNow: 'Live now', shStreamBad: 'Unsupported link. Use a Twitch, YouTube or Kick link.', shStreamLive: 'Live', shSave2: 'Save', shStreamOpen: 'Open stream', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
     myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: '⬇ Image', del: 'Delete', delAsk: 'Delete this bracket?',
     needLogin: 'Sign in to see your saved brackets.', players_n: 'players', hello: 'Hi',
   },
@@ -102,6 +103,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   const [state, setState] = useState<'load' | 'ok' | 'missing' | 'private'>(id ? 'load' : 'ok');
   const [share, setShare] = useState(false);
   const [live, setLive] = useState(false);
+  const [streamUrl, setStreamUrl] = useState('');
+  const [streamOn, setStreamOn] = useState(false);
   const [copied, setCopied] = useState('');
   const [login, setLogin] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -112,10 +115,28 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
 
   useEffect(() => {
     if (!id) return;
-    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; share: boolean; live: boolean }>(`/brackets/${id}`)
-      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setShare(r.share); setLive(r.live); setState('ok'); })
+    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; share: boolean; live: boolean; streamLive?: boolean; streamUrl?: string }>(`/brackets/${id}`)
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setShare(r.share); setLive(r.live); setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
+
+  // The public view refreshes itself: new scores and the stream switch show up without reloading.
+  useEffect(() => {
+    if (!id || mine || state !== 'ok') return;
+    let stop = false;
+    const tick = () => {
+      if (document.hidden) return;
+      api<{ bracket: Bracket | null; streamLive?: boolean; streamUrl?: string }>(`/brackets/${id}`)
+        .then((r) => {
+          if (stop || !r.bracket) return;
+          setBr((old) => (JSON.stringify(old) === JSON.stringify(r.bracket) ? old : r.bracket));
+          setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive);
+        }).catch(() => { /* keep showing the last version */ });
+    };
+    const t = window.setInterval(tick, 8000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { stop = true; window.clearInterval(t); document.removeEventListener('visibilitychange', tick); };
+  }, [id, mine, state]);
 
   // Guests keep their work in the browser, so signing in (a page round-trip) never loses it.
   useEffect(() => { if (id) return; try { localStorage.setItem(DRAFT, JSON.stringify({ title, names, fmt, br })); } catch { /* private mode */ } }, [id, title, names, fmt, br]);
@@ -152,8 +173,16 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   async function flip(k: 'share' | 'live', on: boolean) {
     if (!id) return;
     (k === 'share' ? setShare : setLive)(on);
+    if (k === 'live') setStreamOn(on && !!streamUrl);
     try { await api(`/brackets/${id}`, { method: 'PATCH', body: JSON.stringify({ [k]: on }) }); }
-    catch { (k === 'share' ? setShare : setLive)(!on); setMsg(tx.shFail); }
+    catch { (k === 'share' ? setShare : setLive)(!on); if (k === 'live') setStreamOn(!on && !!streamUrl); setMsg(tx.shFail); }
+  }
+  async function saveStream() {
+    if (!id) return;
+    const v = streamUrl.trim();
+    if (v && !streamEmbed(v)) { setMsg(tx.shStreamBad); return; }
+    try { await api(`/brackets/${id}`, { method: 'PATCH', body: JSON.stringify({ streamUrl: v }) }); setMsg(''); setStreamOn(live && !!v); }
+    catch { setMsg(tx.shFail); }
   }
   async function copyLink(key: string, link: string) {
     try { await navigator.clipboard.writeText(link); setCopied(key); window.setTimeout(() => setCopied(''), 1800); } catch { window.prompt('', link); }
@@ -172,7 +201,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
   if (state === 'private') return <p className="text-lg">{tx.private}</p>;
-  const viewUrl = `${base()}#/view/${id}`, liveUrl = `${base()}#/bracket/${id}/live`;
+  const viewUrl = `${base()}#/view/${id}`;
+  const embed = streamOn ? streamEmbed(streamUrl) : null;
 
   return (
     <>
@@ -205,6 +235,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
           {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') ? tx.hintL : tx.hint}</p>}
+          {embed && (
+            <div className="stream-box-wrap">
+              <p className="st-livep"><i className="st-dot" />{tx.shStreamLive}</p>
+              <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
+              <a className="st-livea" href={streamUrl} target="_blank" rel="noopener noreferrer">{tx.shStreamOpen}</a>
+            </div>
+          )}
           {champ !== null && <p className="text-[1rem]">🏆 <b>{br.players[champ]}</b></p>}
           <div className="rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} /></div>
           {editable && (
@@ -212,15 +249,25 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               <b>{tx.shTitle}</b>
               {!id ? <p className="st-shn">{tx.shSave}</p> : (
                 <>
-                  {([['share', tx.shView, tx.shViewD, share, viewUrl], ['live', tx.shLive, tx.shLiveD, live, liveUrl]] as const).map(([k, t, d, on, link]) => (
-                    <div key={k} className="st-shr">
-                      <div className="st-shh">
-                        <div><span>{t}</span><small>{d}</small></div>
-                        <button type="button" role="switch" aria-checked={on} aria-label={t} className={`st-sw ${on ? 'on' : ''}`} onClick={() => flip(k, !on)}><i /></button>
-                      </div>
-                      {on && <div className="st-shl"><input readOnly dir="ltr" value={link} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink(k, link)}>{copied === k ? tx.shCopied : tx.shCopy}</button></div>}
+                  <div className="st-shr">
+                    <div className="st-shh">
+                      <div><span>{tx.shView}</span><small>{tx.shViewD}</small></div>
+                      <button type="button" role="switch" aria-checked={share} aria-label={tx.shView} className={`st-sw ${share ? 'on' : ''}`} onClick={() => flip('share', !share)}><i /></button>
                     </div>
-                  ))}
+                    {share && <div className="st-shl"><input readOnly dir="ltr" value={viewUrl} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink('share', viewUrl)}>{copied === 'share' ? tx.shCopied : tx.shCopy}</button></div>}
+                  </div>
+                  {share && (
+                    <div className="st-shr">
+                      <div className="st-shh"><div><span>{tx.shLive}</span><small>{tx.shLiveD}</small></div></div>
+                      <div className="st-shl"><input dir="ltr" placeholder={tx.shStreamUrl} maxLength={300} value={streamUrl} onChange={(e) => setStreamUrl(e.target.value)} onBlur={saveStream} /><button type="button" onClick={saveStream}>{tx.shSave2}</button></div>
+                      {streamUrl.trim() !== '' && (
+                        <div className="st-shh" style={{ marginTop: '.6rem' }}>
+                          <div><span>{tx.shStreamNow}</span></div>
+                          <button type="button" role="switch" aria-checked={live} aria-label={tx.shStreamNow} className={`st-sw ${live ? 'on' : ''}`} onClick={() => flip('live', !live)}><i /></button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>

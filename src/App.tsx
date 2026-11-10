@@ -9,7 +9,6 @@ import GamesSection from './components/GamesSection';
 import GamePage from './components/GamePage';
 import TournamentPage from './components/TournamentPage';
 import BracketStudio, { PublicView } from './components/BracketStudio';
-import BracketLive from './components/BracketLive';
 import TournamentsSection from './components/TournamentsSection';
 import ChampionsSection from './components/ChampionsSection';
 import Footer from './components/Footer';
@@ -22,7 +21,6 @@ function Pages() {
   const firstKey = useRef(route.key); // the page the visitor landed on does not fade (the loader already covers it)
   if (route.page === 'admin') return <AdminPage />;
   if (route.page === 'view') return <PublicView key={route.key} id={route.id!} />;
-  if (route.page === 'live') return <BracketLive id={route.id!} />;
   if (route.page === 'bracket') return <div key={route.key.startsWith('bracket:') ? 'studio' : route.key} className="st-root"><BracketStudio id={route.id} /></div>;
   return (
     <>

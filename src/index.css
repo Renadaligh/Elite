@@ -456,11 +456,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .st-sw.on { background: #ff3347; } .st-sw.on i { transform: translateX(20px); } [dir=rtl] .st-sw.on i { transform: translateX(-20px); }
 .st-shl { display: flex; gap: 8px; } .st-shl input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--glass-b); background: transparent; color: var(--text); font-size: .82rem; }
 .st-shl button { padding: 0 16px; border-radius: 10px; border: 1px solid var(--glass-b); font-weight: 700; font-size: .84rem; }
-html.st-livepage, html.st-livepage body { background: transparent !important; } html.st-livepage #app-loader { display: none !important; }
-.st-livebox { padding: 18px; min-height: 100svh; background: transparent; } .st-livet { margin-bottom: 14px; font-size: 1.5rem; font-weight: 800; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
-.st-livebox { --glass: rgba(12,12,18,.9); --glass-b: rgba(255,255,255,.2); --text: #fff; --muted: #b8bdd0; color: #fff; }
 .st-acc { max-width: 48rem; }
-.st-livebox { --surface: rgba(12,12,18,.92); --line: rgba(255,255,255,.2); }
 
 /* ---- theme: dark (default) / light for the bracket studio ---- */
 .st-root, .st-app, .st-login, .st-splash, .st-hero { --s-bg: #07070a; --s-panel: #0b0b10; --s-panel-a: rgba(11,11,16,.82); --s-card: #101016; --s-card2: #14141a; --s-fg: #fff; --s-mut: #9aa0b8; --s-dim: #6c7088; --s-soft: #c9cde0; --s-line: rgba(255,255,255,.08); --s-line2: rgba(255,255,255,.16); --s-hov: rgba(255,255,255,.06); }
@@ -544,3 +540,11 @@ html.st-livepage, html.st-livepage body { background: transparent !important; } 
 .hero-row { grid-template-columns: auto auto; }
 .hero-sec { padding-inline: 1.1rem; }
 @media (max-width: 480px) { .hero-sec { padding-inline: .85rem; font-size: .8rem; } }
+.stream-box-wrap{display:grid;gap:.5rem;max-width:760px}
+.st-livep{display:flex;align-items:center;gap:.5rem;font-weight:700}
+.st-dot{width:.6rem;height:.6rem;border-radius:50%;background:#ff3347;animation:br-pulse 1.4s infinite 1.4s infinite;display:inline-block}
+.st-livea{font-size:.85rem;color:var(--muted);text-decoration:underline}
+.st-shl input::placeholder{opacity:.6}
+.st-avrow{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap}
+.st-avbig{width:4.5rem;height:4.5rem;border-radius:50%;background:var(--s-card2,#222);display:grid;place-items:center;font-weight:800;font-size:1.6rem;overflow:hidden;flex:none}
+.st-avbig img{width:100%;height:100%;object-fit:cover}
