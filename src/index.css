@@ -210,15 +210,15 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 
 /* ---------- Bracket ---------- */
 .br-scroll { max-width: 100%; overflow-x: auto; padding: 6px 2px 14px; -webkit-overflow-scrolling: touch; }
-.br-wrap { position: relative; display: inline-block; min-width: 100%; }
+.br-wrap { position: relative; width: max-content; min-width: 100%; }
 .br-lines { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
 .br-lines path { fill: none; stroke: var(--line, rgba(255,255,255,.14)); stroke-width: 1.5; }
 .br-lines path.on { stroke: #ff3347; }
-.br-main { position: relative; display: flex; align-items: center; gap: 44px; }
-.br-stack { display: flex; flex-direction: column; gap: 34px; }
+.br-main { position: relative; display: flex; align-items: center; gap: 32px; width: 100%; }
+.br-stack { display: flex; flex-direction: column; gap: 34px; flex: 1 1 auto; min-width: 0; }
 .br-sec-title { margin-bottom: 8px; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.br-cols { display: flex; gap: 44px; align-items: stretch; }
-.br-col { display: flex; flex-direction: column; width: 190px; }
+.br-cols { display: flex; gap: 32px; align-items: stretch; width: 100%; }
+.br-col { display: flex; flex-direction: column; flex: 1 1 160px; min-width: 160px; }
 .br-round { margin-bottom: 10px; text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
 .br-col-body { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 14px; }
 .br-match { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--line, rgba(255,255,255,.14)); background: var(--surface, rgba(255,255,255,.04)); }
@@ -235,7 +235,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .br-score { min-width: 18px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 .br-check { color: #ff4455; }
 .br-id { position: absolute; top: -1px; inset-inline-end: 4px; font-size: .6rem; color: var(--muted); opacity: .7; pointer-events: none; }
-.br-final { align-self: center; }
+.br-final { align-self: center; flex: 0 0 160px; }
 .br-champ { margin-top: 14px; display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 12px; border: 1px solid #ff3347; background: rgba(255,51,71,.12); font-size: 1rem; }
 .br-wrap > .br-champ { display: flex; width: fit-content; }
 .stream-box { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 14px; border: 1px solid var(--line, rgba(255,255,255,.14)); background: #000; }
