@@ -17,7 +17,7 @@ const S = {
     discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', perks: 'ماذا ستحصل عليه',
     p1: 'براكتاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',
-    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
+    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
     none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.',
     mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
@@ -29,7 +29,7 @@ const S = {
     discord: 'Continue with Discord', google: 'Continue with Google', perks: 'What you get',
     p1: 'Your brackets saved in your account', p2: 'Single/double elimination, round robin, swiss, groups, leaderboard', p3: 'A ready-to-post image and a share link',
     fine: 'Signing in saves only your name and avatar from the account. We never post anything for you.', back: 'Back to the site',
-    pl: 'Player', rr: 'Round robin', lb: 'Leaderboard', h1: 'Run your tournament', h2: 'the', h3: 'professional way', hp: 'Live bracket, standings that update themselves, and a shareable image in seconds.',
+    pl: 'Player', rr: 'Round robin', lb: 'Leaderboard', grp: 'Group', cP: 'P', cW: 'W', cD: 'D', cL: 'L', cPts: 'Pts', h1: 'Run your tournament', h2: 'the', h3: 'professional way', hp: 'Live bracket, standings that update themselves, and a shareable image in seconds.',
     none: 'Sign-in is not enabled yet.', failed: 'Sign-in failed, please try again.', unavailable: 'This option is not enabled yet.',
     mine: 'My brackets', fresh: 'New bracket', account: 'Account', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
@@ -60,42 +60,71 @@ function Splash() {
 }
 
 
-/** Animated showcase on the sign-in screen: an 8-player bracket plays out to a crowned champion, then a standings table and a leaderboard appear. */
+/** Animated showcase on the sign-in screen: one scene at a time, centred - a bracket plays out to a crowned winner, then round robin, groups and leaderboard. */
+const SCENES = 4;
+function Crown({ t }: { t: number }) {
+  return <svg className="st-crown" style={{ '--t': `${t}s` } as React.CSSProperties} viewBox="0 0 64 44" aria-hidden><path d="M4 38 L9 10 L22 24 L32 4 L42 24 L55 10 L60 38 Z" fill="#ffc233" stroke="#ffdf7a" strokeWidth="3" strokeLinejoin="round" /><rect x="6" y="38" width="52" height="5" rx="2.5" fill="#e0a010" /></svg>;
+}
 function HeroStage({ s, k }: { s: St; k: number }) {
+  const [view, setView] = useState(0);
+  const [out, setOut] = useState(false);
+  const calm = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useEffect(() => {
+    if (calm) return;
+    const stay = view === 0 ? 9500 : 6500;
+    const a = window.setTimeout(() => setOut(true), stay);
+    const b = window.setTimeout(() => { setView((v) => (v + 1) % SCENES); setOut(false); }, stay + 400);
+    return () => { window.clearTimeout(a); window.clearTimeout(b); };
+  }, [view, calm]);
+  const go = (i: number) => { setOut(false); setView(i); };
   const P = (n: number) => `${s.pl} ${n}`;
   const t = (x: number) => ({ '--t': `${x}s` }) as React.CSSProperties;
-  // [x, y, round, top, bottom, topScore, bottomScore, topWins, delay]
+  const r = (x: number, extra: Record<string, string> = {}) => ({ '--r': `${x}s`, ...extra }) as React.CSSProperties;
+  const OY = 65;
+  // x, y, top name, bottom name, top score, bottom score, top wins, delay
   const M: [number, number, string, string, number, number, boolean, number][] = [
     [0, 0, P(1), P(2), 3, 1, true, 0.2], [0, 100, P(3), P(4), 2, 0, true, 0.35], [0, 200, P(5), P(6), 1, 2, false, 0.5], [0, 300, P(7), P(8), 3, 0, true, 0.65],
-    [250, 50, P(1), P(3), 2, 1, true, 1.7], [250, 250, P(6), P(7), 0, 2, false, 1.85],
-    [500, 150, P(1), P(7), 3, 1, true, 3.0],
+    [350, 50, P(1), P(3), 2, 1, true, 1.7], [350, 250, P(6), P(7), 0, 2, false, 1.85], [700, 150, P(1), P(7), 3, 1, true, 3.0],
   ];
   const lines: [string, number][] = [
-    ['M170 35 H210 V85 H250', 1.1], ['M170 135 H210 V85', 1.2], ['M170 235 H210 V285 H250', 1.3], ['M170 335 H210 V285', 1.4],
-    ['M420 85 H460 V185 H500', 2.5], ['M420 285 H460 V185', 2.6], ['M670 185 H740', 3.7],
+    ['M200 35 H275 V85 H350', 1.1], ['M200 135 H275 V85', 1.2], ['M200 235 H275 V285 H350', 1.3], ['M200 335 H275 V285', 1.4],
+    ['M550 85 H625 V185 H700', 2.5], ['M550 285 H625 V185', 2.6],
   ];
-  const rows = [[P(1), 7], [P(2), 5], [P(3), 4], [P(4), 1]] as const;
-  const bars = [[P(1), 92], [P(2), 78], [P(3), 61], [P(4), 44]] as const;
+  const rr: [string, number, number, number, number, number][] = [[P(1), 4, 3, 1, 0, 10], [P(2), 4, 2, 1, 1, 7], [P(3), 4, 2, 0, 2, 6], [P(4), 4, 1, 1, 2, 4], [P(5), 4, 0, 1, 3, 1]];
+  const bars: [string, number][] = [[P(1), 92], [P(2), 78], [P(3), 61], [P(4), 44], [P(5), 30]];
+  const grp = (g: string, base: number, pts: number[], d: number) => (
+    <div className="st-card">
+      <b>{s.grp} {g}</b>
+      {pts.map((x, i) => <div key={i} className={`st-row ${i < 2 ? 'adv' : ''}`} style={r(d + i * 0.14)}><i>{i + 1}</i><span>{P(base + i)}</span><em className="pt">{x}</em></div>)}
+    </div>
+  );
   return (
-    <div className="st-stage" style={{ '--k': k } as React.CSSProperties}>
-      <svg className="st-lines" viewBox="0 0 900 420" fill="none">{lines.map(([d, x], i) => <path key={i} d={d} style={t(x)} />)}</svg>
-      {M.map(([x, y, a, b, sa, sb, w, dl], i) => (
-        <div key={i} className={`st-mc ${i === 6 ? 'hot' : ''}`} style={{ insetInlineStart: x, top: y, ...t(dl) }}>
-          <div className={w ? 'w' : ''}>{a}<b>{sa}</b></div><div className={w ? '' : 'w'}>{b}<b>{sb}</b></div>
+    <div className="st-show">
+      <div className="st-box" style={{ width: 900 * k, height: 500 * k }}>
+        <div key={view} className={`st-scene ${out ? 'out' : ''}`} style={{ '--k': k } as React.CSSProperties}>
+          {view === 0 && (<>
+            <svg className="st-lines" viewBox="0 0 900 500" fill="none"><g transform={`translate(0 ${OY})`}>{lines.map(([d, x], i) => <path key={i} d={d} style={t(x)} />)}</g></svg>
+            {M.map(([x, y, a, b, sa, sb, w, dl], i) => (
+              <div key={i} className={`st-mc ${i === 6 ? 'hot' : ''}`} style={{ insetInlineStart: x, top: y + OY, ...t(dl) }}>
+                <div className={w ? 'w' : ''}><span className="st-nm">{a}{i === 6 && <Crown t={4} />}</span><b>{sa}</b></div><div className={w ? '' : 'w'}><span>{b}</span><b>{sb}</b></div>
+              </div>
+            ))}
+          </>)}
+          {view === 1 && (
+            <div className="st-card"><b>{s.rr}</b>
+              <div className="st-row" style={r(0.2)}><i /><span /><em>{s.cP}</em><em>{s.cW}</em><em>{s.cD}</em><em>{s.cL}</em><em className="pt">{s.cPts}</em></div>
+              {rr.map(([n, p, w, d, l, pt], i) => <div key={i} className="st-row" style={r(0.4 + i * 0.14)}><i>{i + 1}</i><span>{n}</span><em>{p}</em><em>{w}</em><em>{d}</em><em>{l}</em><em className="pt">{pt}</em></div>)}
+            </div>
+          )}
+          {view === 2 && <div className="st-two">{grp('A', 1, [9, 6, 3, 0], 0.3)}{grp('B', 5, [7, 6, 4, 1], 0.45)}</div>}
+          {view === 3 && (
+            <div className="st-card"><b>{s.lb}</b>
+              {bars.map(([n, v], i) => <div key={i} className="st-row" style={r(0.3 + i * 0.14, { '--w': `${v}%` })}><i>{i + 1}</i><span style={{ flex: '0 0 90px' }}>{n}</span><div className="bar"><u /></div><em className="pt">{v}</em></div>)}
+            </div>
+          )}
         </div>
-      ))}
-      <div className="st-champ" style={{ ...t(3.9), insetInlineStart: 740, top: 168 }}>
-        <svg className="st-crown" viewBox="0 0 64 44" aria-hidden><path d="M4 38 L9 10 L22 24 L32 4 L42 24 L55 10 L60 38 Z" fill="#ffc233" stroke="#ffdf7a" strokeWidth="2" strokeLinejoin="round" /><rect x="6" y="38" width="52" height="5" rx="2.5" fill="#e0a010" /><circle cx="9" cy="10" r="3.2" fill="#fff3c0" /><circle cx="32" cy="4" r="3.2" fill="#fff3c0" /><circle cx="55" cy="10" r="3.2" fill="#fff3c0" /></svg>
-        <span>{P(1)}</span>
       </div>
-      <div className="st-panel2" style={{ insetInlineStart: 0, top: 450, ...t(4.4) }}>
-        <b>{s.rr}</b>
-        {rows.map(([n, pt], i) => <div key={i} style={{ '--r': `${4.6 + i * 0.12}s` } as React.CSSProperties}><i>{i + 1}</i><span>{n}</span><em>{pt}</em></div>)}
-      </div>
-      <div className="st-panel2" style={{ insetInlineStart: 470, top: 450, ...t(4.6) }}>
-        <b>{s.lb}</b>
-        {bars.map(([n, v], i) => <div key={i} className="bar" style={{ '--r': `${4.9 + i * 0.12}s`, '--w': `${v}%` } as React.CSSProperties}><span>{n}</span><u><i /></u><em>{v}</em></div>)}
-      </div>
+      <div className="st-dots" role="tablist">{Array.from({ length: SCENES }, (_, i) => <button key={i} type="button" className={view === i ? 'on' : ''} aria-label={`${i + 1}`} onClick={() => go(i)} />)}</div>
     </div>
   );
 }
@@ -106,7 +135,7 @@ function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; g
   const [k, setK] = useState(1);
   useEffect(() => {
     const el = heroRef.current; if (!el) return;
-    const fit = () => setK(Math.max(0.5, Math.min(1.4, el.clientWidth / 960, (el.clientHeight - 380) / 640)));
+    const fit = () => setK(Math.max(0.45, Math.min(1.5, (el.clientWidth - 140) / 900, (el.clientHeight - 360) / 540)));
     fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
   }, []);
   const n = note();
