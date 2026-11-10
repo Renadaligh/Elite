@@ -17,17 +17,17 @@ const pill = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold disabled
 
 export const TXT = {
   ar: {
-    title: 'أداة البراكت', sub: 'سوِّ براكت لأي سيرفر أو مجتمع: خروج مغلوب أو مزدوج أو دوري أو سويسري. حدّث النتائج واحفظه كصورة أو شاركه.',
+    title: 'منظم البطولات', sub: 'سوِّ بطولة لأي سيرفر أو مجتمع: خروج مغلوب أو مزدوج أو دوري أو سويسري. حدّث النتائج واحفظه كصورة أو شاركه.',
     name: 'اسم البطولة', namePh: 'مثلاً: كأس سيرفر الأصدقاء', format: 'النظام', single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', rr: 'دوري (كل لاعب ضد الكل)', swiss: 'سويسري', groups: 'مجموعات ثم إقصائيات', ffa: 'لوحة صدارة (الكل ضد الكل)', dbl: 'دوري مزدوج (ذهاب وإياب)', maxRr: `الدوري: الحد الأقصى ${MAX_RR}`, players: 'اللاعبون / الفرق (سطر لكل واحد، الأعلى = الأقوى)',
-    shuffle: 'خلط عشوائي', create: 'إنشاء البراكت', need: 'أدخل لاعبَين على الأقل', max: `الحد الأقصى ${MAX_PLAYERS}`,
-    hint: 'اضغط على اسم الفائز في كل مباراة لتحديثه.', hintL: 'اكتب النتيجة في كل مباراة (أو الأرقام في كل جولة) والترتيب يتحدث تلقائياً.', score: 'نتيجة المباراة', undo: 'تراجع', save: 'حفظ في براكتاتي', saved: 'تم الحفظ', saving: '…', mine: 'براكتاتي',
-    login: 'تسجيل الدخول', logout: 'خروج', loginTitle: 'سجّل دخولك عشان تحفظ براكتاتك', loginSub: 'تجد كل براكتاتك في مكان واحد وترجع لها من أي جهاز. ما ننشر شيء باسمك.',
+    shuffle: 'خلط عشوائي', create: 'إنشاء البطولة', need: 'أدخل لاعبَين على الأقل', max: `الحد الأقصى ${MAX_PLAYERS}`,
+    hint: 'اضغط على اسم الفائز في كل مباراة لتحديثه.', hintL: 'اكتب النتيجة في كل مباراة (أو الأرقام في كل جولة) والترتيب يتحدث تلقائياً.', score: 'نتيجة المباراة', undo: 'تراجع', save: 'حفظ في بطولاتي', saved: 'تم الحفظ', saving: '…', mine: 'بطولاتي',
+    login: 'تسجيل الدخول', logout: 'خروج', loginTitle: 'سجّل دخولك عشان تحفظ بطولاتك', loginSub: 'تجد كل بطولاتك في مكان واحد وترجع لها من أي جهاز. ما ننشر شيء باسمك.',
     discord: 'الدخول بحساب Discord', google: 'الدخول بحساب Google', none: 'تسجيل الدخول غير مفعّل بعد.', close: 'إغلاق',
     editPlayers: 'تعديل أسماء اللاعبين', rebuild: 'تعديل القائمة وإعادة البناء', rebuildAsk: 'إعادة البناء تمسح النتائج الحالية. متأكد؟', renameNote: 'تغيير الاسم يحافظ على النتائج.',
-    notFound: 'البراكت غير موجود.', by: 'من', copy: 'انسخه لأعدّله', readonly: 'عرض فقط', unsaved: 'لم تُحفظ التعديلات بعد',
-    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البراكتات المحفوظة (100). احذف واحد قديم.', private: 'هذا البراكت غير منشور. اطلب من صاحبه تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البراكت (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البراكت في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shStreamOpen: 'افتح البث', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البراكت أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
-    myTitle: 'براكتاتي', newOne: '+ براكت جديد', empty: 'ما عندك براكتات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: '⬇ صورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟',
-    needLogin: 'سجّل دخولك لتشوف براكتاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
+    notFound: 'البطولة غير موجودة.', by: 'من', copy: 'انسخه لأعدّله', readonly: 'عرض فقط', unsaved: 'لم تُحفظ التعديلات بعد',
+    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البطولات المحفوظة (100). احذف واحد قديم.', private: 'هذه البطولة غير منشورة. اطلب من صاحبها تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البطولة (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البطولة في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shStreamOpen: 'افتح البث', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البطولة أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
+    myTitle: 'بطولاتي', newOne: '+ بطولة جديدة', empty: 'ما عندك بطولات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: '⬇ صورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟',
+    needLogin: 'سجّل دخولك لتشوف بطولاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
   },
   en: {
     title: 'Bracket tool', sub: 'Make a bracket for any server or community: single or double elimination, round robin or swiss. Update results, save it as an image or share it.',
@@ -71,7 +71,7 @@ function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Provider
 
 function Shell({ tx, user, children }: { tx: Tx; user: AuthUser | null; children: ReactNode }) {
   return (
-    <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ background: 'var(--bg)' }}>
+    <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ backgroundColor: 'var(--bg)' }}>
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[40rem]">
           <h1 className="text-[clamp(1.8rem,4.5vw,3rem)] font-extrabold leading-tight">{tx.title}</h1>
@@ -143,7 +143,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
 
   const edit = (b: Bracket | null) => { setBr(b); setDirty(true); setMsg(''); };
   const url = id ? `${base()}#/view/${id}` : `${base()}#/bracket`;
-  const shownTitle = title.trim() || (lang === 'ar' ? 'براكت' : 'Bracket');
+  const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
@@ -206,8 +206,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           <div className="st-nf grid gap-4 rounded-2xl border p-5" style={card}>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.name}<input className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => setTitle(e.target.value)} /></label>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.format}
-              <select className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', background: 'var(--bg)' }} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{tx.single}</option><option value="double">{tx.double}</option><option value="rr">{tx.rr}</option><option value="swiss">{tx.swiss}</option><option value="groups">{tx.groups}</option><option value="ffa">{tx.ffa}</option></select></label>
-            <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', background: 'var(--bg)' }} border={{ borderColor: 'var(--glass-b)' }} players={names.split('\n').filter((q) => q.trim()).length} />
+              <select className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', backgroundColor: 'var(--bg)' }} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{tx.single}</option><option value="double">{tx.double}</option><option value="rr">{tx.rr}</option><option value="swiss">{tx.swiss}</option><option value="groups">{tx.groups}</option><option value="ffa">{tx.ffa}</option></select></label>
+            <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', backgroundColor: 'var(--bg)' }} border={{ borderColor: 'var(--glass-b)' }} players={names.split('\n').filter((q) => q.trim()).length} />
             <label className="st-nf-p grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.players} · {tx.max}<textarea rows={8} dir="auto" className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} value={names} onChange={(e) => setNames(e.target.value)} /></label>
             <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{tx.shuffle}</label>
             <div><button type="button" className="btn-primary" onClick={create}>{tx.create}</button></div>

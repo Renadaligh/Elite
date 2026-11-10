@@ -13,7 +13,7 @@ export default function HeroContent() {
       <div className="hero-cta">
         <a href="#/bracket" className="hero-main">
           <svg className="hm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 5h6v5H3zM3 14h6v5H3zM15 9.5h6v5h-6zM9 7.5h3v9M12 12h3" /></svg>
-          <span>{lang === 'ar' ? 'جرّب أداة البراكت' : 'Try the Bracket Tool'}</span>
+          <span>{lang === 'ar' ? 'جرّب منظم البطولات' : 'Try the Bracket Tool'}</span>
         </a>
         <div className="hero-row">
           <a href="#games" className="hero-sec">{t.ctaGames}</a>

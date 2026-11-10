@@ -14,16 +14,16 @@ import LanguageSwitcher from './LanguageSwitcher';
 /** Members' area of the bracket tool: a real sign-in screen, then a dashboard (no site header). Public links (#/bracket/<id>) stay in the normal site layout for guests. */
 const S = {
   ar: {
-    tool: 'أداة البراكت', welcome: 'أهلاً بك في', welcome2: 'أداة البراكت', sub: 'سجّل دخولك لإنشاء بطولاتك وإدارتها وحفظها في حسابك.',
+    tool: 'منظم البطولات', welcome: 'أهلاً بك في', welcome2: 'منظم البطولات', sub: 'سجّل دخولك لإنشاء بطولاتك وإدارتها وحفظها في حسابك.',
     discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', twitch: 'Twitch', steam: 'Steam', orMail: 'أو بالبريد الإلكتروني', perks: 'ماذا ستحصل عليه',
-    p1: 'براكتاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
+    p1: 'بطولاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',
-    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
+    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'بطولة مباشرة، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
     none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.', expired: 'انتهى الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.',
-    mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
-    total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
-    limitMsg: 'وصلت الحد الأقصى من البراكتات (100)', dup: 'تكرار البراكت', dupSfx: '(نسخة)', dupOk: 'تم إنشاء نسخة', edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
-    backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', avChange: 'تغيير الصورة', avAdd: 'رفع صورة', avRemove: 'حذف الصورة', avHint: 'صورة واحدة، تُصغَّر تلقائياً (خفيفة جداً).', avBad: 'اختر صورة PNG أو JPG أو WebP.', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
+    mine: 'بطولاتي', fresh: 'بطولة جديدة', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ بطولة جديدة',
+    total: 'بطولاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك بطولات محفوظة بعد.', emptyBtn: 'أنشئ أول بطولة',
+    limitMsg: 'وصلت الحد الأقصى من البطولات (100)', dup: 'تكرار البطولة', dupSfx: '(نسخة)', dupOk: 'تم إنشاء نسخة', edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
+    backList: 'بطولاتي', via: 'الدخول عبر', count: 'عدد بطولاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', avChange: 'تغيير الصورة', avAdd: 'رفع صورة', avRemove: 'حذف الصورة', avHint: 'صورة واحدة، تُصغَّر تلقائياً (خفيفة جداً).', avBad: 'اختر صورة PNG أو JPG أو WebP.', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل بطولاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل بطولاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
   },
   en: {
     tool: 'Bracket Tool', welcome: 'Welcome to the', welcome2: 'Bracket Tool', sub: 'Sign in to create, manage and save your tournaments in your account.',
@@ -295,9 +295,9 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
           <div><b>{user.name}</b><p>{s.via} {user.provider}</p></div>
         </div>
         <div className="st-avrow">
-          <label className="st-out" style={{ cursor: 'pointer' }}>{user.avatar ? s.avChange : s.avAdd}<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={busy} onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ''; }} /></label>
-          {user.avatar.startsWith('/api/img/') && <button type="button" className="st-out" disabled={busy} onClick={dropPhoto}>{s.avRemove}</button>}
-          <small style={{ color: 'var(--s-mut)' }}>{s.avHint}</small>
+          <label className="st-pbtn">{user.avatar ? s.avChange : s.avAdd}<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={busy} onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ''; }} /></label>
+          {user.avatar.startsWith('/api/img/') && <button type="button" className="st-pbtn" disabled={busy} onClick={dropPhoto}>{s.avRemove}</button>}
+          <small>{s.avHint}</small>
         </div>
         <label className="st-fld">{s.accName}
           <span className="st-inl"><input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} /><button type="button" disabled={busy || name.trim() === user.name || name.trim().length < 2} onClick={save}>{s.accSave}</button></span>

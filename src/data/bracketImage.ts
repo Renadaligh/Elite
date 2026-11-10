@@ -191,7 +191,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   c.fillStyle = '#ffffff'; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic';
   txt(title, rtl ? W - PAD : PAD, 56, 'start', W - PAD * 2);
   c.fillStyle = '#9aa0b8'; c.font = `600 13px ${family}`;
-  txt(rtl ? 'البراكت' : 'Bracket', rtl ? W - PAD : PAD, 80, 'start', 300);
+  txt(rtl ? 'البطولة' : 'Bracket', rtl ? W - PAD : PAD, 80, 'start', 300);
 
   // section labels
   c.fillStyle = '#9aa0b8'; c.font = `700 12px ${family}`;
