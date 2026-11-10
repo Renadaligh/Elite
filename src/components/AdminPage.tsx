@@ -410,8 +410,8 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           <form onSubmit={save} className="grid gap-4">
             <Field label={x('العنوان (عربي)')}><input className={inp} style={bd} value={f.title.ar} onChange={(e) => setF({ ...f, title: { ...f.title, ar: e.target.value } })} /></Field>
             <Field label="Title (English)"><input dir="ltr" className={inp} style={bd} value={f.title.en} onChange={(e) => setF({ ...f, title: { ...f.title, en: e.target.value } })} /></Field>
-            <Field label={x('الملخص (عربي)')}><textarea rows={3} className={inp} style={bd} value={f.summary.ar} onChange={(e) => setF({ ...f, summary: { ...f.summary, ar: e.target.value } })} /></Field>
-            <Field label="Summary (English)"><textarea dir="ltr" rows={3} className={inp} style={bd} value={f.summary.en} onChange={(e) => setF({ ...f, summary: { ...f.summary, en: e.target.value } })} /></Field>
+            <Field label={x('الملخص (عربي)')}><textarea rows={5} placeholder={x('اكتب كل نقطة في سطر يبدأ بـ -')} className={inp} style={bd} value={f.summary.ar} onChange={(e) => setF({ ...f, summary: { ...f.summary, ar: e.target.value } })} /></Field>
+            <Field label="Summary (English)"><textarea dir="ltr" rows={5} placeholder="Write each point on its own line starting with -" className={inp} style={bd} value={f.summary.en} onChange={(e) => setF({ ...f, summary: { ...f.summary, en: e.target.value } })} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={x('التاريخ')}><input type="date" className={inp} style={bd} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} required /></Field>
               <Field label={x('التصنيف')}>
@@ -974,7 +974,7 @@ export default function AdminPage() {
 
   const tabs = Object.keys(TAB_LABEL) as Tab[];
   return (
-    <ToastHost><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+    <ToastHost><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col border-e p-5 lg:flex" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-4 w-6 bg-current" style={ninja} /></span>

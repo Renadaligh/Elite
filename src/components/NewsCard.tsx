@@ -1,3 +1,4 @@
+import RichText from './RichText';
 import type { NewsItem, NewsTag } from '../data/news';
 import { useI18n } from '../i18n/I18nProvider';
 import type { Dict } from '../i18n/translations';
@@ -27,7 +28,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
         <h3 className="text-[1.15rem] font-semibold leading-snug">
           {item.href ? <a href={item.href} className="news-link after:absolute after:inset-0">{title}</a> : title}
         </h3>
-        <p className="text-[.95rem] leading-relaxed" style={{ color: 'var(--muted)' }}>{item.summary[lang]}</p>
+        <RichText className="text-[.95rem] leading-relaxed" style={{ color: 'var(--muted)' }} text={item.summary[lang]} />
         {item.href && <span aria-hidden="true" className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--link-on)' }}>{t.newsRead} <span className="inline-block rtl:-scale-x-100">→</span></span>}
       </div>
     </article>
