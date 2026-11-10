@@ -254,3 +254,18 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .br-list { display: grid; gap: 12px; }
 .br-list .br-match { width: 100%; }
 .br-list .br-row { padding: 12px 14px; font-size: .95rem; }
+
+/* League formats (round robin / swiss) */
+.lg-table-wrap { overflow-x: auto; border: 1px solid var(--line, rgba(255,255,255,.14)); border-radius: 12px; }
+.lg-table { width: 100%; border-collapse: collapse; font-size: .88rem; font-variant-numeric: tabular-nums; }
+.lg-table thead { background: rgba(255,255,255,.05); color: var(--muted); font-size: .78rem; }
+.lg-table tbody tr + tr { border-top: 1px solid var(--line, rgba(255,255,255,.08)); }
+.lg-table tr.is-top { background: rgba(255,51,71,.12); }
+.lg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.lg-in { width: 52px; padding: 4px 6px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--line, rgba(255,255,255,.2)); background: rgba(255,255,255,.06); color: inherit; }
+.lg-in:focus { outline: 2px solid #ff3347; }
+.lg-live { display: block; width: 100%; padding: 6px; border-top: 1px solid var(--line, rgba(255,255,255,.1)); font-size: .75rem; color: var(--muted); background: none; }
+.lg-live:hover { color: #fff; background: rgba(255,51,71,.12); }
+.lg-draw { display: block; padding: 2px 0; text-align: center; font-size: .65rem; color: var(--muted); border-top: 1px solid var(--line, rgba(255,255,255,.1)); }
+.lg-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--glass-b, rgba(255,255,255,.2)); font-size: .85rem; font-weight: 600; color: var(--muted); }
+.lg-btn.on { color: #fff; background: linear-gradient(135deg, #ff3347, #d90f26); border-color: transparent; }

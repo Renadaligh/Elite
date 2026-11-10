@@ -5,7 +5,8 @@
  * A match has two slots. A slot is a player (index into `players`), the winner/loser of another match, or a bye.
  * Who plays whom is *derived* by resolve(), so advancing a winner only means storing `win` on one match.
  */
-export type BFormat = 'single' | 'double';
+export type BFormat = 'single' | 'double' | 'rr' | 'swiss';
+export const isLeague = (b: { format: BFormat }) => b.format === 'rr' || b.format === 'swiss';
 export type Slot = { p: number } | { w: string } | { l: string } | { bye: true };
 export interface BMatch {
   id: string;
@@ -20,7 +21,10 @@ export interface BMatch {
   sb?: string;
   win?: 'a' | 'b';
 }
-export interface Bracket { format: BFormat; players: string[]; matches: BMatch[]; /** ids of the matches being played right now (shown as LIVE); several can run at once */ cur?: string[] }
+/** League formats (round robin / swiss): points per result (Challonge defaults 1 / 0.5 / 0), swiss round count, round robin home-and-away. */
+export interface LeagueOpts { win: number; draw: number; loss: number; rounds?: number; double?: boolean }
+export const defaultOpts = (format: BFormat, n: number): LeagueOpts => ({ win: 1, draw: 0.5, loss: 0, ...(format === 'swiss' ? { rounds: Math.max(1, Math.ceil(Math.log2(Math.max(2, n)))) } : {}) });
+export interface Bracket { opts?: LeagueOpts; format: BFormat; players: string[]; matches: BMatch[]; /** ids of the matches being played right now (shown as LIVE); several can run at once */ cur?: string[] }
 
 /** number = player index · 'bye' = empty seat · null = not decided yet. */
 export type Who = number | 'bye' | null;
@@ -43,9 +47,11 @@ export function shuffled<T>(list: T[]): T[] {
 }
 
 /** Builds an empty bracket. Players are seeded in the given order (shuffle them first if you want a random draw). */
-export function generate(format: BFormat, players: string[]): Bracket {
-  const names = players.map((p) => p.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
+export function generate(format: BFormat, players: string[], opts?: Partial<LeagueOpts>): Bracket {
+  const names = players.map((p) => p.trim()).filter(Boolean).slice(0, format === 'rr' ? MAX_RR : MAX_PLAYERS);
   const n = names.length;
+  if (format === 'rr') return generateRR(names, { ...defaultOpts('rr', n), ...opts });
+  if (format === 'swiss') return generateSwiss(names, { ...defaultOpts('swiss', n), ...opts });
   const size = pow2(n);
   const k = Math.log2(size);
   const matches: BMatch[] = [];
@@ -123,6 +129,7 @@ export function setScore(br: Bracket, id: string, sa: string, sb: string): Brack
 
 /** The tournament champion (winner of the last match), if decided. */
 export function champion(br: Bracket): number | null {
+  if (isLeague(br)) return leagueChampion(br);
   const last = br.matches.find((m) => m.br === 'F') ?? br.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0];
   const w = last ? resolve(br).get(last.id)?.win : null;
   return typeof w === 'number' ? w : null;
@@ -139,3 +146,138 @@ export function layout(br: Bracket) {
 
 /** Short label for an undecided slot, e.g. "W2-1" → winner/loser of that match. */
 export const slotRef = (s: Slot): string => ('w' in s ? `W:${s.w}` : 'l' in s ? `L:${s.l}` : '');
+
+
+/* ---------------- League formats: round robin + swiss ---------------- */
+export const MAX_RR = 16;
+
+const pl = (i: number): Slot => ({ p: i });
+const BYE: Slot = { bye: true };
+
+/** Round robin (circle method). A bye seat is added when the number of players is odd. */
+function generateRR(names: string[], opts: LeagueOpts): Bracket {
+  const n = names.length;
+  const ids: (number | null)[] = names.map((_, i) => i);
+  if (n % 2) ids.push(null);
+  const m = ids.length, half = m / 2;
+  const matches: BMatch[] = [];
+  const legs = opts.double ? 2 : 1;
+  let round = 0;
+  for (let leg = 0; leg < legs; leg++) {
+    let arr = [...ids];
+    for (let r = 0; r < m - 1; r++) {
+      round++;
+      for (let i = 0; i < half; i++) {
+        let a = arr[i], b = arr[m - 1 - i];
+        if ((leg === 1) !== (r % 2 === 1 && i === 0)) [a, b] = [b, a]; // alternate sides a little, swap in the return leg
+        matches.push({ id: `R${round}-${i + 1}`, br: 'W', round, idx: i + 1, a: a === null ? BYE : pl(a), b: b === null ? BYE : pl(b) });
+      }
+      arr = [arr[0], arr[m - 1], ...arr.slice(1, m - 1)];
+    }
+  }
+  return { format: 'rr', players: names, matches, opts };
+}
+
+/** Standings from the entered scores. Order: points, score difference, score for, wins. */
+export interface Standing { p: number; played: number; w: number; d: number; l: number; gf: number; ga: number; pts: number }
+export function outcome(br: Bracket, m: BMatch): 'a' | 'b' | 'draw' | null {
+  if (!isLeague(br)) return m.win ?? null;
+  if ('bye' in m.a && 'bye' in m.b) return null;
+  if ('bye' in m.b) return 'a';
+  if ('bye' in m.a) return 'b';
+  const a = m.sa !== undefined && m.sa !== '' ? Number(m.sa) : NaN, b = m.sb !== undefined && m.sb !== '' ? Number(m.sb) : NaN;
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  return a > b ? 'a' : b > a ? 'b' : 'draw';
+}
+export function standings(br: Bracket): Standing[] {
+  const o = br.opts ?? defaultOpts(br.format, br.players.length);
+  const S: Standing[] = br.players.map((_, p) => ({ p, played: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 }));
+  for (const m of br.matches) {
+    const r = outcome(br, m); if (!r) continue;
+    if (br.format === 'rr' && ('bye' in m.a || 'bye' in m.b)) continue; // resting in a round robin is not a win
+    const a = 'p' in m.a ? S[m.a.p] : null, b = 'p' in m.b ? S[m.b.p] : null;
+    const sa = Number(m.sa) || 0, sb = Number(m.sb) || 0;
+    const isBye = !a || !b;
+    for (const [x, side] of [[a, 'a'], [b, 'b']] as const) {
+      if (!x) continue;
+      x.played++;
+      if (!isBye) { x.gf += side === 'a' ? sa : sb; x.ga += side === 'a' ? sb : sa; }
+      if (r === 'draw') { x.d++; x.pts += o.draw; } else if (r === side) { x.w++; x.pts += o.win; } else { x.l++; x.pts += o.loss; }
+    }
+  }
+  return S.sort((x, y) => y.pts - x.pts || (y.gf - y.ga) - (x.gf - x.ga) || y.gf - x.gf || y.w - x.w || x.p - y.p);
+}
+
+export const leagueRounds = (br: Bracket) => [...new Set(br.matches.map((m) => m.round))].sort((a, b) => a - b);
+export const roundMatches = (br: Bracket, r: number) => br.matches.filter((m) => m.round === r).sort((a, b) => a.idx - b.idx);
+export const roundDone = (br: Bracket, r: number) => roundMatches(br, r).every((m) => outcome(br, m) !== null || ('bye' in m.a && 'bye' in m.b));
+export const leagueDone = (br: Bracket) => br.matches.every((m) => outcome(br, m) !== null) && (br.format === 'rr' || leagueRounds(br).length >= (br.opts?.rounds ?? 1));
+export const leagueChampion = (br: Bracket): number | null => (leagueDone(br) ? standings(br)[0]?.p ?? null : null);
+
+/** Swiss pairing: same-points players meet, nobody meets the same opponent twice, the odd player out gets a bye (once each). */
+function pairSwiss(br: Bracket, round: number): BMatch[] {
+  const st = standings(br);
+  const order = st.map((s) => s.p);
+  const met = new Set<string>();
+  const hadBye = new Set<number>();
+  for (const m of br.matches) {
+    if ('p' in m.a && 'p' in m.b) { met.add(`${m.a.p}-${m.b.p}`); met.add(`${m.b.p}-${m.a.p}`); }
+    else if ('p' in m.a) hadBye.add(m.a.p); else if ('p' in m.b) hadBye.add(m.b.p);
+  }
+  let bye: number | null = null;
+  let pool = order;
+  if (order.length % 2) {
+    bye = [...order].reverse().find((p) => !hadBye.has(p)) ?? order[order.length - 1];
+    pool = order.filter((p) => p !== bye);
+  }
+  const pairs: [number, number][] = [];
+  const go = (left: number[]): boolean => {
+    if (!left.length) return true;
+    const [a, ...rest] = left;
+    for (let i = 0; i < rest.length; i++) {
+      const b = rest[i];
+      if (met.has(`${a}-${b}`)) continue;
+      pairs.push([a, b]);
+      if (go(rest.filter((_, j) => j !== i))) return true;
+      pairs.pop();
+    }
+    return false;
+  };
+  if (!go(pool)) { pairs.length = 0; for (let i = 0; i < pool.length; i += 2) pairs.push([pool[i], pool[i + 1]]); } // no rematch-free pairing exists: pair by rank
+  const out: BMatch[] = pairs.map(([a, b], i) => ({ id: `R${round}-${i + 1}`, br: 'W', round, idx: i + 1, a: pl(a), b: pl(b) }));
+  if (bye !== null) out.push({ id: `R${round}-${out.length + 1}`, br: 'W', round, idx: out.length + 1, a: pl(bye), b: BYE });
+  return out;
+}
+
+/** Swiss round 1: top half meets bottom half by seed. */
+function generateSwiss(names: string[], opts: LeagueOpts): Bracket {
+  const n = names.length, half = Math.floor(n / 2);
+  const matches: BMatch[] = [];
+  for (let i = 0; i < half; i++) matches.push({ id: `R1-${i + 1}`, br: 'W', round: 1, idx: i + 1, a: pl(i), b: pl(i + half + (n % 2)) });
+  if (n % 2) matches.push({ id: `R1-${half + 1}`, br: 'W', round: 1, idx: half + 1, a: pl(half), b: BYE });
+  return { format: 'swiss', players: names, matches, opts };
+}
+
+/** Adds the next swiss round (only once the current one is fully scored and rounds remain). */
+export function nextSwissRound(br: Bracket): Bracket | null {
+  if (br.format !== 'swiss') return null;
+  const rs = leagueRounds(br), last = rs[rs.length - 1] ?? 0;
+  if (!roundDone(br, last) || last >= (br.opts?.rounds ?? 1)) return null;
+  return { ...br, matches: [...br.matches, ...pairSwiss(br, last + 1)] };
+}
+
+/** Enters a league score. A scored match stops being "current". */
+export function setLeagueScore(br: Bracket, id: string, sa: string, sb: string): Bracket {
+  const next = { ...br, matches: br.matches.map((m) => (m.id === id ? { ...m, sa: sa || undefined, sb: sb || undefined } : m)) };
+  const m = next.matches.find((i) => i.id === id)!;
+  if (outcome(next, m) && next.cur?.includes(id)) { const cur = next.cur.filter((c) => c !== id); next.cur = cur.length ? cur : undefined; }
+  return next;
+}
+/** Swiss: drops the last round (to redo a pairing). */
+export function dropLastRound(br: Bracket): Bracket {
+  const rs = leagueRounds(br), last = rs[rs.length - 1];
+  if (br.format !== 'swiss' || rs.length < 2) return br;
+  const matches = br.matches.filter((m) => m.round !== last), ids = new Set(matches.map((m) => m.id));
+  const cur = (br.cur ?? []).filter((c) => ids.has(c));
+  return { ...br, matches, cur: cur.length ? cur : undefined };
+}

@@ -7,7 +7,7 @@ export const NAV: { href: string; key: keyof Dict }[] = [
   { href: '#games', key: 'navGames' },
   { href: '#tournaments', key: 'navTournaments' },
   { href: '#champions', key: 'navChampions' },
-  { href: '#/bracket', key: 'navBracket' },
+  // { href: '#/bracket', key: 'navBracket' }, // hidden for now (reachable from the sign-in icon)
   // { href: '#community', key: 'navCommunity' }, // hidden for now
   // { href: '#support', key: 'navSupport' }, // hidden for now
 ];

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, champion, generate, resolve, setScore, setWinner, shuffled, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { bracketBlob, downloadBlob } from '../data/bracketImage';
 import { useAuth, type AuthUser } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
@@ -15,10 +15,10 @@ const pill = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold disabled
 
 const TXT = {
   ar: {
-    title: 'أداة البراكت', sub: 'سوِّ براكت لأي سيرفر أو مجتمع: خروج مغلوب أو خروج مزدوج. حدّث النتائج واحفظه كصورة أو شاركه.',
-    name: 'اسم البطولة', namePh: 'مثلاً: كأس سيرفر الأصدقاء', format: 'النظام', single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', players: 'اللاعبون / الفرق (سطر لكل واحد، الأعلى = الأقوى)',
+    title: 'أداة البراكت', sub: 'سوِّ براكت لأي سيرفر أو مجتمع: خروج مغلوب أو مزدوج أو دوري أو سويسري. حدّث النتائج واحفظه كصورة أو شاركه.',
+    name: 'اسم البطولة', namePh: 'مثلاً: كأس سيرفر الأصدقاء', format: 'النظام', single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', rr: 'دوري (كل لاعب ضد الكل)', swiss: 'سويسري', dbl: 'دوري مزدوج (ذهاب وإياب)', maxRr: `الدوري: الحد الأقصى ${MAX_RR}`, players: 'اللاعبون / الفرق (سطر لكل واحد، الأعلى = الأقوى)',
     shuffle: 'خلط عشوائي', create: 'إنشاء البراكت', need: 'أدخل لاعبَين على الأقل', max: `الحد الأقصى ${MAX_PLAYERS}`,
-    hint: 'اضغط على اسم الفائز في كل مباراة لتحديثه.', score: 'نتيجة المباراة', undo: 'تراجع', save: 'حفظ في براكتاتي', saved: 'تم الحفظ', saving: '…', mine: 'براكتاتي',
+    hint: 'اضغط على اسم الفائز في كل مباراة لتحديثه.', hintL: 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً.', score: 'نتيجة المباراة', undo: 'تراجع', save: 'حفظ في براكتاتي', saved: 'تم الحفظ', saving: '…', mine: 'براكتاتي',
     login: 'تسجيل الدخول', logout: 'خروج', loginTitle: 'سجّل دخولك عشان تحفظ براكتاتك', loginSub: 'تجد كل براكتاتك في مكان واحد وترجع لها من أي جهاز. ما ننشر شيء باسمك.',
     discord: 'الدخول بحساب Discord', google: 'الدخول بحساب Google', none: 'تسجيل الدخول غير مفعّل بعد.', close: 'إغلاق',
     editPlayers: 'تعديل أسماء اللاعبين', rebuild: 'تعديل القائمة وإعادة البناء', rebuildAsk: 'إعادة البناء تمسح النتائج الحالية. متأكد؟', renameNote: 'تغيير الاسم يحافظ على النتائج.',
@@ -28,10 +28,10 @@ const TXT = {
     needLogin: 'سجّل دخولك لتشوف براكتاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
   },
   en: {
-    title: 'Bracket tool', sub: 'Make a bracket for any server or community: single or double elimination. Update results, save it as an image or share it.',
-    name: 'Tournament name', namePh: 'e.g. Friends Server Cup', format: 'Format', single: 'Single elimination', double: 'Double elimination', players: 'Players / teams (one per line, top = strongest seed)',
+    title: 'Bracket tool', sub: 'Make a bracket for any server or community: single or double elimination, round robin or swiss. Update results, save it as an image or share it.',
+    name: 'Tournament name', namePh: 'e.g. Friends Server Cup', format: 'Format', single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', dbl: 'Double round robin (home & away)', maxRr: `Round robin: max ${MAX_RR}`, players: 'Players / teams (one per line, top = strongest seed)',
     shuffle: 'Shuffle randomly', create: 'Create bracket', need: 'Enter at least 2 players', max: `Max ${MAX_PLAYERS}`,
-    hint: 'Click the winner of each match to update it.', score: 'Match score', undo: 'Undo', save: 'Save to my brackets', saved: 'Saved', saving: '…', mine: 'My brackets',
+    hint: 'Click the winner of each match to update it.', hintL: 'Type the score of each match; the standings update automatically.', score: 'Match score', undo: 'Undo', save: 'Save to my brackets', saved: 'Saved', saving: '…', mine: 'My brackets',
     login: 'Sign in', logout: 'Sign out', loginTitle: 'Sign in to save your brackets', loginSub: 'Find all your brackets in one place from any device. We never post anything for you.',
     discord: 'Continue with Discord', google: 'Continue with Google', none: 'Sign-in is not enabled yet.', close: 'Close',
     editPlayers: 'Edit player names', rebuild: 'Edit list & rebuild', rebuildAsk: 'Rebuilding clears the current results. Sure?', renameNote: 'Renaming keeps the results.',
@@ -103,6 +103,7 @@ function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof
   const [state, setState] = useState<'load' | 'ok' | 'missing'>(id ? 'load' : 'ok');
   const [login, setLogin] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [dbl, setDbl] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(() => { const n = loginNote(); return n === 'failed' ? tx.loginFailed : n === 'unavailable' ? tx.loginUnavailable : ''; });
   const [editP, setEditP] = useState(false);
@@ -124,7 +125,8 @@ function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
     if (list.length < 2) { setMsg(tx.need); return; }
-    edit(generate(fmt, shuf ? shuffled(list) : list)); setSel(null);
+    if (fmt === 'rr' && list.length > MAX_RR) { setMsg(tx.maxRr); return; }
+    edit(generate(fmt, shuf ? shuffled(list) : list, fmt === 'rr' && dbl ? { double: true } : undefined)); setSel(null);
   }
   const pick = (m: BMatch, side: 'a' | 'b') => { if (!br) return; setSel(m.id); edit(setWinner(br, m.id, m.win === side ? undefined : side)); };
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
@@ -166,7 +168,8 @@ function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof
           <div className="grid max-w-[34rem] gap-4 rounded-2xl border p-5" style={card}>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.name}<input className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => setTitle(e.target.value)} /></label>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.format}
-              <select className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', background: 'var(--bg)' }} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{tx.single}</option><option value="double">{tx.double}</option></select></label>
+              <select className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', background: 'var(--bg)' }} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{tx.single}</option><option value="double">{tx.double}</option><option value="rr">{tx.rr}</option><option value="swiss">{tx.swiss}</option></select></label>
+            {fmt === 'rr' && <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={dbl} onChange={(e) => setDbl(e.target.checked)} />{tx.dbl}</label>}
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.players} · {tx.max}<textarea rows={8} dir="auto" className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} value={names} onChange={(e) => setNames(e.target.value)} /></label>
             <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{tx.shuffle}</label>
             <div><button type="button" className="btn-primary" onClick={create}>{tx.create}</button></div>
@@ -188,9 +191,9 @@ function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
-          {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hint}</p>}
+          {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{br && isLeague(br) ? tx.hintL : tx.hint}</p>}
           {champ !== null && <p className="text-[1rem]">🏆 <b>{br.players[champ]}</b></p>}
-          <div className="rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} /></div>
+          <div className="rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} /></div>
           {editable && m && R && (
             <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={card}>
               <b className="self-center">{m.id}</b>

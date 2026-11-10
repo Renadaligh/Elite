@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { champion, isCurrent, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
+import { champion, isCurrent, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
+import LeagueView from './LeagueView';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
-interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null }
+interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean }
 
 function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: number) {
   const ar = lang === 'ar';
@@ -31,7 +32,11 @@ function useNarrow() {
   return n;
 }
 
-export default function BracketView({ bracket, onPick, selected }: Props) {
+export default function BracketView(p: Props) {
+  return isLeague(p.bracket) ? <LeagueView bracket={p.bracket} onChange={p.onChange} live={p.live} /> : <TreeView {...p} />;
+}
+
+function TreeView({ bracket, onPick, selected }: Props) {
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
   const R = useMemo(() => resolve(bracket), [bracket]);

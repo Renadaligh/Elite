@@ -1,12 +1,111 @@
-import { champion, isCurrent, layout, resolve, type BMatch, type Bracket, type Who } from './bracket';
+import { champion, isCurrent, isLeague, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
 
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
 const CW = 210, CH = 62, RH = CH / 2, GX = 60, GY = 18, PAD = 36, HEAD = 96, FOOT = 56;
 
 interface Opts { title: string; lang: 'ar' | 'en'; scale?: number }
 
-export async function bracketBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob> {
+export async function bracketBlob(br: Bracket, o: Opts): Promise<Blob> {
   try { await document.fonts?.ready; } catch { /* fonts are optional */ }
+  return isLeague(br) ? leagueBlob(br, o) : treeBlob(br, o);
+}
+
+/** Round robin / swiss: standings table, then every round's matches. */
+function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob> {
+  const rtl = lang === 'ar';
+  const family = getComputedStyle(document.body).fontFamily || 'sans-serif';
+  const S = standings(br), rounds = leagueRounds(br);
+  const W = 920, RHt = 36, MW = (W - PAD * 2 - 24) / 3, MH = 56, MR = MH / 2;
+  const rowsOf = (r: number) => Math.ceil(roundMatches(br, r).length / 3);
+  const tableTop = HEAD + 6, tableH = RHt * (S.length + 1);
+  let y = tableTop + tableH + 30;
+  const secY: number[] = [];
+  for (const r of rounds) { secY.push(y); y += 28 + rowsOf(r) * (MH + 12) + 10; }
+  const H = y + FOOT;
+  const k = Math.min(scale, 8000 / W, 16000 / H);
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+  const c = cv.getContext('2d')!;
+  c.scale(k, k); c.direction = rtl ? 'rtl' : 'ltr';
+  const rr = (x: number, y0: number, w: number, h: number, r: number) => { c.beginPath(); c.roundRect(x, y0, w, h, r); };
+  const txt = (str: string, x: number, y0: number, align: 'left' | 'right' | 'center', maxW: number) => {
+    let t = str;
+    while (t.length > 1 && c.measureText(t).width > maxW) t = t.slice(0, -1);
+    c.textAlign = align; c.fillText(t === str ? t : `${t}…`, x, y0);
+  };
+  // x for the start edge of a box / for text anchored at the start side
+  const sx = (x: number, w: number) => (rtl ? W - x - w : x);
+  const al = rtl ? 'right' : 'left', alEnd = rtl ? 'left' : 'right';
+
+  c.fillStyle = '#07070a'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#ff3347'; c.fillRect(0, 0, W, 4);
+  c.fillStyle = '#fff'; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic';
+  txt(title, rtl ? W - PAD : PAD, 56, al, W - PAD * 2);
+  c.fillStyle = '#9aa0b8'; c.font = `600 13px ${family}`;
+  txt(br.format === 'swiss' ? (rtl ? 'سويسري' : 'Swiss') : (rtl ? 'دوري' : 'Round robin'), rtl ? W - PAD : PAD, 80, al, 300);
+
+  // standings
+  const cols = [{ k: '#', w: 40 }, { k: rtl ? 'اللاعب' : 'Player', w: 0 }, { k: rtl ? 'لعب' : 'P', w: 44 }, { k: rtl ? 'فوز' : 'W', w: 44 }, { k: rtl ? 'تعادل' : 'D', w: 44 }, { k: rtl ? 'خسارة' : 'L', w: 44 }, { k: '+/−', w: 56 }, { k: rtl ? 'نقاط' : 'Pts', w: 58 }];
+  const TW = W - PAD * 2; cols[1].w = TW - cols.reduce((t, q) => t + q.w, 0);
+  rr(PAD, tableTop, TW, tableH, 12); c.fillStyle = '#101016'; c.fill();
+  c.save(); rr(PAD, tableTop, TW, tableH, 12); c.clip();
+  c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(PAD, tableTop, TW, RHt);
+  const champ = champion(br);
+  const drawRow = (vals: string[], ry: number, head: boolean, top: boolean) => {
+    if (top) { c.fillStyle = 'rgba(255,51,71,.18)'; c.fillRect(PAD, ry, TW, RHt); }
+    let off = 0;
+    cols.forEach((col, i) => {
+      c.fillStyle = head ? '#9aa0b8' : i === 7 || i === 1 ? '#fff' : '#d8d8e4';
+      c.font = `${head || i === 7 || i === 1 ? 700 : 500} ${head ? 12 : 14}px ${family}`; c.textBaseline = 'middle';
+      const bx = sx(PAD + off, col.w);
+      if (i === 1) txt(vals[i], rtl ? bx + col.w - 8 : bx + 8, ry + RHt / 2 + 1, al, col.w - 16); else txt(vals[i], bx + col.w / 2, ry + RHt / 2 + 1, 'center', col.w - 4);
+      off += col.w;
+    });
+    if (!head) { c.fillStyle = 'rgba(255,255,255,.07)'; c.fillRect(PAD, ry, TW, 1); }
+  };
+  drawRow(cols.map((q) => q.k), tableTop, true, false);
+  S.forEach((q, i) => drawRow([String(i + 1), br.players[q.p] || '—', String(q.played), String(q.w), String(q.d), String(q.l), `${q.gf - q.ga > 0 ? '+' : ''}${q.gf - q.ga}`, String(q.pts)], tableTop + RHt * (i + 1), false, i === 0 && champ !== null));
+  c.restore();
+  c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,.14)'; rr(PAD, tableTop, TW, tableH, 12); c.stroke();
+
+  // rounds
+  rounds.forEach((r, ri) => {
+    const y0 = secY[ri];
+    c.fillStyle = '#9aa0b8'; c.font = `700 12px ${family}`; c.textBaseline = 'middle';
+    txt(rtl ? `الجولة ${r}` : `ROUND ${r}`, rtl ? W - PAD : PAD, y0 + 8, al, 300);
+    roundMatches(br, r).forEach((m, i) => {
+      const col = i % 3, row = Math.floor(i / 3), bx = sx(PAD + col * (MW + 12), MW), by = y0 + 28 + row * (MH + 12);
+      const bye = 'bye' in m.a || 'bye' in m.b, o = outcome(br, m), live = isCurrent(br, m.id) && !o;
+      c.globalAlpha = bye ? 0.5 : 1;
+      rr(bx, by, MW, MH, 10); c.fillStyle = '#14141a'; c.fill();
+      c.save(); rr(bx, by, MW, MH, 10); c.clip();
+      (['a', 'b'] as const).forEach((sd, i2) => {
+        const slot = m[sd], isBye = 'bye' in slot, yy = by + i2 * MR, win = (o === sd) || (bye && !isBye && br.format === 'swiss'), lose = !!o && o !== sd && o !== 'draw';
+        if (win && o !== 'draw') { c.fillStyle = 'rgba(255,51,71,.2)'; c.fillRect(bx, yy, MW, MR); }
+        c.fillStyle = win && o !== 'draw' ? '#fff' : lose || isBye ? '#8b90a6' : '#e8e8f0'; c.font = `${win ? 700 : 500} 13px ${family}`; c.textBaseline = 'middle';
+        txt(isBye ? 'BYE' : br.players[(slot as { p: number }).p] || '—', rtl ? bx + MW - 10 : bx + 10, yy + MR / 2 + 1, al, MW - 52);
+        const sc = m[sd === 'a' ? 'sa' : 'sb'];
+        if (sc && !bye) { c.font = `800 14px ${family}`; c.fillStyle = '#fff'; txt(sc, rtl ? bx + 10 : bx + MW - 10, yy + MR / 2 + 1, alEnd, 34); }
+      });
+      c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect(bx, by + MR, MW, 1);
+      c.restore();
+      c.lineWidth = live ? 2.5 : 1; c.strokeStyle = live ? '#ff3347' : 'rgba(255,255,255,.14)'; rr(bx, by, MW, MH, 10); c.stroke();
+      c.globalAlpha = 1;
+    });
+  });
+
+  if (champ !== null) {
+    const w = Math.min(TW, 360), x = rtl ? W - PAD - w : PAD, yy = H - FOOT - 4;
+    c.fillStyle = '#fff'; c.font = `800 15px ${family}`; c.textBaseline = 'middle';
+    txt(`🏆  ${br.players[champ]}`, rtl ? x + w : x, yy, al, w);
+  }
+  c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle';
+  txt('Elite · plato-ar.com', rtl ? PAD : W - PAD, H - 22, rtl ? 'left' : 'right', 260);
+  c.textAlign = 'start';
+  return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('canvas'))), 'image/png'));
+}
+
+async function treeBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob> {
   const rtl = lang === 'ar';
   const family = getComputedStyle(document.body).fontFamily || 'sans-serif';
   const R = resolve(br);
