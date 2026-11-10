@@ -9,7 +9,6 @@ export const onRequestGet = async ({ request, env, params }: Ctx) => {
   const r = new URL(request.url).searchParams.get('r') === 'mine' ? 'mine' : 'tool';
   const state = hex(16);
   const cfg = PROVIDERS[p];
-  const q = new URLSearchParams({ client_id: cfg.id(env)!, redirect_uri: redirectUri(request, p), response_type: 'code', scope: cfg.scope, state });
-  if (p === 'google') q.set('prompt', 'select_account');
+  const q = new URLSearchParams({ client_id: cfg.id(env)!, redirect_uri: redirectUri(request, p), response_type: 'code', scope: cfg.scope, state, ...(p === 'discord' ? { prompt: 'none' } : {}) });
   return new Response(null, { status: 302, headers: { location: `${cfg.auth}?${q}`, 'set-cookie': cookie(request, 'oauth_state', `${state}.${r}`, 600, '/api/auth'), 'cache-control': 'no-store' } });
 };

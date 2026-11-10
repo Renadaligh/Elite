@@ -341,7 +341,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .st-av { display: grid; place-items: center; font-weight: 800; background: linear-gradient(135deg, #ff3347, #7a2cff); }
 .st-me b { display: block; line-height: 1.3; overflow-wrap: anywhere; } .st-me small { color: #6c7088; text-transform: capitalize; }
 .st-main { min-width: 0; padding: clamp(1.2rem, 3vw, 2.4rem) clamp(1.1rem, 3.4vw, 2.8rem) 4rem; }
-.st-page { animation: st-page .5s cubic-bezier(.22,1,.36,1) both; max-width: 78rem; }
+.st-page { animation: st-page .5s cubic-bezier(.22,1,.36,1) both; max-width: 72rem; margin-inline: auto; }
 @keyframes st-page { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 .st-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
 .st-top h1 { font-size: clamp(1.5rem, 2.4vw, 1.9rem); font-weight: 800; }
