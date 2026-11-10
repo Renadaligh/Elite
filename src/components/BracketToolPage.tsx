@@ -68,7 +68,7 @@ function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Provider
   );
 }
 
-function Shell({ tx, user, onLogin, onLogout, children }: { tx: Tx; user: AuthUser | null; onLogin: () => void; onLogout: () => void; children: ReactNode }) {
+function Shell({ tx, user, children }: { tx: Tx; user: AuthUser | null; children: ReactNode }) {
   return (
     <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ background: 'var(--bg)' }}>
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
@@ -77,13 +77,7 @@ function Shell({ tx, user, onLogin, onLogout, children }: { tx: Tx; user: AuthUs
           <p className="mt-2" style={{ color: 'var(--muted)' }}>{tx.sub}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          {user ? (
-            <>
-              <span className="flex items-center gap-2 text-[.9rem]">{user.avatar && <img src={user.avatar} alt="" className="h-8 w-8 rounded-full" referrerPolicy="no-referrer" />}<b>{user.name}</b></span>
-              <a href="#/bracket/mine" className={pill} style={card}>{tx.mine}</a>
-              <button type="button" className={pill} style={card} onClick={onLogout}>{tx.logout}</button>
-            </>
-          ) : <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#ff3347,#d90f26)', borderColor: 'transparent' }} onClick={onLogin}>{tx.login}</button>}
+          {user && <a href="#/bracket" className={pill} style={card}>{tx.mine}</a>}
         </div>
       </div>
       {children}
@@ -94,7 +88,7 @@ function Shell({ tx, user, onLogin, onLogout, children }: { tx: Tx; user: AuthUs
 interface Draft { title: string; names: string; fmt: BFormat; br: Bracket | null }
 const readDraft = (): Draft => { try { const d = JSON.parse(localStorage.getItem(DRAFT) ?? ''); if (d && typeof d.title === 'string') return d; } catch { /* none */ } return { title: '', names: '', fmt: 'single', br: null }; };
 
-export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth> }) {
+export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth>; readOnly?: boolean; onForeign?: () => void }) {
   const { lang } = useI18n();
   const init = useMemo(() => (id ? { title: '', names: '', fmt: 'single' as BFormat, br: null } : readDraft()), [id]);
   const [title, setTitle] = useState(init.title);
@@ -119,7 +113,7 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
   useEffect(() => {
     if (!id) return;
     api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; share: boolean; live: boolean }>(`/brackets/${id}`)
-      .then((r) => { if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine); setShare(r.share); setLive(r.live); setState('ok'); })
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setShare(r.share); setLive(r.live); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
@@ -127,7 +121,7 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
   useEffect(() => { if (id) return; try { localStorage.setItem(DRAFT, JSON.stringify({ title, names, fmt, br })); } catch { /* private mode */ } }, [id, title, names, fmt, br]);
 
   const edit = (b: Bracket | null) => { setBr(b); setDirty(true); setMsg(''); };
-  const url = id ? `${base()}#/bracket/${id}` : `${base()}#/bracket`;
+  const url = id ? `${base()}#/view/${id}` : `${base()}#/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'براكت' : 'Bracket');
 
   function create() {
@@ -178,7 +172,7 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
   if (state === 'private') return <p className="text-lg">{tx.private}</p>;
-  const viewUrl = `${base()}#/bracket/${id}`, liveUrl = `${base()}#/bracket/${id}/live`;
+  const viewUrl = `${base()}#/view/${id}`, liveUrl = `${base()}#/bracket/${id}/live`;
 
   return (
     <>
@@ -265,16 +259,14 @@ export function Editor({ id, tx, auth }: { id?: string; tx: Tx; auth: ReturnType
 }
 
 /** Public bracket tool: #/bracket (new) · #/bracket/<id> (a saved bracket: view, or edit if it is yours) · #/bracket/mine (my brackets). */
-export default function BracketToolPage({ id, auth: given }: { id?: string; auth?: ReturnType<typeof useAuth> }) {
+export default function BracketToolPage({ id, auth: given, readOnly }: { id?: string; auth?: ReturnType<typeof useAuth>; readOnly?: boolean }) {
   const { lang } = useI18n();
   const tx = TXT[lang];
   const own = useAuth();
   const auth = given ?? own;
-  const [login, setLogin] = useState(false);
   return (
-    <Shell tx={tx} user={auth.user} onLogin={() => setLogin(true)} onLogout={auth.logout}>
-      <Editor key={`${id ?? 'new'}:${auth.user?.id ?? ''}`} id={id} tx={tx} auth={auth} />
-      {login && <LoginModal tx={tx} providers={auth.providers} r="tool" onClose={() => setLogin(false)} />}
+    <Shell tx={tx} user={auth.user}>
+      <Editor key={`${id ?? 'new'}:${auth.user?.id ?? ''}`} id={id} tx={tx} auth={auth} readOnly={readOnly} />
     </Shell>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export type Route = { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'live' | 'admin'; id?: string; key: string };
+export type Route = { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'view' | 'live' | 'admin'; id?: string; key: string };
 
 /** Hash routing needs no server rewrites.
  *  #/news → all news · #/games/<id> → game page · anything else (#top, #games, …) → home. */
@@ -10,6 +10,8 @@ function parse(): Route {
   if (h.startsWith('#/news')) return { page: 'news', key: 'news' };
   const m = /^#\/games\/([^/?#]+)/.exec(h);
   if (m) { const id = decodeURIComponent(m[1]); return { page: 'game', id, key: `game:${id}` }; }
+  const vm = /^#\/view\/([^/?#]+)/.exec(h);
+  if (vm) { const id = decodeURIComponent(vm[1]); return { page: 'view', id, key: `view:${id}` }; }
   const lm = /^#\/bracket\/([^/?#]+)\/live/.exec(h);
   if (lm) { const id = decodeURIComponent(lm[1]); return { page: 'live', id, key: `live:${id}` }; }
   const bm = /^#\/bracket(?:\/([^/?#]+))?/.exec(h);

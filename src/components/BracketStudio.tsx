@@ -20,7 +20,7 @@ const S = {
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',
     pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
     none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.', expired: 'انتهى الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.',
-    mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
+    mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
     edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذا البراكت؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
     backList: 'براكتاتي', via: 'الدخول عبر', count: 'عدد براكتاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل براكتاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accAsk: 'سيتم حذف حسابك وكل براكتاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
@@ -32,7 +32,7 @@ const S = {
     fine: 'Signing in saves only your name and avatar from the account. We never post anything for you.', back: 'Back to the site',
     pl: 'Player', rr: 'Round robin', lb: 'Leaderboard', grp: 'Group', cP: 'P', cW: 'W', cD: 'D', cL: 'L', cPts: 'Pts', h1: 'Run your tournament', h2: 'the', h3: 'professional way', hp: 'Live bracket, standings that update themselves, and a shareable image in seconds.',
     none: 'Sign-in is not enabled yet.', failed: 'Sign-in failed, please try again.', unavailable: 'This option is not enabled yet.', expired: 'The link expired or was already used. Ask for a new one.',
-    mine: 'My brackets', fresh: 'New bracket', account: 'Account', logout: 'Sign out', newBtn: '+ New bracket',
+    mine: 'My brackets', fresh: 'New bracket', account: 'Account', toLight: 'Light mode', toDark: 'Dark mode', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
     edit: 'Open & edit', link: 'Copy link', copied: 'Link copied', img: 'Save as image', del: 'Delete', delAsk: 'Delete this bracket?', players: 'players', fail: 'Something went wrong',
     backList: 'My brackets', via: 'Signed in with', count: 'Saved brackets', needShare: 'Turn on “Publish a view link” on the edit page first', accName: 'Display name', accSave: 'Save', accSaved: 'Saved', accEmail: 'Email', accJoined: 'Joined', accUse: 'Usage', accOf: 'of', accDanger: 'Delete account', accDangerP: 'Permanently deletes your account and all your brackets. This cannot be undone.', accDel: 'Delete my account', accAsk: 'Your account and all your brackets will be deleted permanently. Sure?', fmt: { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups', ffa: 'Leaderboard' },
@@ -57,8 +57,20 @@ const I = {
 };
 const Ic = ({ d, c = 'h-[18px] w-[18px]' }: { d: keyof typeof I; c?: string }) => <svg viewBox="0 0 24 24" className={c} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{I[d]}</svg>;
 
-function Splash() {
-  return <div className="st-splash"><BrandLockup /><div className="st-bar"><b /></div></div>;
+type Theme = 'dark' | 'light';
+function ThemeBtn({ theme, set, s }: { theme: Theme; set: (t: Theme) => void; s: St }) {
+  const light = theme === 'light', label = light ? s.toDark : s.toLight;
+  return (
+    <button type="button" className="st-theme" aria-label={label} title={label} onClick={() => set(light ? 'dark' : 'light')}>
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {light ? <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" /> : <><circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></>}
+      </svg>
+    </button>
+  );
+}
+
+function Splash({ theme }: { theme: Theme }) {
+  return <div className="st-splash" data-st={theme}><BrandLockup /><div className="st-bar"><b /></div></div>;
 }
 
 
@@ -131,7 +143,7 @@ function HeroStage({ s, k }: { s: St; k: number }) {
   );
 }
 
-function LoginScreen({ s, providers }: { s: St; providers: Providers }) {
+function LoginScreen({ s, providers, theme, setTheme }: { s: St; providers: Providers; theme: Theme; setTheme: (t: Theme) => void }) {
   const { dir, lang } = useI18n();
   const heroRef = useRef<HTMLElement>(null);
   const [k, setK] = useState(1);
@@ -145,11 +157,11 @@ function LoginScreen({ s, providers }: { s: St; providers: Providers }) {
   const msg = n === 'failed' ? s.failed : n === 'unavailable' ? s.unavailable : n === 'expired' ? s.expired : '';
   const d = (i: number) => ({ '--d': `${i * 90}ms` }) as React.CSSProperties;
   return (
-    <div className="st-login" dir={dir}>
+    <div className="st-login" dir={dir} data-st={theme}>
       <aside className="st-panel">
         <div className="st-rise flex items-center justify-between" style={d(0)}>
           <BrandLockup />
-          <LanguageSwitcher />
+          <div className="flex items-center gap-2"><ThemeBtn theme={theme} set={setTheme} s={s} /><LanguageSwitcher /></div>
         </div>
         <div className="st-form">
           <h1 className="st-rise" style={d(1)}>{s.welcome}<br /><span className="st-red">{s.welcome2}</span></h1>
@@ -191,7 +203,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const say = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(''), 2200); };
   async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: r.title, lang }), `${r.title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { if (!r.share) { say(s.needShare); return; } try { await navigator.clipboard.writeText(`${base()}#/bracket/${r.id}`); say(s.copied); } catch { say(`${base()}#/bracket/${r.id}`); } }
+  async function copy(r: Row) { if (!r.share) { say(s.needShare); return; } try { await navigator.clipboard.writeText(`${base()}#/view/${r.id}`); say(s.copied); } catch { say(`${base()}#/view/${r.id}`); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -272,7 +284,7 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
   );
 }
 
-function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>; s: St }) {
+function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnType<typeof useAuth>; s: St; theme: Theme; setTheme: (t: Theme) => void }) {
   const { lang, dir } = useI18n();
   const tx = TXT[lang];
   const user = auth.user!;
@@ -281,7 +293,7 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
   const nav = [{ k: 'mine', href: '#/bracket', label: s.mine, i: 'list' }, { k: 'new', href: '#/bracket/new', label: s.fresh, i: 'plus' }, { k: 'account', href: '#/bracket/account', label: s.account, i: 'user' }] as const;
   const title = editing ? '' : sec === 'new' ? s.fresh : sec === 'account' ? s.account : s.mine;
   return (
-    <div className="st-app" dir={dir}>
+    <div className="st-app" dir={dir} data-st={theme}>
       <aside className="st-side">
         <div className="st-side-top">
           <BrandLockup />
@@ -291,10 +303,9 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
           </nav>
         </div>
         <div className="st-side-bot">
+          <div className="st-tools"><LanguageSwitcher /><ThemeBtn theme={theme} set={setTheme} s={s} /></div>
           <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{user.name.slice(0, 1)}</span>}<div><b>{user.name}</b><small>{user.provider}</small></div></div>
-          <nav className="st-nav">
-            <a href="#top"><Ic d="site" />{s.back}</a>
-          </nav>
+          <a href="#top" className="st-logout st-site"><Ic d="site" />{s.back}</a>
           <button type="button" className="st-logout" onClick={auth.logout}><Ic d="out" />{s.logout}</button>
         </div>
       </aside>
@@ -303,7 +314,7 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
           {editing ? (
             <>
               <a href="#/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
-              <Editor id={id} tx={tx} auth={auth} />
+              <Editor id={id} tx={tx} auth={auth} onForeign={() => { window.location.hash = `#/view/${id}`; }} />
             </>
           ) : (
             <>
@@ -319,13 +330,21 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
   );
 }
 
+/** Read-only public page of a published bracket (#/view/<id>): normal site layout, never the dashboard. */
+export function PublicView({ id }: { id: string }) {
+  const auth = useAuth();
+  return (<><Header page="bracket" /><main><BracketToolPage id={id} auth={auth} readOnly /></main><Footer /></>);
+}
+
 export default function BracketRoute({ id }: { id?: string }) {
   const { lang } = useI18n();
   const auth = useAuth();
   const s = S[lang];
-  if (!auth.ready) return <Splash />;
-  // A shared link (#/bracket/<id>) is public: guests see it inside the normal site.
-  if (!auth.user && id && !RESERVED.includes(id)) return (<><Header page="bracket" /><main><BracketToolPage id={id} auth={auth} /></main><Footer /></>);
-  if (!auth.user) return <LoginScreen s={s} providers={auth.providers} />;
-  return <Studio id={id} auth={auth} s={s} />;
+  const [theme, setTheme] = useState<Theme>(() => { try { return localStorage.getItem('elite-st-theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; } });
+  useEffect(() => { try { localStorage.setItem('elite-st-theme', theme); } catch { /* private mode */ } }, [theme]);
+  if (!auth.ready) return <Splash theme={theme} />;
+  // Old shared links (#/bracket/<id>) still work for guests: they get the public view.
+  if (!auth.user && id && !RESERVED.includes(id)) return <PublicView id={id} />;
+  if (!auth.user) return <LoginScreen s={s} providers={auth.providers} theme={theme} setTheme={setTheme} />;
+  return <Studio id={id} auth={auth} s={s} theme={theme} setTheme={setTheme} />;
 }
