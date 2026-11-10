@@ -1,3 +1,4 @@
+import { announceTournament } from '../../_discord';
 import { body, denied, isAdmin, json, newId, num, safeUrl, str, type Ctx } from '../../_lib';
 
 type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number };
@@ -34,6 +35,9 @@ export function parse(b: Record<string, unknown>) {
   };
 }
 
+/** Registration is "open" for a published tournament that has not ended yet and has no winner. */
+export const opens = (v: { published: number; endsAt: string; winner: { en: string; ar: string } }) => !!v.published && Date.now() <= Date.parse(v.endsAt) && !v.winner.en && !v.winner.ar;
+
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const all = isAdmin(request, env);
   const { results } = await env.DB.prepare(`SELECT * FROM tournaments ${all ? '' : 'WHERE published = 1'} ORDER BY starts_at DESC`).all<Row>();
@@ -59,5 +63,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   for (let i = 0; i < tries.length; i++) {
     try { await env.DB.prepare(tries[i][0]).bind(...tries[i][1]).run(); break; } catch (e) { if (i === tries.length - 1) return json({ error: 'db', detail: String((e as Error).message).slice(0, 160) }, 500); }
   }
+  if (v.published && opens(v)) await announceTournament(env, request, id, v);
   return json({ ok: true, id });
 };

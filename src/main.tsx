@@ -28,3 +28,6 @@ if (loader) {
     });
   });
 }
+
+// Installable app (PWA): the worker only provides the install prompt and an offline notice.
+if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', () => { navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => undefined); });

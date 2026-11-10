@@ -1,3 +1,4 @@
+import { announceNews } from '../../_discord';
 import { body, denied, isAdmin, json, newId, safeUrl, str, type Ctx } from '../../_lib';
 
 type Row = { id: string; date: string; tag: string; title_en: string; title_ar: string; summary_en: string; summary_ar: string; image: string; link: string; published: number };
@@ -33,5 +34,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const id = newId();
   await env.DB.prepare('INSERT INTO news (id,date,tag,title_en,title_ar,summary_en,summary_ar,image,link,published) VALUES (?,?,?,?,?,?,?,?,?,?)')
     .bind(id, v.date, v.tag, v.title_en, v.title_ar, v.summary_en, v.summary_ar, v.image, v.link, v.published).run();
+  if (v.published) await announceNews(env, request, id, v);
   return json({ ok: true, id });
 };

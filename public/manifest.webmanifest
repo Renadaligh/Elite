@@ -1,0 +1,16 @@
+{
+  "name": "Plato Elite",
+  "short_name": "Plato",
+  "description": "مجتمع بلاتو العربي: بطولات، ألعاب، وأداة تنظيم البطولات.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050507",
+  "theme_color": "#050507",
+  "icons": [
+    { "src": "brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
