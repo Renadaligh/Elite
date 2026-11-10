@@ -25,7 +25,7 @@ export const TXT = {
     discord: 'الدخول بحساب Discord', google: 'الدخول بحساب Google', none: 'تسجيل الدخول غير مفعّل بعد.', close: 'إغلاق',
     editPlayers: 'تعديل أسماء اللاعبين', rebuild: 'تعديل القائمة وإعادة البناء', rebuildAsk: 'إعادة البناء تمسح النتائج الحالية. متأكد؟', renameNote: 'تغيير الاسم يحافظ على النتائج.',
     notFound: 'البطولة غير موجودة.', by: 'من', copy: 'انسخه لأعدّله', readonly: 'عرض فقط', unsaved: 'لم تُحفظ التعديلات بعد',
-    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البطولات المحفوظة (100). احذف واحد قديم.', private: 'هذه البطولة غير منشورة. اطلب من صاحبها تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البطولة (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البطولة في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shStreamOpen: 'افتح البث', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البطولة أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
+    loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البطولات المحفوظة (100). احذف واحد قديم.', private: 'هذه البطولة غير منشورة. اطلب من صاحبها تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البطولة (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البطولة في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البطولة أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
     myTitle: 'بطولاتي', newOne: '+ بطولة جديدة', empty: 'ما عندك بطولات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: '⬇ صورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟',
     needLogin: 'سجّل دخولك لتشوف بطولاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
   },
@@ -38,7 +38,7 @@ export const TXT = {
     discord: 'Continue with Discord', google: 'Continue with Google', none: 'Sign-in is not enabled yet.', close: 'Close',
     editPlayers: 'Edit player names', rebuild: 'Edit list & rebuild', rebuildAsk: 'Rebuilding clears the current results. Sure?', renameNote: 'Renaming keeps the results.',
     notFound: 'Bracket not found.', by: 'by', copy: 'Copy to edit', readonly: 'View only', unsaved: 'Unsaved changes',
-    loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Live stream (optional)', shLiveD: 'Your stream player shows above the bracket on the view page, only while "Live now" is on.', shStreamUrl: 'Your channel or stream link (Twitch / YouTube / Kick)', shStreamNow: 'Live now', shStreamBad: 'Unsupported link. Use a Twitch, YouTube or Kick link.', shStreamLive: 'Live', shSave2: 'Save', shStreamOpen: 'Open stream', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
+    loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Live stream (optional)', shLiveD: 'Your stream player shows above the bracket on the view page, only while "Live now" is on.', shStreamUrl: 'Your channel or stream link (Twitch / YouTube / Kick)', shStreamNow: 'Live now', shStreamBad: 'Unsupported link. Use a Twitch, YouTube or Kick link.', shStreamLive: 'Live', shSave2: 'Save', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
     myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: '⬇ Image', del: 'Delete', delAsk: 'Delete this bracket?',
     needLogin: 'Sign in to see your saved brackets.', players_n: 'players', hello: 'Hi',
   },
@@ -69,10 +69,10 @@ function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Provider
   );
 }
 
-function Shell({ tx, user, children }: { tx: Tx; user: AuthUser | null; children: ReactNode }) {
+function Shell({ tx, user, children, bare }: { tx: Tx; user: AuthUser | null; children: ReactNode; bare?: boolean }) {
   return (
     <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+      {!bare && <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[40rem]">
           <h1 className="text-[clamp(1.8rem,4.5vw,3rem)] font-extrabold leading-tight">{tx.title}</h1>
           <p className="mt-2" style={{ color: 'var(--muted)' }}>{tx.sub}</p>
@@ -80,7 +80,7 @@ function Shell({ tx, user, children }: { tx: Tx; user: AuthUser | null; children
         <div className="flex flex-wrap items-center gap-2.5">
           {user && <a href="#/bracket" className={pill} style={card}>{tx.mine}</a>}
         </div>
-      </div>
+      </div>}
       {children}
     </article>
   );
@@ -230,10 +230,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
           {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') ? tx.hintL : tx.hint}</p>}
           {embed && (
-            <div className="stream-box-wrap">
+            <div className="stream-box-wrap" style={{ marginInline: 'auto', width: '100%' }}>
               <p className="st-livep"><i className="st-dot" />{tx.shStreamLive}</p>
               <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
-              <a className="st-livea" href={streamUrl} target="_blank" rel="noopener noreferrer">{tx.shStreamOpen}</a>
             </div>
           )}
           {champ !== null && <p className="text-[1rem]">🏆 <b>{br.players[champ]}</b></p>}
@@ -306,7 +305,7 @@ export default function BracketToolPage({ id, auth: given, readOnly }: { id?: st
   const own = useAuth();
   const auth = given ?? own;
   return (
-    <Shell tx={tx} user={auth.user}>
+    <Shell tx={tx} user={auth.user} bare={!!readOnly && !!id}>
       <Editor key={`${id ?? 'new'}:${auth.user?.id ?? ''}`} id={id} tx={tx} auth={auth} readOnly={readOnly} />
     </Shell>
   );

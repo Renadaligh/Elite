@@ -540,7 +540,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .hero-row { grid-template-columns: auto auto; }
 .hero-sec { padding-inline: 1.1rem; }
 @media (max-width: 480px) { .hero-sec { padding-inline: .85rem; font-size: .8rem; } }
-.stream-box-wrap{display:grid;gap:.5rem;max-width:760px}
+.stream-box-wrap{display:grid;gap:.5rem;width:min(100%,calc(72svh*16/9));margin-inline:auto}
 .st-livep{display:flex;align-items:center;gap:.5rem;font-weight:700}
 .st-dot{width:.6rem;height:.6rem;border-radius:50%;background:#ff3347;animation:br-pulse 1.4s infinite 1.4s infinite;display:inline-block}
 .st-livea{font-size:.85rem;color:var(--muted);text-decoration:underline}
