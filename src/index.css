@@ -581,3 +581,9 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .br-final{flex:0 0 232px}
 .br-row{padding:10px 14px;font-size:.95rem}
 .br-col-body{gap:18px}
+
+.st-brcard{width:fit-content;max-width:100%;justify-self:center;padding:14px 22px!important}
+
+/* champion sits right next to the last match */
+.br-champcol{flex:0 0 auto;min-width:0}
+.br-champcol .br-champ{margin:0;white-space:nowrap}

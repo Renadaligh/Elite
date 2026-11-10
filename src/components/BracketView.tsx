@@ -108,6 +108,12 @@ function TreeView({ bracket, onPick, selected }: Props) {
       </div>
     );
   };
+  const champCol = champ !== null && (
+    <div className="br-col br-champcol">
+      <div className="br-round">&nbsp;</div>
+      <div className="br-col-body"><div className="br-champ"><span>🏆</span><b>{bracket.players[champ]}</b></div></div>
+    </div>
+  );
   const section = (title: string, rounds: BMatch[][], br: 'W' | 'L') => (
     <div className="br-sec">
       {title && <div className="br-sec-title">{title}</div>}
@@ -118,6 +124,7 @@ function TreeView({ bracket, onPick, selected }: Props) {
             <div className="br-col-body">{ms.map(card)}</div>
           </div>
         ))}
+        {br === 'W' && bracket.format !== 'double' && champ !== null && champCol}
       </div>
     </div>
   );
@@ -166,10 +173,8 @@ function TreeView({ bracket, onPick, selected }: Props) {
               <div className="br-col-body">{card(L.final)}</div>
             </div>
           )}
+          {L.final && bracket.format === 'double' && champCol}
         </div>
-        {champ !== null && (
-          <div className="br-champ"><span>🏆</span><b>{bracket.players[champ]}</b></div>
-        )}
       </div>
     </div>
   );
