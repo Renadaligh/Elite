@@ -582,8 +582,15 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 .br-row{padding:10px 14px;font-size:.95rem}
 .br-col-body{gap:18px}
 
-.st-brcard{width:fit-content;max-width:100%;justify-self:center;padding:14px 22px!important}
+.st-brcard{width:fit-content;max-width:100%;justify-self:center;padding:6px 0!important;border:0!important;background:transparent!important}
 
 /* champion sits right next to the last match */
 .br-champcol{flex:0 0 auto;min-width:0}
 .br-champcol .br-champ{margin:0;white-space:nowrap}
+
+/* stream + bracket share one width: the stream's size at minimum, growing with the bracket; columns stretch to fill it */
+.st-stage{display:grid;gap:1.25rem;justify-self:center;max-width:100%;min-width:min(100%,calc(50svh*16/9))}
+.st-stage .stream-box{max-width:none}
+.st-stage .br-wrap{min-width:100%;margin-inline:0}
+.st-stage .br-col{flex:1 1 232px}
+.st-stage .br-champcol{flex:0 0 auto}
