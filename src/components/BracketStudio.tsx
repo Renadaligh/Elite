@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { bracketBlob, downloadBlob } from '../data/bracketImage';
 import type { Bracket } from '../data/bracket';
 import { useAuth } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
+import BrandLockup from './BrandLockup';
 import BracketToolPage, { Editor, TXT } from './BracketToolPage';
 import Footer from './Footer';
 import Header from './Header';
@@ -16,7 +17,7 @@ const S = {
     discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', perks: 'ماذا ستحصل عليه',
     p1: 'براكتاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',
-    h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
+    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'براكت مباشر، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
     none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.',
     mine: 'براكتاتي', fresh: 'براكت جديد', account: 'حسابي', logout: 'تسجيل الخروج', newBtn: '+ براكت جديد',
     total: 'براكتاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك براكتات محفوظة بعد.', emptyBtn: 'أنشئ أول براكت',
@@ -28,7 +29,7 @@ const S = {
     discord: 'Continue with Discord', google: 'Continue with Google', perks: 'What you get',
     p1: 'Your brackets saved in your account', p2: 'Single/double elimination, round robin, swiss, groups, leaderboard', p3: 'A ready-to-post image and a share link',
     fine: 'Signing in saves only your name and avatar from the account. We never post anything for you.', back: 'Back to the site',
-    h1: 'Run your tournament', h2: 'the', h3: 'professional way', hp: 'Live bracket, standings that update themselves, and a shareable image in seconds.',
+    pl: 'Player', rr: 'Round robin', lb: 'Leaderboard', h1: 'Run your tournament', h2: 'the', h3: 'professional way', hp: 'Live bracket, standings that update themselves, and a shareable image in seconds.',
     none: 'Sign-in is not enabled yet.', failed: 'Sign-in failed, please try again.', unavailable: 'This option is not enabled yet.',
     mine: 'My brackets', fresh: 'New bracket', account: 'Account', logout: 'Sign out', newBtn: '+ New bracket',
     total: 'My brackets', live: 'In progress', done: 'Completed', stNew: 'New', recent: 'Recent', empty: 'No saved brackets yet.', emptyBtn: 'Create your first bracket',
@@ -55,11 +56,59 @@ const I = {
 const Ic = ({ d, c = 'h-[18px] w-[18px]' }: { d: keyof typeof I; c?: string }) => <svg viewBox="0 0 24 24" className={c} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{I[d]}</svg>;
 
 function Splash() {
-  return <div className="st-splash"><span className="st-logo"><i />plato</span><div className="st-bar"><b /></div></div>;
+  return <div className="st-splash"><BrandLockup /><div className="st-bar"><b /></div></div>;
+}
+
+
+/** Animated showcase on the sign-in screen: an 8-player bracket plays out to a crowned champion, then a standings table and a leaderboard appear. */
+function HeroStage({ s, k }: { s: St; k: number }) {
+  const P = (n: number) => `${s.pl} ${n}`;
+  const t = (x: number) => ({ '--t': `${x}s` }) as React.CSSProperties;
+  // [x, y, round, top, bottom, topScore, bottomScore, topWins, delay]
+  const M: [number, number, string, string, number, number, boolean, number][] = [
+    [0, 0, P(1), P(2), 3, 1, true, 0.2], [0, 100, P(3), P(4), 2, 0, true, 0.35], [0, 200, P(5), P(6), 1, 2, false, 0.5], [0, 300, P(7), P(8), 3, 0, true, 0.65],
+    [250, 50, P(1), P(3), 2, 1, true, 1.7], [250, 250, P(6), P(7), 0, 2, false, 1.85],
+    [500, 150, P(1), P(7), 3, 1, true, 3.0],
+  ];
+  const lines: [string, number][] = [
+    ['M170 35 H210 V85 H250', 1.1], ['M170 135 H210 V85', 1.2], ['M170 235 H210 V285 H250', 1.3], ['M170 335 H210 V285', 1.4],
+    ['M420 85 H460 V185 H500', 2.5], ['M420 285 H460 V185', 2.6], ['M670 185 H740', 3.7],
+  ];
+  const rows = [[P(1), 7], [P(2), 5], [P(3), 4], [P(4), 1]] as const;
+  const bars = [[P(1), 92], [P(2), 78], [P(3), 61], [P(4), 44]] as const;
+  return (
+    <div className="st-stage" style={{ '--k': k } as React.CSSProperties}>
+      <svg className="st-lines" viewBox="0 0 900 420" fill="none">{lines.map(([d, x], i) => <path key={i} d={d} style={t(x)} />)}</svg>
+      {M.map(([x, y, a, b, sa, sb, w, dl], i) => (
+        <div key={i} className={`st-mc ${i === 6 ? 'hot' : ''}`} style={{ insetInlineStart: x, top: y, ...t(dl) }}>
+          <div className={w ? 'w' : ''}>{a}<b>{sa}</b></div><div className={w ? '' : 'w'}>{b}<b>{sb}</b></div>
+        </div>
+      ))}
+      <div className="st-champ" style={{ ...t(3.9), insetInlineStart: 740, top: 168 }}>
+        <svg className="st-crown" viewBox="0 0 64 44" aria-hidden><path d="M4 38 L9 10 L22 24 L32 4 L42 24 L55 10 L60 38 Z" fill="#ffc233" stroke="#ffdf7a" strokeWidth="2" strokeLinejoin="round" /><rect x="6" y="38" width="52" height="5" rx="2.5" fill="#e0a010" /><circle cx="9" cy="10" r="3.2" fill="#fff3c0" /><circle cx="32" cy="4" r="3.2" fill="#fff3c0" /><circle cx="55" cy="10" r="3.2" fill="#fff3c0" /></svg>
+        <span>{P(1)}</span>
+      </div>
+      <div className="st-panel2" style={{ insetInlineStart: 0, top: 450, ...t(4.4) }}>
+        <b>{s.rr}</b>
+        {rows.map(([n, pt], i) => <div key={i} style={{ '--r': `${4.6 + i * 0.12}s` } as React.CSSProperties}><i>{i + 1}</i><span>{n}</span><em>{pt}</em></div>)}
+      </div>
+      <div className="st-panel2" style={{ insetInlineStart: 470, top: 450, ...t(4.6) }}>
+        <b>{s.lb}</b>
+        {bars.map(([n, v], i) => <div key={i} className="bar" style={{ '--r': `${4.9 + i * 0.12}s`, '--w': `${v}%` } as React.CSSProperties}><span>{n}</span><u><i /></u><em>{v}</em></div>)}
+      </div>
+    </div>
+  );
 }
 
 function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; google: boolean } }) {
-  const { dir } = useI18n();
+  const { dir, lang } = useI18n();
+  const heroRef = useRef<HTMLElement>(null);
+  const [k, setK] = useState(1);
+  useEffect(() => {
+    const el = heroRef.current; if (!el) return;
+    const fit = () => setK(Math.max(0.5, Math.min(1.4, el.clientWidth / 960, (el.clientHeight - 380) / 640)));
+    fit(); const ro = new ResizeObserver(fit); ro.observe(el); return () => ro.disconnect();
+  }, []);
   const n = note();
   const any = providers.discord || providers.google;
   const msg = n === 'failed' ? s.failed : n === 'unavailable' ? s.unavailable : '';
@@ -68,7 +117,7 @@ function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; g
     <div className="st-login" dir={dir}>
       <aside className="st-panel">
         <div className="st-rise flex items-center justify-between" style={d(0)}>
-          <span className="st-logo"><i />plato <em>· {s.tool}</em></span>
+          <BrandLockup />
           <LanguageSwitcher />
         </div>
         <div className="st-form">
@@ -84,14 +133,9 @@ function LoginScreen({ s, providers }: { s: St; providers: { discord: boolean; g
         </div>
         <a href="#top" className="st-back st-rise" style={d(8)}><span aria-hidden>{dir === 'rtl' ? '→' : '←'}</span> {s.back}</a>
       </aside>
-      <section className="st-hero" aria-hidden>
+      <section className="st-hero" aria-hidden ref={heroRef}>
         <div className="st-grid" /><div className="st-glow a" /><div className="st-glow b" />
-        <div className="st-stage">
-          <svg className="st-lines" viewBox="0 0 600 260" fill="none"><path d="M200 42 H265 V127 H330" /><path d="M200 212 H265 V127" /><path d="M530 127 H590" /></svg>
-          <div className="st-mc c1"><div className="w">Faisal<b>3</b></div><div>Sara<b>1</b></div></div>
-          <div className="st-mc c2"><div>Omar<b>2</b></div><div className="w">Noura<b>2</b></div></div>
-          <div className="st-mc c3 hot"><div className="w">Faisal</div><div>Noura</div></div>
-        </div>
+        <HeroStage key={lang} s={s} k={k} />
         <div className="st-cap"><h2>{s.h1}<br />{s.h2} <span className="st-red">{s.h3}</span></h2><p>{s.hp}</p></div>
       </section>
     </div>
@@ -154,7 +198,8 @@ function Studio({ id, auth, s }: { id?: string; auth: ReturnType<typeof useAuth>
     <div className="st-app" dir={dir}>
       <aside className="st-side">
         <div className="st-side-top">
-          <span className="st-logo"><i />plato <em>· {s.tool}</em></span>
+          <BrandLockup />
+          <span className="st-tool">{s.tool}</span>
           <nav className="st-nav">
             {nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} aria-current={sec === n.k ? 'page' : undefined}><Ic d={n.i} />{n.label}</a>)}
           </nav>
