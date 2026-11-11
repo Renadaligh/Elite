@@ -32,7 +32,7 @@ export interface Bracket { opts?: LeagueOpts; /** groups: player indexes per gro
 export type Who = number | 'bye' | null;
 export interface Resolved { a: Who; b: Who; win: Who; lose: Who }
 
-export const MAX_PLAYERS = 32;
+export const MAX_PLAYERS = 4096; // no practical limit for members; this is only a safety net
 const pow2 = (n: number) => { let s = 2; while (s < n) s *= 2; return s; };
 
 /** Standard seeding order for a bracket of `size` seats: [1, size, ...] so strong seeds meet late. */

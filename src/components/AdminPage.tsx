@@ -495,7 +495,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             <b>{x('البراكت')}</b>
             <Field label={x('نظام البراكت')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option><option value="rr">{x('دوري (كل لاعب ضد الكل)')}</option><option value="swiss">{x('سويسري')}</option><option value="groups">{x('مجموعات ثم إقصائيات')}</option><option value="ffa">{x('لوحة صدارة (الكل ضد الكل)')}</option></select></Field>
             <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={bd} border={bd} players={names.split('\n').filter((q) => q.trim()).length} />
-            <Field label={`${x('اللاعبون (اسم في كل سطر، الأعلى = الأقوى)')} · ${x('أقصى عدد لاعبين')} ${fmt === 'rr' ? MAX_RR : MAX_PLAYERS}`}><textarea rows={8} dir="auto" className={inp} style={bd} value={names} onChange={(e) => setNames(e.target.value)} /></Field>
+            <Field label={`${x('اللاعبون (اسم في كل سطر، الأعلى = الأقوى)')}${fmt === 'rr' ? ` · ${x('أقصى عدد لاعبين')} ${MAX_RR}` : ''}`}><textarea rows={8} dir="auto" className={inp} style={bd} value={names} onChange={(e) => setNames(e.target.value)} /></Field>
             <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{x('خلط اللاعبين عشوائياً')}</label>
             <div><button type="button" className={btnP} style={gradBtn} onClick={create}>{x('إنشاء البراكت')}</button></div>
           </div>

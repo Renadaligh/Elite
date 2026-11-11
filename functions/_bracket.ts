@@ -1,5 +1,5 @@
 // Shared bracket validator (not a route). Keeps only the fields we know, with limits, so nothing odd can be stored.
-const MAX_PLAYERS = 32;
+const MAX_PLAYERS = 4096; // safety net only: members have no practical limit
 const FORMATS = ['single', 'double', 'rr', 'swiss', 'ffa', 'groups'];
 const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(100, Math.max(-100, v)) : d);
 const txt = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : '');
@@ -32,14 +32,14 @@ export function cleanBracket(v: unknown) {
   const f = o.format as string;
   const elim = f === 'single' || f === 'double';
   const players = o.players.map((p) => txt(p, 40).trim());
-  const matches = f === 'ffa' ? [] : cleanMatches(o.matches, elim ? 80 : 300);
+  const matches = f === 'ffa' ? [] : cleanMatches(o.matches, Math.max(elim ? 80 : 300, players.length * (elim ? 2 : 40)));
   if (!matches) return null;
   // Current matches: an array of known match ids (an old single string is accepted too).
   const koIds = new Set<string>();
   let ko: Record<string, unknown> | undefined;
   if (f === 'groups' && o.ko) {
     const k = o.ko as Record<string, unknown>;
-    const km = cleanMatches(k.matches, 80);
+    const km = cleanMatches(k.matches, Math.max(80, players.length * 2));
     const seed = Array.isArray(k.seed) ? k.seed.filter((x) => Number.isInteger(x) && (x as number) >= 0 && (x as number) < players.length).slice(0, MAX_PLAYERS) : [];
     if (!km || (k.format !== 'single' && k.format !== 'double') || seed.length < 2) return null;
     // knockout slots index into `seed`
