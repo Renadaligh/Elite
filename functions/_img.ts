@@ -7,3 +7,10 @@ export function sniff(b: Uint8Array): { ext: string; type: string } | null {
   if (at(0, 'GIF8')) return { ext: 'gif', type: 'image/gif' };
   return null;
 }
+
+/** MP4 (ISO base media) or WebM (Matroska/EBML) by the first bytes. */
+export function sniffVideo(b: Uint8Array): { ext: string; type: string } | null {
+  if (b.length > 12 && b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return { ext: 'mp4', type: 'video/mp4' };
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return { ext: 'webm', type: 'video/webm' };
+  return null;
+}

@@ -1,5 +1,5 @@
 import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
-import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, mergeGames, type AdminGame, type GameDetails, type GameRow } from '../data/games';
+import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGames, youtubeId, type AdminGame, type GameDetails, type GameRow } from '../data/games';
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
@@ -22,6 +22,8 @@ const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
 const EN: Record<string, string> = {
+ 'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic',
+
   'تحديث': 'Update', 'بطولة': 'Tournament', 'مجتمع': 'Community', 'فعالية': 'Event',
   'لوحة التحكم': 'Dashboard', 'مرحباً بك': 'Welcome back', 'أدخل كلمة السر للمتابعة': 'Enter the password to continue',
   'كلمة السر': 'Password', 'دخول': 'Sign in', 'جارٍ الدخول…': 'Signing in…', 'كلمة السر غير صحيحة': 'Wrong password',
@@ -641,6 +643,156 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   );
 }
 
+/* ---------- Game page content: paragraphs, images, videos (grow with a + button) ---------- */
+const MAX_TEXTS = 12, MAX_IMAGES = 24, MAX_VIDEOS = 8, MAX_VIDEO_MB = 50;
+const mv = <T,>(a: T[], i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= a.length) return a; const n = [...a]; [n[i], n[j]] = [n[j], n[i]]; return n; };
+
+function ParaCard({ i, n, t, dl, onChange, onMove, onDel }: { i: number; n: number; t: GameDetails['texts'][number]; dl: 'ar' | 'en'; onChange: (t: GameDetails['texts'][number]) => void; onMove: (d: -1 | 1) => void; onDel: () => void }) {
+  const { x } = useX();
+  const [titleOn, setTitleOn] = useState(!!(t.title.ar || t.title.en));
+  return (
+    <div className="grid gap-2 rounded-xl border p-3" style={bd}>
+      <div className="flex items-center gap-3 text-[.8rem] font-bold" style={{ color: 'var(--muted)' }}>
+        <span>{x('فقرة')} {i + 1}</span><span className="flex-1" />
+        <button type="button" disabled={i === 0} aria-label="up" onClick={() => onMove(-1)} className="px-1 disabled:opacity-30">↑</button>
+        <button type="button" disabled={i === n - 1} aria-label="down" onClick={() => onMove(1)} className="px-1 disabled:opacity-30">↓</button>
+        <button type="button" onClick={onDel} style={{ color: '#ff6b7a' }}>{x('حذف')}</button>
+      </div>
+      {titleOn && <input dir={dl === 'en' ? 'ltr' : 'rtl'} className={inp} style={bd} placeholder={x('عنوان الفقرة (اختياري)')} value={t.title[dl]} onChange={(e) => onChange({ ...t, title: { ...t.title, [dl]: e.target.value } })} />}
+      <textarea dir={dl === 'en' ? 'ltr' : 'rtl'} rows={4} className={inp} style={bd} placeholder={x('اكتب نص الفقرة هنا…')} value={t.body[dl]} onChange={(e) => onChange({ ...t, body: { ...t.body, [dl]: e.target.value } })} />
+      {!titleOn && <button type="button" className="self-start text-[.8rem] font-semibold" style={{ color: 'var(--muted)' }} onClick={() => setTitleOn(true)}>+ {x('عنوان للفقرة (اختياري)')}</button>}
+    </div>
+  );
+}
+
+function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; onChange: (d: GameDetails) => void }) {
+  const { x } = useX();
+  const toast = useToast();
+  const [dl, setDl] = useState<'ar' | 'en'>('ar');
+  const [busy, setBusy] = useState('');
+  const [pct, setPct] = useState<number | null>(null);
+  const [link, setLink] = useState('');
+  const set = (p: Partial<GameDetails>) => onChange({ ...value, ...p });
+  const tab = (l: 'ar' | 'en', label: string) => (
+    <button type="button" aria-pressed={dl === l} onClick={() => setDl(l)} className="rounded-full px-3.5 py-1 text-[.8rem] font-bold transition-colors" style={dl === l ? { background: '#ff3347', color: '#fff' } : { color: 'var(--muted)' }}>{label}</button>
+  );
+
+  async function addImages(files: FileList | null) {
+    if (!files?.length) return;
+    let list = [...value.images];
+    setBusy('img');
+    try {
+      for (const file of [...files].slice(0, MAX_IMAGES - list.length)) {
+        const fd = new FormData(); fd.append('file', await shrink(file), 'image');
+        const res = await fetch('/api/upload', { method: 'POST', headers: { authorization: `Bearer ${k}` }, body: fd });
+        if (!res.ok) throw new Error(String(res.status));
+        list = [...list, ((await res.json()) as { url: string }).url];
+        onChange({ ...value, images: list });
+      }
+      toast.ok(x('تم رفع الصورة بنجاح'));
+    } catch (e) { toast.err((e as Error).message === '500' ? x('التخزين غير مفعّل بعد (R2)') : x('فشل رفع الصورة')); }
+    setBusy('');
+  }
+
+  function addVideoFile(file?: File) {
+    if (!file) return;
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) { toast.err(x('الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.')); return; }
+    const type = file.type === 'video/webm' ? 'video/webm' : file.type === 'video/mp4' ? 'video/mp4' : '';
+    if (!type) { toast.err(x('الصيغ المدعومة: MP4 و WebM')); return; }
+    setBusy('vid'); setPct(0);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload');
+    xhr.setRequestHeader('authorization', `Bearer ${k}`);
+    xhr.setRequestHeader('content-type', type);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) setPct(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onerror = () => { setBusy(''); setPct(null); toast.err(x('فشل رفع الفيديو')); };
+    xhr.onload = () => {
+      setBusy(''); setPct(null);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { const url = (JSON.parse(xhr.responseText) as { url: string }).url; onChange({ ...value, videos: [...value.videos, { title: { ar: '', en: '' }, url }] }); toast.ok(x('تم رفع الفيديو بنجاح')); } catch { toast.err(x('فشل رفع الفيديو')); }
+      } else toast.err(xhr.status === 500 ? x('التخزين غير مفعّل بعد (R2)') : x('فشل رفع الفيديو'));
+    };
+    xhr.send(file);
+  }
+  function addLink() {
+    const u = link.trim();
+    if (!youtubeId(u)) { toast.err(x('رابط يوتيوب غير صحيح')); return; }
+    set({ videos: [...value.videos, { title: { ar: '', en: '' }, url: u }] }); setLink('');
+  }
+
+  const tile = 'relative aspect-video w-[8.5rem] overflow-hidden rounded-xl border';
+  const addTile = 'grid aspect-video w-[8.5rem] cursor-pointer place-items-center rounded-xl border-2 border-dashed p-2 text-center text-[.8rem] font-bold transition-colors hover:bg-[var(--glass)]';
+  const xBtn = 'absolute start-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/70 text-[.7rem] leading-none text-[#ff6b7a]';
+  return (
+    <div className="grid gap-3">
+      <div className="mt-3 flex items-center gap-3">
+        <h4 className="flex-1 font-bold">{x('لمحة عن اللعبة')}</h4>
+        <div className="inline-flex gap-1 rounded-full border p-0.5" style={bd}>{tab('ar', x('عربي'))}{tab('en', 'English')}</div>
+      </div>
+      {value.texts.map((t, i) => (
+        <ParaCard key={i} i={i} n={value.texts.length} t={t} dl={dl}
+          onChange={(nt) => set({ texts: value.texts.map((o, j) => (j === i ? nt : o)) })}
+          onMove={(d) => set({ texts: mv(value.texts, i, d) })}
+          onDel={() => set({ texts: value.texts.filter((_, j) => j !== i) })} />
+      ))}
+      {value.texts.length < MAX_TEXTS && <button type="button" className={`${btnG} self-start border-dashed`} style={{ borderColor: '#5a2029', color: '#ff6b7a' }} onClick={() => set({ texts: [...value.texts, { title: { ar: '', en: '' }, body: { ar: '', en: '' } }] })}>＋ {x('إضافة فقرة')}</button>}
+
+      <h4 className="mt-3 font-bold">{x('الصور')}</h4>
+      <div className="flex flex-wrap gap-3 rounded-xl border p-3" style={bd}>
+        {value.images.map((src, i) => (
+          <div key={src + i} className={tile} style={bd}>
+            <img src={src} alt="" className="h-full w-full object-cover" />
+            <button type="button" aria-label="remove" className={xBtn} onClick={() => set({ images: value.images.filter((_, j) => j !== i) })}>×</button>
+            <span className="absolute bottom-1 end-1 flex gap-1 text-[.8rem]">
+              <button type="button" aria-label="earlier" disabled={i === 0} className="rounded bg-black/70 px-1.5 disabled:opacity-30" onClick={() => set({ images: mv(value.images, i, -1) })}>‹</button>
+              <button type="button" aria-label="later" disabled={i === value.images.length - 1} className="rounded bg-black/70 px-1.5 disabled:opacity-30" onClick={() => set({ images: mv(value.images, i, 1) })}>›</button>
+            </span>
+          </div>
+        ))}
+        {value.images.length < MAX_IMAGES && (
+          <label className={addTile} style={{ borderColor: '#5a2029', color: '#ff6b7a' }}>
+            <span>{busy === 'img' ? x('جارٍ الرفع…') : <>＋ {x('رفع صور')}<br /><span className="font-normal" style={{ color: 'var(--muted)' }}>{x('من الجهاز')}</span></>}</span>
+            <input type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" disabled={!!busy} onChange={(e) => { void addImages(e.target.files); e.target.value = ''; }} />
+          </label>
+        )}
+      </div>
+
+      <h4 className="mt-3 font-bold">{x('الفيديوهات')}</h4>
+      <div className="grid gap-3 rounded-xl border p-3" style={bd}>
+        <div className="flex flex-wrap gap-3">
+          {value.videos.map((v, i) => {
+            const yt = youtubeId(v.url);
+            return (
+              <div key={v.url + i} className="grid w-[8.5rem] gap-1.5">
+                <div className={tile} style={bd}>
+                  {isVideoFile(v.url) ? <video src={v.url} muted preload="metadata" className="h-full w-full object-cover" /> : yt ? <img src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" className="h-full w-full object-cover" /> : null}
+                  <span className="pointer-events-none absolute inset-0 grid place-items-center"><i className="grid h-8 w-8 place-items-center rounded-full bg-[#ff3347] text-[.8rem] not-italic text-white">▶</i></span>
+                  <button type="button" aria-label="remove" className={xBtn} onClick={() => set({ videos: value.videos.filter((_, j) => j !== i) })}>×</button>
+                </div>
+                <input dir={dl === 'en' ? 'ltr' : 'rtl'} className={`${inp} !py-1.5 !text-[.8rem]`} style={bd} placeholder={x('عنوان (اختياري)')} value={v.title[dl]} onChange={(e) => set({ videos: value.videos.map((o, j) => (j === i ? { ...o, title: { ...o.title, [dl]: e.target.value } } : o)) })} />
+              </div>
+            );
+          })}
+          {value.videos.length < MAX_VIDEOS && (
+            <label className={addTile} style={{ borderColor: '#5a2029', color: '#ff6b7a' }}>
+              <span>{busy === 'vid' ? `${pct ?? 0}%` : <>＋ {x('رفع فيديو')}<br /><span className="font-normal" style={{ color: 'var(--muted)' }}>MP4 / WebM</span></>}</span>
+              <input type="file" accept="video/mp4,video/webm" className="sr-only" disabled={!!busy} onChange={(e) => { addVideoFile(e.target.files?.[0]); e.target.value = ''; }} />
+            </label>
+          )}
+        </div>
+        {busy === 'vid' && <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--glass-b)' }}><div className="h-full transition-[width]" style={{ width: `${pct ?? 0}%`, background: '#ff3347' }} /></div>}
+        {value.videos.length < MAX_VIDEOS && (
+          <div className="flex gap-2">
+            <input dir="ltr" className={inp} style={bd} placeholder="https://youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
+            <button type="button" className={`${btnG} shrink-0 whitespace-nowrap`} style={bd} onClick={addLink}>{x('إضافة رابط')}</button>
+          </div>
+        )}
+        <p className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.')}</p>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Games ---------- */
 type GForm = { id: string; custom: boolean; hidden: boolean; name: { ar: string; en: string }; tagline: { ar: string; en: string }; genre: string; image: string; tournamentOnly: boolean; details: GameDetails };
 
@@ -656,11 +808,6 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   useEffect(load, [load]);
 
   const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: fullDetails(g.details) });
-  const ar = lang === 'en' ? 'Arabic' : 'عربي';
-  const setDet = (fn: (d: GameDetails) => GameDetails) => setF((cur) => (cur ? { ...cur, details: fn(cur.details) } : cur));
-  const setText = (i: number, p: Partial<GameDetails['texts'][number]>) => setDet((d) => ({ ...d, texts: d.texts.map((t, j) => (j === i ? { ...t, ...p } : t)) }));
-  const setVideo = (i: number, p: Partial<GameDetails['videos'][number]>) => setDet((d) => ({ ...d, videos: d.videos.map((v, j) => (j === i ? { ...v, ...p } : v)) }));
-  const setImg = (i: number, url: string) => setDet((d) => ({ ...d, images: d.images.map((u, j) => (j === i ? url : u)) }));
   const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err(m); };
   const term = q.trim().toLowerCase();
   const shown = rows.filter((g) => (genre === 'all' || g.genreKey === genre) && (!term || `${g.name.ar} ${g.name.en} ${g.tagline.ar} ${g.tagline.en}`.toLowerCase().includes(term)));
@@ -817,29 +964,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </select>
             </Field>
             <ImageField k={k} label={x('صورة اللعبة')} value={f.image} onChange={(v) => setF({ ...f, image: v })} />
-            <h4 className="-mb-1 mt-3 font-bold">{x('لمحة عن اللعبة (حتى نصّين)')}</h4>
-            {f.details.texts.map((tx, i) => (
-              <div key={i} className="grid gap-3 rounded-xl border p-3" style={bd}>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label={`${x('العنوان')} ${i + 1} — ${ar}`}><input className={inp} style={bd} value={tx.title.ar} onChange={(e) => setText(i, { title: { ...tx.title, ar: e.target.value } })} /></Field>
-                  <Field label={`${x('العنوان')} ${i + 1} — English`}><input dir="ltr" className={inp} style={bd} value={tx.title.en} onChange={(e) => setText(i, { title: { ...tx.title, en: e.target.value } })} /></Field>
-                  <Field label={`${x('النص')} ${i + 1} — ${ar}`}><textarea rows={4} className={inp} style={bd} value={tx.body.ar} onChange={(e) => setText(i, { body: { ...tx.body, ar: e.target.value } })} /></Field>
-                  <Field label={`${x('النص')} ${i + 1} — English`}><textarea dir="ltr" rows={4} className={inp} style={bd} value={tx.body.en} onChange={(e) => setText(i, { body: { ...tx.body, en: e.target.value } })} /></Field>
-                </div>
-              </div>
-            ))}
-            <h4 className="-mb-1 mt-3 font-bold">{x('مقاطع وفيديوهات (حتى 4 من يوتيوب)')}</h4>
-            {f.details.videos.map((v, i) => (
-              <div key={i} className="grid gap-3 rounded-xl border p-3 sm:grid-cols-3" style={bd}>
-                <Field label={`${x('رابط المقطع')} ${i + 1}`}><input dir="ltr" className={inp} style={bd} placeholder="https://youtu.be/…" value={v.url} onChange={(e) => setVideo(i, { url: e.target.value })} /></Field>
-                <Field label={`${x('العنوان')} — ${ar}`}><input className={inp} style={bd} value={v.title.ar} onChange={(e) => setVideo(i, { title: { ...v.title, ar: e.target.value } })} /></Field>
-                <Field label={`${x('العنوان')} — English`}><input dir="ltr" className={inp} style={bd} value={v.title.en} onChange={(e) => setVideo(i, { title: { ...v.title, en: e.target.value } })} /></Field>
-              </div>
-            ))}
-            <h4 className="-mb-1 mt-3 font-bold">{x('صور من اللعبة (حتى 4)')}</h4>
-            {f.details.images.map((src, i) => (
-              <ImageField key={i} k={k} label={`${x('صورة')} ${i + 1}`} value={src} onChange={(v) => setImg(i, v)} />
-            ))}
+            <DetailsEditor k={k} value={f.details} onChange={(d) => setF({ ...f, details: d })} />
             {!f.custom && <p className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{x('اترك أي حقل فارغاً ليرجع للافتراضي')}</p>}
             <div className="flex gap-3 pt-2"><button className={btnP} style={gradBtn} type="submit">{x('حفظ')}</button><button type="button" className={btnG} style={bd} onClick={() => setF(null)}>{x('إلغاء')}</button></div>
           </form>

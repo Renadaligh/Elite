@@ -1,9 +1,9 @@
 // Shared helpers for the API (Cloudflare Pages Functions + D1). Not a route: it exports no handlers.
 interface D1Stmt { bind(...v: unknown[]): D1Stmt; all<T = unknown>(): Promise<{ results: T[] }>; run(): Promise<unknown>; first<T = unknown>(): Promise<T | null> }
-interface R2Obj { body: ReadableStream; httpMetadata?: { contentType?: string } }
+interface R2Obj { body: ReadableStream; size: number; httpMetadata?: { contentType?: string } }
 export interface Env {
   DB: { prepare(q: string): D1Stmt };
-  IMAGES?: { put(key: string, value: Uint8Array, opts?: { httpMetadata?: { contentType?: string } }): Promise<unknown>; get(key: string): Promise<R2Obj | null>; delete(key: string): Promise<unknown> };
+  IMAGES?: { put(key: string, value: Uint8Array, opts?: { httpMetadata?: { contentType?: string } }): Promise<unknown>; get(key: string, opts?: { range?: { offset: number; length?: number } }): Promise<R2Obj | null>; delete(key: string): Promise<unknown> };
   ADMIN_PASSWORD?: string;
   DISCORD_CLIENT_ID?: string; DISCORD_CLIENT_SECRET?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string;
   TWITCH_CLIENT_ID?: string; TWITCH_CLIENT_SECRET?: string; STEAM_API_KEY?: string; RESEND_API_KEY?: string; MAIL_FROM?: string; DISCORD_WEBHOOK_URL?: string;

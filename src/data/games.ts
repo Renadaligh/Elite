@@ -16,9 +16,9 @@ export interface Game {
   /** Dominant colour of the artwork; tints the page under the banner. */
   tone?: string;
   overview: Localized;
-  /** Game page: up to 2 titled text blocks, 4 videos, 4 images (all edited in the dashboard). */
+  /** Game page: text paragraphs, videos (YouTube or an uploaded file) and images, all edited in the dashboard. */
   texts?: { title: Localized; body: Localized }[];
-  videos?: { title: Localized; youtubeId: string }[];
+  videos?: { title: Localized; youtubeId: string; /** uploaded video file (then youtubeId is empty) */ src?: string }[];
   images?: string[];
 }
 export const SHOW_EXAMPLE_GAMES = false;
@@ -101,16 +101,16 @@ export const GENRE_KEYS = Object.keys(genres);
 export const genreLabel = (key: string): Localized => genres[key] ?? genres.Arcade;
 /** Game-page content edited in the dashboard (stored as JSON in the games table). */
 export interface GameDetails { texts: { title: Localized; body: Localized }[]; videos: { title: Localized; url: string }[]; images: string[] }
-export const emptyDetails = (): GameDetails => ({
-  texts: [0, 1].map(() => ({ title: { ar: '', en: '' }, body: { ar: '', en: '' } })),
-  videos: [0, 1, 2, 3].map(() => ({ title: { ar: '', en: '' }, url: '' })),
-  images: ['', '', '', ''],
+export const emptyDetails = (): GameDetails => ({ texts: [], videos: [], images: [] });
+export const emptyText = () => ({ title: { ar: '', en: '' }, body: { ar: '', en: '' } });
+/** The dashboard form edits growing lists: normalise whatever came from the server. */
+export const fullDetails = (d?: Partial<GameDetails>): GameDetails => ({
+  texts: (d?.texts ?? []).map((t) => ({ title: { ar: t.title?.ar ?? '', en: t.title?.en ?? '' }, body: { ar: t.body?.ar ?? '', en: t.body?.en ?? '' } })),
+  videos: (d?.videos ?? []).map((v) => ({ title: { ar: v.title?.ar ?? '', en: v.title?.en ?? '' }, url: v.url ?? '' })),
+  images: (d?.images ?? []).filter(Boolean),
 });
-/** The dashboard form always shows every slot (2 texts, 4 videos, 4 images): fill the missing ones with empty slots. */
-export const fullDetails = (d?: Partial<GameDetails>): GameDetails => {
-  const e = emptyDetails();
-  return { texts: e.texts.map((t, i) => ({ ...t, ...(d?.texts?.[i] ?? {}) })), videos: e.videos.map((v, i) => ({ ...v, ...(d?.videos?.[i] ?? {}) })), images: e.images.map((_, i) => d?.images?.[i] ?? '') };
-};
+/** Uploaded video file (served from our own storage) → true. */
+export const isVideoFile = (u: string) => /^\/api\/img\/[0-9a-f-]{36}\.(mp4|webm)$/.test(u.trim());
 /** YouTube link or bare id → id. */
 export const youtubeId = (v: string) => (v.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)?.[1] ?? (/^[\w-]{11}$/.test(v.trim()) ? v.trim() : ''));
 /** Fields of a game that come from its details row; empty details keep the built-in values. */
@@ -119,7 +119,7 @@ function applyDetails(d: GameDetails | undefined): Partial<Game> {
   const out: Partial<Game> = {};
   const texts = (d.texts ?? []).filter((t) => t.title.ar || t.title.en || t.body.ar || t.body.en).map((t) => ({ title: { ar: t.title.ar || t.title.en, en: t.title.en || t.title.ar }, body: { ar: t.body.ar || t.body.en, en: t.body.en || t.body.ar } }));
   if (texts.length) out.texts = texts;
-  const videos = (d.videos ?? []).map((v) => ({ id: youtubeId(v.url ?? ''), t: v.title })).filter((v) => v.id).map((v) => ({ youtubeId: v.id, title: { ar: v.t.ar || v.t.en, en: v.t.en || v.t.ar } }));
+  const videos = (d.videos ?? []).map((v) => ({ id: youtubeId(v.url ?? ''), src: isVideoFile(v.url ?? '') ? v.url.trim() : '', t: v.title })).filter((v) => v.id || v.src).map((v) => ({ youtubeId: v.id, src: v.src || undefined, title: { ar: v.t.ar || v.t.en, en: v.t.en || v.t.ar } }));
   if (videos.length) out.videos = videos;
   const images = (d.images ?? []).filter(Boolean);
   if (images.length) out.images = images;

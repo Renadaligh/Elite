@@ -41,7 +41,7 @@ export default function GamePage({ id }: { id: string }) {
 
   if (!g) {
     return (
-      <section className={`min-h-[100svh] pb-16 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ background: 'var(--bg)' }}>
+      <section className={`min-h-[100svh] pb-16 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ backgroundColor: 'var(--bg)' }}>
         <p className="mb-6 text-xl">{t.gameNotFound}</p>{back}
       </section>
     );
@@ -57,7 +57,7 @@ export default function GamePage({ id }: { id: string }) {
   const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #ff3347, #d90f26)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
-    <article className="page-in relative isolate min-h-[100svh] overflow-x-clip" style={{ background: 'var(--bg)' }}>
+    <article className="page-in relative isolate min-h-[100svh] overflow-x-clip" style={{ backgroundColor: 'var(--bg)' }}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem]" style={{ background: `radial-gradient(ellipse 70% 22rem at 50% 0, color-mix(in srgb, ${tone} 26%, transparent), transparent)` }} />
       <div className={`mx-auto max-w-[72rem] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(8rem,14vw,11rem)] ${WRAP}`}>
         <div className="mb-10">{back}</div>
@@ -91,11 +91,13 @@ export default function GamePage({ id }: { id: string }) {
 
         <Block title={t.gSecVideos}>
           {g.videos?.length ? (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {g.videos.map((v, i) => (
                 <li key={i}>
                   <div className="aspect-video overflow-hidden rounded-2xl border" style={card}>
-                    <iframe className="h-full w-full" src={`https://www.youtube-nocookie.com/embed/${v.youtubeId}`} title={v.title[lang]} loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen />
+                    {v.src
+                      ? <video className="h-full w-full bg-black object-contain" src={v.src} controls playsInline preload="metadata" aria-label={v.title[lang]} />
+                      : <iframe className="h-full w-full" src={`https://www.youtube-nocookie.com/embed/${v.youtubeId}`} title={v.title[lang]} loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen />}
                   </div>
                   {v.title[lang] && <p className="mt-2 text-[.9rem] font-semibold">{v.title[lang]}</p>}
                 </li>

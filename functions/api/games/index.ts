@@ -12,15 +12,15 @@ const out = (r: Row) => r.id === META ? { id: META, genre: '', name: { en: '', a
   image: r.image, hidden: !!r.hidden, custom: !!r.custom, tournamentOnly: !!r.tournament_only, details: readDetails(r.details),
 });
 
-/** Game-page content edited in the dashboard, stored as one JSON text column: up to 2 text blocks, 4 videos and 4 images. */
+/** Game-page content edited in the dashboard, stored as one JSON text column: paragraphs (12), videos (8: YouTube links or uploaded files) and images (24). */
 export function cleanDetails(raw: unknown) {
   const d = (raw ?? {}) as Record<string, unknown>;
   const arr = (v: unknown, max: number) => (Array.isArray(v) ? v.slice(0, max) : []) as Record<string, unknown>[];
   const pair = (o: unknown, max: number) => { const p = (o ?? {}) as Record<string, unknown>; return { en: str(p.en, max), ar: str(p.ar, max) }; };
   return {
-    texts: arr(d.texts, 2).map((t) => ({ title: pair(t.title, 80), body: pair(t.body, 1200) })).filter((t) => t.title.en || t.title.ar || t.body.en || t.body.ar),
-    videos: arr(d.videos, 4).map((v) => ({ title: pair(v.title, 80), url: str(v.url, 200) })).filter((v) => v.url),
-    images: (Array.isArray(d.images) ? d.images.slice(0, 4) : []).map((u) => safeUrl(u)).filter(Boolean),
+    texts: arr(d.texts, 12).map((t) => ({ title: pair(t.title, 80), body: pair(t.body, 1200) })).filter((t) => t.title.en || t.title.ar || t.body.en || t.body.ar),
+    videos: arr(d.videos, 8).map((v) => ({ title: pair(v.title, 80), url: str(v.url, 200) })).filter((v) => v.url),
+    images: (Array.isArray(d.images) ? d.images.slice(0, 24) : []).map((u) => safeUrl(u)).filter(Boolean),
   };
 }
 function readDetails(j?: string) { try { return j ? cleanDetails(JSON.parse(j)) : undefined; } catch { return undefined; } }
