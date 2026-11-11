@@ -1,12 +1,13 @@
 import { sniff, sniffVideo } from '../_img';
-import { denied, isAdmin, json, type Ctx } from '../_lib';
+import { json, type Ctx } from '../_lib';
+import { guardUpload } from '../_admin';
 
 const MAX = 6 * 1024 * 1024;
 const MAX_VIDEO = 50 * 1024 * 1024;
 
 /** POST /api/upload (admin only): an image as multipart "file", or a video sent as the raw body (Content-Type video/mp4 | video/webm, up to 50 MB) → stored in R2, returns { url }. */
 export const onRequestPost = async ({ request, env }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guardUpload(request, env); if (a instanceof Response) return a;
   if (!env.IMAGES) return json({ error: 'storage-not-configured' }, 500);
   if ((request.headers.get('content-type') ?? '').startsWith('video/')) {
     const len = Number(request.headers.get('content-length') ?? 0);

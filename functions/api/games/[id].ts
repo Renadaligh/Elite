@@ -1,9 +1,10 @@
-import { body, denied, isAdmin, json, type Ctx } from '../../_lib';
+import { body, json, type Ctx } from '../../_lib';
+import { guard } from '../../_admin';
 import { parse } from './index';
 
 /** PUT = create or update the row for this id (overrides a built-in game, or edits a custom one). */
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'games', 'edit'); if (a instanceof Response) return a;
   if (params.id.startsWith('__')) return json({ error: 'invalid' }, 400);
   const v = parse(await body(request));
   const base = [params.id, v.genre, v.name.en, v.name.ar, v.tagline.en, v.tagline.ar, v.image, v.hidden, v.custom];
@@ -23,7 +24,7 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
 
 /** DELETE removes a custom game, or resets a built-in game back to its defaults. */
 export const onRequestDelete = async ({ request, env, params }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'games', 'delete'); if (a instanceof Response) return a;
   await env.DB.prepare('DELETE FROM games WHERE id=?').bind(params.id).run();
   return json({ ok: true });
 };

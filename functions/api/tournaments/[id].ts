@@ -1,9 +1,10 @@
-import { body, denied, isAdmin, json, type Ctx } from '../../_lib';
+import { body, json, type Ctx } from '../../_lib';
+import { guard } from '../../_admin';
 import { announceTournament } from '../../_discord';
 import { opens, parse } from './index';
 
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'tournaments', 'edit'); if (a instanceof Response) return a;
   const v = parse(await body(request));
   if (!v) return json({ error: 'invalid' }, 400);
   if ((v.winner.en || v.winner.ar) && v.mode === 'team' && !v.members) return json({ error: 'members_required' }, 400);
@@ -24,7 +25,7 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
 };
 
 export const onRequestDelete = async ({ request, env, params }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'tournaments', 'delete'); if (a instanceof Response) return a;
   await env.DB.prepare('DELETE FROM tournaments WHERE id=?').bind(params.id).run();
   return json({ ok: true });
 };

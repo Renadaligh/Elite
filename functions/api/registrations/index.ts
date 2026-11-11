@@ -1,4 +1,5 @@
-import { body, denied, isAdmin, json, str, type Ctx } from '../../_lib';
+import { body, json, str, type Ctx } from '../../_lib';
+import { guard } from '../../_admin';
 
 /** Public: register for a tournament. Admin: list all registrations. */
 export const onRequestPost = async ({ request, env }: Ctx) => {
@@ -21,7 +22,7 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
 };
 
 export const onRequestGet = async ({ request, env }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'regs', 'view'); if (a instanceof Response) return a;
   const { results } = await env.DB.prepare('SELECT * FROM registrations ORDER BY id DESC').all();
   return json(results);
 };

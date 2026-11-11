@@ -1,9 +1,10 @@
-import { body, denied, isAdmin, json, type Ctx } from '../../_lib';
+import { body, json, type Ctx } from '../../_lib';
+import { guard } from '../../_admin';
 import { META, cleanMeta, readMeta } from './index';
 
 /** PUT /api/games/meta (admin): saves the display order and/or the deleted built-in games. Only the fields sent are changed. */
 export const onRequestPut = async ({ request, env }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'games', 'edit'); if (a instanceof Response) return a;
   const b = await body(request);
   let cur = { order: [] as string[], deleted: [] as string[] };
   try { const r = await env.DB.prepare('SELECT details FROM games WHERE id=?').bind(META).first<{ details: string }>(); cur = readMeta(r?.details); } catch { /* no details column yet */ }

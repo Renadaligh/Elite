@@ -1,5 +1,6 @@
 import { announceTournament } from '../../_discord';
-import { body, denied, isAdmin, json, newId, num, safeUrl, str, type Ctx } from '../../_lib';
+import { body, json, newId, num, safeUrl, str, type Ctx } from '../../_lib';
+import { guard, seesAll } from '../../_admin';
 
 type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number };
 /** The bracket is stored as JSON text; bad/empty text just means "no bracket". */
@@ -39,13 +40,13 @@ export function parse(b: Record<string, unknown>) {
 export const opens = (v: { published: number; endsAt: string; winner: { en: string; ar: string } }) => !!v.published && Date.now() <= Date.parse(v.endsAt) && !v.winner.en && !v.winner.ar;
 
 export const onRequestGet = async ({ request, env }: Ctx) => {
-  const all = isAdmin(request, env);
+  const all = await seesAll(request, env, 'tournaments');
   const { results } = await env.DB.prepare(`SELECT * FROM tournaments ${all ? '' : 'WHERE published = 1'} ORDER BY starts_at DESC`).all<Row>();
   return json(results.map((r) => out(r, all)));
 };
 
 export const onRequestPost = async ({ request, env }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'tournaments', 'add'); if (a instanceof Response) return a;
   const v = parse(await body(request));
   if (!v) return json({ error: 'invalid' }, 400);
   const id = newId();

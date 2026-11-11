@@ -15,9 +15,12 @@ import LanguageSwitcher from './LanguageSwitcher';
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
 type Reg = { id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
-type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs';
+type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins';
+type Perms = Partial<Record<'news' | 'tournaments' | 'games' | 'regs', string[]>>;
+type Me = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; recovery?: boolean };
 
 const KEY = 'elite-admin-key';
+const ME = 'elite-admin-me';
 const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
@@ -69,6 +72,8 @@ const EN: Record<string, string> = {
   'اترك أي حقل فارغاً ليرجع للافتراضي': 'Leave any field empty to restore its default', 'تحقق من اسم اللعبة': 'Check the game name', 'الفئة': 'Tier', 'عادية': 'Regular', 'بطولة كبرى (Major) — تظهر عليها شارة': 'Major tournament — shows a badge',
 };
 
+Object.assign(EN, {"ما عندك صلاحية لهذا الإجراء": "You do not have permission for this action", "اسم المستخدم": "Username", "كلمة المرور": "Password", "الحساب مقفل. تواصل مع الأدمن الرئيسي لفتحه": "This account is locked. Contact the main admin to unlock it", "الحساب موقوف. تواصل مع الأدمن الرئيسي": "This account is disabled. Contact the main admin", "انتهت صلاحية كلمة المرور المؤقتة. اطلب من الأدمن الرئيسي كلمة جديدة": "The temporary password expired. Ask the main admin for a new one", "اسم المستخدم أو كلمة المرور غير صحيحة": "Wrong username or password", "محاولات متبقية": "attempts left", "كلمة المرور لازم تكون 10 أحرف على الأقل": "The password must be at least 10 characters", "كلمتا المرور غير متطابقتين": "The passwords do not match", "كلمة المرور الحالية غير صحيحة": "The current password is wrong", "اختر كلمة مختلفة عن الحالية وعن اسم المستخدم": "Choose a password different from the current one and from the username", "كلمة المرور الحالية": "Current password", "كلمة المرور الجديدة (10 أحرف على الأقل)": "New password (at least 10 characters)", "أعد كتابة كلمة المرور الجديدة": "Repeat the new password", "اختر كلمة مرور جديدة": "Choose a new password", "الحساب": "Account", "كلمة المرور الحالية مؤقتة. لازم تغيّرها قبل المتابعة": "The current password is temporary. You must change it before continuing", "جارٍ الحفظ…": "Saving…", "حفظ ومتابعة": "Save and continue", "تسجيل خروج": "Sign out", "تم تغيير كلمة المرور": "Password changed", "تغيير كلمة المرور": "Change password", "الأدمنز": "Admins", "أنشئ حسابات وحدد صلاحيات كل أدمن": "Create accounts and set each admin's permissions", "+ أدمن جديد": "+ New admin", "الأدمن الرئيسي": "Main admin", "أدمن": "Admin", "موقوف": "Disabled", "مقفل": "Locked", "كلمة مؤقتة": "Temp password", "كل الصلاحيات": "All permissions", "آخر دخول": "Last login", "فتح الحساب": "Unlock", "الصلاحيات": "Permissions", "كلمة مرور جديدة": "New password", "إنشاء كلمة مرور مؤقتة جديدة؟ بتنتهي جلساته الحالية": "Create a new temporary password? His current sessions will end", "تفعيل": "Enable", "إيقاف": "Disable", "تم فتح الحساب": "Account unlocked", "تم تفعيل الحساب": "Account enabled", "تم إيقاف الحساب": "Account disabled", "تم حفظ الصلاحيات": "Permissions saved", "جارٍ التحميل…": "Loading…", "أدمن جديد": "New admin", "اسم المستخدم (إنجليزي، ما يتغير بعد الإنشاء)": "Username (English, cannot be changed later)", "بيتولّد له كلمة مرور مؤقتة تظهر لك مرة وحدة، ويغيّرها عند أول دخول": "A temporary password is generated, shown to you once, and he changes it at first sign-in", "جارٍ الإنشاء…": "Creating…", "إنشاء الحساب": "Create account", "تعذّر تحميل الحسابات": "Could not load accounts", "اسم المستخدم مستخدم من قبل": "That username is taken", "تعذّر إنشاء الحساب": "Could not create the account", "تعذّر تنفيذ العملية": "Could not complete the action", "اسم المستخدم: 3 إلى 24 حرف إنجليزي صغير أو رقم أو _": "Username: 3 to 24 lowercase English letters, digits or _", "اختر صلاحية واحدة على الأقل": "Choose at least one permission", "محرر أخبار": "News editor", "منظم بطولات": "Tournament organizer", "مدير ألعاب": "Games manager", "كامل": "Full", "إضافة": "Add", "عرض": "View", "بدون صلاحيات": "No permissions", "كلمة المرور المؤقتة": "Temporary password", "سلّمها للأدمن بنفسك. تظهر مرة وحدة فقط، وصلاحيتها 7 أيام، وبيُطلب منه يغيّرها عند أول دخول": "Hand it to the admin yourself. It is shown once only, valid for 7 days, and he must change it at first sign-in", "نسخ": "Copy", "تم النسخ": "Copied", "تم": "Done"});
+
 function useX() {
   const { lang } = useI18n();
   return { lang, x: (ar: string) => (lang === 'en' ? EN[ar] ?? ar : ar) };
@@ -81,7 +86,7 @@ type Toaster = { ok: (text: string) => void; err: (text: string) => void };
 const ToastCtx = createContext<Toaster>({ ok: () => undefined, err: () => undefined });
 const useToast = () => useContext(ToastCtx);
 /** Error text for a failed save: the usual hint plus the server's reason, so a real problem is visible instead of guessed. */
-const why = (err: unknown, base: string) => { const d = (err as { detail?: string }).detail; return d ? `${base} (${d})` : base; };
+const why = (err: unknown, base: string) => { if ((err as Error).message === '403') return 'ما عندك صلاحية لهذا الإجراء'; const d = (err as { detail?: string }).detail; return d ? `${base} (${d})` : base; };
 
 function ToastHost({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
@@ -111,6 +116,10 @@ function ToastHost({ children }: { children: ReactNode }) {
 }
 
 const getKey = () => { try { return sessionStorage.getItem(KEY) ?? ''; } catch { return ''; } };
+const getMe = (): Me | null => { try { const v = sessionStorage.getItem(ME); return v ? (JSON.parse(v) as Me) : null; } catch { return null; } };
+const saveMe = (m: Me) => { try { sessionStorage.setItem(ME, JSON.stringify(m)); } catch { /* ignore */ } };
+const PermCtx = createContext<(sec: string, act: string) => boolean>(() => false);
+const useCan = () => useContext(PermCtx);
 
 /* ---------- Tiny inline icons ---------- */
 type IP = SVGProps<SVGSVGElement>;
@@ -128,9 +137,10 @@ const OutI = (p: IP) => <svg {...ic} {...p}><path d="M14 4.5h4.5a1.5 1.5 0 0 1 1
 const SearchI = (p: IP) => <svg {...ic} {...p}><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>;
 const XI = (p: IP) => <svg {...ic} strokeWidth={2.2} {...p}><path d="M6 6l12 12M18 6 6 18" /></svg>;
 
+const ShieldI = (p: IP) => <svg {...ic} {...p}><path d="M12 3.5 5 6v5.5c0 4.2 2.8 7.4 7 9 4.2-1.6 7-4.8 7-9V6l-7-2.5Z" /><path d="M9 12l2.2 2.2L15 10.5" /></svg>;
 const PadI = (p: IP) => <svg {...ic} {...p}><rect x="3" y="7" width="18" height="11" rx="4" /><path d="M8 10.5v4M6 12.5h4M15.5 11.5h.01M17.5 13.5h.01" /></svg>;
-const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI };
-const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات' };
+const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI, admins: ShieldI };
+const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات', admins: 'الأدمنز' };
 
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
@@ -300,6 +310,7 @@ const when = (iso: string) => toInput(iso).replace('T', ' ');
 
 /* ---------- Overview ---------- */
 function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
+  const can = useCan();
   const { x } = useX();
   const [news, setNews] = useState<Adm<NewsItem>[]>([]);
   const [tours, setTours] = useState<Adm<Tournament>[]>([]);
@@ -307,8 +318,8 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   useEffect(() => {
     api<Adm<NewsItem>[]>('/news', { key: k }).then(setNews).catch(() => undefined);
     api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setTours).catch(() => undefined);
-    api<Reg[]>('/registrations', { key: k }).then(setRegs).catch(() => undefined);
-  }, [k]);
+    if (can('regs', 'view')) api<Reg[]>('/registrations', { key: k }).then(setRegs).catch(() => undefined);
+  }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   const now = Date.now();
   const upcoming = tours.filter((t) => t.published !== false && statusOf(t, now) === 'upcoming').length;
   const live = tours.filter((t) => t.published !== false && statusOf(t, now) === 'live').length;
@@ -316,7 +327,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const stats = [
     { icon: NewsI, label: x('أخبار منشورة'), value: news.filter((n) => n.published !== false).length, note: `${x('من أصل')} ${news.length}`, tab: 'news' as Tab },
     { icon: CupI, label: x('بطولات قادمة'), value: upcoming, note: `${live} ${x('مباشرة الآن')}`, tab: 'tournaments' as Tab },
-    { icon: UsersI, label: x('إجمالي التسجيلات'), value: regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab },
+    ...(can('regs', 'view') ? [{ icon: UsersI, label: x('إجمالي التسجيلات'), value: regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab }] : []),
   ];
   return (
     <div>
@@ -364,6 +375,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
 const emptyNews = (): Adm<NewsItem> => ({ id: '', date: new Date().toISOString().slice(0, 10), tag: 'update', title: { ar: '', en: '' }, summary: { ar: '', en: '' }, image: '', href: '', published: true });
 
 function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const can = useCan();
   const { lang, x } = useX();
   const [rows, setRows] = useState<Adm<NewsItem>[]>([]);
   const [f, setF] = useState<Adm<NewsItem> | null>(null);
@@ -387,7 +399,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الأخبار')} (${rows.length})`} sub={x('أضف وعدّل أخبار الموقع')} action={<button className={btnP} style={gradBtn} onClick={() => { setF(emptyNews()); }}>{x('+ خبر جديد')}</button>} />
+      <PageHead title={`${x('الأخبار')} (${rows.length})`} sub={x('أضف وعدّل أخبار الموقع')} action={can('news', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyNews()); }}>{x('+ خبر جديد')}</button> : undefined} />
       <div className="flex flex-col gap-2.5">
         {rows.map((r) => (
           <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -399,8 +411,8 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </div>
             </div>
             <div className="flex gap-2">
-              <button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, image: r.image ?? '', href: r.href ?? '' }); }}><PenI className="h-4 w-4" /></button>
-              <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>
+              {can('news', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, image: r.image ?? '', href: r.href ?? '' }); }}><PenI className="h-4 w-4" /></button>)}
+              {can('news', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
             </div>
           </Card>
         ))}
@@ -547,6 +559,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
 }
 
 function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const can = useCan();
   const { lang, x } = useX();
   const GAMES = useGames();
   const [rows, setRows] = useState<Adm<Tournament>[]>([]);
@@ -581,7 +594,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
 
   return (
     <div>
-      <PageHead title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={<button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button>} />
+      <PageHead title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button> : undefined} />
       <div className="flex flex-col gap-2.5">
         {rows.map((r) => {
           const st = statusOf(r, now);
@@ -598,8 +611,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </div>
               <div className="flex gap-2">
                 <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('البراكت')}{r.bracket ? ' ✓' : ''}</button>
-                <button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>
-                <button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>
+                {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>)}
+                {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
             </Card>
           );
@@ -647,9 +660,10 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
 const MAX_TEXTS = 12, MAX_IMAGES = 24, MAX_VIDEOS = 8, MAX_VIDEO_MB = 50;
 const mv = <T,>(a: T[], i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= a.length) return a; const n = [...a]; [n[i], n[j]] = [n[j], n[i]]; return n; };
 
-function ParaCard({ i, n, t, dl, onChange, onMove, onDel }: { i: number; n: number; t: GameDetails['texts'][number]; dl: 'ar' | 'en'; onChange: (t: GameDetails['texts'][number]) => void; onMove: (d: -1 | 1) => void; onDel: () => void }) {
+function ParaCard({ i, n, t, onChange, onMove, onDel }: { i: number; n: number; t: GameDetails['texts'][number]; onChange: (t: GameDetails['texts'][number]) => void; onMove: (d: -1 | 1) => void; onDel: () => void }) {
   const { x } = useX();
   const [titleOn, setTitleOn] = useState(!!(t.title.ar || t.title.en));
+  const langs: ['ar' | 'en', string][] = [['ar', x('عربي')], ['en', 'English']];
   return (
     <div className="grid gap-2 rounded-xl border p-3" style={bd}>
       <div className="flex items-center gap-3 text-[.8rem] font-bold" style={{ color: 'var(--muted)' }}>
@@ -658,8 +672,15 @@ function ParaCard({ i, n, t, dl, onChange, onMove, onDel }: { i: number; n: numb
         <button type="button" disabled={i === n - 1} aria-label="down" onClick={() => onMove(1)} className="px-1 disabled:opacity-30">↓</button>
         <button type="button" onClick={onDel} style={{ color: '#ff6b7a' }}>{x('حذف')}</button>
       </div>
-      {titleOn && <input dir={dl === 'en' ? 'ltr' : 'rtl'} className={inp} style={bd} placeholder={x('عنوان الفقرة (اختياري)')} value={t.title[dl]} onChange={(e) => onChange({ ...t, title: { ...t.title, [dl]: e.target.value } })} />}
-      <textarea dir={dl === 'en' ? 'ltr' : 'rtl'} rows={4} className={inp} style={bd} placeholder={x('اكتب نص الفقرة هنا…')} value={t.body[dl]} onChange={(e) => onChange({ ...t, body: { ...t.body, [dl]: e.target.value } })} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {langs.map(([l, label]) => (
+          <div key={l} className="grid content-start gap-2">
+            <span className="text-[.78rem] font-bold" style={{ color: 'var(--muted)' }}>{label}</span>
+            {titleOn && <input dir={l === 'en' ? 'ltr' : 'rtl'} className={inp} style={bd} placeholder={x('عنوان الفقرة (اختياري)')} value={t.title[l]} onChange={(e) => onChange({ ...t, title: { ...t.title, [l]: e.target.value } })} />}
+            <textarea dir={l === 'en' ? 'ltr' : 'rtl'} rows={4} className={inp} style={bd} placeholder={x('اكتب نص الفقرة هنا…')} value={t.body[l]} onChange={(e) => onChange({ ...t, body: { ...t.body, [l]: e.target.value } })} />
+          </div>
+        ))}
+      </div>
       {!titleOn && <button type="button" className="self-start text-[.8rem] font-semibold" style={{ color: 'var(--muted)' }} onClick={() => setTitleOn(true)}>+ {x('عنوان للفقرة (اختياري)')}</button>}
     </div>
   );
@@ -668,14 +689,10 @@ function ParaCard({ i, n, t, dl, onChange, onMove, onDel }: { i: number; n: numb
 function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; onChange: (d: GameDetails) => void }) {
   const { x } = useX();
   const toast = useToast();
-  const [dl, setDl] = useState<'ar' | 'en'>('ar');
   const [busy, setBusy] = useState('');
   const [pct, setPct] = useState<number | null>(null);
   const [link, setLink] = useState('');
   const set = (p: Partial<GameDetails>) => onChange({ ...value, ...p });
-  const tab = (l: 'ar' | 'en', label: string) => (
-    <button type="button" aria-pressed={dl === l} onClick={() => setDl(l)} className="rounded-full px-3.5 py-1 text-[.8rem] font-bold transition-colors" style={dl === l ? { background: '#ff3347', color: '#fff' } : { color: 'var(--muted)' }}>{label}</button>
-  );
 
   async function addImages(files: FileList | null) {
     if (!files?.length) return;
@@ -727,10 +744,9 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
     <div className="grid gap-3">
       <div className="mt-3 flex items-center gap-3">
         <h4 className="flex-1 font-bold">{x('لمحة عن اللعبة')}</h4>
-        <div className="inline-flex gap-1 rounded-full border p-0.5" style={bd}>{tab('ar', x('عربي'))}{tab('en', 'English')}</div>
       </div>
       {value.texts.map((t, i) => (
-        <ParaCard key={i} i={i} n={value.texts.length} t={t} dl={dl}
+        <ParaCard key={i} i={i} n={value.texts.length} t={t}
           onChange={(nt) => set({ texts: value.texts.map((o, j) => (j === i ? nt : o)) })}
           onMove={(d) => set({ texts: mv(value.texts, i, d) })}
           onDel={() => set({ texts: value.texts.filter((_, j) => j !== i) })} />
@@ -769,7 +785,9 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
                   <span className="pointer-events-none absolute inset-0 grid place-items-center"><i className="grid h-8 w-8 place-items-center rounded-full bg-[#ff3347] text-[.8rem] not-italic text-white">▶</i></span>
                   <button type="button" aria-label="remove" className={xBtn} onClick={() => set({ videos: value.videos.filter((_, j) => j !== i) })}>×</button>
                 </div>
-                <input dir={dl === 'en' ? 'ltr' : 'rtl'} className={`${inp} !py-1.5 !text-[.8rem]`} style={bd} placeholder={x('عنوان (اختياري)')} value={v.title[dl]} onChange={(e) => set({ videos: value.videos.map((o, j) => (j === i ? { ...o, title: { ...o.title, [dl]: e.target.value } } : o)) })} />
+                {(['ar', 'en'] as const).map((l) => (
+                  <input key={l} dir={l === 'en' ? 'ltr' : 'rtl'} className={`${inp} !py-1.5 !text-[.8rem]`} style={bd} placeholder={`${x('عنوان (اختياري)')} · ${l === 'ar' ? x('عربي') : 'EN'}`} value={v.title[l]} onChange={(e) => set({ videos: value.videos.map((o, j) => (j === i ? { ...o, title: { ...o.title, [l]: e.target.value } } : o)) })} />
+                ))}
               </div>
             );
           })}
@@ -797,6 +815,7 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
 type GForm = { id: string; custom: boolean; hidden: boolean; name: { ar: string; en: string }; tagline: { ar: string; en: string }; genre: string; image: string; tournamentOnly: boolean; details: GameDetails };
 
 function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const can = useCan();
   const { lang, x } = useX();
   const [rows, setRows] = useState<AdminGame[]>([]);
   const [f, setF] = useState<GForm | null>(null);
@@ -808,7 +827,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   useEffect(load, [load]);
 
   const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: fullDetails(g.details) });
-  const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err(m); };
+  const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err((err as Error).message === '403' ? x('ما عندك صلاحية لهذا الإجراء') : m); };
   const term = q.trim().toLowerCase();
   const shown = rows.filter((g) => (genre === 'all' || g.genreKey === genre) && (!term || `${g.name.ar} ${g.name.en} ${g.tagline.ar} ${g.tagline.en}`.toLowerCase().includes(term)));
 
@@ -894,7 +913,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={<button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '', tournamentOnly: false, details: emptyDetails() }); }}>{x('+ لعبة جديدة')}</button>} />
+      <PageHead title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={can('games', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '', tournamentOnly: false, details: emptyDetails() }); }}>{x('+ لعبة جديدة')}</button> : undefined} />
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative min-w-[14rem] flex-1">
           <SearchI className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
@@ -933,13 +952,13 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
               </div>
             </div>
             <div className="flex shrink-0 gap-2 max-sm:gap-1.5">
-              <button className={`${btnG} max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF(toForm(g)); }}><PenI className="h-4 w-4" /></button>
+              {can('games', 'edit') && (<button className={`${btnG} max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF(toForm(g)); }}><PenI className="h-4 w-4" /></button>)}
               <button type="button" className={`${btnG} !px-3 max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={bd} onClick={() => toggle(g)} aria-label={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')} title={g.hidden ? x('إظهار في الموقع') : x('إخفاء من الموقع')}>
                 <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   {g.hidden ? <><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19.5C6.5 19.5 3 12 3 12a17.6 17.6 0 0 1 4.1-5.1M9.9 4.6A9.7 9.7 0 0 1 12 4.5c5.5 0 9 7.5 9 7.5a17.5 17.5 0 0 1-2.2 3.3M14.1 14.1a3 3 0 0 1-4.2-4.2" /><path d="m3 3 18 18" /></> : <><path d="M3 12s3.5-7.5 9-7.5S21 12 21 12s-3.5 7.5-9 7.5S3 12 3 12Z" /><circle cx="12" cy="12" r="3" /></>}
                 </svg>
               </button>
-              <button className={`${btnG} max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(g)}><TrashI className="h-4 w-4" /></button>
+              {can('games', 'delete') && (<button className={`${btnG} max-sm:!h-9 max-sm:!w-9 max-sm:!px-0`} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(g)}><TrashI className="h-4 w-4" /></button>)}
             </div>
           </Card>
           </Fragment>
@@ -978,6 +997,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 const csvCell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const can = useCan();
   const { x } = useX();
   const [rows, setRows] = useState<Reg[]>([]);
   const [tid, setTid] = useState('all');
@@ -1027,7 +1047,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
                 <td className="px-4 py-3">{r.team_name || '—'}</td>
                 <td className="whitespace-pre-line px-4 py-3" dir="ltr" style={{ textAlign: 'start' }}>{r.members || '—'}</td>
                 <td className="px-4 py-3" dir="ltr" style={{ textAlign: 'start', color: 'var(--muted)' }}>{r.created_at}</td>
-                <td className="px-4 py-3"><button className="p-1" style={{ color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-[18px] w-[18px]" /></button></td>
+                <td className="px-4 py-3">{can('regs', 'delete') && <button className="p-1" style={{ color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-[18px] w-[18px]" /></button>}</td>
               </tr>
             ))}
             {!shown.length && <tr><td colSpan={6} className="p-8 text-center" style={{ color: 'var(--muted)' }}>{x('ما فيه تسجيلات بعد.')}</td></tr>}
@@ -1039,50 +1059,288 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 }
 
 /* ---------- Login ---------- */
-function Login({ onDone }: { onDone: (key: string) => void }) {
+function PwInput({ value, onChange, label, auto, focus }: { value: string; onChange: (v: string) => void; label: string; auto: string; focus?: boolean }) {
   const { x } = useX();
-  const [pw, setPw] = useState('');
   const [show, setShow] = useState(false);
+  return (
+    <label className="mt-4 flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{label}
+      <span className="relative block">
+        <LockI className="pointer-events-none absolute start-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 opacity-60" />
+        <input type={show ? 'text' : 'password'} autoFocus={focus} autoComplete={auto} dir="ltr" className={`${inp} !py-3 !ps-10 !pe-11`} style={{ ...bd, textAlign: 'start' }} value={value} onChange={(e) => onChange(e.target.value)} />
+        <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? x('إخفاء') : x('إظهار')} className="absolute end-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg opacity-70 hover:opacity-100">
+          {show ? <EyeOffI className="h-[18px] w-[18px]" /> : <EyeI className="h-[18px] w-[18px]" />}
+        </button>
+      </span>
+    </label>
+  );
+}
+
+function AuthShell({ children, onSubmit, title, sub }: { children: ReactNode; onSubmit: (e: FormEvent) => void; title: string; sub: string }) {
+  const { x } = useX();
+  return (
+    <section className="admin-bg relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-10">
+      <div className="absolute end-4 top-4 z-10 flex gap-2"><LanguageSwitcher /></div>
+      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#ff3347,transparent 70%)' }} />
+      <form onSubmit={onSubmit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
+          <span aria-hidden="true" className="inline-block h-7 w-11 bg-current" style={ninja} />
+        </div>
+        <h1 className="mt-5 text-center text-[1.55rem] font-extrabold">{title}</h1>
+        <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>{sub}</p>
+        {children}
+        <a href="#/" className="mt-5 flex items-center justify-center gap-2 text-[.85rem]" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+      </form>
+    </section>
+  );
+}
+const ErrBox = ({ text }: { text: string }) => (text ? <p role="alert" className="mt-3 rounded-lg px-3 py-2 text-[.88rem] font-semibold" style={{ color: '#ff6b7a', background: 'rgba(255,77,94,.12)' }}>{text}</p> : null);
+
+function Login({ onDone }: { onDone: (key: string, me: Me) => void }) {
+  const { x } = useX();
+  const [user, setUser] = useState('');
+  const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (busy || !pw) return;
+    if (busy || !pw || !user.trim()) return;
     setBusy(true); setErr('');
     try {
-      await api('/registrations', { key: pw });
-      try { sessionStorage.setItem(KEY, pw); } catch { /* ignore */ }
-      onDone(pw);
-    } catch (ex) { setErr((ex as Error).message === '401' ? x('كلمة السر غير صحيحة') : x('تعذّر الاتصال بالخادم')); }
+      const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: user.trim(), password: pw }) });
+      const j = (await res.json().catch(() => ({}))) as { token?: string; username?: string; role?: 'owner' | 'admin'; perms?: Perms; mustChange?: boolean; recovery?: boolean; error?: string; left?: number };
+      if (res.ok && j.token) { onDone(j.token, { username: j.username ?? user, role: j.role ?? 'admin', perms: j.perms ?? {}, mustChange: !!j.mustChange, recovery: !!j.recovery }); setBusy(false); return; }
+      if (j.error === 'locked') setErr(x('الحساب مقفل. تواصل مع الأدمن الرئيسي لفتحه'));
+      else if (j.error === 'disabled') setErr(x('الحساب موقوف. تواصل مع الأدمن الرئيسي'));
+      else if (j.error === 'expired') setErr(x('انتهت صلاحية كلمة المرور المؤقتة. اطلب من الأدمن الرئيسي كلمة جديدة'));
+      else if (res.status === 401) setErr(j.left ? `${x('اسم المستخدم أو كلمة المرور غير صحيحة')} (${x('محاولات متبقية')}: ${j.left})` : x('اسم المستخدم أو كلمة المرور غير صحيحة'));
+      else setErr(x('تعذّر الاتصال بالخادم'));
+    } catch { setErr(x('تعذّر الاتصال بالخادم')); }
     setBusy(false);
   }
 
   return (
-    <section className="admin-bg relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-10">
-      <div className="absolute end-4 top-4 z-10 flex gap-2"><LanguageSwitcher /></div>
-      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#ff3347,transparent 70%)' }} />
-      <form onSubmit={submit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
-          <span aria-hidden="true" className="inline-block h-7 w-11 bg-current" style={ninja} />
-        </div>
-        <h1 className="mt-5 text-center text-[1.55rem] font-extrabold">{x('مرحباً بك')}</h1>
-        <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>Elite · {x('لوحة التحكم')}</p>
+    <AuthShell onSubmit={submit} title={x('مرحباً بك')} sub={`Elite · ${x('لوحة التحكم')}`}>
+      <label className="mt-7 flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('اسم المستخدم')}
+        <input autoFocus autoComplete="username" autoCapitalize="none" spellCheck={false} dir="ltr" className={`${inp} !py-3`} style={{ ...bd, textAlign: 'start' }} value={user} onChange={(e) => setUser(e.target.value)} />
+      </label>
+      <PwInput value={pw} onChange={setPw} label={x('كلمة المرور')} auto="current-password" />
+      <ErrBox text={err} />
+      <button type="submit" disabled={busy || !pw || !user.trim()} className={`${btnP} mt-6 w-full !py-3 text-[1rem]`} style={gradBtn}>{busy ? x('جارٍ الدخول…') : x('دخول')}</button>
+    </AuthShell>
+  );
+}
 
-        <label className="mt-7 flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('أدخل كلمة السر للمتابعة')}
-          <span className="relative block">
-            <LockI className="pointer-events-none absolute start-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 opacity-60" />
-            <input type={show ? 'text' : 'password'} autoFocus autoComplete="current-password" dir="ltr" className={`${inp} !py-3 !ps-10 !pe-11`} style={{ ...bd, textAlign: 'start' }} value={pw} onChange={(e) => setPw(e.target.value)} placeholder={x('كلمة السر')} />
-            <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? x('إخفاء') : x('إظهار')} className="absolute end-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg opacity-70 hover:opacity-100">
-              {show ? <EyeOffI className="h-[18px] w-[18px]" /> : <EyeI className="h-[18px] w-[18px]" />}
-            </button>
-          </span>
-        </label>
-        {err && <p role="alert" className="mt-3 rounded-lg px-3 py-2 text-[.88rem] font-semibold" style={{ color: '#ff6b7a', background: 'rgba(255,77,94,.12)' }}>{err}</p>}
-        <button type="submit" disabled={busy || !pw} className={`${btnP} mt-6 w-full !py-3 text-[1rem]`} style={gradBtn}>{busy ? x('جارٍ الدخول…') : x('دخول')}</button>
-        <a href="#/" className="mt-5 flex items-center justify-center gap-2 text-[.85rem]" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+/** Change-password form. Forced at the first login (temporary password) and also used voluntarily from the sidebar. */
+function usePwForm(k: string, me: Me, onOk: () => void) {
+  const { x } = useX();
+  const [cur, setCur] = useState(''); const [n1, setN1] = useState(''); const [n2, setN2] = useState('');
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+  const needCur = !me.recovery;
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    if (n1.length < 10) { setErr(x('كلمة المرور لازم تكون 10 أحرف على الأقل')); return; }
+    if (n1 !== n2) { setErr(x('كلمتا المرور غير متطابقتين')); return; }
+    setBusy(true); setErr('');
+    try { await api('/admin/password', { method: 'POST', key: k, body: JSON.stringify({ current: cur, next: n1 }) }); onOk(); }
+    catch (ex) {
+      const m = (ex as Error).message;
+      setErr(m === '401' ? x('كلمة المرور الحالية غير صحيحة') : m === '400' ? x('اختر كلمة مختلفة عن الحالية وعن اسم المستخدم') : x('تعذّر الاتصال بالخادم'));
+    }
+    setBusy(false);
+  }
+  const fields = (
+    <>
+      {needCur && <PwInput value={cur} onChange={setCur} label={x('كلمة المرور الحالية')} auto="current-password" focus />}
+      <PwInput value={n1} onChange={setN1} label={x('كلمة المرور الجديدة (10 أحرف على الأقل)')} auto="new-password" focus={!needCur} />
+      <PwInput value={n2} onChange={setN2} label={x('أعد كتابة كلمة المرور الجديدة')} auto="new-password" />
+      <ErrBox text={err} />
+    </>
+  );
+  return { submit, fields, busy, ready: !!n1 && !!n2 && (!needCur || !!cur) };
+}
+
+function ForceChange({ k, me, onDone, onLogout }: { k: string; me: Me; onDone: () => void; onLogout: () => void }) {
+  const { x } = useX();
+  const f = usePwForm(k, me, onDone);
+  return (
+    <AuthShell onSubmit={f.submit} title={x('اختر كلمة مرور جديدة')} sub={`${x('الحساب')}: ${me.username}`}>
+      <p className="mt-4 text-center text-[.88rem]" style={{ color: 'var(--muted)' }}>{x('كلمة المرور الحالية مؤقتة. لازم تغيّرها قبل المتابعة')}</p>
+      {f.fields}
+      <button type="submit" disabled={f.busy || !f.ready} className={`${btnP} mt-6 w-full !py-3 text-[1rem]`} style={gradBtn}>{f.busy ? x('جارٍ الحفظ…') : x('حفظ ومتابعة')}</button>
+      <button type="button" onClick={onLogout} className="mt-3 w-full text-center text-[.85rem]" style={{ color: 'var(--muted)' }}>{x('تسجيل خروج')}</button>
+    </AuthShell>
+  );
+}
+
+function PwDrawer({ k, me, onClose }: { k: string; me: Me; onClose: () => void }) {
+  const { x } = useX();
+  const toast = useToast();
+  const f = usePwForm(k, me, () => { toast.ok(x('تم تغيير كلمة المرور')); onClose(); });
+  return (
+    <Drawer title={x('تغيير كلمة المرور')} onClose={onClose}>
+      <form onSubmit={f.submit}>
+        {f.fields}
+        <button type="submit" disabled={f.busy || !f.ready} className={`${btnP} mt-6 w-full`} style={gradBtn}>{f.busy ? x('جارٍ الحفظ…') : x('حفظ')}</button>
       </form>
-    </section>
+    </Drawer>
+  );
+}
+
+/* ---------- Admin accounts (owner only) ---------- */
+type AdminRow = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; tempExpires: number; disabled: boolean; locked: boolean; lastLogin: number; createdAt: number; createdBy: string };
+const PERM_ROWS: { sec: keyof Perms; label: string; acts: [string, string][] }[] = [
+  { sec: 'news', label: 'الأخبار', acts: [['add', 'إضافة'], ['edit', 'تعديل'], ['delete', 'حذف']] },
+  { sec: 'tournaments', label: 'البطولات', acts: [['add', 'إضافة'], ['edit', 'تعديل'], ['delete', 'حذف']] },
+  { sec: 'games', label: 'الألعاب', acts: [['add', 'إضافة'], ['edit', 'تعديل'], ['delete', 'حذف']] },
+  { sec: 'regs', label: 'التسجيلات', acts: [['view', 'عرض'], ['delete', 'حذف']] },
+];
+const PRESET_LIST: { id: string; label: string; perms: Perms }[] = [
+  { id: 'news', label: 'محرر أخبار', perms: { news: ['add', 'edit', 'delete'] } },
+  { id: 'tournaments', label: 'منظم بطولات', perms: { tournaments: ['add', 'edit', 'delete'], regs: ['view'] } },
+  { id: 'games', label: 'مدير ألعاب', perms: { games: ['add', 'edit', 'delete'] } },
+  { id: 'full', label: 'كامل', perms: { news: ['add', 'edit', 'delete'], tournaments: ['add', 'edit', 'delete'], games: ['add', 'edit', 'delete'], regs: ['view', 'delete'] } },
+];
+const sameP = (a: Perms, b: Perms) => PERM_ROWS.every((r) => [...(a[r.sec] ?? [])].sort().join() === [...(b[r.sec] ?? [])].sort().join());
+
+function PermGrid({ value, onChange }: { value: Perms; onChange: (p: Perms) => void }) {
+  const { x } = useX();
+  const flip = (sec: keyof Perms, act: string) => {
+    let cur = [...(value[sec] ?? [])];
+    if (cur.includes(act)) { cur = cur.filter((a) => a !== act); if (sec === 'regs' && act === 'view') cur = []; }
+    else { cur.push(act); if (sec === 'regs' && act === 'delete' && !cur.includes('view')) cur.push('view'); }
+    const n = { ...value, [sec]: cur }; if (!cur.length) delete n[sec];
+    onChange(n);
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
+        {PRESET_LIST.map((pr) => {
+          const on = sameP(value, pr.perms);
+          return <button key={pr.id} type="button" onClick={() => onChange(pr.perms)} className="rounded-full border px-3 py-1.5 text-[.82rem] font-bold transition" style={on ? { color: '#fff', ...gradBtn, borderColor: 'transparent' } : bd}>{x(pr.label)}</button>;
+        })}
+      </div>
+      <div className="mt-1 flex flex-col gap-1.5">
+        {PERM_ROWS.map((r) => (
+          <div key={r.sec} className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border px-3.5 py-2.5" style={{ borderColor: 'var(--glass-b)' }}>
+            <span className="min-w-[5.5rem] text-[.9rem] font-extrabold">{x(r.label)}</span>
+            {r.acts.map(([a, l]) => (
+              <label key={a} className="inline-flex cursor-pointer items-center gap-1.5 text-[.88rem] font-semibold">
+                <input type="checkbox" className="h-4 w-4 accent-[#ff3347]" checked={!!value[r.sec]?.includes(a)} onChange={() => flip(r.sec, a)} />{x(l)}
+              </label>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const permText = (p: Perms, x: (s: string) => string) => {
+  const t = PERM_ROWS.filter((r) => p[r.sec]?.length).map((r) => `${x(r.label)}: ${(p[r.sec] ?? []).map((a) => x(r.acts.find((z) => z[0] === a)?.[1] ?? a)).join(' · ')}`);
+  return t.length ? t : [x('بدون صلاحيات')];
+};
+
+function TempPw({ r, onClose }: { r: { username: string; password: string }; onClose: () => void }) {
+  const { x } = useX();
+  const [copied, setCopied] = useState(false);
+  const txt = `${x('اسم المستخدم')}: ${r.username}\n${x('كلمة المرور المؤقتة')}: ${r.password}`;
+  return (
+    <Drawer title={x('كلمة المرور المؤقتة')} onClose={onClose}>
+      <p className="text-[.92rem]" style={{ color: 'var(--muted)' }}>{x('سلّمها للأدمن بنفسك. تظهر مرة وحدة فقط، وصلاحيتها 7 أيام، وبيُطلب منه يغيّرها عند أول دخول')}</p>
+      <div dir="ltr" className="mt-4 rounded-xl border p-4 text-center" style={{ borderColor: 'var(--glass-b)', background: 'var(--chip-bg)' }}>
+        <div className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{r.username}</div>
+        <div className="mt-1 select-all text-[1.5rem] font-black tracking-wider">{r.password}</div>
+      </div>
+      <div className="mt-5 flex gap-2">
+        <button type="button" className={`${btnP} flex-1`} style={gradBtn} onClick={() => { void navigator.clipboard?.writeText(txt).then(() => setCopied(true)).catch(() => undefined); }}>{copied ? x('تم النسخ') : x('نسخ')}</button>
+        <button type="button" className={btnG} style={bd} onClick={onClose}>{x('تم')}</button>
+      </div>
+    </Drawer>
+  );
+}
+
+function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const { x, lang } = useX();
+  const toast = useToast();
+  const [rows, setRows] = useState<AdminRow[]>([]);
+  const [add, setAdd] = useState<{ username: string; perms: Perms } | null>(null);
+  const [edit, setEdit] = useState<{ username: string; perms: Perms } | null>(null);
+  const [temp, setTemp] = useState<{ username: string; password: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const load = useCallback(() => { api<AdminRow[]>('/admin/admins', { key: k }).then(setRows).catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل الحسابات')); }); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [load]);
+  const fail = (e: unknown, m: string) => { const c = (e as Error).message; if (c === '401') onAuthFail(); else toast.err(c === '409' ? x('اسم المستخدم مستخدم من قبل') : m); };
+  const when2 = (t: number) => (t ? new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }) : '—');
+
+  async function create() {
+    if (!add || busy) return;
+    if (!/^[a-z0-9_]{3,24}$/.test(add.username)) { toast.err(x('اسم المستخدم: 3 إلى 24 حرف إنجليزي صغير أو رقم أو _')); return; }
+    if (!Object.keys(add.perms).length) { toast.err(x('اختر صلاحية واحدة على الأقل')); return; }
+    setBusy(true);
+    try { const r = await api<{ username: string; password: string }>('/admin/admins', { method: 'POST', key: k, body: JSON.stringify({ username: add.username, perms: add.perms }) }); setAdd(null); setTemp(r); load(); }
+    catch (e) { fail(e, x('تعذّر إنشاء الحساب')); }
+    setBusy(false);
+  }
+  async function patch(u: string, b: Record<string, unknown>, ok: string) {
+    try { const r = await api<{ password?: string }>(`/admin/admins/${encodeURIComponent(u)}`, { method: 'PATCH', key: k, body: JSON.stringify(b) }); if (r.password) setTemp({ username: u, password: r.password }); else toast.ok(ok); load(); }
+    catch (e) { fail(e, x('تعذّر تنفيذ العملية')); }
+  }
+
+  return (
+    <div>
+      <PageHead title={`${x('الأدمنز')} (${rows.length})`} sub={x('أنشئ حسابات وحدد صلاحيات كل أدمن')} action={<button className={btnP} style={gradBtn} onClick={() => setAdd({ username: '', perms: {} })}>{x('+ أدمن جديد')}</button>} />
+      <div className="flex flex-col gap-3">
+        {rows.map((r) => (
+          <Card key={r.username} className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span dir="ltr" className="text-[1.02rem] font-extrabold">{r.username}</span>
+                  {r.role === 'owner' && <Badge tone="blue">{x('الأدمن الرئيسي')}</Badge>}
+                  {r.disabled && <Badge tone="gray">{x('موقوف')}</Badge>}
+                  {r.locked && <Badge tone="red">{x('مقفل')}</Badge>}
+                  {r.mustChange && r.role !== 'owner' && <Badge tone="amber">{x('كلمة مؤقتة')}</Badge>}
+                </div>
+                <div className="mt-1.5 flex flex-col gap-0.5 text-[.84rem]" style={{ color: 'var(--muted)' }}>
+                  {r.role === 'owner' ? <span>{x('كل الصلاحيات')}</span> : permText(r.perms, x).map((t) => <span key={t}>{t}</span>)}
+                  <span>{x('آخر دخول')}: {when2(r.lastLogin)}</span>
+                </div>
+              </div>
+              {r.role !== 'owner' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {r.locked && <button className={btnG} style={{ ...bd, color: '#27c27a' }} onClick={() => patch(r.username, { action: 'unlock' }, x('تم فتح الحساب'))}>{x('فتح الحساب')}</button>}
+                  <button className={btnG} style={bd} onClick={() => setEdit({ username: r.username, perms: r.perms })}><PenI className="h-4 w-4" />{x('الصلاحيات')}</button>
+                  <button className={btnG} style={bd} onClick={() => { if (window.confirm(x('إنشاء كلمة مرور مؤقتة جديدة؟ بتنتهي جلساته الحالية'))) void patch(r.username, { action: 'reset' }, ''); }}>{x('كلمة مرور جديدة')}</button>
+                  <button className={btnG} style={{ ...bd, color: r.disabled ? '#27c27a' : '#ff6b7a' }} onClick={() => patch(r.username, { disabled: !r.disabled }, r.disabled ? x('تم تفعيل الحساب') : x('تم إيقاف الحساب'))}>{r.disabled ? x('تفعيل') : x('إيقاف')}</button>
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+        {!rows.length && <Card className="p-8 text-center text-[.92rem] opacity-70">{x('جارٍ التحميل…')}</Card>}
+      </div>
+
+      {add && (
+        <Drawer title={x('أدمن جديد')} onClose={() => setAdd(null)}>
+          <label className="flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('اسم المستخدم (إنجليزي، ما يتغير بعد الإنشاء)')}
+            <input dir="ltr" autoFocus autoCapitalize="none" spellCheck={false} className={inp} style={{ ...bd, textAlign: 'start' }} value={add.username} onChange={(e) => setAdd({ ...add, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24) })} placeholder="ahmed_news" />
+          </label>
+          <div className="mt-5 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('الصلاحيات')}</div>
+          <div className="mt-2"><PermGrid value={add.perms} onChange={(p) => setAdd({ ...add, perms: p })} /></div>
+          <p className="mt-4 text-[.84rem]" style={{ color: 'var(--muted)' }}>{x('بيتولّد له كلمة مرور مؤقتة تظهر لك مرة وحدة، ويغيّرها عند أول دخول')}</p>
+          <button type="button" disabled={busy} className={`${btnP} mt-5 w-full`} style={gradBtn} onClick={create}>{busy ? x('جارٍ الإنشاء…') : x('إنشاء الحساب')}</button>
+        </Drawer>
+      )}
+      {edit && (
+        <Drawer title={`${x('الصلاحيات')} · ${edit.username}`} onClose={() => setEdit(null)}>
+          <PermGrid value={edit.perms} onChange={(p) => setEdit({ ...edit, perms: p })} />
+          <button type="button" className={`${btnP} mt-5 w-full`} style={gradBtn} onClick={() => { const e = edit; setEdit(null); void patch(e.username, { perms: e.perms }, x('تم حفظ الصلاحيات')); }}>{x('حفظ')}</button>
+        </Drawer>
+      )}
+      {temp && <TempPw r={temp} onClose={() => setTemp(null)} />}
+    </div>
   );
 }
 
@@ -1090,16 +1348,27 @@ function Login({ onDone }: { onDone: (key: string) => void }) {
 export default function AdminPage() {
   const { x } = useX();
   const [key, setKey] = useState(getKey);
+  const [me, setMe] = useState<Me | null>(getMe);
   const [tab, setTab] = useState<Tab>('overview');
   const [menu, setMenu] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
   const pick = (id: Tab) => { setTab(id); setMenu(false); window.scrollTo({ top: 0 }); };
-  const logout = useCallback(() => { try { sessionStorage.removeItem(KEY); } catch { /* ignore */ } setKey(''); }, []);
+  const clear = useCallback(() => { try { sessionStorage.removeItem(KEY); sessionStorage.removeItem(ME); } catch { /* ignore */ } setKey(''); setMe(null); }, []);
+  const logout = useCallback(() => { if (key) void fetch('/api/admin/logout', { method: 'POST', headers: { authorization: `Bearer ${key}` } }).catch(() => undefined); clear(); }, [key, clear]);
+  const onLogin = (token: string, m: Me) => { try { sessionStorage.setItem(KEY, token); } catch { /* ignore */ } saveMe(m); setKey(token); setMe(m); };
+  // Re-read the account from the server (permissions may have changed) and drop dead sessions.
+  useEffect(() => {
+    if (!key) return;
+    api<Me>('/admin/me', { key }).then((m) => { setMe((o) => { const n = { ...m, recovery: m.recovery ?? o?.recovery }; saveMe(n); return n; }); }).catch((e: Error) => { if (e.message === '401') clear(); });
+  }, [key, clear]);
+  const can = useCallback((sec: string, act: string) => !!me && (me.role === 'owner' || !!(me.perms as Record<string, string[] | undefined>)[sec]?.includes(act)), [me]);
 
-  if (!key) return <Login onDone={setKey} />;
+  if (!key || !me) return <Login onDone={onLogin} />;
+  if (me.mustChange) return <ForceChange k={key} me={me} onLogout={logout} onDone={() => { const n = { ...me, mustChange: false, recovery: false }; saveMe(n); setMe(n); }} />;
 
-  const tabs = Object.keys(TAB_LABEL) as Tab[];
+  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || (id === 'admins' ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
   return (
-    <ToastHost><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+    <ToastHost><PermCtx.Provider value={can}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-4 w-6 bg-current" style={ninja} /></span>
@@ -1116,6 +1385,13 @@ export default function AdminPage() {
             );
           })}
         </nav>
+        <div className="mt-auto pt-6">
+          <div className="rounded-xl border p-3" style={{ borderColor: 'var(--glass-b)' }}>
+            <div dir="ltr" className="truncate text-[.92rem] font-extrabold">{me.username}</div>
+            <div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{me.role === 'owner' ? x('الأدمن الرئيسي') : x('أدمن')}</div>
+            <button type="button" onClick={() => setPwOpen(true)} className="mt-2 text-[.82rem] font-semibold underline-offset-2 hover:underline" style={{ color: 'var(--muted)' }}>{x('تغيير كلمة المرور')}</button>
+          </div>
+        </div>
       </aside>
 
       <div className="min-w-0">
@@ -1147,6 +1423,7 @@ export default function AdminPage() {
                 );
               })}
               <div className="my-1 border-t" style={{ borderColor: 'var(--glass-b)' }} />
+              <button type="button" onClick={() => { setMenu(false); setPwOpen(true); }} className="flex items-center gap-3 rounded-xl px-4 py-3 text-start text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><LockI className="h-5 w-5" /><span dir="ltr">{me.username}</span> · {x('تغيير كلمة المرور')}</button>
               <a href="#/" className="flex items-center gap-3 rounded-xl px-4 py-3 text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-5 w-5 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
             </nav>
           </div>
@@ -1158,9 +1435,11 @@ export default function AdminPage() {
           {tab === 'tournaments' && <TournamentsTab k={key} onAuthFail={logout} />}
           {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
+          {tab === 'admins' && me.role === 'owner' && <AdminsTab k={key} onAuthFail={logout} />}
           </div>
         </main>
       </div>
-    </div></ToastHost>
+      {pwOpen && <PwDrawer k={key} me={me} onClose={() => setPwOpen(false)} />}
+    </div></PermCtx.Provider></ToastHost>
   );
 }

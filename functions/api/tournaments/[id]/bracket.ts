@@ -1,9 +1,10 @@
-import { body, denied, isAdmin, json, safeUrl, type Ctx } from '../../../_lib';
+import { body, json, safeUrl, type Ctx } from '../../../_lib';
+import { guard } from '../../../_admin';
 import { cleanBracket } from '../../../_bracket';
 
 /** Admin only. Body may hold any of: bracket (object, or null to remove it), streamUrl, streamLive. Only the given fields change. */
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'tournaments', 'edit'); if (a instanceof Response) return a;
   const b = await body(request);
   const sets: string[] = [], vals: unknown[] = [];
   if ('bracket' in b) {

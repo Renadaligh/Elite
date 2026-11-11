@@ -1,5 +1,6 @@
 import { announceNews } from '../../_discord';
-import { body, denied, isAdmin, json, newId, safeUrl, str, type Ctx } from '../../_lib';
+import { body, json, newId, safeUrl, str, type Ctx } from '../../_lib';
+import { guard, seesAll } from '../../_admin';
 
 type Row = { id: string; date: string; tag: string; title_en: string; title_ar: string; summary_en: string; summary_ar: string; image: string; link: string; published: number };
 const out = (r: Row) => ({
@@ -22,13 +23,13 @@ export function parse(b: Record<string, unknown>) {
 }
 
 export const onRequestGet = async ({ request, env }: Ctx) => {
-  const all = isAdmin(request, env);
+  const all = await seesAll(request, env, 'news');
   const { results } = await env.DB.prepare(`SELECT * FROM news ${all ? '' : 'WHERE published = 1'} ORDER BY date DESC`).all<Row>();
   return json(results.map(out));
 };
 
 export const onRequestPost = async ({ request, env }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'news', 'add'); if (a instanceof Response) return a;
   const v = parse(await body(request));
   if (!v) return json({ error: 'invalid' }, 400);
   const id = newId();

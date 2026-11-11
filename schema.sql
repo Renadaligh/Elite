@@ -79,3 +79,28 @@ CREATE TABLE IF NOT EXISTS login_links (
   token_hash TEXT PRIMARY KEY, email TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS user_brackets_user ON user_brackets (user_id, updated_at);
+
+-- Admin accounts (the owner row is created automatically at the first owner login)
+CREATE TABLE IF NOT EXISTS admins (
+  username TEXT PRIMARY KEY,
+  pass_hash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'admin',
+  perms TEXT NOT NULL DEFAULT '{}',
+  must_change INTEGER NOT NULL DEFAULT 1,
+  temp_expires INTEGER NOT NULL DEFAULT 0,
+  disabled INTEGER NOT NULL DEFAULT 0,
+  locked INTEGER NOT NULL DEFAULT 0,
+  locked_until INTEGER NOT NULL DEFAULT 0,
+  failed INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL DEFAULT 0,
+  last_login INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  token_hash TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  recovery INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_user ON admin_sessions(username);

@@ -6,25 +6,13 @@ export interface Env {
   IMAGES?: { put(key: string, value: Uint8Array, opts?: { httpMetadata?: { contentType?: string } }): Promise<unknown>; get(key: string, opts?: { range?: { offset: number; length?: number } }): Promise<R2Obj | null>; delete(key: string): Promise<unknown> };
   ADMIN_PASSWORD?: string;
   DISCORD_CLIENT_ID?: string; DISCORD_CLIENT_SECRET?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string;
-  TWITCH_CLIENT_ID?: string; TWITCH_CLIENT_SECRET?: string; STEAM_API_KEY?: string; RESEND_API_KEY?: string; MAIL_FROM?: string; DISCORD_WEBHOOK_URL?: string;
+  TWITCH_CLIENT_ID?: string; TWITCH_CLIENT_SECRET?: string; STEAM_API_KEY?: string; RESEND_API_KEY?: string; MAIL_FROM?: string; DISCORD_WEBHOOK_URL?: string; OWNER_USERNAME?: string;
 }
 export type Ctx = { request: Request; env: Env; params: Record<string, string> };
 
 export const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 
-function safeEq(a: string, b: string) {
-  const x = new TextEncoder().encode(a), y = new TextEncoder().encode(b);
-  let d = x.length ^ y.length;
-  for (let i = 0; i < Math.max(x.length, y.length); i++) d |= (x[i] ?? 0) ^ (y[i] ?? 0);
-  return d === 0;
-}
-
-export function isAdmin(req: Request, env: Env) {
-  const h = req.headers.get('authorization') ?? '';
-  const pass = h.startsWith('Bearer ') ? h.slice(7) : '';
-  return !!env.ADMIN_PASSWORD && !!pass && safeEq(pass, env.ADMIN_PASSWORD);
-}
 export const denied = () => json({ error: 'unauthorized' }, 401);
 
 export async function body(req: Request): Promise<Record<string, unknown>> {

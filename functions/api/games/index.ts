@@ -1,4 +1,5 @@
-import { body, denied, json, isAdmin, safeUrl, str, type Ctx } from '../../_lib';
+import { body, json, safeUrl, str, type Ctx } from '../../_lib';
+import { guard } from '../../_admin';
 
 type Row = { id: string; genre: string; name_en: string; name_ar: string; tagline_en: string; tagline_ar: string; image: string; hidden: number; custom: number; tournament_only?: number; details?: string };
 /** Special row (not a game) that keeps the dashboard's display order and the list of deleted built-in games. */
@@ -42,7 +43,7 @@ export const onRequestGet = async ({ env }: Ctx) => {
 };
 
 export const onRequestPost = async ({ request, env }: Ctx) => {
-  if (!isAdmin(request, env)) return denied();
+  const a = await guard(request, env, 'games', 'add'); if (a instanceof Response) return a;
   const v = parse(await body(request));
   if (!v.name.en && !v.name.ar) return json({ error: 'invalid' }, 400);
   const base = (v.name.en || 'game').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'game';
