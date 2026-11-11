@@ -1100,7 +1100,7 @@ export default function AdminPage() {
   const tabs = Object.keys(TAB_LABEL) as Tab[];
   return (
     <ToastHost><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-      <aside className="hidden flex-col border-e p-5 lg:flex" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
+      <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-4 w-6 bg-current" style={ninja} /></span>
           <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Elite</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
@@ -1116,10 +1116,6 @@ export default function AdminPage() {
             );
           })}
         </nav>
-        <div className="mt-auto flex flex-col gap-2 pt-6">
-          <a href="#/" className={btnG} style={bd}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
-          <button type="button" onClick={logout} className={btnG} style={bd}><OutI className="h-4 w-4" />{x('تسجيل خروج')}</button>
-        </div>
       </aside>
 
       <div className="min-w-0">
@@ -1131,7 +1127,11 @@ export default function AdminPage() {
             <span className="truncate text-[1rem] font-extrabold">{x(TAB_LABEL[tab])}</span>
           </div>
           <div className="hidden text-[.9rem] font-semibold lg:block" style={{ color: 'var(--muted)' }}>{x(TAB_LABEL[tab])}</div>
-          <div className="flex shrink-0 items-center gap-2"><LanguageSwitcher /><button type="button" onClick={logout} className="pill lg:hidden" aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button></div>
+          <div className="flex shrink-0 items-center gap-2">
+            <a href="#/" className="pill hidden lg:inline-flex" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+            <button type="button" onClick={logout} className="pill" style={{ gap: '.4rem' }} aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /><span className="hidden lg:inline">{x('تسجيل خروج')}</span></button>
+            <LanguageSwitcher />
+          </div>
         </header>
         {menu && (
           <div className="lg:hidden">
