@@ -1146,7 +1146,7 @@ function Login({ onDone }: { onDone: (key: string, me: Me) => void }) {
   }
 
   return (
-    <AuthShell onSubmit={submit} title={x('مرحباً بك')} sub={`Elite · ${x('لوحة التحكم')}`}>
+    <AuthShell onSubmit={submit} title={x('مرحباً بك')} sub={`Plato AR · ${x('لوحة التحكم')}`}>
       <label className="mt-7 flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('اسم المستخدم')}
         <input autoFocus autoComplete="username" autoCapitalize="none" spellCheck={false} dir="ltr" className={`${inp} !py-3`} style={{ ...bd, textAlign: 'start' }} value={user} onChange={(e) => setUser(e.target.value)} />
       </label>
@@ -1483,7 +1483,7 @@ function AdminInner() {
       <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-5 w-5 bg-current" style={ninja} /></span>
-          <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Elite</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
+          <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Plato AR</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
         </div>
         <nav className="flex flex-col gap-1">
           {tabs.map((id) => {

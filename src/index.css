@@ -862,3 +862,6 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61
 /* public bracket page: no frame around the bracket */
 .pv-root .br-scroll.pv, .pv-root[data-st] .br-scroll.pv { border: 0 !important; border-radius: 0; background: transparent; box-shadow: none; }
 .pv-body .st-brcard { border: 0 !important; background: transparent !important; box-shadow: none !important; border-radius: 0; }
+
+/* dashboard editor: the bracket card takes the full column (fit-content collapsed it to 0 width for big brackets) */
+.st-brcard { width: 100%; justify-self: stretch; min-width: 0; }
