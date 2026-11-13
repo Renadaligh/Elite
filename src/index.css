@@ -886,3 +886,6 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61
 
 /* hero v21 (desktop): copy a little higher, buttons a little closer to the tagline */
 @media (min-width: 768px) { .hero-copy { transform: translateY(-4.2svh); } .hero-desc { margin-bottom: 4rem; } }
+
+/* hero v22 (phones): the hero is a little taller than the screen, so the next section's title does not peek in under the browser's bottom bar */
+@media (max-width: 767px) { #top { min-height: calc(100svh + 6rem) !important; } }
