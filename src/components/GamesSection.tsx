@@ -99,8 +99,8 @@ export default function GamesSection() {
           const selected = category === id;
           return <button key={id} type="button" aria-pressed={selected} onClick={() => chooseCategory(id)}
             className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200"
-            style={{ borderColor: selected ? '#9a88ff' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
-              background: selected ? 'linear-gradient(115deg,#7a4dff,#2a2fa8)' : 'var(--glass)' }}>
+            style={{ borderColor: selected ? '#8fb2ff' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
+              background: selected ? 'linear-gradient(115deg,#3d7bff,#2a2fa8)' : 'var(--glass)' }}>
             {c[lang]} <span className="ms-1 opacity-70">{i === 0 ? GAMES.length : GAMES.filter(g => g.genre.en === id).length}</span>
           </button>;
         })}

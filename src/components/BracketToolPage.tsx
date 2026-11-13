@@ -12,7 +12,7 @@ import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
 const DRAFT = 'elite-bracket-draft';
 const card = { background: 'var(--glass)', borderColor: 'var(--glass-b)' };
-const inp = 'w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-[.95rem] outline-none focus:border-[#7a4dff]';
+const inp = 'w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-[.95rem] outline-none focus:border-[#3d7bff]';
 const pill = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold disabled:opacity-60';
 
 export const TXT = {
@@ -218,13 +218,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
         <div className={`grid min-w-0 gap-5 ${!editable && readOnly ? 'pv-body' : ''}`}>
           <div className={`flex flex-wrap items-center justify-between gap-3 ${!editable && readOnly ? 'pv-pad' : ''}`}>
             <div>
-              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#7a4dff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />
+              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />
                 : <h2 className="text-[1.4rem] font-extrabold">{title}</h2>}
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
               <BracketActions bracket={br} title={shownTitle} url={url} />
-              {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#7a4dff,#4a5cff)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
+              {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}

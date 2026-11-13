@@ -4,7 +4,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import type { Dict } from '../i18n/translations';
 
 export const TAG_KEY: Record<NewsTag, keyof Dict> = { update: 'tagUpdate', tournament: 'tagTournament', community: 'tagCommunity', event: 'tagEvent' };
-const TAG_DOT: Record<NewsTag, string> = { update: '#9a88ff', tournament: '#ffb02e', community: '#e9e9f0', event: '#7be07a' };
+const TAG_DOT: Record<NewsTag, string> = { update: '#8fb2ff', tournament: '#ffb02e', community: '#e9e9f0', event: '#7be07a' };
 
 
 export default function NewsCard({ item }: { item: NewsItem }) {

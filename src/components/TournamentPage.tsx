@@ -49,7 +49,7 @@ export default function TournamentPage({ id }: { id: string }) {
 
       {x.streamLive && x.streamUrl && (
         <section aria-label={t.tStream} className="mb-10">
-          <h2 className="mb-3 flex items-center gap-2 text-[1.2rem] font-extrabold"><i className="h-2.5 w-2.5 animate-pulse rounded-full" style={{ background: '#7a4dff' }} />{t.tStream}</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-[1.2rem] font-extrabold"><i className="h-2.5 w-2.5 animate-pulse rounded-full" style={{ background: '#3d7bff' }} />{t.tStream}</h2>
           {embed ? <div className="stream-box"><iframe src={embed} title={t.tStream} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div>
             : <a href={x.streamUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">{t.tStreamOpen} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>}
         </section>
@@ -61,8 +61,8 @@ export default function TournamentPage({ id }: { id: string }) {
           {x.bracket && s !== 'completed' && <BracketActions bracket={x.bracket} title={x.name[lang]} url={`${window.location.origin}${window.location.pathname}#/tournaments/${x.id}`} />}
         </div>
         {live.map((cr, i) => (
-          <p key={i} className="mb-3 mr-3 inline-flex flex-wrap items-center gap-3 rounded-xl border px-4 py-2.5 text-[.95rem]" style={{ borderColor: '#7a4dff', background: 'rgba(122,77,255,.1)' }}>
-            <span className="rounded px-2 py-0.5 text-[.65rem] font-extrabold tracking-wider text-white" style={{ background: '#7a4dff' }}>{lang === 'ar' ? 'الآن' : 'LIVE'}</span>
+          <p key={i} className="mb-3 mr-3 inline-flex flex-wrap items-center gap-3 rounded-xl border px-4 py-2.5 text-[.95rem]" style={{ borderColor: '#3d7bff', background: 'rgba(61,123,255,.1)' }}>
+            <span className="rounded px-2 py-0.5 text-[.65rem] font-extrabold tracking-wider text-white" style={{ background: '#3d7bff' }}>{lang === 'ar' ? 'الآن' : 'LIVE'}</span>
             <b>{cr.a}</b><span style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'ضد' : 'vs'}</span><b>{cr.b}</b>
           </p>
         ))}

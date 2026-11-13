@@ -63,7 +63,7 @@ function Facts({ x }: { x: Tournament }) {
       <div><dt className="opacity-70">{t.tFormat}</dt><dd className="font-bold">{x.format[lang]}</dd></div>
       <div className="col-span-2">
         <dt className="flex justify-between opacity-70"><span>{t.tTeams}</span><span>{full ? t.tFull : `${x.slots.filled}/${x.slots.total}`}</span></dt>
-        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#7a4dff,#4a5cff)' }} /></div></dd>
+        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div></dd>
       </div>
     </dl>
   );
@@ -96,7 +96,7 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const fmt = useFmt();
   useGames();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#7a4dff', '#1a1f6a'];
+  const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
     <article className="news-card on-art relative text-white md:mb-6" style={{ background: `linear-gradient(135deg, ${c[0]}, ${c[1]})`, border: 'none' }}>
       {x.image ? (
@@ -162,7 +162,7 @@ export default function TournamentsSection() {
   const list = tab === 'all' ? withStatus : withStatus.filter((r) => r.s === tab);
   const featured = tab !== 'completed' && list[0] && list[0].s !== 'completed' ? list[0] : null;
   const rest = featured ? list.slice(1) : list;
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #7a4dff, #4a5cff)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
     <section id="tournaments" aria-labelledby="tournaments-title" className="scroll-mt-20 px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ backgroundColor: 'var(--bg)' }}>

@@ -174,7 +174,7 @@ const sel = `${inp} sel`;
 const selCls = sel;
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
-const gradBtn = { background: 'linear-gradient(135deg,#7a4dff,#4a5cff)', boxShadow: '0 8px 22px -8px rgba(110,90,255,.7)' };
+const gradBtn = { background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', boxShadow: '0 8px 22px -8px rgba(61,123,255,.7)' };
 const btnG = 'inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-[.85rem] font-semibold transition hover:bg-[var(--glass)]';
 const ninja = { WebkitMask: `url(${BASE}brand/dice.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice.png) center / contain no-repeat` };
 
@@ -293,7 +293,7 @@ const Card = ({ children, className = '', ...rest }: { children: ReactNode; clas
   <div {...rest} className={`rounded-2xl border ${className}`} style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(10px)' }}>{children}</div>
 );
 function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray' | 'blue'; children: ReactNode }) {
-  const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#9a88ff' }[tone];
+  const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#8fb2ff' }[tone];
   return <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[.74rem] font-bold" style={{ color: c, background: `color-mix(in srgb, ${c} 15%, transparent)` }}><i className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />{children}</span>;
 }
 function PageHead({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) {
@@ -366,7 +366,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
               <div className="mt-4 text-[2.2rem] font-black leading-none">{s.value}</div>
               <div className="mt-1.5 text-[.9rem] font-semibold">{s.label}</div>
               <div className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{s.note}</div>
-              <div aria-hidden="true" className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full opacity-30 blur-2xl" style={{ background: '#7a4dff' }} />
+              <div aria-hidden="true" className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full opacity-30 blur-2xl" style={{ background: '#3d7bff' }} />
             </Card>
           </button>
         ))}
@@ -633,7 +633,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </div>
               <div className="w-36">
                 <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.filled}/{r.slots.total}</span></div>
-                <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#7a4dff,#4a5cff)' }} /></div>
+                <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
                 <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('البراكت')}{r.bracket ? ' ✓' : ''}</button>
@@ -808,7 +808,7 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
               <div key={v.url + i} className="grid w-[8.5rem] gap-1.5">
                 <div className={tile} style={bd}>
                   {isVideoFile(v.url) ? <video src={v.url} muted preload="metadata" className="h-full w-full object-cover" /> : yt ? <img src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" className="h-full w-full object-cover" /> : null}
-                  <span className="pointer-events-none absolute inset-0 grid place-items-center"><i className="grid h-8 w-8 place-items-center rounded-full bg-[#7a4dff] text-[.8rem] not-italic text-white">▶</i></span>
+                  <span className="pointer-events-none absolute inset-0 grid place-items-center"><i className="grid h-8 w-8 place-items-center rounded-full bg-[#3d7bff] text-[.8rem] not-italic text-white">▶</i></span>
                   <button type="button" aria-label="remove" className={xBtn} onClick={() => set({ videos: value.videos.filter((_, j) => j !== i) })}>×</button>
                 </div>
                 {(['ar', 'en'] as const).map((l) => (
@@ -824,7 +824,7 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
             </label>
           )}
         </div>
-        {busy === 'vid' && <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--glass-b)' }}><div className="h-full transition-[width]" style={{ width: `${pct ?? 0}%`, background: '#7a4dff' }} /></div>}
+        {busy === 'vid' && <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--glass-b)' }}><div className="h-full transition-[width]" style={{ width: `${pct ?? 0}%`, background: '#3d7bff' }} /></div>}
         {value.videos.length < MAX_VIDEOS && (
           <div className="flex gap-2">
             <input dir="ltr" className={inp} style={bd} placeholder="https://youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
@@ -956,7 +956,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
       <div className="flex flex-col gap-2.5">
         {shown.map((g, gi) => (
           <Fragment key={g.id}>
-            {drag && sorting && drag.over === gi && drag.over !== rows.findIndex((r) => r.id === drag.id) && drag.over !== rows.findIndex((r) => r.id === drag.id) + 1 && <div className="h-1 rounded-full" style={{ background: '#7a4dff' }} />}
+            {drag && sorting && drag.over === gi && drag.over !== rows.findIndex((r) => r.id === drag.id) && drag.over !== rows.findIndex((r) => r.id === drag.id) + 1 && <div className="h-1 rounded-full" style={{ background: '#3d7bff' }} />}
           <Card data-gid={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 max-sm:flex-nowrap max-sm:gap-2.5 ${g.hidden || drag?.id === g.id ? 'opacity-60' : ''} ${drag?.id === g.id ? 'scale-[.98]' : ''}`}>
             {sorting && (
               <button type="button" className="grid h-10 w-9 shrink-0 cursor-grab touch-none place-items-center rounded-lg border active:cursor-grabbing" style={bd} aria-label={x('اسحب لتغيير الترتيب')} title={x('اسحب لتغيير الترتيب')}
@@ -989,7 +989,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           </Card>
           </Fragment>
         ))}
-        {drag && sorting && drag.over === rows.length && rows.findIndex((r) => r.id === drag.id) !== rows.length - 1 && <div className="h-1 rounded-full" style={{ background: '#7a4dff' }} />}
+        {drag && sorting && drag.over === rows.length && rows.findIndex((r) => r.id === drag.id) !== rows.length - 1 && <div className="h-1 rounded-full" style={{ background: '#3d7bff' }} />}
       </div>
 
       {f && (
@@ -1106,7 +1106,7 @@ function AuthShell({ children, onSubmit, title, sub }: { children: ReactNode; on
   return (
     <section className="admin-bg relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-10">
       <div className="absolute end-4 top-4 z-10 flex gap-2"><AdThemeBtn /><LanguageSwitcher /></div>
-      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#7a4dff,transparent 70%)' }} />
+      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#3d7bff,transparent 70%)' }} />
       <form onSubmit={onSubmit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
           <span aria-hidden="true" className="inline-block h-9 w-9 bg-current" style={ninja} />
@@ -1253,7 +1253,7 @@ function PermGrid({ value, onChange }: { value: Perms; onChange: (p: Perms) => v
             <span className="min-w-[5.5rem] text-[.9rem] font-extrabold">{x(r.label)}</span>
             {r.acts.map(([a, l]) => (
               <label key={a} className="inline-flex cursor-pointer items-center gap-1.5 text-[.88rem] font-semibold">
-                <input type="checkbox" className="h-4 w-4 accent-[#7a4dff]" checked={!!value[r.sec]?.includes(a)} onChange={() => flip(r.sec, a)} />{x(l)}
+                <input type="checkbox" className="h-4 w-4 accent-[#3d7bff]" checked={!!value[r.sec]?.includes(a)} onChange={() => flip(r.sec, a)} />{x(l)}
               </label>
             ))}
           </div>

@@ -53,7 +53,7 @@ export default function GamePage({ id }: { id: string }) {
   const count = (k: Tab) => (k === 'all' ? rows.length : rows.filter((r) => r.s === k).length);
   const list = tab === 'all' ? rows : rows.filter((r) => r.s === tab);
   const tag = rows.some((r) => r.s === 'live') ? t.gTagLive : rows.some((r) => r.s === 'upcoming') ? t.gTagUpcoming : '';
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #7a4dff, #4a5cff)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
     <article className="page-in relative isolate min-h-[100svh] overflow-x-clip" style={{ backgroundColor: 'var(--bg)' }}>
@@ -68,7 +68,7 @@ export default function GamePage({ id }: { id: string }) {
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2">
               <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: 'var(--glass-b)' }}>{g.genre[lang]}</span>
-              {tag && <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: '#9a88ff', color: '#9a88ff' }}>{tag}</span>}
+              {tag && <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: '#8fb2ff', color: '#8fb2ff' }}>{tag}</span>}
             </div>
             <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.4rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{g.name[lang]}</h1>
             <p className="mt-2 max-w-[40rem]" style={{ color: 'var(--muted)' }}>{g.tagline[lang]}</p>

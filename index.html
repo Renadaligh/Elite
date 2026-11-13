@@ -27,12 +27,12 @@
     }
     #app-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .app-loader-glows { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-    .app-loader-glow { position: absolute; width: 60vw; height: 60vw; min-width: 340px; min-height: 340px; border-radius: 50%; background: #4a5cff; filter: blur(110px); opacity: .22; top: 50%; left: 50%; translate: -50% -50%; animation: loader-drift 14s ease-in-out infinite alternate; }
+    .app-loader-glow { position: absolute; width: 60vw; height: 60vw; min-width: 340px; min-height: 340px; border-radius: 50%; background: #5b5ff0; filter: blur(110px); opacity: .22; top: 50%; left: 50%; translate: -50% -50%; animation: loader-drift 14s ease-in-out infinite alternate; }
     @keyframes loader-drift { to { transform: scale(1.14); opacity: .12; } }
     .app-loader-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 26px; width: min(240px, 68vw); }
     .app-loader-mark { width: 190px; max-width: 100%; height: auto; display: block; }
     .app-loader-track { width: 100%; height: 3px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, .14); }
-    .app-loader-bar { height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, #4a5cff, #9a88ff); box-shadow: 0 0 15px rgba(154,136,255, .7); animation: loader-sweep 1.6s ease-in-out infinite; }
+    .app-loader-bar { height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, #5b5ff0, #8fb2ff); box-shadow: 0 0 15px rgba(143,178,255, .7); animation: loader-sweep 1.6s ease-in-out infinite; }
     @keyframes loader-sweep { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
     @media (prefers-reduced-motion: reduce) {
       .app-loader-glow, .app-loader-bar { animation: none; }

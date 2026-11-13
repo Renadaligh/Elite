@@ -18,7 +18,7 @@ export default function NewsPage() {
   const present = useMemo(() => TAGS.filter((x) => items.some((n) => n.tag === x)), [items]);
   useCardsReveal(root, status === 'ready', [shown]);
 
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #7a4dff, #4a5cff)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
     <section ref={root} aria-labelledby="news-page-title" className="min-h-[100svh] px-[clamp(1.1rem,7vw,6.9rem)] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(6.5rem,12vw,9rem)]" style={{ backgroundColor: 'var(--bg)' }}>
