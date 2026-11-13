@@ -19,8 +19,8 @@ const BASE = import.meta.env.BASE_URL;
 export const LAYERS: ArtLayer[] = [
   {
     id: 'scene',
-    src: `${BASE}art/hero-bg.webp`,                // 1672×941, background only (no dice, no floating props)
-    srcMobile: `${BASE}art/hero-bg-m.webp`,        // 941×1672 phone version
+    src: `${BASE}art/hero2-bg.webp`,                // 1672×941, background only (no dice, no floating props)
+    srcMobile: `${BASE}art/hero2-bg-m.webp`,        // 941×1672 phone version
     depth: 6,
     zoom: 0.03,
     mirrorInLtr: false,
@@ -30,8 +30,8 @@ export const LAYERS: ArtLayer[] = [
 ];
 
 /** Phone backgrounds (941×1672). */
-export const HERO_BG_M = `${BASE}art/hero-bg-m.webp`;
-export const HERO_BG_M_NIGHT = `${BASE}art/hero-bg-m-night.webp`;
+export const HERO_BG_M = `${BASE}art/hero2-bg-m.webp`;
+export const HERO_BG_M_NIGHT = `${BASE}art/hero2-bg-m-night.webp`;
 
 /**
  * Floating props. Positions are centre points + visible width in pixels of the background they sit on
@@ -60,5 +60,5 @@ export const DICE_DESKTOP = { x: 1180, y: 163, w: 288, dur: 7.4, amp: 1.1 };
 export const DICE_PHONE = { x: 303, y: 261, w: 324, dur: 7.4, amp: 2.2 };
 
 /** The dice is its own transparent image so it can be placed independently on desktop and on phones (and animated later). */
-export const HERO_DICE = `${BASE}art/hero-dice.webp`;
-export const HERO_BG_NIGHT = `${BASE}art/hero-bg-night.webp`;
+export const HERO_DICE = `${BASE}art/hero2-dice.webp`;
+export const HERO_BG_NIGHT = `${BASE}art/hero2-bg-night.webp`;
