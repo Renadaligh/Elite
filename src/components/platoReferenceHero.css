@@ -1,0 +1,285 @@
+/* This stylesheet is scoped to the new standalone Plato AR hero. */
+.plato-ref-hero{--pr-ink:#f3f2ff;--pr-mute:#b7b6df;--pr-glass:rgba(255,255,255,.07);--pr-line:rgba(255,255,255,.16);--pr-b1:#2f5bff;--pr-b2:#7a4dff;--pr-b3:#ff9a5c;--pr-cta:#4a6bff;--pr-g1:#5aa0ff;--pr-g2:#a98bff;--pr-w1:#ffb347;--pr-w2:#ffd96a;position:relative;isolation:isolate;min-height:100svh;overflow:hidden;display:flex;flex-direction:column;background:#0d0e22;color:var(--pr-ink);font-family:Outfit,Tajawal,Poppins,system-ui,sans-serif}
+.plato-ref-hero *{box-sizing:border-box}
+.plato-ref-glows{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.plato-ref-glows span{position:absolute;border-radius:50%;filter:blur(90px);opacity:.52;animation:platoRefDrift 22s ease-in-out infinite alternate}
+.plato-ref-glows span:nth-child(1){width:46vw;height:46vw;min-width:360px;min-height:360px;background:var(--pr-b1);top:-14vw;inset-inline-start:-8vw}
+.plato-ref-glows span:nth-child(2){width:42vw;height:42vw;min-width:310px;min-height:310px;background:var(--pr-b2);top:10vh;inset-inline-end:-10vw;animation-duration:28s}
+.plato-ref-glows span:nth-child(3){width:30vw;height:30vw;min-width:250px;min-height:250px;background:var(--pr-b3);bottom:-12vw;inset-inline-end:20vw;opacity:.3;animation-duration:25s}
+@keyframes platoRefDrift{to{transform:translate(6vw,4vh) scale(1.12)}}
+.plato-ref-layout{width:100%;max-width:1400px;margin:auto;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:20px;padding:115px clamp(20px,4vw,56px) 85px}
+.plato-ref-content{position:relative;z-index:2;min-width:0}
+.plato-ref-heading{font-size:clamp(54px,7.5vw,110px);line-height:.98;font-weight:800;letter-spacing:-.03em}
+[dir=rtl] .plato-ref-heading{line-height:1.2;letter-spacing:0;font-size:clamp(52px,7vw,101px)}
+.plato-ref-heading span{display:block;animation:platoRefRise .9s cubic-bezier(.2,.8,.2,1) both}
+.plato-ref-heading span:nth-child(2){background:linear-gradient(90deg,var(--pr-g1),var(--pr-g2));background-clip:text;-webkit-background-clip:text;color:transparent;animation-delay:.16s}
+.plato-ref-heading span:nth-child(3){background:linear-gradient(90deg,var(--pr-w1),var(--pr-w2));background-clip:text;-webkit-background-clip:text;color:transparent;animation-delay:.32s}
+@keyframes platoRefRise{from{opacity:0;transform:translateY(30px);filter:blur(7px)}to{opacity:1;transform:none;filter:none}}
+.plato-ref-desc{margin-top:26px;font-size:clamp(17px,1.55vw,20px);line-height:1.7;color:var(--pr-mute);max-width:30em}
+.plato-ref-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.plato-ref-button{font-size:16px;font-weight:700;padding:15px 28px;border-radius:999px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform .25s,box-shadow .25s;white-space:nowrap}
+.plato-ref-button:hover{transform:translateY(-3px)}
+.plato-ref-button-primary{background:var(--pr-cta);color:white;box-shadow:0 10px 30px -8px var(--pr-cta)}
+.plato-ref-button-secondary{color:var(--pr-ink);border:1px solid var(--pr-line);background:var(--pr-glass);backdrop-filter:blur(10px)}
+.plato-ref-stats{display:inline-flex;flex-wrap:wrap;margin-top:44px;background:var(--pr-glass);backdrop-filter:blur(14px);border:1px solid var(--pr-line);border-radius:22px;overflow:hidden}
+.plato-ref-stat{padding:16px 24px;display:flex;flex-direction:column;gap:2px;min-width:120px}
+.plato-ref-stat+.plato-ref-stat{border-inline-start:1px solid var(--pr-line)}
+.plato-ref-stat b{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.plato-ref-stat small{font-size:13px;color:var(--pr-mute)}
+.plato-ref-heart{color:#ff6fa5;font-size:22px!important;animation:platoRefBeat 2.4s ease-in-out infinite}
+@keyframes platoRefBeat{50%{transform:scale(1.18)}}
+.plato-ref-stage{position:relative;height:min(62vh,560px);display:grid;place-items:center;perspective:1100px;min-width:0}
+.plato-ref-tilt{transform-style:preserve-3d;transition:transform .25s ease-out}
+.plato-ref-bob{transform-style:preserve-3d;animation:platoRefBob 6s ease-in-out infinite}
+@keyframes platoRefBob{50%{transform:translateY(-22px)}}
+.plato-ref-cube{--dice-size:clamp(150px,19vw,230px);position:relative;display:block;width:var(--dice-size);height:var(--dice-size);transform-style:preserve-3d;cursor:pointer;background:transparent;border:0;padding:0;appearance:none;-webkit-tap-highlight-color:transparent}
+.plato-ref-face{position:absolute;inset:0;border-radius:7%;background:linear-gradient(145deg,#fff,#cfc8ff);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:15%;border:1px solid rgba(239,235,255,.72);box-shadow:inset 0 0 40px rgba(255,255,255,.7),inset 0 -10px 30px rgba(110,90,255,.25);backface-visibility:visible}
+.plato-ref-face i{place-self:center;width:62%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#6aa8ff,#1f4fd8)}
+.plato-ref-cube.is-outline .plato-ref-face{background:rgba(255,255,255,.04);box-shadow:none;border-color:var(--pr-g2)}
+.plato-ref-cube.is-outline .plato-ref-face i{background:transparent;border:3px solid #5aa0ff}
+@keyframes platoRefSpin{from{transform:rotateX(-24deg) rotateY(0)}to{transform:rotateX(-24deg) rotateY(360deg)}}
+.plato-ref-king{position:absolute;width:72px;height:115px;top:10%;inset-inline-start:11%;filter:drop-shadow(0 14px 12px rgba(70,50,170,.35));animation:platoRefBob 7s ease-in-out infinite}
+.plato-ref-king svg{display:block;width:100%;height:100%;transform:rotate(-12deg)}
+.plato-ref-chip{position:absolute;width:78px;height:78px;border-radius:50%;background:radial-gradient(circle,#8e6bff 40%,#6c46f0 41%);border:5px dashed rgba(255,255,255,.75);box-shadow:0 16px 30px -10px rgba(110,70,240,.7);bottom:16%;inset-inline-end:8%;animation:platoRefBob 8s ease-in-out infinite -2.5s}
+.plato-ref-card{position:absolute;width:62px;height:88px;border-radius:12px;background:linear-gradient(150deg,#fff,#ffe9ef);display:grid;place-items:center;color:#ff4f7f;font-size:30px;box-shadow:0 16px 30px -12px rgba(255,79,127,.6);top:18%;inset-inline-end:14%;transform:rotate(14deg);animation:platoRefBob 9s ease-in-out infinite -4s}
+.plato-ref-shadow{position:absolute;bottom:6%;width:46%;height:26px;background:rgba(0,0,0,.5);filter:blur(22px);border-radius:50%;animation:platoRefShadow 6s ease-in-out infinite}
+@keyframes platoRefShadow{50%{transform:scale(.78);opacity:.6}}
+.plato-ref-scroll{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);border:2px solid var(--pr-mute);width:25px;height:43px;border-radius:24px;display:flex;justify-content:center;padding-top:7px}
+.plato-ref-scroll span{width:4px;height:9px;border-radius:8px;background:var(--pr-mute);animation:platoRefScroll 1.8s ease-in-out infinite}
+@keyframes platoRefScroll{to{transform:translateY(14px);opacity:0}}
+@media(max-width:980px){.plato-ref-layout{grid-template-columns:1fr;gap:0;padding-top:100px}.plato-ref-stage{order:-1;height:300px}.plato-ref-content{text-align:center}.plato-ref-desc{margin-inline:auto}.plato-ref-actions,.plato-ref-stats{justify-content:center}.plato-ref-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,430px);margin-inline:auto}.plato-ref-stat:nth-child(3){border-inline-start:0;border-top:1px solid var(--pr-line)}.plato-ref-stat:nth-child(4){border-top:1px solid var(--pr-line)}}
+@media(max-width:600px){.plato-ref-layout{padding:95px 20px 85px}.plato-ref-stage{height:220px}.plato-ref-cube{--dice-size:135px}.plato-ref-heading{font-size:clamp(46px,13vw,66px)}[dir=rtl] .plato-ref-heading{font-size:clamp(43px,12vw,65px)}.plato-ref-desc{margin-top:20px;font-size:16px}.plato-ref-actions{margin-top:25px;flex-direction:column;align-items:center}.plato-ref-button{width:min(100%,280px)}.plato-ref-stats{margin-top:30px}.plato-ref-stat{padding:12px 14px;min-width:0}.plato-ref-stat b{font-size:23px}.plato-ref-king{inset-inline-start:4%;top:0;transform:scale(.75)}.plato-ref-card{inset-inline-end:4%;top:5%;transform:scale(.8)}.plato-ref-chip{inset-inline-end:0;bottom:0;transform:scale(.75)}}
+@media(prefers-reduced-motion:reduce){.plato-ref-hero *, .plato-ref-hero *::before,.plato-ref-hero *::after{animation:none!important;transition:none!important}.plato-ref-heading span{opacity:1;transform:none;filter:none}}
+
+/* Blue-dominant glow on small screens, preserving desktop styling. */
+@media (max-width: 600px) {
+  .plato-ref-hero {
+    background: radial-gradient(ellipse 95% 55% at 45% 24%, #132d83 0%, #111b52 42%, #0a102c 78%, #0b0d21 100%);
+    --pr-b1: #277dff;
+    --pr-b2: #1555d9;
+    --pr-b3: #398aff;
+  }
+  .plato-ref-glows span:nth-child(1) {
+    width: 115vw;
+    height: 115vw;
+    top: -12vw;
+    inset-inline-start: -18vw;
+    opacity: .56;
+    filter: blur(85px);
+  }
+  .plato-ref-glows span:nth-child(2) {
+    width: 95vw;
+    height: 95vw;
+    top: 28vh;
+    inset-inline-end: -25vw;
+    opacity: .25;
+    filter: blur(95px);
+  }
+  .plato-ref-glows span:nth-child(3) {
+    opacity: .12;
+    bottom: -8vw;
+  }
+}
+
+/* The cube keeps its last rotation through roll, stop, and resume (no snap). */
+.plato-ref-cube:disabled{cursor:wait;opacity:1}
+.plato-ref-cube .plato-ref-face{transition:background .48s ease,box-shadow .48s ease,border-color .48s ease}
+.plato-ref-cube .plato-ref-face i{transition:background .48s ease,border-color .48s ease}
+.plato-ref-click-hint{position:absolute;inset-inline-start:50%;bottom:0;transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;z-index:3;padding:7px 12px;border:1px solid rgba(141,180,255,.35);border-radius:999px;background:rgba(20,36,91,.54);color:#e9efff;font-size:12px;font-weight:700;letter-spacing:.01em;pointer-events:none;animation:platoRefHint 2.4s ease-in-out infinite;box-shadow:0 0 18px rgba(68,128,255,.24);backdrop-filter:blur(10px)}
+.plato-ref-click-hint-icon{display:inline-block;font-size:15px;animation:platoRefHintTap 2.4s ease-in-out infinite}
+@keyframes platoRefHint{0%,100%{opacity:.8;translate:0 0}50%{opacity:1;translate:0 -7px}}
+@keyframes platoRefHintTap{0%,100%{transform:scale(1)}55%{transform:scale(.8)}}
+@media(max-width:980px){.plato-ref-click-hint{bottom:-11px}}
+@media(prefers-reduced-motion:reduce){.plato-ref-click-hint,.plato-ref-click-hint-icon{animation:none}}
+
+/* Smoothly blend the hero into the background of the next section. */
+.plato-ref-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset-inline: 0;
+  bottom: 0;
+  height: clamp(90px, 14vh, 170px);
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, var(--bg, #050507) 100%);
+}
+.plato-ref-scroll { z-index: 4; }
+
+/* Phones: a simple unframed prompt, centered just beneath the die. */
+@media (max-width: 600px) {
+  .plato-ref-click-hint {
+    left: 50%;
+    right: auto;
+    inset-inline-start: auto;
+    bottom: 10px;
+    transform: translateX(-50%);
+    padding: 3px 6px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: #e4eeff;
+    font-size: 12px;
+    text-shadow: 0 2px 9px rgba(5, 15, 55, .8);
+  }
+  .plato-ref-click-hint-icon { color: #a4c8ff; }
+}
+
+/* Mobile: move the hint to the quiet side of the die, mirroring placement by language. */
+@media (max-width: 600px) {
+  .plato-ref-click-hint {
+    left: 35%;
+    right: auto;
+    bottom: 8px;
+    transform: translateX(-50%);
+    direction: ltr;
+    gap: 6px;
+    white-space: nowrap;
+    text-align: center;
+  }
+  [dir="rtl"] .plato-ref-click-hint {
+    left: 67%;
+    right: auto;
+    transform: translateX(-50%);
+    direction: rtl;
+  }
+  [dir="rtl"] .plato-ref-click-hint-icon { font-size: 17px; }
+}
+
+/* Today's game: result card shown when the dice stops */
+.plato-ref-pick{position:absolute;inset-inline:5%;bottom:0;z-index:4;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px 14px;padding:14px 16px;border:1px solid var(--pr-line);border-radius:22px;background:rgba(20,22,66,.78);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 22px 50px -18px rgba(0,0,0,.65);animation:platoRefPick .55s cubic-bezier(.2,.9,.25,1.15) both}
+@keyframes platoRefPick{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
+.plato-ref-pick-art{display:block;width:64px;height:64px;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.plato-ref-pick-art img{display:block;width:100%;height:100%;object-fit:cover}
+.plato-ref-pick-body{display:flex;flex-direction:column;gap:1px;min-width:0}
+.plato-ref-pick-body small{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--pr-w2)}
+[dir=rtl] .plato-ref-pick-body small{letter-spacing:0;font-size:13px}
+.plato-ref-pick-body b{font-size:clamp(20px,2vw,26px);font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.plato-ref-pick-body span{font-size:13px;color:var(--pr-mute)}
+.plato-ref-pick-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px}
+.plato-ref-pick .plato-ref-button{flex:1 1 auto;padding:11px 18px;font-size:14px;font-family:inherit}
+.plato-ref-pick button{cursor:pointer}
+.plato-ref-pick button:disabled{opacity:.55;cursor:default}
+@media(max-width:980px){
+  .plato-ref-stage.has-pick{height:auto;min-height:220px;align-content:center;row-gap:16px;padding-bottom:6px}
+  .plato-ref-stage.has-pick .plato-ref-tilt{min-height:var(--dice-size)}
+  .plato-ref-pick{position:relative;inset:auto;width:min(100%,26rem)}
+}
+@media(prefers-reduced-motion:reduce){.plato-ref-pick{animation:none!important}}
+
+/* ── Light theme ── */
+:root[data-theme='light'] .plato-ref-hero{--pr-ink:#0f1747;--pr-mute:#4a5788;--pr-glass:rgba(255,255,255,.66);--pr-line:rgba(40,70,180,.2);--pr-b1:#8db4ff;--pr-b2:#c4b3ff;--pr-b3:#cdd8ff;--pr-cta:#2f5bff;--pr-g1:#2a63ff;--pr-g2:#6a49f0;--pr-w1:#f08400;--pr-w2:#e3a100;background:linear-gradient(180deg,#dfeaff 0%,#ebeeff 55%,#f4f2ff 100%);color:var(--pr-ink)}
+:root[data-theme='light'] .plato-ref-glows span{opacity:.6}
+:root[data-theme='light'] .plato-ref-glows span:nth-child(3){opacity:.45}
+:root[data-theme='light'] .plato-ref-face{border-color:rgba(90,100,210,.45);box-shadow:inset 0 0 28px rgba(255,255,255,.6),inset 0 -8px 24px rgba(110,90,255,.3);background:linear-gradient(145deg,#fbfaff,#c9c2fb)}
+:root[data-theme='light'] .plato-ref-shadow{background:rgba(50,60,150,.34)}
+:root[data-theme='light'] .plato-ref-king{filter:drop-shadow(0 14px 12px rgba(70,60,170,.3))}
+:root[data-theme='light'] .plato-ref-button-secondary{background:rgba(255,255,255,.7)}
+:root[data-theme='light'] .plato-ref-button-primary{box-shadow:0 12px 28px -10px rgba(47,91,255,.7)}
+:root[data-theme='light'] .plato-ref-click-hint{border-color:rgba(60,90,200,.35);background:rgba(255,255,255,.78);color:#1b2a6b;box-shadow:0 0 18px rgba(68,128,255,.2)}
+:root[data-theme='light'] .plato-ref-pick{background:rgba(255,255,255,.88);box-shadow:0 22px 50px -20px rgba(40,60,160,.45)}
+:root[data-theme='light'] .plato-ref-pick-art{box-shadow:inset 0 0 0 1px rgba(30,50,130,.18)}
+:root[data-theme='light'] .plato-ref-scroll{border-color:rgba(15,23,71,.5)}
+:root[data-theme='light'] .plato-ref-scroll span{background:rgba(15,23,71,.55)}
+@media(max-width:600px){
+  :root[data-theme='light'] .plato-ref-hero{background:radial-gradient(ellipse 95% 55% at 45% 24%,#cfe0ff 0%,#e4ecff 45%,#f3f1ff 80%,#fbf5ee 100%)}
+  :root[data-theme='light'] .plato-ref-click-hint{background:transparent;color:#1b2a6b;text-shadow:0 2px 9px rgba(255,255,255,.9);box-shadow:none}
+  :root[data-theme='light'] .plato-ref-click-hint-icon{color:#2f5bff}
+}
+
+/* Light theme: rolling (outline) state keeps the see-through wireframe look */
+:root[data-theme='light'] .plato-ref-cube.is-outline .plato-ref-face{background:rgba(255,255,255,.06);box-shadow:none;border-color:#5a4de0}
+:root[data-theme='light'] .plato-ref-cube.is-outline .plato-ref-face i{background:transparent;border:3px solid #2455e8}
+
+/* Light theme polish: black king, blue chip, cooler palette so the scene reads as one family */
+:root[data-theme='light'] .plato-ref-king g{stroke:#7b87d8}
+:root[data-theme='light'] .plato-ref-king stop:nth-child(1){stop-color:#4a5384}
+:root[data-theme='light'] .plato-ref-king stop:nth-child(2){stop-color:#232949}
+:root[data-theme='light'] .plato-ref-king stop:nth-child(3){stop-color:#0d1129}
+:root[data-theme='light'] .plato-ref-king{filter:drop-shadow(0 14px 12px rgba(30,40,110,.4))}
+:root[data-theme='light'] .plato-ref-chip{background:radial-gradient(circle,#5b8cff 40%,#2f5bff 41%);box-shadow:0 16px 30px -10px rgba(47,91,255,.65)}
+:root[data-theme='light'] .plato-ref-face{background:linear-gradient(145deg,#f4f6ff,#b9c4fb);border-color:rgba(60,80,200,.5)}
+
+/* Hero photo backgrounds (blurred, logo-free). Dark: deep blue; light: pastel version. */
+.plato-ref-hero{background:linear-gradient(180deg,rgba(4,6,24,.35),rgba(4,6,24,.2) 50%,rgba(4,6,24,.65)),url('/bg/hero-dark.jpg') center/cover no-repeat,#0d0e22}
+:root[data-theme='light'] .plato-ref-hero{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.04) 50%,rgba(244,242,255,.4)),url('/bg/hero-light.jpg') center/cover no-repeat,#e8eeff}
+@media(max-width:600px){
+  :root[data-theme='light'] .plato-ref-hero{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.08) 55%,rgba(244,242,255,.45)),url('/bg/hero-light.jpg') 40% center/cover no-repeat,#e8eeff}
+}
+
+/* Light theme v3: near-white page, blue glow only behind the dice, blue stats bar, readable copy. */
+:root[data-theme='light'] .plato-ref-hero,
+:root[data-theme='light'] .plato-ref-hero:is(*){--pr-g1:#1f55ff;--pr-g2:#2a3fe0;--pr-w1:#e8a000;--pr-w2:#ffc933;--pr-mute:#33406e;background:radial-gradient(ellipse 38% 55% at 68% 50%,rgba(47,107,255,.55),rgba(0,190,230,.18) 60%,transparent 100%),linear-gradient(180deg,#ffffff,#f3f7ff 60%,#ffffff)}
+:root[data-theme='light'][dir='rtl'] .plato-ref-hero{background:radial-gradient(ellipse 38% 55% at 32% 50%,rgba(47,107,255,.55),rgba(0,190,230,.18) 60%,transparent 100%),linear-gradient(180deg,#ffffff,#f3f7ff 60%,#ffffff)}
+@media(max-width:600px){
+  :root[data-theme='light'] .plato-ref-hero,:root[data-theme='light'][dir='rtl'] .plato-ref-hero{background:radial-gradient(ellipse 80% 38% at 50% 62%,rgba(47,107,255,.45),rgba(0,190,230,.14) 60%,transparent 100%),linear-gradient(180deg,#ffffff,#f3f7ff 60%,#ffffff)}
+}
+:root[data-theme='light'] .plato-ref-desc{color:#2b3763;font-weight:500}
+:root[data-theme='light'] .plato-ref-shadow{background:rgba(40,50,140,.42);filter:blur(14px)}
+:root[data-theme='light'] .plato-ref-face{background:linear-gradient(145deg,#ffffff,#c4d4ff);border-color:rgba(31,85,255,.65);box-shadow:inset 0 0 26px rgba(255,255,255,.9),inset 0 -8px 22px rgba(31,85,255,.35)}
+:root[data-theme='light'] .plato-ref-button-secondary{background:rgba(255,255,255,.9);border:1.5px solid #2f6bff;color:#1a46d8}
+:root[data-theme='light'] .plato-ref-stats{background:linear-gradient(135deg,#2f6bff,#1a46d8);border-color:transparent;box-shadow:0 20px 40px -18px rgba(26,70,216,.8)}
+:root[data-theme='light'] .plato-ref-stats *{color:#fff}
+
+/* ───────── Plato Table (canvas pool hero) ─────────
+   The old dice rules above are no longer used by the hero and can be deleted in a later cleanup. */
+.pt-stage{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;min-width:0;width:100%}
+.pt-canvas{display:block;max-width:100%;touch-action:pan-y;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 28px 40px rgba(8,10,40,.55))}
+.pt-hint{min-height:1.7em;margin:14px 0 0;padding:0 12px;text-align:center;font-size:13px;font-weight:700;color:var(--pr-mute);opacity:0;transform:translateY(-4px);transition:opacity .5s,transform .5s;pointer-events:none}
+.pt-hint.is-on{opacity:1;transform:none}
+.pt-links{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pt-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--pr-line);background:var(--pr-glass);color:var(--pr-ink);font-weight:700;font-size:14px;text-decoration:none}
+.pt-links a:focus-visible{outline:3px solid var(--pr-cta);outline-offset:2px}
+@media(max-width:980px){.plato-ref-layout{gap:28px}.pt-stage{margin-top:6px}}
+@media(max-width:600px){.plato-ref-layout{padding-bottom:70px}}
+@media(prefers-reduced-motion:reduce){.pt-hint{transition:none}}
+
+/* Desktop: give the table most of the width. */
+@media(min-width:981px){.plato-ref-layout{max-width:1800px;grid-template-columns:.85fr 1.15fr;gap:clamp(56px,7vw,150px)}}
+
+/* Phones and tablets: heading and text first, then the table, then the buttons and stats (so the table is not hidden below the fold). */
+@media(max-width:980px){
+  .plato-ref-layout{display:flex;flex-direction:column;align-items:stretch;gap:0}
+  .plato-ref-content{display:contents}
+  .plato-ref-heading{order:1;text-align:center}
+  .plato-ref-desc{order:2;text-align:center;margin-inline:auto}
+  .pt-stage{order:3;align-self:center;margin:24px 0 8px}
+  .plato-ref-actions{order:4;justify-content:center;width:100%}
+  .plato-ref-stats{order:5}
+}
+
+:root[data-theme='light'] .pt-canvas{filter:drop-shadow(0 20px 28px rgba(40,60,160,.28))}
+:root[data-theme='light'] .pt-hint{color:#33406e}
+
+/* Theme chooser under the table */
+.pt-themes{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}
+.pt-themes button{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--pr-line);background:var(--pr-glass);color:var(--pr-ink);font:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:background .25s,transform .25s}
+.pt-themes button:hover{transform:translateY(-2px)}
+.pt-themes button svg{width:18px;height:18px;flex:none}
+.pt-themes button[aria-pressed=true]{background:var(--pr-cta);border-color:transparent;color:#fff}
+.pt-themes button:focus-visible{outline:3px solid var(--pr-cta);outline-offset:2px}
+@media(max-width:600px){.pt-themes{gap:6px}.pt-themes button{padding:0 14px;font-size:14px}}
+
+/* Score and re-rack */
+.pt-tools{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:24px;font-size:14px;font-weight:700;color:var(--pr-mute)}
+.pt-tools b{color:var(--pr-ink);font-variant-numeric:tabular-nums}
+.pt-tools button{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--pr-line);background:var(--pr-glass);color:var(--pr-ink);font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.pt-tools button:focus-visible{outline:3px solid var(--pr-cta);outline-offset:2px}
+
+/* Phone: one typed line instead of three stacked words. */
+.plato-ref-heading .pt-type{display:none}
+.plato-ref-heading.is-typing>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.plato-ref-heading.is-typing .pt-type{display:block;font-style:normal;min-height:1.2em;line-height:1.2;white-space:nowrap}
+.pt-type em{font-style:normal}
+.pt-type .pt-w1{background:linear-gradient(90deg,var(--pr-g1),var(--pr-g2));background-clip:text;-webkit-background-clip:text;color:transparent}
+.pt-type .pt-w2{background:linear-gradient(90deg,var(--pr-w1),var(--pr-w2));background-clip:text;-webkit-background-clip:text;color:transparent}
+.pt-caret{display:inline-block;width:.07em;height:.82em;margin-inline-start:.06em;vertical-align:-.06em;background:#fff;text-decoration:none;animation:ptCaret .9s steps(1) infinite}
+@keyframes ptCaret{50%{opacity:0}}
+@media(max-width:980px){.plato-ref-actions{margin-top:20px}}
+/* Phone/tablet: tighten rack row -> hint -> buttons, and keep the scroll icon clear of the stats. */
+@media(max-width:980px){.pt-hint{margin-top:8px;min-height:1.3em}.pt-stage{margin-bottom:0}.plato-ref-actions{margin-top:10px}.plato-ref-layout{padding-bottom:120px}}
+
+.pt-themes .pt-more{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;border:1px dashed var(--pr-line);color:var(--pr-mute);font-weight:700;font-size:15px}
+@media(max-width:600px){.pt-themes .pt-more{padding:0 12px;font-size:14px}}

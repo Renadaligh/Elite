@@ -23,7 +23,7 @@ export interface NewsItem {
 
 export const NEWS_SEED: NewsItem[] = [
   { id: 'n1', date: '2026-10-12', tag: 'event',
-    title: { en: 'Elite community night: details coming soon', ar: 'ليلة مجتمع Elite: التفاصيل قريباً' },
+    title: { en: 'Elite community night: details coming soon', ar: 'ليلة مجتمع ايليت: التفاصيل قريباً' },
     summary: { en: 'Placeholder news item. Replace this with the real announcement text.', ar: 'خبر تجريبي. استبدل هذا بنص الإعلان الحقيقي.' } },
   { id: 'n2', date: '2026-10-08', tag: 'tournament',
     title: { en: 'Tournament announcement placeholder', ar: 'إعلان بطولة تجريبي' },
