@@ -839,3 +839,23 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61
 .pv-pad { padding-inline: clamp(16px, 4vw, 40px); }
 .pv-body .stream-box-wrap { margin-inline: clamp(16px, 4vw, 40px) !important; }
 .pv-body .st-brcard { width: auto; margin-inline: clamp(16px, 4vw, 40px); border-radius: 16px; overflow: hidden; }
+
+/* public bracket page: light mode (button in the top bar) */
+.pv-root[data-st=dark] { --bg: #050b2b; --bg-rgb: 5, 11, 43; }
+.pv-root[data-st=dark] .pv-top { background: #040a28; border-bottom-color: rgba(150,175,255,.2); }
+.pv-root[data-st=light] .pv-top { background: #fff; border-bottom-color: rgba(16,26,61,.12); }
+.pv-root[data-st=light] .pv-back { color: var(--text); border-color: rgba(16,26,61,.22); }
+.pv-root[data-st=light] .pv-logo img { filter: brightness(0) opacity(.88); }
+.pv-root[data-st=light] .pv-bar .br-wrap::before { background: #e3e9fa; border-block-color: rgba(16,26,61,.12); }
+.pv-root[data-st=light] .pv-bar .br-round { color: #34406a; }
+.pv-root .pv-top .st-theme { margin-inline-start: 0; }
+
+/* public bracket page: language + theme buttons, no inner vertical scrolling, bracket as wide as the page */
+.pv-tools { display: flex; align-items: center; gap: 8px; }
+.pv-top { gap: 10px; }
+.pv-logo { margin-inline: auto; }
+.pv-root[data-st=light] .pv-tools .pill { border-color: rgba(16,26,61,.22); color: var(--text); }
+.pv-body .st-brcard { overflow: visible; border-radius: 0; margin-inline: clamp(16px, 4vw, 40px); width: auto; max-width: none; }
+.br-scroll.pv { overflow-y: hidden; max-height: none; height: auto; border-radius: 16px; }
+.pv-root[data-st=dark] .br-scroll.pv, .pv-root[data-st=light] .br-scroll.pv { border: 1px solid var(--glass-b); }
+.pv .br-wrap { margin-inline: auto; }

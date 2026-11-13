@@ -375,12 +375,16 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
 export function PublicView({ id }: { id: string }) {
   const auth = useAuth();
   const { lang } = useI18n();
+  const st = S[lang === 'ar' ? 'ar' : 'en'];
+  const [theme, setTheme] = useState<Theme>(() => { try { return localStorage.getItem('elite-pv-theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; } });
+  useEffect(() => { try { localStorage.setItem('elite-pv-theme', theme); } catch { /* private mode */ } }, [theme]);
   // Standalone page (no site header/footer): logo, back-to-site button, then the bracket.
   return (
-    <div className="pv-root">
+    <div className="pv-root" data-st={theme}>
       <div className="pv-top">
         <a href="#/" className="pv-back"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: lang === 'ar' ? 'none' : 'scaleX(-1)' }}><path d="M9 6l6 6-6 6" /></svg>{lang === 'ar' ? 'العودة للموقع' : 'Back to site'}</a>
         <a href="#/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
+        <div className="pv-tools"><ThemeBtn theme={theme} set={setTheme} s={st} /><LanguageSwitcher /></div>
       </div>
       <BracketToolPage id={id} auth={auth} readOnly />
     </div>
