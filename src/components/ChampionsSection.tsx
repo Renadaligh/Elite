@@ -43,27 +43,26 @@ function ChampionCard({ x }: { x: Tournament }) {
   useGames();
   const g = getGame(x.gameId);
   const w = useWinner(x);
+  const shown = open ? w.members : w.members.slice(0, LIMIT);
   return (
-    <article className={`champ-card group ${x.image ? 'has-img' : ''}`} style={{ ['--champ-bg' as string]: x.image ? `url("${x.image}")` : `url(${BASE}art/hero-scene.webp)`, ['--champ-pos' as string]: x.imagePos || 'center' }}>
-      <div className="flex items-center justify-between">
-        <span aria-hidden="true" className="inline-block h-[1.5rem] w-[1.5rem] bg-white" style={ninjaMask} />
-        <span className={`champ-mode ${w.isTeam ? 'is-team' : ''}`}>{w.isTeam ? t.chTeam : t.chSolo}</span>
+    <article className="tc cc">
+      <div className="tc-im" style={x.image ? undefined : { background: `linear-gradient(135deg, ${g?.colors?.[0] ?? '#3d7bff'}, ${g?.colors?.[1] ?? '#1a1f6a'})` }}>
+        {x.image && <img src={x.image} alt="" loading="lazy" decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+        <div className="tc-chips"><span className="rounded-full px-3 py-1 text-[.78rem] font-bold" style={{ background: 'var(--tc-chip)', color: 'var(--text)' }}>{w.isTeam ? t.chTeam : t.chSolo}</span></div>
       </div>
-      <div className="flex-1" />
-      <p className="champ-label">{t.chBadge}</p>
-      <h3 dir="auto" className="champ-name">{w.name}</h3>
-      {w.members.length > 0 && (
-        <>
-          <ul className={`champ-members ${w.members.length > 3 ? 'is-grid' : ''}`}>{(open ? w.members : w.members.slice(0, LIMIT)).map((m, i) => <li key={`${m}-${i}`} dir="auto">{m}</li>)}</ul>
-          {w.members.length > LIMIT && (
-            <button type="button" className="champ-more" onClick={() => setOpen((v) => !v)}>{open ? t.chShowLess : `${t.chShowAll} (+${w.members.length - LIMIT})`}</button>
-          )}
-        </>
-      )}
-      <div className="champ-meta">
-        <p className="text-[.95rem] font-bold text-white">{x.name[lang]}</p>
-        <p><time dateTime={x.startsAt}>{date(x)}</time>{g ? ` · ${g.name[lang]}` : ''}</p>
-        <p className="flex items-center justify-between gap-3"><span>{t.chPrize}</span><b className="text-white">{x.prize[lang]}</b></p>
+      <div className="tc-body">
+        <p className="text-[.78rem] font-bold" style={{ color: 'var(--link-on)' }}>{t.chBadge}</p>
+        <h3 dir="auto" className="mt-0.5 text-[1.4rem] font-extrabold leading-tight [overflow-wrap:anywhere]">{w.name}</h3>
+        {w.members.length > 0 && (
+          <ul className="mt-3 flex flex-wrap gap-1.5">{shown.map((m, i) => <li key={`${m}-${i}`} dir="auto" className="rounded-full px-2.5 py-1 text-[.8rem]" style={{ background: 'var(--tc-pill)' }}>{m}</li>)}
+            {w.members.length > LIMIT && <li><button type="button" className="rounded-full px-2.5 py-1 text-[.8rem] font-bold" style={{ color: 'var(--link-on)' }} onClick={() => setOpen((v) => !v)}>{open ? t.chShowLess : `+${w.members.length - LIMIT} ${t.chShowAll}`}</button></li>}
+          </ul>
+        )}
+        <div className="mt-4 text-[.86rem]" style={{ color: 'var(--muted)' }}>
+          <p className="font-bold" style={{ color: 'var(--text)' }}>{x.name[lang]}</p>
+          <p><time dateTime={x.startsAt}>{date(x)}</time>{g ? ` · ${g.name[lang]}` : ''}</p>
+          <p className="mt-1">{t.chPrize}: <b style={{ color: 'var(--text)' }}>{x.prize[lang]}</b></p>
+        </div>
       </div>
     </article>
   );

@@ -1,5 +1,4 @@
 import type { Localized } from './news';
-import type { Bracket } from './bracket';
 
 /**
  * Tournament model + PLACEHOLDER data. Status is NOT stored: it is computed from the dates
@@ -33,11 +32,6 @@ export interface Tournament {
   /** Winner portrait (tall, ~9:16). Path under /public or full URL. */
   /** Names of the winning team's members (team tournaments only). */
   winnerMembers?: string[];
-  /** Live bracket (single/double elimination), updated from the dashboard. */
-  bracket?: Bracket;
-  /** Live stream link + on/off switch: nothing is shown to visitors unless streamLive is true. */
-  streamUrl?: string;
-  streamLive?: boolean;
 }
 
 export type TournamentStatus = 'live' | 'upcoming' | 'completed';

@@ -15,11 +15,14 @@ const TAB_KEY: Record<Tab, keyof Dict> = { all: 'tabAll', live: 'tabLive', upcom
 const ST_KEY: Record<TournamentStatus, keyof Dict> = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' };
 const ST_COLOR: Record<TournamentStatus, string> = { live: '#27c27a', upcoming: '#ffb02e', completed: '#8d8d9b' };
 
+const ST_BG: Record<TournamentStatus, string> = { live: '#ef4565', upcoming: '#18a77a', completed: 'var(--tc-chip)' };
+
 function StatusPill({ s }: { s: TournamentStatus }) {
   const { t } = useI18n();
+  const solid = s !== 'completed';
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[.78rem] font-bold" style={{ borderColor: ST_COLOR[s], color: s === 'completed' ? 'var(--muted)' : 'var(--text)', background: s === 'live' ? 'rgba(39,194,122,.18)' : 'var(--chip-bg)' }}>
-      <i aria-hidden="true" className={`h-2 w-2 rounded-full ${s === 'live' ? 'animate-pulse' : ''}`} style={{ background: ST_COLOR[s] }} />
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[.78rem] font-bold backdrop-blur-sm" style={{ background: ST_BG[s], color: solid ? '#fff' : 'var(--text)' }}>
+      {s === 'live' && <i aria-hidden="true" className="h-2 w-2 animate-pulse rounded-full bg-white" />}
       {t[ST_KEY[s]]}
     </span>
   );
@@ -89,57 +92,35 @@ function MajorBadge() {
 
 /** Dice mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
 
-function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
-  const { t, lang } = useI18n();
-  const fmt = useFmt();
+/** Image on top (full colour, no overlay) with the status chips on it; the text sits below on a plain surface. */
+function Media({ x, s }: { x: Tournament; s: TournamentStatus }) {
   useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
-    <article className="news-card on-art relative text-white md:mb-6" style={{ background: `linear-gradient(135deg, ${c[0]}, ${c[1]})`, border: 'none' }}>
-      {x.image ? (
-        <>
-          <img src={x.image} alt="" loading="lazy" decoding="async" className="tour-img" style={{ objectPosition: x.imagePos || undefined }} />
-          <div aria-hidden="true" className="tour-fade tour-fade-h" />
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,.55), rgba(0,0,0,.15))' }} aria-hidden="true" />
-        </>
-      )}
-      <div className={`relative grid grid-cols-1 gap-6 p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center ${x.image ? 'pt-20 lg:pt-8' : ''}`}>
-        <div className="flex flex-col">
-          <div className="mb-3 flex flex-wrap items-center gap-3"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{g && <span className="text-[.85rem] font-semibold opacity-90">{g.name[lang]}</span>}</div>
-          <h3 className="text-[clamp(1.4rem,3vw,2.3rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">{x.name[lang]}</h3>
-          <p className="mt-1.5 text-[.95rem] opacity-85">{fmt(x.startsAt)}</p>
-          <Facts x={x} />
-          <Register x={x} s={s} />
-        </div>
-        <div className="min-w-0 lg:justify-self-end"><Countdown to={s === 'live' ? x.endsAt : x.startsAt} label={s === 'live' ? t.tEndsIn : t.tStartsIn} /></div>
-      </div>
-    </article>
+    <div className="tc-im" style={x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
+      {x.image && <img src={x.image} alt="" loading="lazy" decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+      <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</div>
+    </div>
   );
 }
 
-function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
+function TourCard({ x, s, feat }: { x: Tournament; s: TournamentStatus; feat?: boolean }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   useGames();
   const g = getGame(x.gameId);
+  const showCd = s === 'upcoming' || (feat && s === 'live');
   return (
-    <article className="news-card news-card-hover">
-      {x.image && (
-        <>
-          <img src={x.image} alt="" loading="lazy" decoding="async" className="tour-img" style={{ objectPosition: x.imagePos || undefined }} />
-          <div aria-hidden="true" className="tour-fade" />
-        </>
-      )}
-      <div className={`relative flex min-w-0 flex-1 flex-col p-5 ${x.image ? 'pt-12' : ''}`}>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</span>{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
-        <h3 className="text-[1.15rem] font-semibold leading-snug">{x.name[lang]}</h3>
+    <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''}`}>
+      <Media x={x} s={s} />
+      <div className="tc-body">
+        {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
+        <h3 className={`${feat ? 'text-[clamp(1.3rem,2.4vw,1.9rem)] font-extrabold' : 'text-[1.15rem] font-bold'} mt-0.5 leading-snug [overflow-wrap:anywhere]`}>{x.name[lang]}</h3>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time></p>
         <Facts x={x} />
-        {s === 'completed' && x.winner && <p className="mt-4 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)' }}>{t.tWinner}: <b>{x.winner[lang]}</b></p>}
+        {showCd && <div className="mt-4"><Countdown to={s === 'live' ? x.endsAt : x.startsAt} label={s === 'live' ? t.tEndsIn : t.tStartsIn} /></div>}
+        {s === 'completed' && x.winner && <p className="tc-win"><span style={{ color: 'var(--muted)' }}>{t.tWinner}</span><b>{x.winner[lang]}</b></p>}
         <Register x={x} s={s} />
       </div>
     </article>
@@ -185,8 +166,8 @@ export default function TournamentsSection() {
       {status === 'ready' && list.length === 0 && <p style={{ color: 'var(--muted)' }}>{t.tEmpty}</p>}
       {status === 'ready' && list.length > 0 && (
         <div className="m-rail md:block">
-          {featured && <Featured x={featured.x} s={featured.s} />}
-          {rest.length > 0 && <div className="m-cont">{rest.map((r) => <Card key={r.x.id} x={r.x} s={r.s} />)}</div>}
+          {featured && <TourCard feat x={featured.x} s={featured.s} />}
+          {rest.length > 0 && <div className="m-cont">{rest.map((r) => <TourCard key={r.x.id} x={r.x} s={r.s} />)}</div>}
         </div>
       )}
     </section>

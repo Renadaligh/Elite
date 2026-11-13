@@ -15,10 +15,10 @@ type Tab = 'all' | TournamentStatus;
 const TABS: Tab[] = ['all', 'live', 'upcoming', 'completed'];
 const TAB_KEY = { all: 'tabAll', live: 'tabLive', upcoming: 'tabUpcoming', completed: 'tabDone' } as const;
 
-function Block({ title, children }: { title: string; children: ReactNode }) {
+function Block({ title, children, bare }: { title: string; children: ReactNode; bare?: boolean }) {
   return (
     <section aria-label={title} className="mt-10">
-      <h2 className="mb-4 text-[1.35rem] font-extrabold">{title}</h2>
+      {!bare && <h2 className="mb-4 text-[1.35rem] font-extrabold">{title}</h2>}
       {children}
     </section>
   );
@@ -75,12 +75,12 @@ export default function GamePage({ id }: { id: string }) {
           </div>
         </header>
 
-        {!!g.texts?.length && <Block title={t.gSecAbout}>
+        {!!g.texts?.length && <Block title={t.gSecAbout} bare>
           {(
             <div className={`grid gap-4 ${g.texts.length > 1 ? 'md:grid-cols-2' : ''}`}>
               {g.texts.map((x, i) => (
-                <div key={i} className="rounded-2xl border p-5" style={card}>
-                  {x.title[lang] && <h3 className="mb-2 text-[1.1rem] font-bold">{x.title[lang]}</h3>}
+                <div key={i}>
+                  {x.title[lang] && <h2 className="mb-3 text-[1.35rem] font-extrabold">{x.title[lang]}</h2>}
                   <p className="whitespace-pre-line leading-relaxed" style={{ color: 'var(--muted)' }}>{x.body[lang]}</p>
                 </div>
               ))}

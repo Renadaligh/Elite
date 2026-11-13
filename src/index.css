@@ -943,3 +943,18 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 /* hero, light: the bottom fades into the page colour in many soft steps (taller, eased), so no edge shows under the props */
 :root[data-hero='day'] .hero-bottomfade { height: 34%; background-image: linear-gradient(180deg, rgba(var(--bg-rgb), 0) 0%, rgba(var(--bg-rgb), .06) 18%, rgba(var(--bg-rgb), .2) 38%, rgba(var(--bg-rgb), .45) 58%, rgba(var(--bg-rgb), .75) 78%, rgba(var(--bg-rgb), .93) 92%, var(--bg) 100%) !important; }
 @media (max-width: 767px) { :root[data-hero='day'] .hero-bottomfade { height: 16%; } }
+
+/* ---- tournament cards: image on top in full colour, text below on a plain surface ---- */
+:root { --tc-bg: rgba(14,26,88,.85); --tc-chip: rgba(8,14,50,.78); --tc-pill: #1a2870; }
+:root[data-hero='day'] { --tc-bg: #fffdff; --tc-chip: rgba(255,255,255,.92); --tc-pill: #ece4fa; }
+.tc { position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: 1.25rem; background: var(--tc-bg); box-shadow: 0 10px 26px -12px var(--shadow, rgba(0,0,0,.4)); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+.tc:hover { transform: translateY(-3px); }
+.tc-im { position: relative; height: 9.5rem; overflow: hidden; flex: none; }
+.tc-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tc-chips { position: absolute; top: .75rem; inset-inline-start: .75rem; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.tc-body { display: flex; flex-direction: column; min-width: 0; flex: 1; padding: 1rem 1.1rem 1.15rem; }
+.tc-win { margin-top: 1rem; padding: .55rem .8rem; border-radius: .8rem; background: var(--tc-pill); font-size: .88rem; display: flex; justify-content: space-between; gap: .5rem; }
+.tc .btn-primary { align-self: stretch; justify-content: center; }
+.tc [role=timer] > div { background: var(--tc-pill) !important; border-color: transparent !important; }
+@media (min-width: 1024px) { .tc-feat { display: grid; grid-template-columns: 1fr 1.1fr; } .tc-feat .tc-im { height: auto; min-height: 18rem; } }
+@media (prefers-reduced-motion: reduce) { .tc, .tc:hover { transition: none; transform: none; } }
