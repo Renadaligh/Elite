@@ -63,7 +63,7 @@ export default function GamePage({ id }: { id: string }) {
 
         <header className="flex flex-col gap-6 pb-8 sm:flex-row sm:items-center">
           <span className="relative aspect-[4/5] w-36 shrink-0 overflow-hidden rounded-3xl sm:w-44" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, boxShadow: `0 20px 50px -22px ${tone}` }}>
-            {g.image ? <img src={g.image} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 22%' }} /> : <span aria-hidden="true" className="absolute inset-0" style={{ background: `url(${import.meta.env.BASE_URL}brand/cube.png) 50% 50% / 52% no-repeat` }} />}
+            {g.image ? <img src={g.image} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 22%' }} /> : <span aria-hidden="true" className="absolute inset-0" style={{ background: `url(${import.meta.env.BASE_URL}brand/cube-v2.png) 50% 50% / 52% no-repeat` }} />}
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2">

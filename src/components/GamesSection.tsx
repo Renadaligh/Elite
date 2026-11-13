@@ -83,7 +83,7 @@ export default function GamesSection() {
   };
 
   const cw = wide ? 'clamp(210px, 19vw, 290px)' : 'min(60vw, 250px)';
-  const stage: Vars = { '--cw': cw, '--wm': `url(${BASE}brand/cube.png)`, height: 'calc(var(--cw) * 1.4 + 2.5rem)' };
+  const stage: Vars = { '--cw': cw, '--wm': `url(${BASE}brand/cube-v2.png)`, height: 'calc(var(--cw) * 1.4 + 2.5rem)' };
   const active = games[index];
 
   return (

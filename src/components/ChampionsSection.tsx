@@ -25,7 +25,7 @@ function useDate() {
 }
 
 const BASE = import.meta.env.BASE_URL;
-const ninjaMask = { WebkitMask: `url(${BASE}brand/dice.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice.png) center / contain no-repeat` } as const;
+const ninjaMask = { WebkitMask: `url(${BASE}brand/dice-v2.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice-v2.png) center / contain no-repeat` } as const;
 
 /** Winner's name, plus the team members (team tournaments). */
 const useWinner = (x: Tournament) => {

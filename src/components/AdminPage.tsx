@@ -29,7 +29,7 @@ const EN: Record<string, string> = {
  'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic',
 
   'تحديث': 'Update', 'بطولة': 'Tournament', 'مجتمع': 'Community', 'فعالية': 'Event',
-  'لوحة التحكم': 'Dashboard', 'مرحباً بك': 'Welcome back', 'أدخل كلمة السر للمتابعة': 'Enter the password to continue',
+  'لوحة التحكم': 'Dashboard', 'مرحبًا بك': 'Welcome back', 'أدخل كلمة السر للمتابعة': 'Enter the password to continue',
   'كلمة السر': 'Password', 'دخول': 'Sign in', 'جارٍ الدخول…': 'Signing in…', 'كلمة السر غير صحيحة': 'Wrong password',
   'تعذّر الاتصال بالخادم': 'Could not reach the server', 'العودة للموقع': 'Back to the site', 'إظهار': 'Show', 'إخفاء': 'Hide',
   'نظرة عامة': 'Overview', 'الأخبار': 'News', 'البطولات': 'Tournaments', 'التسجيلات': 'Registrations', 'تسجيل خروج': 'Sign out',
@@ -176,7 +176,7 @@ const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
 const gradBtn = { background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', boxShadow: '0 8px 22px -8px rgba(61,123,255,.7)' };
 const btnG = 'inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-[.85rem] font-semibold transition hover:bg-[var(--glass)]';
-const ninja = { WebkitMask: `url(${BASE}brand/dice.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice.png) center / contain no-repeat` };
+const ninja = { WebkitMask: `url(${BASE}brand/dice-v2.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice-v2.png) center / contain no-repeat` };
 
 /** Downscale big photos in the browser (max 1800px, WebP) before upload. GIFs and failures are sent as-is. */
 async function shrink(file: File): Promise<Blob> {
@@ -1064,15 +1064,15 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
       </div>
       <Card className="overflow-x-auto">
         <table className="w-full min-w-[42rem] text-[.88rem]">
-          <thead><tr style={{ color: 'var(--muted)' }}>{[x('البطولة'), 'Plato ID', x('الفريق'), x('الأعضاء'), x('التاريخ'), ''].map((h, i) => <th key={i} className="px-4 py-3 text-start text-[.78rem] font-bold uppercase tracking-wide">{h}</th>)}</tr></thead>
+          <thead><tr style={{ color: 'var(--muted)' }}>{[x('البطولة'), 'Plato ID', x('الفريق'), x('الأعضاء'), x('التاريخ'), ''].map((h, i) => <th key={i} className="px-4 py-3 text-center text-[.78rem] font-bold uppercase tracking-wide">{h}</th>)}</tr></thead>
           <tbody>
             {shown.map((r) => (
               <tr key={r.id} className="border-t align-top" style={{ borderColor: 'var(--glass-b)' }}>
-                <td className="px-4 py-3">{r.tournament_name}</td>
-                <td className="px-4 py-3 font-semibold" dir="ltr" style={{ textAlign: 'start' }}>{r.plato_id}</td>
-                <td className="px-4 py-3">{r.team_name || '—'}</td>
-                <td className="whitespace-pre-line px-4 py-3" dir="ltr" style={{ textAlign: 'start' }}>{r.members || '—'}</td>
-                <td className="px-4 py-3" dir="ltr" style={{ textAlign: 'start', color: 'var(--muted)' }}>{r.created_at}</td>
+                <td className="px-4 py-3 text-center">{r.tournament_name}</td>
+                <td className="px-4 py-3 font-semibold" dir="ltr" style={{ textAlign: 'center' }}>{r.plato_id}</td>
+                <td className="px-4 py-3 text-center">{r.team_name || '—'}</td>
+                <td className="whitespace-pre-line px-4 py-3 text-center" dir="ltr" style={{ textAlign: 'center' }}>{r.members || '—'}</td>
+                <td className="px-4 py-3" dir="ltr" style={{ textAlign: 'center', color: 'var(--muted)' }}>{r.created_at}</td>
                 <td className="px-4 py-3">{can('regs', 'delete') && <button className="p-1" style={{ color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-[18px] w-[18px]" /></button>}</td>
               </tr>
             ))}
@@ -1146,7 +1146,7 @@ function Login({ onDone }: { onDone: (key: string, me: Me) => void }) {
   }
 
   return (
-    <AuthShell onSubmit={submit} title={x('مرحباً بك')} sub={`Plato AR · ${x('لوحة التحكم')}`}>
+    <AuthShell onSubmit={submit} title={x('مرحبًا بك')} sub={`Plato AR · ${x('لوحة التحكم')}`}>
       <label className="mt-7 flex flex-col gap-2 text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{x('اسم المستخدم')}
         <input autoFocus autoComplete="username" autoCapitalize="none" spellCheck={false} dir="ltr" className={`${inp} !py-3`} style={{ ...bd, textAlign: 'start' }} value={user} onChange={(e) => setUser(e.target.value)} />
       </label>

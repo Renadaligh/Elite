@@ -21,7 +21,7 @@ async function preloadBrand() {
   if (IMG.cube) return;
   const b = import.meta.env.BASE_URL;
   try { await document.fonts?.load('500 24px Ubuntu'); } catch { /* optional */ }
-  IMG.cube = await loadImg(`${b}brand/cube.png`);
+  IMG.cube = await loadImg(`${b}brand/cube-v2.png`);
 }
 function brandMark(c: CanvasRenderingContext2D, W: number, cy: number, rtl: boolean, family: string) {
   const ch = 26, gap = 8;
