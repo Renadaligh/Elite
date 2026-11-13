@@ -44,7 +44,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
   return (
     <header data-solid={solid} className="hdr fixed inset-x-0 top-0 z-50">
       <div dir="ltr" className="flex items-center justify-between gap-4 px-[clamp(1rem,4vw,3.5rem)] py-3 sm:py-4">
-        <BrandLockup collapsed={!solid} />
+        <BrandLockup />
         <nav dir={dir} aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-[clamp(1rem,2.2vw,2.1rem)]">
             {NAV.map((n) => {
