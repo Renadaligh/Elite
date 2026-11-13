@@ -865,3 +865,6 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61
 
 /* dashboard editor: the bracket card takes the full column (fit-content collapsed it to 0 width for big brackets) */
 .st-brcard { width: 100%; justify-self: stretch; min-width: 0; }
+/* public bracket page: logo on one side, buttons on the other (no back button) */
+.pv-logo { margin-inline: 0; }
+.pv-tools { margin-inline-start: auto; }

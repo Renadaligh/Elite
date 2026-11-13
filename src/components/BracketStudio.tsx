@@ -382,7 +382,6 @@ export function PublicView({ id }: { id: string }) {
   return (
     <div className="pv-root" data-st={theme}>
       <div className="pv-top">
-        <a href="#/" className="pv-back"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: lang === 'ar' ? 'none' : 'scaleX(-1)' }}><path d="M9 6l6 6-6 6" /></svg>{lang === 'ar' ? 'العودة للموقع' : 'Back to site'}</a>
         <a href="#/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
         <div className="pv-tools"><ThemeBtn theme={theme} set={setTheme} s={st} /><LanguageSwitcher /></div>
       </div>
