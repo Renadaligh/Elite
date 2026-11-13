@@ -939,3 +939,7 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 [data-st=light] .br-row.is-win, :root[data-hero='day'] .br-row.is-win:not([data-st=dark] *) { background: #d9cdf6; }
 /* public bracket: columns keep a sensible width instead of stretching across a wide screen */
 .pv .br-wrap { max-width: calc(var(--nc, 4) * 16rem + 3rem); margin-inline: auto; }
+
+/* hero, light: the bottom fades into the page colour in many soft steps (taller, eased), so no edge shows under the props */
+:root[data-hero='day'] .hero-bottomfade { height: 34%; background-image: linear-gradient(180deg, rgba(var(--bg-rgb), 0) 0%, rgba(var(--bg-rgb), .06) 18%, rgba(var(--bg-rgb), .2) 38%, rgba(var(--bg-rgb), .45) 58%, rgba(var(--bg-rgb), .75) 78%, rgba(var(--bg-rgb), .93) 92%, var(--bg) 100%) !important; }
+@media (max-width: 767px) { :root[data-hero='day'] .hero-bottomfade { height: 16%; } }
