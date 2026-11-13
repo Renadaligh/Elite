@@ -810,16 +810,32 @@ html, body { max-width: 100%; overflow-x: clip; }
 
 
 /* ---- dashboard themes: dark = blues with a violet touch, light = cool white ---- */
-:root[data-ad='dark'] { --bg: #050b2b; --bg-rgb: 5, 11, 43; --text: #f4f7ff; --muted: #a3b3ea; --glass: rgba(14,26,88,.6); --glass-b: rgba(150,175,255,.2); --nav-solid: rgba(6,14,52,.84); --dialog: #0b1650; --link-on: #9db4ff; --chip-bg: rgba(0,0,0,.28); --chip-b: rgba(150,175,255,.22); --track: rgba(150,175,255,.18); --skel-a: rgba(150,175,255,.05); --skel-b: rgba(150,175,255,.11); }
-:root[data-ad='light'] { --bg: #eef2fb; --bg-rgb: 238, 242, 251; --text: #101a3d; --muted: #55608a; --glass: rgba(255,255,255,.92); --glass-b: rgba(16,26,61,.14); --nav-solid: rgba(246,248,254,.92); --dialog: #fff; --link-on: #3b5bdb; --chip-bg: rgba(16,26,61,.06); --chip-b: rgba(16,26,61,.14); --track: rgba(16,26,61,.12); --shadow: rgba(16,26,61,.18); --skel-a: rgba(16,26,61,.05); --skel-b: rgba(16,26,61,.1); color-scheme: light; }
-:root[data-ad='dark'] body, :root[data-ad='light'] body { background: var(--bg); }
-:root[data-ad='dark'] .admin-bg { background: radial-gradient(60% 45% at 92% 0%, rgba(140,100,255,.14), transparent 70%), radial-gradient(70% 55% at 10% 5%, rgba(40,110,255,.26), transparent 70%), linear-gradient(180deg, #08123d, #050b2b); }
-:root[data-ad='light'] .admin-bg { background: radial-gradient(70% 55% at 85% 0%, rgba(61,123,255,.14), transparent 70%), radial-gradient(60% 50% at 10% 10%, rgba(60,120,255,.16), transparent 70%), linear-gradient(180deg, #f6f8ff, #e9eefb); }
-:root[data-ad='light'] .admin-page .shadow-2xl, :root[data-ad='light'] .admin-bg form { box-shadow: 0 24px 50px -28px rgba(16,26,61,.35); }
-:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61,.4); }
+html:root[data-ad='dark'] { --bg: #050b2b; --bg-rgb: 5, 11, 43; --text: #f4f7ff; --muted: #a3b3ea; --glass: rgba(14,26,88,.6); --glass-b: rgba(150,175,255,.2); --nav-solid: rgba(6,14,52,.84); --dialog: #0b1650; --link-on: #9db4ff; --chip-bg: rgba(0,0,0,.28); --chip-b: rgba(150,175,255,.22); --track: rgba(150,175,255,.18); --skel-a: rgba(150,175,255,.05); --skel-b: rgba(150,175,255,.11); }
+html:root[data-ad='light'] { --bg: #eef2fb; --bg-rgb: 238, 242, 251; --text: #101a3d; --muted: #55608a; --glass: rgba(255,255,255,.92); --glass-b: rgba(16,26,61,.14); --nav-solid: rgba(246,248,254,.92); --dialog: #fff; --link-on: #3b5bdb; --chip-bg: rgba(16,26,61,.06); --chip-b: rgba(16,26,61,.14); --track: rgba(16,26,61,.12); --shadow: rgba(16,26,61,.18); --skel-a: rgba(16,26,61,.05); --skel-b: rgba(16,26,61,.1); color-scheme: light; }
+html:root[data-ad='dark'] body, html:root[data-ad='light'] body { background: var(--bg); }
+html:root[data-ad='dark'] .admin-bg { background: radial-gradient(60% 45% at 92% 0%, rgba(140,100,255,.14), transparent 70%), radial-gradient(70% 55% at 10% 5%, rgba(40,110,255,.26), transparent 70%), linear-gradient(180deg, #08123d, #050b2b); }
+html:root[data-ad='light'] .admin-bg { background: radial-gradient(70% 55% at 85% 0%, rgba(61,123,255,.14), transparent 70%), radial-gradient(60% 50% at 10% 10%, rgba(60,120,255,.16), transparent 70%), linear-gradient(180deg, #f6f8ff, #e9eefb); }
+html:root[data-ad='light'] .admin-page .shadow-2xl, html:root[data-ad='light'] .admin-bg form { box-shadow: 0 24px 50px -28px rgba(16,26,61,.35); }
+html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61,.4); }
 .admin-bg .st-theme, .admin-page .st-theme, header .st-theme { border-color: var(--glass-b); background: var(--glass); color: var(--text); }
 
 
 /* ---- site light mode (the sun/moon button): dark is the default, light = day hero + cool-white pages ---- */
 :root[data-hero='day'] { --bg: #f2f5fc; --bg-rgb: 242, 245, 252; --text: #101a3d; --muted: #55608a; --glass: rgba(255,255,255,.88); --glass-b: rgba(16,26,61,.14); --nav-solid: rgba(246,248,254,.9); --dialog: #fff; --link-on: #3b5bdb; --chip-bg: rgba(16,26,61,.06); --chip-b: rgba(16,26,61,.14); --track: rgba(16,26,61,.12); --shadow: rgba(16,26,61,.18); --skel-a: rgba(16,26,61,.05); --skel-b: rgba(16,26,61,.1); --art-a: #dfe7fb; --art-b: #f2f5fc; --card-dim: none; color-scheme: light; }
 :root[data-hero='day'] body { background: var(--bg); }
+
+/* light mode: below-the-hero fixes */
+.on-art { --bg-rgb: 7, 10, 38; }
+:root[data-hero='day'] .news-card:not(.on-art) .tour-img { filter: saturate(.85) brightness(1.12); }
+:root[data-hero='day'] .news-card:not(.on-art) .tour-fade { background: linear-gradient(to top, rgba(var(--bg-rgb), 1) 0%, rgba(var(--bg-rgb), .94) 50%, rgba(var(--bg-rgb), .8) 100%); }
+:root[data-hero='day'] .news-card:not(.on-art) { box-shadow: 0 18px 40px -28px rgba(16,26,61,.35); }
+/* light mode: the hero melts into the page through soft blue instead of a milky white haze */
+:root[data-hero='day'] .hero-bottomfade { height: 26%; background-image: linear-gradient(180deg, rgba(110,128,225,0) 0%, rgba(120,140,235,.22) 40%, rgba(170,188,240,.6) 78%, var(--bg) 100%) !important; }
+@media (max-width: 767px) { :root[data-hero='day'] .hero-bottomfade { height: 12%; } }
+/* phones: slightly smaller Plato AR wordmark */
+@media (max-width: 767px) { .hero-name img { height: 1.14em; } }
+
+/* public bracket link: side margins so the page is not glued to the screen edges */
+.pv-pad { padding-inline: clamp(16px, 4vw, 40px); }
+.pv-body .stream-box-wrap { margin-inline: clamp(16px, 4vw, 40px) !important; }
+.pv-body .st-brcard { width: auto; margin-inline: clamp(16px, 4vw, 40px); border-radius: 16px; overflow: hidden; }
