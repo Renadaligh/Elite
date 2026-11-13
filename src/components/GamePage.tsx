@@ -8,7 +8,7 @@ import { ArrowIcon } from './icons';
 import { Register } from './TournamentsSection';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
-const card = { background: 'var(--glass)', borderColor: 'var(--glass-b)' };
+const card = { background: 'var(--glass)', borderColor: 'transparent' };
 const ST = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' } as const;
 const TONE = { live: '#27c27a', upcoming: '#ffb02e', completed: '#9aa0b8' } as const;
 type Tab = 'all' | TournamentStatus;
@@ -53,7 +53,7 @@ export default function GamePage({ id }: { id: string }) {
   const count = (k: Tab) => (k === 'all' ? rows.length : rows.filter((r) => r.s === k).length);
   const list = tab === 'all' ? rows : rows.filter((r) => r.s === tab);
   const tag = rows.some((r) => r.s === 'live') ? t.gTagLive : rows.some((r) => r.s === 'upcoming') ? t.gTagUpcoming : '';
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: 'transparent' });
 
   return (
     <article className="page-in relative isolate min-h-[100svh] overflow-x-clip" style={{ backgroundColor: 'var(--bg)' }}>
@@ -61,14 +61,14 @@ export default function GamePage({ id }: { id: string }) {
       <div className={`mx-auto max-w-[72rem] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(8rem,14vw,11rem)] ${WRAP}`}>
         <div className="mb-10">{back}</div>
 
-        <header className="flex flex-col gap-6 border-b pb-8 sm:flex-row sm:items-center" style={{ borderColor: 'var(--glass-b)' }}>
+        <header className="flex flex-col gap-6 pb-8 sm:flex-row sm:items-center">
           <span className="relative aspect-[4/5] w-36 shrink-0 overflow-hidden rounded-3xl sm:w-44" style={{ background: `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`, boxShadow: `0 20px 50px -22px ${tone}` }}>
             {g.image ? <img src={g.image} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 22%' }} /> : <span aria-hidden="true" className="absolute inset-0" style={{ background: `url(${import.meta.env.BASE_URL}brand/cube.png) 50% 50% / 52% no-repeat` }} />}
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: 'var(--glass-b)' }}>{g.genre[lang]}</span>
-              {tag && <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: '#8fb2ff', color: '#8fb2ff' }}>{tag}</span>}
+              <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: 'transparent', background: 'var(--chip-bg)' }}>{g.genre[lang]}</span>
+              {tag && <span className="rounded-full border px-3.5 py-1 text-[.82rem] font-semibold" style={{ borderColor: 'transparent', background: 'var(--chip-bg)', color: 'var(--link-on)' }}>{tag}</span>}
             </div>
             <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.4rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{g.name[lang]}</h1>
             <p className="mt-2 max-w-[40rem]" style={{ color: 'var(--muted)' }}>{g.tagline[lang]}</p>
@@ -131,7 +131,7 @@ export default function GamePage({ id }: { id: string }) {
                 <ul className="flex snap-x gap-4 overflow-x-auto pb-3 [scrollbar-width:thin]">
                   {list.map(({ x, s }) => (
                     <li key={x.id} className="flex w-[17rem] shrink-0 snap-start flex-col gap-1.5 rounded-2xl border p-4" style={card}>
-                      <span className="w-max rounded-full border px-2.5 py-0.5 text-[.72rem] font-bold" style={{ color: TONE[s], borderColor: TONE[s] }}>{t[ST[s]]}</span>
+                      <span className="w-max rounded-full border px-2.5 py-0.5 text-[.72rem] font-bold" style={{ color: TONE[s], borderColor: 'transparent', background: 'var(--chip-bg)' }}>{t[ST[s]]}</span>
                       <div className="mt-1 font-semibold">{x.name[lang]}</div>
                       <div className="text-[.85rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{date(x.startsAt)}</time></div>
                       {s === 'completed' && x.winner && <div className="text-[.88rem]">{t.tWinner}: <b>{x.winner[lang]}</b></div>}

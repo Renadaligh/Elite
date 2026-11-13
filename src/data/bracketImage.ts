@@ -6,8 +6,8 @@ const CW = 210, CH = 62, RH = CH / 2, GX = 60, GY = 18, PAD = 36, HEAD = 96, FOO
 /** Header-style brand mark (cube · plato) + site address, drawn at the bottom corner of every image. */
 
 /** Colours of the picture. Dark by default; light when the page being viewed is in light mode. */
-const DARK = { bg: '#050b2b', fg: '#fff', mut: '#9fb0e6', dim: '#6f80b8', soft: '#d6defa', lose: '#7f8fc4', panel: '#0e1a58', card: '#142470', head: 'rgba(150,175,255,.1)', line: 'rgba(150,175,255,.12)', line2: 'rgba(150,175,255,.16)', border: 'rgba(150,175,255,.22)', border2: 'rgba(150,175,255,.3)', acc: '#8fb2ff', glow: .13 };
-const LIGHT = { bg: '#eef2fb', fg: '#101a3d', mut: '#55608a', dim: '#7c86ab', soft: '#2b365e', lose: '#8a93b5', panel: '#ffffff', card: '#ffffff', head: 'rgba(16,26,61,.06)', line: 'rgba(16,26,61,.08)', line2: 'rgba(16,26,61,.1)', border: 'rgba(16,26,61,.16)', border2: 'rgba(16,26,61,.24)', acc: '#2f5fe0', glow: .1 };
+const DARK = { bg: '#050b2b', fg: '#fff', mut: '#9fb0e6', dim: '#6f80b8', soft: '#d6defa', lose: '#7f8fc4', panel: '#0e1a58', card: '#142470', head: 'rgba(150,175,255,.1)', line: 'rgba(150,175,255,.12)', line2: 'rgba(150,175,255,.16)', border: 'rgba(150,175,255,.22)', border2: 'rgba(150,175,255,.3)', acc: '#8fb2ff', glow: .13, win: '#5eead4', winBg: 'rgba(34,197,160,.2)' };
+const LIGHT = { bg: '#f4eefc', fg: '#2b2160', mut: '#6d62a0', dim: '#8d84b8', soft: '#463b84', lose: '#9a91c2', panel: '#ffffff', card: '#ffffff', head: 'rgba(43,33,96,.06)', line: 'rgba(43,33,96,.08)', line2: 'rgba(43,33,96,.1)', border: 'rgba(43,33,96,.16)', border2: 'rgba(43,33,96,.24)', acc: '#4a5df0', glow: .1, win: '#0f9d76', winBg: 'rgba(15,157,118,.16)' };
 let P: typeof DARK = DARK;
 /** Light when the bracket page on screen is light (dashboard / public view carry data-st, the main site uses data-hero). */
 function pageIsLight() {
@@ -147,7 +147,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
       c.save(); rr(bx, by, MW, MH, 10); c.clip();
       (['a', 'b'] as const).forEach((sd, i2) => {
         const slot = m[sd], isBye = 'bye' in slot, yy = by + i2 * MR, win = (o === sd) || (bye && !isBye && br.format === 'swiss'), lose = !!o && o !== sd && o !== 'draw';
-        if (win && o !== 'draw') { c.fillStyle = 'rgba(61,123,255,.2)'; c.fillRect(bx, yy, MW, MR); }
+        if (win && o !== 'draw') { c.fillStyle = P.winBg; c.fillRect(bx, yy, MW, MR); }
         c.fillStyle = win && o !== 'draw' ? P.fg : lose || isBye ? P.lose : P.soft; c.font = `${win ? 700 : 500} 13px ${family}`; c.textBaseline = 'middle';
         txt(isBye ? 'BYE' : br.players[(slot as { p: number }).p] || '—', rtl ? bx + MW - 10 : bx + 10, yy + MR / 2 + 1, al, MW - 52);
         const sc = m[sd === 'a' ? 'sa' : 'sb'];
@@ -276,11 +276,11 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     c.save(); rr(x, p.y, CW, CH, 10); c.clip();
     ([['a', r.a, m.sa], ['b', r.b, m.sb]] as const).forEach(([side, w, sc], i) => {
       const y = p.y + i * RH, win = !isBye && m.win === side, lose = !isBye && !!m.win && !win;
-      if (win) { c.fillStyle = 'rgba(61,123,255,.2)'; c.fillRect(x, y, CW, RH); }
+      if (win) { c.fillStyle = P.winBg; c.fillRect(x, y, CW, RH); }
       c.fillStyle = win ? P.fg : lose || typeof w !== 'number' ? P.lose : P.soft;
       c.font = `${win ? 700 : 500} 14px ${family}`; c.textBaseline = 'middle';
       txt(nm(w), rtl ? x + CW - 12 : x + 12, y + RH / 2 + 1, 'start', CW - 56);
-      if (sc || win) { c.font = `800 14px ${family}`; c.fillStyle = win && !sc ? P.acc : P.fg; c.textAlign = 'end'; txt(sc || '✓', rtl ? x + 12 : x + CW - 12, y + RH / 2 + 1, rtl ? 'start' : 'end', 30); }
+      if (sc || win) { c.font = `800 14px ${family}`; c.fillStyle = win && !sc ? P.win : P.fg; c.textAlign = 'end'; txt(sc || '✓', rtl ? x + 12 : x + CW - 12, y + RH / 2 + 1, rtl ? 'start' : 'end', 30); }
     });
     c.fillStyle = P.line2; c.fillRect(x, p.y + RH, CW, 1);
     c.restore();

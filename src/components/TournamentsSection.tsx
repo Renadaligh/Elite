@@ -88,8 +88,6 @@ function MajorBadge() {
 }
 
 /** Dice mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
-const NINJA = `url(${import.meta.env.BASE_URL}brand/dice.png) center / contain no-repeat`;
-const NinjaMark = () => <span aria-hidden="true" className="tour-ninja" style={{ WebkitMask: NINJA, mask: NINJA }} />;
 
 function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
@@ -109,7 +107,6 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
           <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,.55), rgba(0,0,0,.15))' }} aria-hidden="true" />
         </>
       )}
-      <NinjaMark />
       <div className={`relative grid grid-cols-1 gap-6 p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center ${x.image ? 'pt-20 lg:pt-8' : ''}`}>
         <div className="flex flex-col">
           <div className="mb-3 flex flex-wrap items-center gap-3"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{g && <span className="text-[.85rem] font-semibold opacity-90">{g.name[lang]}</span>}</div>
@@ -137,7 +134,6 @@ function Card({ x, s }: { x: Tournament; s: TournamentStatus }) {
           <div aria-hidden="true" className="tour-fade" />
         </>
       )}
-      <NinjaMark />
       <div className={`relative flex min-w-0 flex-1 flex-col p-5 ${x.image ? 'pt-12' : ''}`}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</span>{g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}</div>
         <h3 className="text-[1.15rem] font-semibold leading-snug">{x.name[lang]}</h3>
