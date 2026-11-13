@@ -1497,6 +1497,10 @@ function AdminInner() {
           })}
         </nav>
         <div className="mt-auto pt-6">
+          <div className="mb-3 grid gap-2">
+            <a href="#/" className="pill !h-10 w-full justify-center" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+            <button type="button" onClick={logout} className="pill !h-10 w-full justify-center" style={{ gap: '.4rem', color: '#ff6b7a', borderColor: 'rgba(255,107,122,.4)' }}><OutI className="h-4 w-4" />{x('تسجيل خروج')}</button>
+          </div>
           <div className="rounded-xl border p-3" style={{ borderColor: 'var(--glass-b)' }}>
             <div dir="ltr" className="truncate text-[.92rem] font-extrabold">{me.username}</div>
             <div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{me.role === 'owner' ? x('الأدمن الرئيسي') : x('أدمن')}</div>
@@ -1515,8 +1519,7 @@ function AdminInner() {
           </div>
           <div className="hidden text-[.9rem] font-semibold lg:block" style={{ color: 'var(--muted)' }}>{x(TAB_LABEL[tab])}</div>
           <div className="flex shrink-0 items-center gap-2">
-            <a href="#/" className="pill hidden lg:inline-flex" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
-            <button type="button" onClick={logout} className="pill" style={{ gap: '.4rem' }} aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /><span className="hidden lg:inline">{x('تسجيل خروج')}</span></button>
+            <button type="button" onClick={logout} className="pill lg:hidden" style={{ gap: '.4rem' }} aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button>
             <AdThemeBtn />
             <LanguageSwitcher />
           </div>
