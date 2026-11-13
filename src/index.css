@@ -893,3 +893,39 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(43,33,96
 /* light mode: winner row/check in green so it reads against the violet-white page */
 :root[data-hero='day'] .br-row.is-win, [data-st=light] .br-row.is-win { background: rgba(74,93,240,.12); }
 :root[data-hero='day'] .br-check, [data-st=light] .br-check { color: #4a5df0; }
+
+/* bracket studio / public view in dark: carry their own text colours so the site's light mode (data-hero=day) can not leak dark text into them */
+[data-st=dark] { --bg: #050b2b; --bg-rgb: 5, 11, 43; --text: #f4f7ff; --muted: #a3b3ea; --glass: rgba(14,26,88,.6); --glass-b: rgba(150,175,255,.2); --dialog: #0b1650; --link-on: #9db4ff; --chip-bg: rgba(0,0,0,.28); --chip-b: rgba(150,175,255,.22); --track: rgba(150,175,255,.18); --skel-a: rgba(150,175,255,.05); --skel-b: rgba(150,175,255,.11); color-scheme: dark; }
+
+/* bracket, light: stronger contrast so it does not look washed out */
+[data-st=light] .br-match, :root[data-hero='day'] .br-match { border-color: rgba(74,93,240,.3); background: #fff; box-shadow: 0 3px 10px -4px rgba(74,93,240,.28); }
+[data-st=light] .br-row + .br-row, :root[data-hero='day'] .br-row + .br-row { border-top-color: rgba(74,93,240,.18); }
+[data-st=light] .br-row.is-win, :root[data-hero='day'] .br-row.is-win { background: rgba(74,93,240,.17); color: #1f1858; }
+[data-st=light] .br-row.is-win .br-score, :root[data-hero='day'] .br-row.is-win .br-score { color: #3446e0; }
+[data-st=light] .br-row.is-lose, :root[data-hero='day'] .br-row.is-lose { color: #8d84b8; }
+[data-st=light] .br-round, :root[data-hero='day'] .br-round { color: #2b2160; }
+.pv-root[data-st=light] .pv-bar .br-wrap::before { background: #d6c9f5; border-block-color: rgba(74,93,240,.22); }
+.pv-root[data-st=light] .pv-bar .br-round { color: #2b2160; }
+.pv-root[data-st=light] .pv-top { background: #faf6ff; }
+[data-st=light] .br-champ, :root[data-hero='day'] .br-champ { background: linear-gradient(135deg, #8d9bf8, #b49cf4); border-color: #6577f5; color: #fff; box-shadow: 0 8px 22px -8px rgba(101,119,245,.55); }
+/* bracket, dark: the winner's score must stay readable */
+[data-st=dark] .br-row.is-win .br-score { color: var(--text); }
+[data-st=dark] .br-row.is-win { color: var(--text); }
+
+/* admin / dashboard, light: header buttons look like one family, borders readable, and the pale status colours get darker shades that read on a light page */
+html:root[data-ad='light'] { --glass-b: rgba(43,33,96,.24); --chip-b: rgba(43,33,96,.22); }
+.admin-page .pill, .admin-bg .pill, header .pill { background: var(--glass); }
+.admin-page .pill:hover, .admin-bg .pill:hover { background: var(--dialog); }
+html:root[data-ad='light'] [style*="color: rgb(255, 107, 122)"] { color: #d02a40 !important; }
+html:root[data-ad='light'] [style*="color: rgb(255, 176, 46)"] { color: #a85f00 !important; }
+html:root[data-ad='light'] [style*="color: rgb(169, 155, 255)"] { color: #5a44d8 !important; }
+html:root[data-ad='light'] [style*="color: rgb(143, 178, 255)"] { color: #3547d4 !important; }
+html:root[data-ad='light'] [style*="color: rgb(39, 194, 122)"] { color: #0c8a5b !important; }
+html:root[data-ad='light'] [style*="border-color: rgb(59, 63, 143)"] { border-color: #9aa0e8 !important; }
+html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
+
+/* round view on wide screens: a centred column instead of rows stretched across the whole page */
+.br-mobile { width: 100%; max-width: 36rem; margin-inline: auto; }
+.br-mobile .br-champ { justify-self: center; margin-top: 6px; }
+.br-mobile .br-chips { justify-content: center; flex-wrap: wrap; }
+.br-mobile .br-toggle { justify-self: center; }
