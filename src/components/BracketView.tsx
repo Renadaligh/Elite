@@ -115,6 +115,29 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
     return () => ro.disconnect();
   }, [bracket, R, lang, rtl, showTree]);
 
+  // desktop: grab the bracket with the mouse and drag it in any direction (sideways inside the bracket, up/down moves the page)
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
+    const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,input,textarea,select,a')) return;
+      on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
+    };
+    const move = (e: PointerEvent) => {
+      if (!on) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!moved) { if (Math.hypot(dx, dy) < 6) return; moved = true; el.classList.add('is-panning'); try { el.setPointerCapture(e.pointerId); } catch { /* ignore */ } }
+      el.scrollLeft = sl - dx; window.scrollTo(window.scrollX, sp - dy);
+    };
+    const up = () => {
+      if (!on) return; on = false;
+      if (moved) { el.classList.remove('is-panning'); el.addEventListener('click', eat, { capture: true, once: true }); setTimeout(() => el.removeEventListener('click', eat, true), 0); }
+    };
+    el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    return () => { el.removeEventListener('pointerdown', down); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); };
+  }, [showTree]);
+
   const card = (m: BMatch) => {
     const r = R.get(m.id) as Resolved;
     const isBye = r.a === 'bye' || r.b === 'bye';

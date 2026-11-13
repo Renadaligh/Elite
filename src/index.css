@@ -929,3 +929,8 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 .br-mobile .br-champ { justify-self: center; margin-top: 6px; }
 .br-mobile .br-chips { justify-content: center; flex-wrap: wrap; }
 .br-mobile .br-toggle { justify-self: center; }
+
+/* bracket: drag with the mouse to move around */
+@media (hover: hover) and (pointer: fine) { .br-scroll { cursor: grab; } .br-scroll .br-row:not(:disabled) { cursor: pointer; } }
+.br-scroll.is-panning { cursor: grabbing !important; user-select: none; }
+.br-scroll.is-panning * { cursor: grabbing !important; }
