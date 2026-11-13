@@ -12,7 +12,12 @@ export default function HeroThemeToggle() {
   useEffect(() => {
     document.documentElement.dataset.hero = mode;
     // browser top bar (Safari status area) follows the hero's top colour
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', mode === 'day' ? '#283695' : '#0a0d33');
+    // Safari ignores in-place changes to this tag, so the tag is replaced by a fresh one
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
+    const tc = document.createElement('meta');
+    tc.name = 'theme-color';
+    tc.content = mode === 'day' ? '#283695' : '#0a0d33';
+    document.head.appendChild(tc);
     try { localStorage.setItem(KEY, mode); } catch { /* private mode */ }
   }, [mode]);
   const night = mode === 'night';
