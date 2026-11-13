@@ -203,7 +203,7 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
   return (
     <div ref={box} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''}`} style={fitStyle} dir={dir}>
       {toggle}
-      <div className="br-wrap" ref={wrap}>
+      <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
         </svg>

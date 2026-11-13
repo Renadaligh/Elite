@@ -934,3 +934,8 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 @media (hover: hover) and (pointer: fine) { .br-scroll { cursor: grab; } .br-scroll .br-row:not(:disabled) { cursor: pointer; } }
 .br-scroll.is-panning { cursor: grabbing !important; user-select: none; }
 .br-scroll.is-panning * { cursor: grabbing !important; }
+
+/* light: winners use the same lavender as the round header band */
+[data-st=light] .br-row.is-win, :root[data-hero='day'] .br-row.is-win:not([data-st=dark] *) { background: #d9cdf6; }
+/* public bracket: columns keep a sensible width instead of stretching across a wide screen */
+.pv .br-wrap { max-width: calc(var(--nc, 4) * 16rem + 3rem); margin-inline: auto; }
