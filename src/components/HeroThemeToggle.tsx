@@ -11,6 +11,8 @@ export default function HeroThemeToggle() {
   const [mode, setMode] = useState<Mode>(() => (document.documentElement.dataset.hero === 'day' ? 'day' : 'night'));
   useEffect(() => {
     document.documentElement.dataset.hero = mode;
+    // browser top bar (Safari status area) follows the hero's top colour
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', mode === 'day' ? '#283695' : '#0a0d33');
     try { localStorage.setItem(KEY, mode); } catch { /* private mode */ }
   }, [mode]);
   const night = mode === 'night';
