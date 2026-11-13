@@ -891,5 +891,5 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(43,33,96
 @media (max-width: 767px) { #top { min-height: calc(100svh + 6rem) !important; } }
 
 /* light mode: winner row/check in green so it reads against the violet-white page */
-:root[data-hero='day'] .br-row.is-win, [data-st=light] .br-row.is-win { background: rgba(15,157,118,.13); }
-:root[data-hero='day'] .br-check, [data-st=light] .br-check { color: #0f9d76; }
+:root[data-hero='day'] .br-row.is-win, [data-st=light] .br-row.is-win { background: rgba(74,93,240,.12); }
+:root[data-hero='day'] .br-check, [data-st=light] .br-check { color: #4a5df0; }
