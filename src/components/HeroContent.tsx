@@ -8,7 +8,7 @@ export default function HeroContent() {
   const { t, lang } = useI18n();
   return (
     <div className="hero-copy mx-auto flex w-full max-w-[40rem] flex-col items-center text-center md:w-fit md:max-w-none">
-      <h1 dir="ltr" className="hero-name" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></h1>
+      <h1 className="sr-only">Plato AR</h1>
       <p className="hero-desc">{t.heroSub}</p>
       <div aria-hidden="true" className="hero-gap" />
       <div className="hero-cta">
