@@ -1,4 +1,5 @@
-import { body, json, safeUrl, str, type Ctx } from '../../_lib';
+import { body, json, jsonPublic, safeUrl, str, type Ctx } from '../../_lib';
+import { logAdmin } from '../../_audit';
 import { guard } from '../../_admin';
 
 type Row = { id: string; genre: string; name_en: string; name_ar: string; tagline_en: string; tagline_ar: string; image: string; hidden: number; custom: number; tournament_only?: number; details?: string };
@@ -38,7 +39,7 @@ export function parse(b: Record<string, unknown>) {
 export const onRequestGet = async ({ env }: Ctx) => {
   try {
     const { results } = await env.DB.prepare('SELECT * FROM games').all<Row>();
-    return json(results.map(out));
+    return jsonPublic(results.map(out));
   } catch { return json([]); }
 };
 
@@ -59,5 +60,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   for (let i = 0; i < tries.length; i++) {
     try { await env.DB.prepare(tries[i][0]).bind(...tries[i][1]).run(); break; } catch (e) { if (i === tries.length - 1) throw e; }
   }
+  await logAdmin(env, a.username, 'games.add', `${v.name.en || v.name.ar} (${id})`);
   return json({ ok: true, id });
 };

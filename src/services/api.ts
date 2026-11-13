@@ -3,6 +3,7 @@ export async function api<T>(path: string, init: RequestInit & { key?: string } 
   const { key, headers, ...rest } = init;
   const res = await fetch(`/api${path}`, {
     ...rest,
+    ...(key ? { cache: 'no-store' as const } : {}), // admin screens always read fresh data (public lists are cached for a short while)
     headers: { ...(rest.body ? { 'content-type': 'application/json' } : {}), ...(key ? { authorization: `Bearer ${key}` } : {}), ...headers },
   });
   if (!res.ok) {

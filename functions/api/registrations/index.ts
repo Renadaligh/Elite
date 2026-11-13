@@ -11,6 +11,7 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const t = await env.DB.prepare('SELECT name_en, filled, total FROM tournaments WHERE id=? AND published=1').bind(tid).first<{ name_en: string; filled: number; total: number }>();
   if (!t) return json({ ok: false, error: 'unknown' }, 404);
   if (t.filled >= t.total) return json({ ok: false, error: 'full' }, 409);
+  if (team && await env.DB.prepare("SELECT 1 AS x FROM registrations WHERE tournament_id=? AND mode='team' AND lower(trim(team_name))=lower(trim(?))").bind(tid, teamName).first()) return json({ ok: false, error: 'duplicate_team' }, 409);
   try {
     await env.DB.prepare('INSERT INTO registrations (tournament_id,tournament_name,mode,plato_id,team_name,members,lang) VALUES (?,?,?,?,?,?,?)')
       .bind(tid, t.name_en, team ? 'team' : 'solo', plato, teamName, members, b.lang === 'en' ? 'en' : 'ar').run();

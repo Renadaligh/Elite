@@ -4,7 +4,7 @@ import type { Tournament } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { CloseIcon } from './icons';
 
-type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'required';
+type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'required';
 const MAX = { id: 80, name: 80, members: 600 };
 
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none transition-colors focus:border-[var(--link-on)]';
@@ -42,13 +42,13 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
         body: JSON.stringify({ tournamentId: x.id, tournamentName: x.name.en, mode: team ? 'team' : 'solo', platoId: id, teamName: teamName.trim(), members: members.trim(), lang, hp }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
-      setState(data.ok ? 'done' : data.error === 'duplicate' ? 'dup' : 'error');
+      setState(data.ok ? 'done' : data.error === 'duplicate' ? 'dup' : data.error === 'duplicate_team' ? 'dupTeam' : 'error');
     } catch {
       setState('error');
     }
   }
 
-  const msg = state === 'required' ? t.regRequired : state === 'dup' ? t.regDup : state === 'error' ? t.regErr : '';
+  const msg = state === 'required' ? t.regRequired : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'error' ? t.regErr : '';
 
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>

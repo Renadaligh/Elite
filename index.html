@@ -2,15 +2,16 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#050507" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
+  <script>try{if(localStorage.getItem("plato-hero")==="night")document.documentElement.dataset.hero="night"}catch(e){}</script>
+  <meta name="theme-color" content="#070a26" />
   <title>Elite</title>
   <link rel="icon" type="image/png" href="%BASE_URL%brand/favicon.png" />
   <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="%BASE_URL%brand/icon-192.png" />
+  <link rel="apple-touch-icon" href="%BASE_URL%brand/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Plato" />
+  <meta name="apple-mobile-web-app-title" content="Plato AR" />
   <script>
     try {
       const lang = localStorage.getItem('elite-lang') || 'en';
@@ -19,19 +20,19 @@
     } catch (_) {}
   </script>
   <style>
-    html, body { margin: 0; min-height: 100%; background: #050507; }
+    html, body { margin: 0; min-height: 100%; background: #070a26; }
     #app-loader {
-      position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: #050507; isolation: isolate;
+      position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: #070a26; isolation: isolate;
       opacity: 1; visibility: visible; transition: opacity 850ms cubic-bezier(.22, 1, .36, 1), visibility 850ms;
     }
     #app-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .app-loader-glows { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-    .app-loader-glow { position: absolute; width: 60vw; height: 60vw; min-width: 340px; min-height: 340px; border-radius: 50%; background: #d90f26; filter: blur(110px); opacity: .22; top: 50%; left: 50%; translate: -50% -50%; animation: loader-drift 14s ease-in-out infinite alternate; }
+    .app-loader-glow { position: absolute; width: 60vw; height: 60vw; min-width: 340px; min-height: 340px; border-radius: 50%; background: #4a5cff; filter: blur(110px); opacity: .22; top: 50%; left: 50%; translate: -50% -50%; animation: loader-drift 14s ease-in-out infinite alternate; }
     @keyframes loader-drift { to { transform: scale(1.14); opacity: .12; } }
     .app-loader-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 26px; width: min(240px, 68vw); }
     .app-loader-mark { width: 150px; height: auto; color: #fff; }
     .app-loader-track { width: 100%; height: 3px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, .14); }
-    .app-loader-bar { height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, #d90f26, #ff4455); box-shadow: 0 0 15px rgba(255, 68, 85, .7); animation: loader-sweep 1.6s ease-in-out infinite; }
+    .app-loader-bar { height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, #4a5cff, #9a88ff); box-shadow: 0 0 15px rgba(154,136,255, .7); animation: loader-sweep 1.6s ease-in-out infinite; }
     @keyframes loader-sweep { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
     @media (prefers-reduced-motion: reduce) {
       .app-loader-glow, .app-loader-bar { animation: none; }

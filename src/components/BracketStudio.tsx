@@ -374,7 +374,17 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
 /** Read-only public page of a published bracket (#/view/<id>): normal site layout, never the dashboard. */
 export function PublicView({ id }: { id: string }) {
   const auth = useAuth();
-  return (<><Header page="bracket" /><main><BracketToolPage id={id} auth={auth} readOnly /></main><Footer /></>);
+  const { lang } = useI18n();
+  // Standalone page (no site header/footer): logo, back-to-site button, then the bracket.
+  return (
+    <div className="pv-root">
+      <div className="pv-top">
+        <a href="#/" className="pv-back"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: lang === 'ar' ? 'none' : 'scaleX(-1)' }}><path d="M9 6l6 6-6 6" /></svg>{lang === 'ar' ? 'العودة للموقع' : 'Back to site'}</a>
+        <a href="#/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
+      </div>
+      <BracketToolPage id={id} auth={auth} readOnly />
+    </div>
+  );
 }
 
 export default function BracketRoute({ id }: { id?: string }) {

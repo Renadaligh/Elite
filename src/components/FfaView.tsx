@@ -1,4 +1,5 @@
 import { addFfaRound, dropFfaRound, ffaChampion, ffaRows, setFfaScore, type Bracket } from '../data/bracket';
+import { TrophyIcon } from './icons';
 import { useI18n } from '../i18n/I18nProvider';
 
 /** Leaderboard / free-for-all: sorted standings on top, then a players × rounds score grid (editable with `onChange`). */
@@ -9,7 +10,7 @@ export default function FfaView({ bracket: br, onChange }: { bracket: Bracket; o
   const th = 'px-2 py-2 text-center font-semibold';
   return (
     <div className="lg" dir={dir}>
-      {champ !== null && <div className="br-champ" style={{ marginTop: 0, marginBottom: 12 }}><span>🏆</span><b>{br.players[champ]}</b></div>}
+      {champ !== null && <div className="br-champ" style={{ marginTop: 0, marginBottom: 12 }}><TrophyIcon className="h-5 w-5 shrink-0" style={{ color: '#ffc93c' }} /><b>{br.players[champ]}</b></div>}
       <div className="lg-table-wrap">
         <table className="lg-table">
           <thead><tr><th className={th}>#</th><th className={`${th} !text-start`}>{ar ? 'اللاعب' : 'Player'}</th><th className={th}>{ar ? 'الجولات' : 'Rounds'}</th><th className={th}>{ar ? 'الأفضل' : 'Best'}</th><th className={th}>{ar ? 'المجموع' : 'Total'}</th></tr></thead>

@@ -104,3 +104,17 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
   recovery INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_user ON admin_sessions(username);
+
+-- Admin audit log: append-only (the app only ever INSERTs; there is no update/delete route). Kept forever. No IP addresses.
+CREATE TABLE IF NOT EXISTS admin_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  at INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target TEXT NOT NULL DEFAULT '',
+  detail TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_admin_log_at ON admin_log(at);
+-- Optional hard lock at database level (run each as ONE statement): rows can then never be changed even by mistake.
+-- CREATE TRIGGER IF NOT EXISTS admin_log_no_update BEFORE UPDATE ON admin_log BEGIN SELECT RAISE(ABORT, 'append-only'); END;
+-- CREATE TRIGGER IF NOT EXISTS admin_log_no_delete BEFORE DELETE ON admin_log BEGIN SELECT RAISE(ABORT, 'append-only'); END;

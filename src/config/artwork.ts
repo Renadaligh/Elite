@@ -1,13 +1,12 @@
 /**
- * Hero artwork layers (back → front). A layer is either a still image or a looping video.
- * Video layers use `src` as the poster (shown before playback and for reduced-motion users).
+ * Hero artwork layers (back → front). A layer is a still image (desktop file + a lighter phone crop).
  * All paths use BASE_URL so they work under any base path.
- * The footage has no wordmark: <EliteWordmark/> draws it on top (aligned to the footage), so the layer is never mirrored.
+ * The artwork keeps its empty space on the left and the dice character on the right; the hero copy sits in that empty space on desktop.
  */
 export interface ArtLayer {
   id: string;
   src: string;
-  video?: { webm: string; mp4: string; mobile?: { webm: string; mp4: string } };
+  srcMobile: string;
   depth: number;                                 // pointer-parallax px
   zoom: number;                                  // extra scale at the end of the scroll transition
   mirrorInLtr: boolean;
@@ -20,15 +19,16 @@ const BASE = import.meta.env.BASE_URL;
 export const LAYERS: ArtLayer[] = [
   {
     id: 'scene',
-    src: `${BASE}art/hero-scene.webp`,
-    video: {
-      webm: `${BASE}art/hero-scene.webm`, mp4: `${BASE}art/hero-scene.mp4`,                 // 1920×1080
-      mobile: { webm: `${BASE}art/hero-scene-m.webm`, mp4: `${BASE}art/hero-scene-m.mp4` }, // 1280×720 for phones
-    },
-    depth: 0,      // keep static: the wordmark overlay must stay aligned with the footage
+    src: `${BASE}art/hero-bg.webp`,                // 1672×941, background only (no dice)
+    srcMobile: `${BASE}art/hero-bg.webp`,
+    depth: 6,
     zoom: 0.03,
     mirrorInLtr: false,
     mirrorInRtl: false,
-    pos: { ltr: '50% 50%', rtl: '50% 50%', mobileLtr: '46% 50%', mobileRtl: '46% 50%' },
+    pos: { ltr: '70% 40%', rtl: '70% 40%', mobileLtr: '90% 40%', mobileRtl: '90% 40%' },
   },
 ];
+
+/** The dice is its own transparent image so it can be placed independently on desktop and on phones (and animated later). */
+export const HERO_DICE = `${BASE}art/hero-dice.webp`;
+export const HERO_BG_NIGHT = `${BASE}art/hero-bg-night.webp`;

@@ -7,7 +7,7 @@ const BASE = import.meta.env.BASE_URL;
 const VW = 1280, VH = 720;
 /** The footage settles the word at y 328; it is lifted so it sits above the hero paragraph (more on phones, where the
  *  copy block is taller). Sprite and SVG move together. */
-const LIFT_DESKTOP = 106, LIFT_PHONE = 156;
+const LIFT_DESKTOP = 106, LIFT_PHONE = 114;
 const SPRITE = { src: `${BASE}art/elite-intro.webp`, x: 300, y: 195, w: 690, h: 205, cols: 4, frames: 44, fps: 24 };
 const WORD = { x: 515, y: 328, w: 248, h: 52 };
 const pct = (n: number, of: number) => `${(n / of) * 100}%`;

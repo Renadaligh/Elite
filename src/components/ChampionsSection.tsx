@@ -78,7 +78,7 @@ function ArchiveRow({ x }: { x: Tournament }) {
   const w = useWinner(x);
   return (
     <li className="flex items-center gap-4 rounded-2xl border p-3 pe-5" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
-      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl" style={{ background: '#0a0a0d', border: '1px solid var(--glass-b)', color: '#fff' }}>
+      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl" style={{ background: '#0a0f33', border: '1px solid var(--glass-b)', color: '#fff' }}>
         <span aria-hidden="true" className="inline-block h-4 w-7 bg-current" style={ninjaMask} />
       </span>
       <div className="min-w-0 flex-1">

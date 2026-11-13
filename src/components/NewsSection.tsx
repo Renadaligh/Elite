@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useCardsReveal } from '../hooks/useCardsReveal';
 import { useNews } from '../hooks/useNews';
 import { useI18n } from '../i18n/I18nProvider';
@@ -8,9 +8,19 @@ const LIMIT = 3;
 
 /** First section under the hero: the 3 newest stories + a link to the full news page. */
 export default function NewsSection() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const { items, status, retry } = useNews(LIMIT);
   const root = useRef<HTMLElement>(null);
+  // Mobile rail: always start at the newest card (RTL scroll offsets otherwise leave it on a later one after load / language switch).
+  useLayoutEffect(() => {
+    const rail = root.current?.querySelector<HTMLElement>('.m-rail');
+    if (!rail) return;
+    const reset = () => { rail.scrollLeft = 0; };
+    reset();
+    const id = window.requestAnimationFrame(reset);
+    const t2 = window.setTimeout(reset, 250);
+    return () => { window.cancelAnimationFrame(id); window.clearTimeout(t2); };
+  }, [status, dir, items.length]);
   useCardsReveal(root, status === 'ready', []); // animate once on first load; later silent refreshes just swap the content in
 
   return (

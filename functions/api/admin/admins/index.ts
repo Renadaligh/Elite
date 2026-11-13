@@ -1,5 +1,6 @@
 import { PRESETS, TEMP_MS, cleanPerms, guardOwner, hashPw, ownerName, readPerms, tempPassword, validUser } from '../../../_admin';
 import { body, json, str, type Ctx } from '../../../_lib';
+import { logAdmin } from '../../../_audit';
 
 type Row = { username: string; role: string; perms: string; must_change: number; temp_expires: number; disabled: number; locked: number; locked_until: number; last_login: number; created_at: number; created_by: string };
 
@@ -22,5 +23,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const password = tempPassword(), salt = crypto.randomUUID().replace(/-/g, ''), now = Date.now();
   await env.DB.prepare("INSERT INTO admins (username, pass_hash, salt, role, perms, must_change, temp_expires, created_by, created_at) VALUES (?,?,?,'admin',?,1,?,?,?)")
     .bind(username, await hashPw(password, salt), salt, JSON.stringify(perms), now + TEMP_MS, a.username, now).run();
+  await logAdmin(env, a.username, 'admins.create', username, { permissions: perms });
   return json({ ok: true, username, password, expiresAt: now + TEMP_MS });
 };

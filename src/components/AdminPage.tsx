@@ -9,13 +9,13 @@ import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
-import { ArrowIcon } from './icons';
+import { ArrowIcon, TrophyIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
 type Reg = { id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
-type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins';
+type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins' | 'log';
 type Perms = Partial<Record<'news' | 'tournaments' | 'games' | 'regs', string[]>>;
 type Me = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; recovery?: boolean };
 
@@ -139,8 +139,8 @@ const XI = (p: IP) => <svg {...ic} strokeWidth={2.2} {...p}><path d="M6 6l12 12M
 
 const ShieldI = (p: IP) => <svg {...ic} {...p}><path d="M12 3.5 5 6v5.5c0 4.2 2.8 7.4 7 9 4.2-1.6 7-4.8 7-9V6l-7-2.5Z" /><path d="M9 12l2.2 2.2L15 10.5" /></svg>;
 const PadI = (p: IP) => <svg {...ic} {...p}><rect x="3" y="7" width="18" height="11" rx="4" /><path d="M8 10.5v4M6 12.5h4M15.5 11.5h.01M17.5 13.5h.01" /></svg>;
-const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI, admins: ShieldI };
-const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات', admins: 'الإداريين' };
+const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI, admins: ShieldI, log: GridI };
+const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات', admins: 'الإداريين', log: 'سجل النشاط' };
 
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
@@ -148,7 +148,7 @@ const sel = `${inp} sel`;
 const selCls = sel;
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
-const gradBtn = { background: 'linear-gradient(135deg,#ff3347,#d90f26)', boxShadow: '0 8px 22px -8px rgba(235,40,60,.7)' };
+const gradBtn = { background: 'linear-gradient(135deg,#7a4dff,#4a5cff)', boxShadow: '0 8px 22px -8px rgba(110,90,255,.7)' };
 const btnG = 'inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-[.85rem] font-semibold transition hover:bg-[var(--glass)]';
 const ninja = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no-repeat`, mask: `url(${BASE}brand/ninja.png) center / contain no-repeat` };
 
@@ -208,7 +208,7 @@ function FocusPicker({ src, pos, onChange }: { src: string; pos: string; onChang
               className="relative cursor-grab touch-none select-none overflow-hidden rounded-xl border active:cursor-grabbing" style={{ width: `${f.w}rem`, maxWidth: '100%', aspectRatio: `${f.w} / ${f.h}`, borderColor: 'var(--glass-b)' }}
             >
               <img src={src} alt="" draggable={false} onLoad={(e) => setRatio(e.currentTarget.naturalWidth / Math.max(1, e.currentTarget.naturalHeight))} className="pointer-events-none h-full w-full object-cover" style={{ objectPosition: `${px}% ${py}%` }} />
-              <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(6,6,8,.95) 0%, rgba(6,6,8,.55) 50%, rgba(6,6,8,.1) 100%)' }} />
+              <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,12,44,.95) 0%, rgba(8,12,44,.55) 50%, rgba(8,12,44,.1) 100%)' }} />
             </div>
             <span className="text-[.74rem] font-medium">{f.label}</span>
           </div>
@@ -267,7 +267,7 @@ const Card = ({ children, className = '', ...rest }: { children: ReactNode; clas
   <div {...rest} className={`rounded-2xl border ${className}`} style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(10px)' }}>{children}</div>
 );
 function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray' | 'blue'; children: ReactNode }) {
-  const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#ff4455' }[tone];
+  const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#9a88ff' }[tone];
   return <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[.74rem] font-bold" style={{ color: c, background: `color-mix(in srgb, ${c} 15%, transparent)` }}><i className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />{children}</span>;
 }
 function PageHead({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) {
@@ -340,7 +340,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
               <div className="mt-4 text-[2.2rem] font-black leading-none">{s.value}</div>
               <div className="mt-1.5 text-[.9rem] font-semibold">{s.label}</div>
               <div className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{s.note}</div>
-              <div aria-hidden="true" className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full opacity-30 blur-2xl" style={{ background: '#ff3347' }} />
+              <div aria-hidden="true" className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full opacity-30 blur-2xl" style={{ background: '#7a4dff' }} />
             </Card>
           </button>
         ))}
@@ -515,7 +515,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           </div>
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
-            <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green">🏆 {br.players[champ]}</Badge>}</div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <BracketActions bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} live /></div>
             <div className="rounded-xl border p-3" style={bd}>
@@ -607,7 +607,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </div>
               <div className="w-36">
                 <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.filled}/{r.slots.total}</span></div>
-                <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div>
+                <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#7a4dff,#4a5cff)' }} /></div>
               </div>
               <div className="flex gap-2">
                 <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('البراكت')}{r.bracket ? ' ✓' : ''}</button>
@@ -751,7 +751,7 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
           onMove={(d) => set({ texts: mv(value.texts, i, d) })}
           onDel={() => set({ texts: value.texts.filter((_, j) => j !== i) })} />
       ))}
-      {value.texts.length < MAX_TEXTS && <button type="button" className={`${btnG} self-start border-dashed`} style={{ borderColor: '#5a2029', color: '#ff6b7a' }} onClick={() => set({ texts: [...value.texts, { title: { ar: '', en: '' }, body: { ar: '', en: '' } }] })}>＋ {x('إضافة فقرة')}</button>}
+      {value.texts.length < MAX_TEXTS && <button type="button" className={`${btnG} self-start border-dashed`} style={{ borderColor: '#3b3f8f', color: '#a99bff' }} onClick={() => set({ texts: [...value.texts, { title: { ar: '', en: '' }, body: { ar: '', en: '' } }] })}>＋ {x('إضافة فقرة')}</button>}
 
       <h4 className="mt-3 font-bold">{x('الصور')}</h4>
       <div className="flex flex-wrap gap-3 rounded-xl border p-3" style={bd}>
@@ -766,7 +766,7 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
           </div>
         ))}
         {value.images.length < MAX_IMAGES && (
-          <label className={addTile} style={{ borderColor: '#5a2029', color: '#ff6b7a' }}>
+          <label className={addTile} style={{ borderColor: '#3b3f8f', color: '#a99bff' }}>
             <span>{busy === 'img' ? x('جارٍ الرفع…') : <>＋ {x('رفع صور')}<br /><span className="font-normal" style={{ color: 'var(--muted)' }}>{x('من الجهاز')}</span></>}</span>
             <input type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" disabled={!!busy} onChange={(e) => { void addImages(e.target.files); e.target.value = ''; }} />
           </label>
@@ -782,7 +782,7 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
               <div key={v.url + i} className="grid w-[8.5rem] gap-1.5">
                 <div className={tile} style={bd}>
                   {isVideoFile(v.url) ? <video src={v.url} muted preload="metadata" className="h-full w-full object-cover" /> : yt ? <img src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" className="h-full w-full object-cover" /> : null}
-                  <span className="pointer-events-none absolute inset-0 grid place-items-center"><i className="grid h-8 w-8 place-items-center rounded-full bg-[#ff3347] text-[.8rem] not-italic text-white">▶</i></span>
+                  <span className="pointer-events-none absolute inset-0 grid place-items-center"><i className="grid h-8 w-8 place-items-center rounded-full bg-[#7a4dff] text-[.8rem] not-italic text-white">▶</i></span>
                   <button type="button" aria-label="remove" className={xBtn} onClick={() => set({ videos: value.videos.filter((_, j) => j !== i) })}>×</button>
                 </div>
                 {(['ar', 'en'] as const).map((l) => (
@@ -792,13 +792,13 @@ function DetailsEditor({ k, value, onChange }: { k: string; value: GameDetails; 
             );
           })}
           {value.videos.length < MAX_VIDEOS && (
-            <label className={addTile} style={{ borderColor: '#5a2029', color: '#ff6b7a' }}>
+            <label className={addTile} style={{ borderColor: '#3b3f8f', color: '#a99bff' }}>
               <span>{busy === 'vid' ? `${pct ?? 0}%` : <>＋ {x('رفع فيديو')}<br /><span className="font-normal" style={{ color: 'var(--muted)' }}>MP4 / WebM</span></>}</span>
               <input type="file" accept="video/mp4,video/webm" className="sr-only" disabled={!!busy} onChange={(e) => { addVideoFile(e.target.files?.[0]); e.target.value = ''; }} />
             </label>
           )}
         </div>
-        {busy === 'vid' && <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--glass-b)' }}><div className="h-full transition-[width]" style={{ width: `${pct ?? 0}%`, background: '#ff3347' }} /></div>}
+        {busy === 'vid' && <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--glass-b)' }}><div className="h-full transition-[width]" style={{ width: `${pct ?? 0}%`, background: '#7a4dff' }} /></div>}
         {value.videos.length < MAX_VIDEOS && (
           <div className="flex gap-2">
             <input dir="ltr" className={inp} style={bd} placeholder="https://youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
@@ -930,7 +930,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
       <div className="flex flex-col gap-2.5">
         {shown.map((g, gi) => (
           <Fragment key={g.id}>
-            {drag && sorting && drag.over === gi && drag.over !== rows.findIndex((r) => r.id === drag.id) && drag.over !== rows.findIndex((r) => r.id === drag.id) + 1 && <div className="h-1 rounded-full" style={{ background: '#ff3347' }} />}
+            {drag && sorting && drag.over === gi && drag.over !== rows.findIndex((r) => r.id === drag.id) && drag.over !== rows.findIndex((r) => r.id === drag.id) + 1 && <div className="h-1 rounded-full" style={{ background: '#7a4dff' }} />}
           <Card data-gid={g.id} className={`flex flex-wrap items-center gap-4 p-3.5 max-sm:flex-nowrap max-sm:gap-2.5 ${g.hidden || drag?.id === g.id ? 'opacity-60' : ''} ${drag?.id === g.id ? 'scale-[.98]' : ''}`}>
             {sorting && (
               <button type="button" className="grid h-10 w-9 shrink-0 cursor-grab touch-none place-items-center rounded-lg border active:cursor-grabbing" style={bd} aria-label={x('اسحب لتغيير الترتيب')} title={x('اسحب لتغيير الترتيب')}
@@ -963,7 +963,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           </Card>
           </Fragment>
         ))}
-        {drag && sorting && drag.over === rows.length && rows.findIndex((r) => r.id === drag.id) !== rows.length - 1 && <div className="h-1 rounded-full" style={{ background: '#ff3347' }} />}
+        {drag && sorting && drag.over === rows.length && rows.findIndex((r) => r.id === drag.id) !== rows.length - 1 && <div className="h-1 rounded-full" style={{ background: '#7a4dff' }} />}
       </div>
 
       {f && (
@@ -1080,7 +1080,7 @@ function AuthShell({ children, onSubmit, title, sub }: { children: ReactNode; on
   return (
     <section className="admin-bg relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-10">
       <div className="absolute end-4 top-4 z-10 flex gap-2"><LanguageSwitcher /></div>
-      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#ff3347,transparent 70%)' }} />
+      <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#7a4dff,transparent 70%)' }} />
       <form onSubmit={onSubmit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
           <span aria-hidden="true" className="inline-block h-7 w-11 bg-current" style={ninja} />
@@ -1227,7 +1227,7 @@ function PermGrid({ value, onChange }: { value: Perms; onChange: (p: Perms) => v
             <span className="min-w-[5.5rem] text-[.9rem] font-extrabold">{x(r.label)}</span>
             {r.acts.map(([a, l]) => (
               <label key={a} className="inline-flex cursor-pointer items-center gap-1.5 text-[.88rem] font-semibold">
-                <input type="checkbox" className="h-4 w-4 accent-[#ff3347]" checked={!!value[r.sec]?.includes(a)} onChange={() => flip(r.sec, a)} />{x(l)}
+                <input type="checkbox" className="h-4 w-4 accent-[#7a4dff]" checked={!!value[r.sec]?.includes(a)} onChange={() => flip(r.sec, a)} />{x(l)}
               </label>
             ))}
           </div>
@@ -1258,6 +1258,91 @@ function TempPw({ r, onClose }: { r: { username: string; password: string }; onC
         <button type="button" className={btnG} style={bd} onClick={onClose}>{x('تم')}</button>
       </div>
     </Drawer>
+  );
+}
+
+type LogRow = { id: number; at: number; username: string; action: string; target: string; detail: string };
+const LOG_ACTION: Record<string, string> = {
+  'login.ok': 'تسجيل دخول', 'login.recovery': 'دخول بمفتاح الاسترجاع', 'login.fail': 'محاولة دخول فاشلة', 'login.blocked': 'محاولة على حساب مقفل', 'login.lockout': 'قفل الحساب بعد محاولات فاشلة',
+  'password.change': 'تغيير كلمة المرور',
+  'admins.create': 'إنشاء حساب أدمن', 'admins.permissions': 'تعديل صلاحيات', 'admins.disable': 'إيقاف حساب', 'admins.enable': 'تفعيل حساب', 'admins.unlock': 'فتح حساب مقفل', 'admins.reset': 'كلمة مرور مؤقتة جديدة',
+  'news.add': 'إضافة خبر', 'news.edit': 'تعديل خبر', 'news.delete': 'حذف خبر',
+  'tournaments.add': 'إضافة بطولة', 'tournaments.edit': 'تعديل بطولة', 'tournaments.delete': 'حذف بطولة', 'tournaments.bracket': 'تعديل شجرة/بث',
+  'games.add': 'إضافة لعبة', 'games.edit': 'تعديل لعبة', 'games.delete': 'حذف لعبة', 'games.order': 'ترتيب/حذف ألعاب',
+  'regs.delete': 'حذف تسجيل',
+};
+Object.assign(EN, {"سجل النشاط": "Activity log", "سجل دائم لا يمكن تعديله أو حذفه. يعرض من فعل ماذا ومتى": "A permanent log that cannot be edited or deleted. Shows who did what and when", "كل الإداريين": "All admins", "كل الأحداث": "All events", "من": "From", "إلى": "To", "تحميل المزيد": "Load more", "ما فيه سجلات": "No entries", "جدول السجل غير موجود في قاعدة البيانات. شغّل أمر الإنشاء من ADMIN-SETUP.md": "The log table is missing from the database. Run the create statement from ADMIN-SETUP.md", "تعذّر تحميل السجل": "Could not load the log", "الأدمن": "Admin", "الوقت": "Time", "الحدث": "Event", "الهدف": "Target", "التفاصيل": "Details", "تسجيل دخول": "Sign-in", "دخول بمفتاح الاسترجاع": "Recovery-key sign-in", "محاولة دخول فاشلة": "Failed sign-in", "محاولة على حساب مقفل": "Attempt on a locked account", "قفل الحساب بعد محاولات فاشلة": "Account locked after failed attempts", "تغيير كلمة المرور": "Password changed", "إنشاء حساب أدمن": "Admin account created", "تعديل صلاحيات": "Permissions changed", "إيقاف حساب": "Account disabled", "تفعيل حساب": "Account enabled", "فتح حساب مقفل": "Account unlocked", "كلمة مرور مؤقتة جديدة": "New temporary password", "إضافة خبر": "News added", "تعديل خبر": "News edited", "حذف خبر": "News deleted", "إضافة بطولة": "Tournament added", "تعديل بطولة": "Tournament edited", "حذف بطولة": "Tournament deleted", "تعديل شجرة/بث": "Bracket/stream edited", "إضافة لعبة": "Game added", "تعديل لعبة": "Game edited", "حذف لعبة": "Game deleted", "ترتيب/حذف ألعاب": "Games order/removal", "حذف تسجيل": "Registration deleted"});
+
+/** Owner-only, read-only activity log. There is deliberately no edit or delete control anywhere. */
+function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const { x, lang } = useX();
+  const toast = useToast();
+  const [rows, setRows] = useState<LogRow[]>([]);
+  const [users, setUsers] = useState<string[]>([]);
+  const [actions, setActions] = useState<string[]>([]);
+  const [more, setMore] = useState(false);
+  const [missing, setMissing] = useState(false);
+  const [f, setF] = useState({ user: '', action: '', from: '', to: '' });
+  const qs = useCallback((before?: number) => {
+    const q = new URLSearchParams();
+    if (f.user) q.set('user', f.user);
+    if (f.action) q.set('action', f.action);
+    if (f.from) q.set('from', String(new Date(`${f.from}T00:00:00+03:00`).getTime()));
+    if (f.to) q.set('to', String(new Date(`${f.to}T00:00:00+03:00`).getTime() + 86400000));
+    if (before) q.set('before', String(before));
+    return q.toString();
+  }, [f]);
+  const load = useCallback((append = false) => {
+    const before = append && rows.length ? rows[rows.length - 1].id : undefined;
+    api<{ rows: LogRow[]; users: string[]; actions: string[]; more: boolean; missing?: boolean }>(`/admin/log?${qs(before)}`, { key: k })
+      .then((r) => { setRows((p) => (append ? [...p, ...r.rows] : r.rows)); setUsers(r.users); setActions(r.actions); setMore(r.more); setMissing(!!r.missing); })
+      .catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل السجل')); });
+  }, [k, qs, rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(false); }, [f, k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const when = (t: number) => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'medium' });
+  const sel = 'h-10 rounded-xl border border-white/15 bg-white/[.06] px-3 text-[.9rem] text-inherit';
+  const fmt = (d: string) => {
+    if (!d) return null;
+    try {
+      const o = JSON.parse(d) as Record<string, unknown>;
+      return Object.entries(o).filter(([, v]) => v !== undefined).map(([key, v]) => (Array.isArray(v) && v.length === 2 && typeof v[0] === 'string'
+        ? <div key={key} dir="ltr" className="text-left"><b>{key}</b>: <span className="opacity-60 line-through">{String(v[0]) || '∅'}</span> → <span>{String(v[1]) || '∅'}</span></div>
+        : <div key={key} dir="ltr" className="text-left"><b>{key}</b>: {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>));
+    } catch { return d; }
+  };
+  return (
+    <div className="space-y-4">
+      <p className="text-[.95rem] opacity-70">{x('سجل دائم لا يمكن تعديله أو حذفه. يعرض من فعل ماذا ومتى')}</p>
+      <div className="flex flex-wrap gap-2">
+        <select className={sel} value={f.user} onChange={(e) => setF({ ...f, user: e.target.value })} aria-label={x('الأدمن')}>
+          <option value="">{x('كل الإداريين')}</option>{users.map((u) => <option key={u} value={u}>{u}</option>)}
+        </select>
+        <select className={sel} value={f.action} onChange={(e) => setF({ ...f, action: e.target.value })} aria-label={x('الحدث')}>
+          <option value="">{x('كل الأحداث')}</option>{actions.map((a) => <option key={a} value={a}>{LOG_ACTION[a] ? x(LOG_ACTION[a]) : a}</option>)}
+        </select>
+        <label className="flex items-center gap-2 text-[.85rem] opacity-80">{x('من')}<input type="date" className={sel} value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} /></label>
+        <label className="flex items-center gap-2 text-[.85rem] opacity-80">{x('إلى')}<input type="date" className={sel} value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} /></label>
+      </div>
+      {missing && <p className="rounded-xl border border-[#ffc93c]/40 bg-[#ffc93c]/10 p-3 text-[.9rem]">{x('جدول السجل غير موجود في قاعدة البيانات. شغّل أمر الإنشاء من ADMIN-SETUP.md')}</p>}
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <table className="w-full min-w-[40rem] text-start text-[.88rem]">
+          <thead className="bg-white/[.06] text-[.8rem] opacity-80"><tr>{['الوقت', 'الأدمن', 'الحدث', 'الهدف', 'التفاصيل'].map((h) => <th key={h} className="px-3 py-2 text-start font-bold">{x(h)}</th>)}</tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-t border-white/10 align-top">
+                <td className="whitespace-nowrap px-3 py-2 opacity-80">{when(r.at)}</td>
+                <td className="px-3 py-2 font-bold" dir="ltr">{r.username}</td>
+                <td className="px-3 py-2">{LOG_ACTION[r.action] ? x(LOG_ACTION[r.action]) : r.action}</td>
+                <td className="px-3 py-2" dir="auto">{r.target}</td>
+                <td className="px-3 py-2 text-[.8rem] opacity-90">{fmt(r.detail)}</td>
+              </tr>
+            ))}
+            {!rows.length && <tr><td colSpan={5} className="px-3 py-8 text-center opacity-60">{x('ما فيه سجلات')}</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      {more && <button type="button" onClick={() => load(true)} className="h-10 rounded-xl border border-white/20 px-4 font-bold">{x('تحميل المزيد')}</button>}
+    </div>
   );
 }
 
@@ -1366,7 +1451,7 @@ export default function AdminPage() {
   if (!key || !me) return <Login onDone={onLogin} />;
   if (me.mustChange) return <ForceChange k={key} me={me} onLogout={logout} onDone={() => { const n = { ...me, mustChange: false, recovery: false }; saveMe(n); setMe(n); }} />;
 
-  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || (id === 'admins' ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
+  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || ((id === 'admins' || id === 'log') ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
   return (
     <ToastHost><PermCtx.Provider value={can}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
@@ -1436,6 +1521,7 @@ export default function AdminPage() {
           {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
           {tab === 'admins' && me.role === 'owner' && <AdminsTab k={key} onAuthFail={logout} />}
+          {tab === 'log' && me.role === 'owner' && <LogTab k={key} onAuthFail={logout} />}
           </div>
         </main>
       </div>

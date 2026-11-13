@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TrophyIcon } from './icons';
 import { dropLastRound, isCurrent, leagueChampion, leagueRounds, nextSwissRound, outcome, roundDone, roundMatches, setLeagueScore, standings, toggleCurrent, type BMatch, type Bracket } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 
@@ -50,7 +51,7 @@ export default function LeagueView({ bracket: br, onChange, live, advance }: Pro
 
   return (
     <div className="lg" dir={dir}>
-      {champ !== null && !advance && <div className="br-champ" style={{ marginTop: 0, marginBottom: 12 }}><span>🏆</span><b>{name(champ)}</b></div>}
+      {champ !== null && !advance && <div className="br-champ" style={{ marginTop: 0, marginBottom: 12 }}><TrophyIcon className="h-5 w-5 shrink-0" style={{ color: '#ffc93c' }} /><b>{name(champ)}</b></div>}
       <div className="lg-table-wrap">
         <table className="lg-table">
           <thead><tr>

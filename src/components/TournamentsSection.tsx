@@ -13,12 +13,12 @@ type Tab = 'all' | TournamentStatus;
 const TABS: Tab[] = ['all', 'live', 'upcoming', 'completed'];
 const TAB_KEY: Record<Tab, keyof Dict> = { all: 'tabAll', live: 'tabLive', upcoming: 'tabUpcoming', completed: 'tabDone' };
 const ST_KEY: Record<TournamentStatus, keyof Dict> = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' };
-const ST_COLOR: Record<TournamentStatus, string> = { live: '#ff3b4e', upcoming: '#ffb02e', completed: '#8d8d9b' };
+const ST_COLOR: Record<TournamentStatus, string> = { live: '#27c27a', upcoming: '#ffb02e', completed: '#8d8d9b' };
 
 function StatusPill({ s }: { s: TournamentStatus }) {
   const { t } = useI18n();
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[.78rem] font-bold" style={{ borderColor: ST_COLOR[s], color: s === 'completed' ? 'var(--muted)' : 'var(--text)', background: s === 'live' ? 'rgba(255,59,78,.18)' : 'var(--chip-bg)' }}>
+    <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[.78rem] font-bold" style={{ borderColor: ST_COLOR[s], color: s === 'completed' ? 'var(--muted)' : 'var(--text)', background: s === 'live' ? 'rgba(39,194,122,.18)' : 'var(--chip-bg)' }}>
       <i aria-hidden="true" className={`h-2 w-2 rounded-full ${s === 'live' ? 'animate-pulse' : ''}`} style={{ background: ST_COLOR[s] }} />
       {t[ST_KEY[s]]}
     </span>
@@ -63,7 +63,7 @@ function Facts({ x }: { x: Tournament }) {
       <div><dt className="opacity-70">{t.tFormat}</dt><dd className="font-bold">{x.format[lang]}</dd></div>
       <div className="col-span-2">
         <dt className="flex justify-between opacity-70"><span>{t.tTeams}</span><span>{full ? t.tFull : `${x.slots.filled}/${x.slots.total}`}</span></dt>
-        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#ff3347,#d90f26)' }} /></div></dd>
+        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#7a4dff,#4a5cff)' }} /></div></dd>
       </div>
     </dl>
   );
@@ -96,7 +96,7 @@ function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const fmt = useFmt();
   useGames();
   const g = getGame(x.gameId);
-  const c = g?.colors ?? ['#ff3347', '#3a0710'];
+  const c = g?.colors ?? ['#7a4dff', '#1a1f6a'];
   return (
     <article className="news-card on-art relative text-white md:mb-6" style={{ background: `linear-gradient(135deg, ${c[0]}, ${c[1]})`, border: 'none' }}>
       {x.image ? (
@@ -162,10 +162,10 @@ export default function TournamentsSection() {
   const list = tab === 'all' ? withStatus : withStatus.filter((r) => r.s === tab);
   const featured = tab !== 'completed' && list[0] && list[0].s !== 'completed' ? list[0] : null;
   const rest = featured ? list.slice(1) : list;
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #ff3347, #d90f26)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #7a4dff, #4a5cff)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
-    <section id="tournaments" aria-labelledby="tournaments-title" className="scroll-mt-20 px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ background: 'var(--bg)' }}>
+    <section id="tournaments" aria-labelledby="tournaments-title" className="scroll-mt-20 px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="mb-7 max-w-[40rem]">
         <h2 id="tournaments-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.tournTitle}</h2>
         <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.tournSub}</p>

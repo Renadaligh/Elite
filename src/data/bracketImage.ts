@@ -33,15 +33,25 @@ function brandMark(c: CanvasRenderingContext2D, W: number, cy: number, rtl: bool
 function bg(c: CanvasRenderingContext2D, W: number, H: number, rtl: boolean) {
   c.fillStyle = '#060608'; c.fillRect(0, 0, W, H);
   const R = Math.min(Math.max(W, H) * 0.42, 620), cx = rtl ? W : 0;
-  const g = c.createRadialGradient(cx, 0, 0, cx, 0, R); g.addColorStop(0, 'rgba(255,51,71,.13)'); g.addColorStop(1, 'rgba(255,51,71,0)');
+  const g = c.createRadialGradient(cx, 0, 0, cx, 0, R); g.addColorStop(0, 'rgba(122,77,255,.13)'); g.addColorStop(1, 'rgba(122,77,255,0)');
   c.fillStyle = g; c.fillRect(0, 0, W, H);
-  const g2 = c.createRadialGradient(W - cx, H, 0, W - cx, H, R * 0.7); g2.addColorStop(0, 'rgba(255,51,71,.04)'); g2.addColorStop(1, 'rgba(255,51,71,0)');
+  const g2 = c.createRadialGradient(W - cx, H, 0, W - cx, H, R * 0.7); g2.addColorStop(0, 'rgba(122,77,255,.04)'); g2.addColorStop(1, 'rgba(122,77,255,0)');
   c.fillStyle = g2; c.fillRect(0, 0, W, H);
 }
 /** Keeps the canvas inside what browsers (and iPhones: ~16M pixels) can draw, however big the bracket is. */
 const fit = (scale: number, W: number, H: number) => Math.min(scale, 8000 / W, 16000 / H, Math.sqrt(16_000_000 / (W * H)));
 
 interface Opts { title: string; lang: 'ar' | 'en'; scale?: number }
+
+/** Gold trophy drawn on the canvas (no emoji fonts needed), centred at (cx, cy), `size` px square. */
+function trophy(c: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
+  c.save(); c.translate(cx - size / 2, cy - size / 2); c.scale(size / 24, size / 24);
+  c.lineWidth = 1.9; c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = '#ffc93c'; c.fillStyle = 'rgba(255,201,60,.25)';
+  const cup = new Path2D('M7 3h10v6a5 5 0 0 1-10 0V3Z');
+  c.fill(cup); c.stroke(cup);
+  c.stroke(new Path2D('M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4'));
+  c.restore();
+}
 
 export async function bracketBlob(br: Bracket, o: Opts): Promise<Blob> {
   try { await document.fonts?.ready; } catch { /* fonts are optional */ }
@@ -80,7 +90,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
   const sx = (x: number, w: number) => (rtl ? W - x - w : x);
   const al = rtl ? 'right' : 'left', alEnd = rtl ? 'left' : 'right';
 
-  bg(c, W, H, rtl); c.fillStyle = '#ff3347'; c.fillRect(0, 0, W, 4);
+  bg(c, W, H, rtl); c.fillStyle = '#7a4dff'; c.fillRect(0, 0, W, 4);
   c.fillStyle = '#fff'; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic';
   txt(title, rtl ? W - PAD : PAD, 56, al, W - PAD * 2);
   c.fillStyle = '#9aa0b8'; c.font = `600 13px ${family}`;
@@ -89,12 +99,12 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
   // standings
   const cols = [{ k: '#', w: 40 }, { k: rtl ? 'اللاعب' : 'Player', w: 0 }, { k: rtl ? 'لعب' : 'P', w: 44 }, { k: rtl ? 'فوز' : 'W', w: 44 }, { k: rtl ? 'تعادل' : 'D', w: 44 }, { k: rtl ? 'خسارة' : 'L', w: 44 }, { k: '+/−', w: 56 }, { k: rtl ? 'نقاط' : 'Pts', w: 58 }];
   const TW = W - PAD * 2; cols[1].w = TW - cols.reduce((t, q) => t + q.w, 0);
-  rr(PAD, tableTop, TW, tableH, 12); c.fillStyle = '#101016'; c.fill();
+  rr(PAD, tableTop, TW, tableH, 12); c.fillStyle = '#101647'; c.fill();
   c.save(); rr(PAD, tableTop, TW, tableH, 12); c.clip();
   c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(PAD, tableTop, TW, RHt);
   const champ = champion(br);
   const drawRow = (vals: string[], ry: number, head: boolean, top: boolean) => {
-    if (top) { c.fillStyle = 'rgba(255,51,71,.18)'; c.fillRect(PAD, ry, TW, RHt); }
+    if (top) { c.fillStyle = 'rgba(122,77,255,.18)'; c.fillRect(PAD, ry, TW, RHt); }
     let off = 0;
     cols.forEach((col, i) => {
       c.fillStyle = head ? '#9aa0b8' : i === 7 || i === 1 ? '#fff' : '#d8d8e4';
@@ -119,11 +129,11 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
       const col = i % 3, row = Math.floor(i / 3), bx = sx(PAD + col * (MW + 12), MW), by = y0 + 28 + row * (MH + 12);
       const bye = 'bye' in m.a || 'bye' in m.b, o = outcome(br, m), live = isCurrent(br, m.id) && !o;
       c.globalAlpha = bye ? 0.5 : 1;
-      rr(bx, by, MW, MH, 10); c.fillStyle = '#14141a'; c.fill();
+      rr(bx, by, MW, MH, 10); c.fillStyle = '#151c58'; c.fill();
       c.save(); rr(bx, by, MW, MH, 10); c.clip();
       (['a', 'b'] as const).forEach((sd, i2) => {
         const slot = m[sd], isBye = 'bye' in slot, yy = by + i2 * MR, win = (o === sd) || (bye && !isBye && br.format === 'swiss'), lose = !!o && o !== sd && o !== 'draw';
-        if (win && o !== 'draw') { c.fillStyle = 'rgba(255,51,71,.2)'; c.fillRect(bx, yy, MW, MR); }
+        if (win && o !== 'draw') { c.fillStyle = 'rgba(122,77,255,.2)'; c.fillRect(bx, yy, MW, MR); }
         c.fillStyle = win && o !== 'draw' ? '#fff' : lose || isBye ? '#8b90a6' : '#e8e8f0'; c.font = `${win ? 700 : 500} 13px ${family}`; c.textBaseline = 'middle';
         txt(isBye ? 'BYE' : br.players[(slot as { p: number }).p] || '—', rtl ? bx + MW - 10 : bx + 10, yy + MR / 2 + 1, al, MW - 52);
         const sc = m[sd === 'a' ? 'sa' : 'sb'];
@@ -131,7 +141,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
       });
       c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect(bx, by + MR, MW, 1);
       c.restore();
-      c.lineWidth = live ? 2.5 : 1; c.strokeStyle = live ? '#ff3347' : 'rgba(255,255,255,.14)'; rr(bx, by, MW, MH, 10); c.stroke();
+      c.lineWidth = live ? 2.5 : 1; c.strokeStyle = live ? '#7a4dff' : 'rgba(255,255,255,.14)'; rr(bx, by, MW, MH, 10); c.stroke();
       c.globalAlpha = 1;
     });
   });
@@ -139,7 +149,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
   if (champ !== null) {
     const w = Math.min(TW, 360), x = rtl ? W - PAD - w : PAD, yy = H - FOOT - 4;
     c.fillStyle = '#fff'; c.font = `800 15px ${family}`; c.textBaseline = 'middle';
-    txt(`🏆  ${br.players[champ]}`, rtl ? x + w : x, yy, al, w);
+    trophy(c, rtl ? x + w - 10 : x + 10, yy, 19); txt(br.players[champ], rtl ? x + w - 30 : x + 30, yy, al, w - 30);
   }
   c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle';
   brandMark(c, W, H - 46, rtl, family);
@@ -198,7 +208,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   };
 
   bg(c, W, H, rtl);
-  c.fillStyle = '#ff3347'; c.fillRect(0, 0, W, 4);
+  c.fillStyle = '#7a4dff'; c.fillRect(0, 0, W, 4);
   // title
   c.fillStyle = '#ffffff'; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic';
   txt(title, rtl ? W - PAD : PAD, 56, 'start', W - PAD * 2);
@@ -236,7 +246,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
       if (!('w' in s)) continue;
       const from = pos.get(s.w); if (!from) continue;
       const x1 = rtl ? X(from.x) : X(from.x) + CW, x2 = rtl ? X(to.x) + CW : X(to.x), y1 = from.y + RH, y2 = to.y + RH, mx = (x1 + x2) / 2;
-      c.strokeStyle = R.get(s.w)?.win != null ? '#ff3347' : 'rgba(255,255,255,.2)';
+      c.strokeStyle = R.get(s.w)?.win != null ? '#7a4dff' : 'rgba(255,255,255,.2)';
       c.beginPath(); c.moveTo(x1, y1); c.lineTo(mx, y1); c.lineTo(mx, y2); c.lineTo(x2, y2); c.stroke();
     }
   }
@@ -248,20 +258,20 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     const r = R.get(m.id)!;
     const x = X(p.x), isBye = r.a === 'bye' || r.b === 'bye', live = isCurrent(br, m.id) && !m.win;
     c.globalAlpha = isBye ? 0.45 : 1;
-    rr(x, p.y, CW, CH, 10); c.fillStyle = '#14141a'; c.fill();
+    rr(x, p.y, CW, CH, 10); c.fillStyle = '#151c58'; c.fill();
     c.save(); rr(x, p.y, CW, CH, 10); c.clip();
     ([['a', r.a, m.sa], ['b', r.b, m.sb]] as const).forEach(([side, w, sc], i) => {
       const y = p.y + i * RH, win = !isBye && m.win === side, lose = !isBye && !!m.win && !win;
-      if (win) { c.fillStyle = 'rgba(255,51,71,.2)'; c.fillRect(x, y, CW, RH); }
+      if (win) { c.fillStyle = 'rgba(122,77,255,.2)'; c.fillRect(x, y, CW, RH); }
       c.fillStyle = win ? '#ffffff' : lose || typeof w !== 'number' ? '#8b90a6' : '#e8e8f0';
       c.font = `${win ? 700 : 500} 14px ${family}`; c.textBaseline = 'middle';
       txt(nm(w), rtl ? x + CW - 12 : x + 12, y + RH / 2 + 1, 'start', CW - 56);
-      if (sc || win) { c.font = `800 14px ${family}`; c.fillStyle = win && !sc ? '#ff4455' : '#fff'; c.textAlign = 'end'; txt(sc || '✓', rtl ? x + 12 : x + CW - 12, y + RH / 2 + 1, rtl ? 'start' : 'end', 30); }
+      if (sc || win) { c.font = `800 14px ${family}`; c.fillStyle = win && !sc ? '#9a88ff' : '#fff'; c.textAlign = 'end'; txt(sc || '✓', rtl ? x + 12 : x + CW - 12, y + RH / 2 + 1, rtl ? 'start' : 'end', 30); }
     });
     c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect(x, p.y + RH, CW, 1);
     c.restore();
-    c.lineWidth = live ? 2.5 : 1; c.strokeStyle = live ? '#ff3347' : 'rgba(255,255,255,.14)'; rr(x, p.y, CW, CH, 10); c.stroke();
-    if (live) { c.fillStyle = '#ff3347'; c.font = `800 10px ${family}`; c.textBaseline = 'middle'; c.textAlign = 'center'; c.fillRect(x + CW / 2 - 24, p.y - 8, 48, 16); c.fillStyle = '#fff'; c.fillText(rtl ? 'الآن' : 'LIVE', x + CW / 2, p.y); }
+    c.lineWidth = live ? 2.5 : 1; c.strokeStyle = live ? '#7a4dff' : 'rgba(255,255,255,.14)'; rr(x, p.y, CW, CH, 10); c.stroke();
+    if (live) { c.fillStyle = '#7a4dff'; c.font = `800 10px ${family}`; c.textBaseline = 'middle'; c.textAlign = 'center'; c.fillRect(x + CW / 2 - 24, p.y - 8, 48, 16); c.fillStyle = '#fff'; c.fillText(rtl ? 'الآن' : 'LIVE', x + CW / 2, p.y); }
     c.globalAlpha = 1;
   }
 
@@ -270,14 +280,14 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   if (champ !== null && lp) {
     const x = X(champCol * (CW + GX)), y = lp.y;
     const lx1 = rtl ? X(lp.x) : X(lp.x) + CW, lx2 = rtl ? x + CW : x;
-    c.lineWidth = 1.5; c.strokeStyle = '#ff3347'; c.beginPath(); c.moveTo(lx1, y + RH); c.lineTo(lx2, y + RH); c.stroke();
-    c.save(); c.shadowColor = 'rgba(255,51,71,.5)'; c.shadowBlur = 26;
+    c.lineWidth = 1.5; c.strokeStyle = '#7a4dff'; c.beginPath(); c.moveTo(lx1, y + RH); c.lineTo(lx2, y + RH); c.stroke();
+    c.save(); c.shadowColor = 'rgba(122,77,255,.5)'; c.shadowBlur = 26;
     rr(x, y, CW, CH, 14);
-    const gr = c.createLinearGradient(x, y, x + CW, y + CH); gr.addColorStop(0, '#3a0e16'); gr.addColorStop(1, '#1a070b');
+    const gr = c.createLinearGradient(x, y, x + CW, y + CH); gr.addColorStop(0, '#1a1f6a'); gr.addColorStop(1, '#0b0f3a');
     c.fillStyle = gr; c.fill(); c.restore();
-    c.lineWidth = 2.5; c.strokeStyle = '#ff3347'; rr(x, y, CW, CH, 14); c.stroke();
+    c.lineWidth = 2.5; c.strokeStyle = '#7a4dff'; rr(x, y, CW, CH, 14); c.stroke();
     c.fillStyle = '#fff'; c.textBaseline = 'middle';
-    c.font = `400 20px ${family}`; c.textAlign = 'center'; c.fillText('🏆', x + CW / 2, y + 20);
+    trophy(c, x + CW / 2, y + 20, 22);
     c.font = `800 17px ${family}`; txt(br.players[champ], x + CW / 2, y + 45, 'center', CW - 24);
   }
   c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle';
@@ -301,7 +311,7 @@ function tableCanvas(opts: { title: string; sub: string; lang: 'ar' | 'en'; scal
   const al = rtl ? 'right' : 'left';
   const rr = (x: number, y0: number, w: number, h: number, r: number) => { c.beginPath(); c.roundRect(x, y0, w, h, r); };
   const txt = (str: string, x: number, y0: number, align: 'left' | 'right' | 'center', maxW: number) => { let t = str; while (t.length > 1 && c.measureText(t).width > maxW) t = t.slice(0, -1); c.textAlign = align; c.fillText(t === str ? t : `${t}…`, x, y0); };
-  bg(c, W, H, rtl); c.fillStyle = '#ff3347'; c.fillRect(0, 0, W, 4);
+  bg(c, W, H, rtl); c.fillStyle = '#7a4dff'; c.fillRect(0, 0, W, 4);
   c.fillStyle = '#fff'; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic'; txt(opts.title, rtl ? W - PAD : PAD, 56, al, W - PAD * 2);
   c.fillStyle = '#9aa0b8'; c.font = `600 13px ${family}`; txt(opts.sub, rtl ? W - PAD : PAD, 80, al, 400);
   const TW = W - PAD * 2;
@@ -309,12 +319,12 @@ function tableCanvas(opts: { title: string; sub: string; lang: 'ar' | 'en'; scal
     const top = tops[bi], th = RHt * (b.rows.length + 1);
     if (b.label) { c.fillStyle = '#9aa0b8'; c.font = `700 12px ${family}`; c.textBaseline = 'middle'; txt(b.label, rtl ? W - PAD : PAD, top - 12, al, 300); }
     const widths = [...b.widths]; widths[1] = TW - widths.reduce((t, w, i) => (i === 1 ? t : t + w), 0);
-    rr(PAD, top, TW, th, 12); c.fillStyle = '#101016'; c.fill();
+    rr(PAD, top, TW, th, 12); c.fillStyle = '#101647'; c.fill();
     c.save(); rr(PAD, top, TW, th, 12); c.clip();
     c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(PAD, top, TW, RHt);
     [b.head, ...b.rows].forEach((vals, ri) => {
       const ry = top + ri * RHt, head = ri === 0;
-      if (!head && b.hi !== undefined && ri - 1 < b.hi) { c.fillStyle = b.hiColor ?? 'rgba(255,51,71,.18)'; c.fillRect(PAD, ry, TW, RHt); }
+      if (!head && b.hi !== undefined && ri - 1 < b.hi) { c.fillStyle = b.hiColor ?? 'rgba(122,77,255,.18)'; c.fillRect(PAD, ry, TW, RHt); }
       let off = 0;
       vals.forEach((v, i) => {
         const w = widths[i]; const bx = rtl ? W - PAD - off - w : PAD + off;
@@ -327,7 +337,7 @@ function tableCanvas(opts: { title: string; sub: string; lang: 'ar' | 'en'; scal
     });
     c.restore(); c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,.14)'; rr(PAD, top, TW, th, 12); c.stroke();
   });
-  if (opts.champ) { c.fillStyle = '#fff'; c.font = `800 15px ${family}`; c.textBaseline = 'middle'; txt(`🏆  ${opts.champ}`, rtl ? W - PAD : PAD, H - (opts.footer ? FOOT : 20) - 24, al, TW); }
+  if (opts.champ) { c.fillStyle = '#fff'; c.font = `800 15px ${family}`; c.textBaseline = 'middle'; const cy = H - (opts.footer ? FOOT : 20) - 24; trophy(c, rtl ? W - PAD - 10 : PAD + 10, cy, 19); txt(opts.champ, rtl ? W - PAD - 30 : PAD + 30, cy, al, TW - 30); }
   if (opts.footer) { c.fillStyle = '#6c7088'; c.font = `600 12px ${family}`; c.textBaseline = 'middle'; brandMark(c, W, H - 46, rtl, family); }
   c.textAlign = 'start';
   return cv;
@@ -356,7 +366,7 @@ async function groupsBlob(br: Bracket, o: Opts): Promise<Blob> {
   const tree = await treeCanvas(k, { ...o, title: ar ? 'الإقصائيات' : 'Knockout' });
   const W = Math.max(top.width, tree.width), H = top.height + tree.height;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const c = cv.getContext('2d')!; c.fillStyle = '#07070a'; c.fillRect(0, 0, W, H);
+  const c = cv.getContext('2d')!; c.fillStyle = '#070a26'; c.fillRect(0, 0, W, H);
   c.drawImage(top, ar ? W - top.width : 0, 0); c.drawImage(tree, ar ? W - tree.width : 0, top.height);
   return canvasBlob(cv);
 }

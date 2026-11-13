@@ -12,7 +12,7 @@ import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
 const DRAFT = 'elite-bracket-draft';
 const card = { background: 'var(--glass)', borderColor: 'var(--glass-b)' };
-const inp = 'w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-[.95rem] outline-none focus:border-[#ff3347]';
+const inp = 'w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-[.95rem] outline-none focus:border-[#7a4dff]';
 const pill = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold disabled:opacity-60';
 
 export const TXT = {
@@ -26,7 +26,7 @@ export const TXT = {
     editPlayers: 'تعديل أسماء اللاعبين', rebuild: 'تعديل القائمة وإعادة البناء', rebuildAsk: 'إعادة البناء تمسح النتائج الحالية. متأكد؟', renameNote: 'تغيير الاسم يحافظ على النتائج.',
     notFound: 'البطولة غير موجودة.', by: 'من', copy: 'انسخه لأعدّله', readonly: 'عرض فقط', unsaved: 'لم تُحفظ التعديلات بعد',
     loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البطولات المحفوظة (100). احذف واحد قديم.', private: 'هذه البطولة غير منشورة. اطلب من صاحبها تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البطولة (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البطولة في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البطولة أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
-    myTitle: 'بطولاتي', newOne: '+ بطولة جديدة', empty: 'ما عندك بطولات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: '⬇ صورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟',
+    myTitle: 'بطولاتي', newOne: '+ بطولة جديدة', empty: 'ما عندك بطولات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: 'صورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟',
     needLogin: 'سجّل دخولك لتشوف بطولاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
   },
   en: {
@@ -39,7 +39,7 @@ export const TXT = {
     editPlayers: 'Edit player names', rebuild: 'Edit list & rebuild', rebuildAsk: 'Rebuilding clears the current results. Sure?', renameNote: 'Renaming keeps the results.',
     notFound: 'Bracket not found.', by: 'by', copy: 'Copy to edit', readonly: 'View only', unsaved: 'Unsaved changes',
     loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Live stream (optional)', shLiveD: 'Your stream player shows above the bracket on the view page, only while "Live now" is on.', shStreamUrl: 'Your channel or stream link (Twitch / YouTube / Kick)', shStreamNow: 'Live now', shStreamBad: 'Unsupported link. Use a Twitch, YouTube or Kick link.', shStreamLive: 'Live', shSave2: 'Save', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
-    myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: '⬇ Image', del: 'Delete', delAsk: 'Delete this bracket?',
+    myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: 'Image', del: 'Delete', delAsk: 'Delete this bracket?',
     needLogin: 'Sign in to see your saved brackets.', players_n: 'players', hello: 'Hi',
   },
 } as const;
@@ -54,7 +54,7 @@ function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Provider
   const { lang } = useI18n();
   return (
     <div className="backdrop-fade fixed inset-0 z-[90] grid place-items-center bg-black/60 p-5 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div role="dialog" aria-modal="true" aria-label={tx.loginTitle} className="modal-in grid w-full max-w-[26rem] gap-3 rounded-2xl border p-7 text-center shadow-2xl" style={{ background: 'var(--dialog, #0b0b10)', borderColor: 'var(--glass-b)' }}>
+      <div role="dialog" aria-modal="true" aria-label={tx.loginTitle} className="modal-in grid w-full max-w-[26rem] gap-3 rounded-2xl border p-7 text-center shadow-2xl" style={{ background: 'var(--dialog, #0b1038)', borderColor: 'var(--glass-b)' }}>
         <h2 className="text-[1.2rem] font-extrabold">{tx.loginTitle}</h2>
         <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.loginSub}</p>
         {providers.discord && <a href={`/api/auth/login/discord?r=${r}`} className="rounded-xl px-4 py-3 font-bold text-white" style={{ background: '#5865f2' }}>{tx.discord}</a>}
@@ -71,7 +71,7 @@ function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Provider
 
 function Shell({ tx, user, children, bare }: { tx: Tx; user: AuthUser | null; children: ReactNode; bare?: boolean }) {
   return (
-    <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ backgroundColor: 'var(--bg)' }}>
+    <article className={bare ? 'pv-page min-h-[100svh] pb-10' : `page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ backgroundColor: 'var(--bg)' }}>
       {!bare && <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[40rem]">
           <h1 className="text-[clamp(1.8rem,4.5vw,3rem)] font-extrabold leading-tight">{tx.title}</h1>
@@ -133,7 +133,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive);
         }).catch(() => { /* keep showing the last version */ });
     };
-    const t = window.setInterval(tick, 8000);
+    const t = window.setInterval(tick, 15000);
     document.addEventListener('visibilitychange', tick);
     return () => { stop = true; window.clearInterval(t); document.removeEventListener('visibilitychange', tick); };
   }, [id, mine, state]);
@@ -215,16 +215,16 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           </div>
         )
       ) : (
-        <div className="grid min-w-0 gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className={`grid min-w-0 gap-5 ${!editable && readOnly ? 'pv-body' : ''}`}>
+          <div className={`flex flex-wrap items-center justify-between gap-3 ${!editable && readOnly ? 'pv-pad' : ''}`}>
             <div>
-              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#ff3347]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />
+              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#7a4dff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />
                 : <h2 className="text-[1.4rem] font-extrabold">{title}</h2>}
-              {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{owner && `${tx.by} ${owner} · `}{tx.readonly}</p>}
+              {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
               <BracketActions bracket={br} title={shownTitle} url={url} />
-              {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#ff3347,#d90f26)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
+              {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#7a4dff,#4a5cff)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
@@ -236,7 +236,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
             </div>
           )}
-          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} /></div>
+          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} pub={!!readOnly && !editable} /></div>
           </div>
           {editable && (
             <div className="st-share" style={card}>

@@ -13,6 +13,10 @@ export type Ctx = { request: Request; env: Env; params: Record<string, string> }
 export const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 
+/** Public, rarely-changing lists: the browser may reuse the answer for `secs` seconds (fewer API calls). Varies by Authorization so admins never get a cached public copy. */
+export const jsonPublic = (data: unknown, secs = 30) =>
+  new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${secs}`, vary: 'authorization' } });
+
 export const denied = () => json({ error: 'unauthorized' }, 401);
 
 export async function body(req: Request): Promise<Record<string, unknown>> {

@@ -11,7 +11,7 @@ const LaserIcon = <svg {...svg}><circle cx="12" cy="12" r="3" /><path d="M12 3v3
 function Feature({ icon, label }: { icon: ReactNode; label: string }) {
   return (
     <li className="flex flex-col items-center gap-3 rounded-2xl border px-3 py-5 text-center transition-transform duration-300 hover:-translate-y-1" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
-      <span className="grid h-14 w-14 place-items-center rounded-2xl text-white" style={{ background: 'linear-gradient(135deg,#ff3347,#d90f26)', boxShadow: '0 12px 24px -12px rgba(235,40,60,.9)' }}>{icon}</span>
+      <span className="grid h-14 w-14 place-items-center rounded-2xl text-white" style={{ background: 'linear-gradient(135deg,#7a4dff,#4a5cff)', boxShadow: '0 12px 24px -12px rgba(110,90,255,.9)' }}>{icon}</span>
       <span className="text-[.95rem] font-semibold">{label}</span>
     </li>
   );
@@ -23,7 +23,7 @@ export default function SupportSection() {
   return (
     <SectionShell id="support" title={t.navSupport} sub={t.supSub}>
       <div className="relative isolate overflow-hidden rounded-[2rem] border p-[clamp(1.5rem,4vw,3rem)]" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
-        <div aria-hidden="true" className="pointer-events-none absolute -top-24 -z-10 h-72 w-72 rounded-full opacity-50 blur-3xl [inset-inline-end:-4rem]" style={{ background: 'radial-gradient(circle,#ff3347,transparent 70%)' }} />
+        <div aria-hidden="true" className="pointer-events-none absolute -top-24 -z-10 h-72 w-72 rounded-full opacity-50 blur-3xl [inset-inline-end:-4rem]" style={{ background: 'radial-gradient(circle,#7a4dff,transparent 70%)' }} />
         <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_1fr]">
           <div>
             <span className="inline-block rounded-full border px-3.5 py-1 text-[.82rem] font-bold" style={{ borderColor: 'var(--glass-b)', color: 'var(--link-on)', background: 'var(--chip-bg)' }}>{STORE.name}</span>

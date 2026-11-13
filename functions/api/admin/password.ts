@@ -1,5 +1,6 @@
 import { sha256 } from '../../_auth';
 import { eq, getAdmin, hashPw } from '../../_admin';
+import { logAdmin } from '../../_audit';
 import { body, denied, json, type Ctx } from '../../_lib';
 
 /** POST /api/admin/password { current, next }. After a recovery login the current password is not required. */
@@ -18,5 +19,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const t = (request.headers.get('authorization') ?? '').slice(7);
   await env.DB.prepare('DELETE FROM admin_sessions WHERE username=? AND token_hash<>?').bind(a.username, await sha256(t)).run();
   await env.DB.prepare('UPDATE admin_sessions SET recovery=0 WHERE token_hash=?').bind(await sha256(t)).run();
+  await logAdmin(env, a.username, 'password.change', a.recovery ? 'after recovery login' : '');
   return json({ ok: true });
 };

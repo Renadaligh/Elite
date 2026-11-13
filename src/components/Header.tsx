@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import { NAV } from '../config/site';
 import BrandLockup from './BrandLockup';
+import HeroThemeToggle from './HeroThemeToggle';
 import { CloseIcon, MenuIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
@@ -43,7 +44,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
   return (
     <header data-solid={solid} className="hdr fixed inset-x-0 top-0 z-50">
       <div dir="ltr" className="flex items-center justify-between gap-4 px-[clamp(1rem,4vw,3.5rem)] py-3 sm:py-4">
-        <BrandLockup />
+        <BrandLockup collapsed={!solid} />
         <nav dir={dir} aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-[clamp(1rem,2.2vw,2.1rem)]">
             {NAV.map((n) => {
@@ -59,6 +60,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
           </ul>
         </nav>
         <div className="flex items-center gap-2">
+          <HeroThemeToggle />
           <LanguageSwitcher />
           <button ref={burger} type="button" className="pill !px-0 lg:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t.closeMenu : t.menu}>
             {open ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}

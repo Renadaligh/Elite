@@ -87,7 +87,7 @@ export default function GamesSection() {
   const active = games[index];
 
   return (
-    <section id="games" aria-labelledby="games-title" className="relative scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ background: 'var(--bg)' }}>
+    <section id="games" aria-labelledby="games-title" className="relative scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="mx-auto max-w-[40rem] text-center">
         <h2 id="games-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.gamesTitle}</h2>
         <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.gamesSub}</p>
@@ -99,8 +99,8 @@ export default function GamesSection() {
           const selected = category === id;
           return <button key={id} type="button" aria-pressed={selected} onClick={() => chooseCategory(id)}
             className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200"
-            style={{ borderColor: selected ? '#ff4455' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
-              background: selected ? 'linear-gradient(115deg,#ff3347,#a30a1b)' : 'var(--glass)' }}>
+            style={{ borderColor: selected ? '#9a88ff' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
+              background: selected ? 'linear-gradient(115deg,#7a4dff,#2a2fa8)' : 'var(--glass)' }}>
             {c[lang]} <span className="ms-1 opacity-70">{i === 0 ? GAMES.length : GAMES.filter(g => g.genre.en === id).length}</span>
           </button>;
         })}
@@ -134,7 +134,7 @@ export default function GamesSection() {
                   if (o === 0) go(g); else setIndex(i);
                 }}>
                 {g.image ? <OfficialGameImage key={g.id} src={g.image} /> : <div className="gcard-art" />}
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(to top, rgba(5,5,7,.92) 0%,rgba(5,5,7,.7) 16%,rgba(5,5,7,.25) 40%,transparent 66%)'}} />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(to top, rgba(7,10,38,.92) 0%,rgba(7,10,38,.7) 16%,rgba(7,10,38,.25) 40%,transparent 66%)'}} />
                 <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-5">
                   <span className="text-[.78rem] font-semibold opacity-85">{g.genre[lang]}</span>
                   <div className="text-[clamp(1.15rem,1.8vw,1.55rem)] font-extrabold leading-tight">{g.name[lang]}</div>

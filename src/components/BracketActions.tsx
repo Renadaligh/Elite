@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Bracket } from '../data/bracket';
 import { bracketBlob, downloadBlob, shareBracket } from '../data/bracketImage';
 import { useI18n } from '../i18n/I18nProvider';
+import { DownloadIcon, ShareIcon } from './icons';
 
 /** "Save as image" + "Share" for a bracket. Works on the public page and in the dashboard. */
 export default function BracketActions({ bracket, title, url }: { bracket: Bracket; title: string; url: string }) {
@@ -19,12 +20,12 @@ export default function BracketActions({ bracket, title, url }: { bracket: Brack
     } catch { flash(ar ? 'تعذّر إنشاء الصورة' : 'Could not create the image'); }
     setBusy(false);
   }
-  const b = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold transition-opacity disabled:opacity-60';
+  const b = 'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[.85rem] font-semibold transition-opacity disabled:opacity-60';
   const st = { borderColor: 'var(--glass-b)', background: 'var(--glass)' };
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <button type="button" className={b} style={st} disabled={busy} onClick={() => run('save')}>⬇ {ar ? 'حفظ كصورة' : 'Save as image'}</button>
-      <button type="button" className={b} style={st} disabled={busy} onClick={() => run('share')}>↗ {ar ? 'مشاركة' : 'Share'}</button>
+      <button type="button" className={b} style={st} disabled={busy} onClick={() => run('save')}><DownloadIcon className="h-4 w-4" />{ar ? 'حفظ كصورة' : 'Save as image'}</button>
+      <button type="button" className={b} style={st} disabled={busy} onClick={() => run('share')}><ShareIcon className="h-4 w-4" />{ar ? 'مشاركة' : 'Share'}</button>
       {msg && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }} role="status">{msg}</span>}
     </div>
   );

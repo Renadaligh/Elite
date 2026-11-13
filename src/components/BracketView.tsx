@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { TrophyIcon } from './icons';
 import { champion, isCurrent, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
@@ -6,7 +7,7 @@ import FfaView from './FfaView';
 import GroupsView from './GroupsView';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
-interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean }
+interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
 
 function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: number) {
   const ar = lang === 'ar';
@@ -42,7 +43,7 @@ export default function BracketView(p: Props) {
   return <TreeView {...p} />;
 }
 
-function TreeView({ bracket, onPick, selected }: Props) {
+function TreeView({ bracket, onPick, selected, pub }: Props) {
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
   const R = useMemo(() => resolve(bracket), [bracket]);
@@ -50,7 +51,26 @@ function TreeView({ bracket, onPick, selected }: Props) {
   const champ = champion(bracket);
   const narrow = useNarrow();
   const [tree, setTree] = useState(false); // phone: user asked for the full tree
-  const showTree = !narrow || tree;
+  const [byRounds, setByRounds] = useState(false); // public view: optional rounds list
+  const showTree = pub ? !byRounds : !narrow || tree;
+  // Public view on a phone: columns shrink so the whole tree fits the screen; very big brackets keep readable columns and scroll sideways.
+  const box = useRef<HTMLDivElement>(null);
+  const [bw, setBw] = useState(0);
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const on = () => setBw(el.clientWidth);
+    on(); const ro = new ResizeObserver(on); ro.observe(el); return () => ro.disconnect();
+  }, [showTree]);
+  const single = bracket.format !== 'double';
+  const nCols = L.winners.length + (L.final ? 1 : 0);
+  const fitStyle = (() => {
+    if (!pub || !narrow || !single || !bw || !nCols) return undefined;
+    const gap = 16, avail = bw - 24;
+    let cw = Math.floor((avail - gap * (nCols - 1)) / nCols);
+    if (cw < 58) cw = 84;
+    const fs = cw >= 104 ? 12.5 : cw >= 78 ? 10.5 : 8.5;
+    return { '--cw': `${cw}px`, '--gap': `${gap}px`, '--fs': `${fs}px` } as CSSProperties;
+  })();
   // Phone list view: pick a branch + round; opens on the round of the current match (else the first round still to play).
   const playable = (m: BMatch) => { const r = R.get(m.id); return !!r && r.a !== 'bye' && r.b !== 'bye'; };
   const start = useMemo(() => {
@@ -108,10 +128,10 @@ function TreeView({ bracket, onPick, selected }: Props) {
       </div>
     );
   };
-  const champCol = champ !== null && (
+  const champCol = champ !== null && !(pub && single) && (
     <div className="br-col br-champcol">
       <div className="br-round">&nbsp;</div>
-      <div className="br-col-body"><div className="br-champ"><span>🏆</span><b>{bracket.players[champ]}</b></div></div>
+      <div className="br-col-body"><div className="br-champ"><TrophyIcon className="h-5 w-5 shrink-0" style={{ color: '#ffc93c' }} /><b>{bracket.players[champ]}</b></div></div>
     </div>
   );
   const section = (title: string, rounds: BMatch[][], br: 'W' | 'L') => (
@@ -137,7 +157,9 @@ function TreeView({ bracket, onPick, selected }: Props) {
   const chip = (on: boolean, label: string, click: () => void, key: string) => (
     <button key={key} type="button" onClick={click} className={`br-chip ${on ? 'on' : ''}`}>{label}</button>
   );
-  const toggle = narrow && (
+  const toggle = pub ? (
+    <button type="button" className="br-toggle" onClick={() => setByRounds((v) => !v)}>{byRounds ? (lang === 'ar' ? 'عرض الشجرة' : 'Tree view') : (lang === 'ar' ? 'عرض بالجولات' : 'View by rounds')}</button>
+  ) : narrow && (
     <button type="button" className="br-toggle" onClick={() => setTree((v) => !v)}>{tree ? (lang === 'ar' ? 'عرض بالجولات' : 'Round view') : (lang === 'ar' ? 'عرض الشجرة كاملة' : 'Full tree')}</button>
   );
 
@@ -150,13 +172,13 @@ function TreeView({ bracket, onPick, selected }: Props) {
         <div className="br-list">
           {shown.length ? shown.map(card) : <p style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'ما فيه مباريات' : 'No matches'}</p>}
         </div>
-        {champ !== null && <div className="br-champ"><span>🏆</span><b>{bracket.players[champ]}</b></div>}
+        {champ !== null && <div className="br-champ"><TrophyIcon className="h-5 w-5 shrink-0" style={{ color: '#ffc93c' }} /><b>{bracket.players[champ]}</b></div>}
       </div>
     );
   }
 
   return (
-    <div className="br-scroll" dir={dir}>
+    <div ref={box} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''}`} style={fitStyle} dir={dir}>
       {toggle}
       <div className="br-wrap" ref={wrap}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
@@ -175,6 +197,7 @@ function TreeView({ bracket, onPick, selected }: Props) {
           )}
           {L.final && bracket.format === 'double' && champCol}
         </div>
+        {pub && single && champ !== null && <div className="br-champ pv-champ"><TrophyIcon className="h-5 w-5 shrink-0" style={{ color: '#ffc93c' }} /><b>{bracket.players[champ]}</b></div>}
       </div>
     </div>
   );

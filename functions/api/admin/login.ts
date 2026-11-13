@@ -1,5 +1,6 @@
 import { MAX_FAILS, eq, hashPw, newSession, ownerName, readPerms, FULL } from '../../_admin';
 import { body, json, str, type Ctx } from '../../_lib';
+import { logAdmin } from '../../_audit';
 
 type Row = { username: string; pass_hash: string; salt: string; role: string; perms: string; must_change: number; temp_expires: number; disabled: number; locked: number; locked_until: number; failed: number };
 const DUMMY_SALT = 'x'.repeat(32);
@@ -15,6 +16,7 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const done = async (r: { username: string; role: string; perms: string; must_change: number }, recovery: boolean) => {
     await env.DB.prepare('UPDATE admins SET failed=0, last_login=? WHERE username=?').bind(now, r.username).run();
     const token = await newSession(env, r.username, recovery);
+    await logAdmin(env, r.username, recovery ? 'login.recovery' : 'login.ok');
     const isOwner = r.role === 'owner';
     return json({ token, username: r.username, role: isOwner ? 'owner' : 'admin', perms: isOwner ? FULL : readPerms(r.perms), mustChange: !!r.must_change, recovery });
   };
@@ -30,9 +32,9 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   }
 
   const r = await env.DB.prepare('SELECT * FROM admins WHERE username=?').bind(username).first<Row>();
-  if (!r) { await hashPw(password, DUMMY_SALT); return json({ error: 'invalid' }, 401); }
+  if (!r) { await hashPw(password, DUMMY_SALT); await logAdmin(env, username.slice(0, 40), 'login.fail', 'unknown account'); return json({ error: 'invalid' }, 401); }
   const isOwner = r.role === 'owner';
-  if (r.locked || (isOwner && r.locked_until > now)) return json({ error: 'locked' }, 423);
+  if (r.locked || (isOwner && r.locked_until > now)) { await logAdmin(env, r.username, 'login.blocked', 'account locked'); return json({ error: 'locked' }, 423); }
   const ok = eq(await hashPw(password, r.salt), r.pass_hash);
   if (!ok) {
     const f = r.failed + 1;
@@ -40,8 +42,10 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
       // An admin stays locked until the owner unlocks it; the owner is only paused 15 minutes (the recovery key still works).
       if (isOwner) await env.DB.prepare('UPDATE admins SET failed=0, locked_until=? WHERE username=?').bind(now + 15 * 60000, r.username).run();
       else await env.DB.prepare('UPDATE admins SET failed=0, locked=1 WHERE username=?').bind(r.username).run();
+      await logAdmin(env, r.username, 'login.lockout', isOwner ? 'owner paused 15 min' : 'locked until owner unlocks');
       return json({ error: 'locked' }, 423);
     }
+    await logAdmin(env, r.username, 'login.fail', `attempt ${f} of ${MAX_FAILS}`);
     await env.DB.prepare('UPDATE admins SET failed=? WHERE username=?').bind(f, r.username).run();
     return json({ error: 'invalid', left: MAX_FAILS - f }, 401);
   }

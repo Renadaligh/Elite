@@ -1,5 +1,6 @@
 import { announceNews } from '../../_discord';
-import { body, json, newId, safeUrl, str, type Ctx } from '../../_lib';
+import { body, json, jsonPublic, newId, safeUrl, str, type Ctx } from '../../_lib';
+import { logAdmin } from '../../_audit';
 import { guard, seesAll } from '../../_admin';
 
 type Row = { id: string; date: string; tag: string; title_en: string; title_ar: string; summary_en: string; summary_ar: string; image: string; link: string; published: number };
@@ -25,7 +26,7 @@ export function parse(b: Record<string, unknown>) {
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const all = await seesAll(request, env, 'news');
   const { results } = await env.DB.prepare(`SELECT * FROM news ${all ? '' : 'WHERE published = 1'} ORDER BY date DESC`).all<Row>();
-  return json(results.map(out));
+  return all ? json(results.map(out)) : jsonPublic(results.map(out));
 };
 
 export const onRequestPost = async ({ request, env }: Ctx) => {
@@ -36,5 +37,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   await env.DB.prepare('INSERT INTO news (id,date,tag,title_en,title_ar,summary_en,summary_ar,image,link,published) VALUES (?,?,?,?,?,?,?,?,?,?)')
     .bind(id, v.date, v.tag, v.title_en, v.title_ar, v.summary_en, v.summary_ar, v.image, v.link, v.published).run();
   if (v.published) await announceNews(env, request, id, v);
+  await logAdmin(env, a.username, 'news.add', `${v.title_en || v.title_ar} (${id})`);
   return json({ ok: true, id });
 };
