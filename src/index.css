@@ -958,3 +958,13 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 .tc [role=timer] > div { background: var(--tc-pill) !important; border-color: transparent !important; }
 @media (min-width: 1024px) { .tc-feat { display: grid; grid-template-columns: 1fr 1.1fr; } .tc-feat .tc-im { aspect-ratio: auto; height: 100%; min-height: 100%; } }
 @media (prefers-reduced-motion: reduce) { .tc, .tc:hover { transition: none; transform: none; } }
+
+/* phones: tighter copy block (name → tagline → buttons) so the buttons sit above the chess towers */
+@media (max-width: 767px) {
+  .hero-name img { height: 1.36em; }
+  .hero-name { margin-bottom: .35rem; }
+  .hero-desc { margin-bottom: 1rem; }
+  .hero-cta { gap: 8px; }
+  .hero-cta .hero-main { height: 2.85rem; }
+  .hero-cta .hero-sec { height: 2.45rem; }
+}
