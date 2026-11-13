@@ -859,3 +859,6 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61
 .br-scroll.pv { overflow-y: hidden; max-height: none; height: auto; border-radius: 16px; }
 .pv-root[data-st=dark] .br-scroll.pv, .pv-root[data-st=light] .br-scroll.pv { border: 1px solid var(--glass-b); }
 .pv .br-wrap { margin-inline: auto; }
+/* public bracket page: no frame around the bracket */
+.pv-root .br-scroll.pv, .pv-root[data-st] .br-scroll.pv { border: 0 !important; border-radius: 0; background: transparent; box-shadow: none; }
+.pv-body .st-brcard { border: 0 !important; background: transparent !important; box-shadow: none !important; border-radius: 0; }
