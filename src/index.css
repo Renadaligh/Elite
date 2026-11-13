@@ -773,34 +773,12 @@ html, body { max-width: 100%; overflow-x: clip; }
   .hero-desc { text-shadow: 0 2px 10px rgba(70,40,160,.9), 0 0 3px rgba(70,40,160,.6); }
 }
 
-/* ── hero v19: background and dice are separate images (same in both languages, never mirrored).
-   Desktop: both sit on one "cover" plate so they stay aligned. Phones: the dice is placed on its own at the top, text under it, the picture's props at the bottom. ── */
-.hero-art { position: absolute; inset: 0; container-type: size; overflow: hidden; }
-.hero-stage { position: absolute; inset: 0; --pw: max(100cqw, calc(100cqh * 1.7769)); --ph: calc(var(--pw) / 1.7769); --pl: calc((100cqw - var(--pw)) * .7); --pt: calc((100cqh - var(--ph)) * .4); }
-.hero-plate { position: absolute; left: var(--pl); top: var(--pt); width: var(--pw); height: var(--ph); }
-.hero-plate img { display: block; width: 100%; height: 100%; max-width: none; user-select: none; }
-.hero-dice { position: absolute; left: calc(var(--pl) + var(--pw) * .6943); top: calc(var(--pt) + var(--ph) * .2136); width: calc(var(--pw) * .2877); height: auto; max-width: none; user-select: none; pointer-events: none; }
-@media (max-width: 767px) {
-  .hero-plate { left: auto; right: 0; top: auto; bottom: 0; height: 69svh; width: auto; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8%); mask-image: linear-gradient(180deg, transparent 0, #000 8%); }
-  .hero-plate img { width: auto; height: 100%; }
-  .hero-dice { --dw: min(92vw, 45svh); left: 50%; margin-left: calc(var(--dw) / -2); top: 8svh; width: var(--dw); }
-  .hero-wrap { padding-top: calc(9.5svh + min(92vw, 45svh) * .709 + .6rem); }
-}
-
-/* phones: dice a little higher (text stays where it is) */
-@media (max-width: 767px) { .hero-dice { top: 6svh; } }
-
 /* ── hero day / night (button in the header; remembered on the device) ── */
-.hero-plate img.hero-night { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .6s ease; }
-.hero-plate img:not(.hero-night) { transition: opacity .6s ease; }
-:root[data-hero='night'] .hero-plate img.hero-night { opacity: 1; }
-:root[data-hero='night'] .hero-plate img:not(.hero-night) { opacity: 0; }
 :root[data-hero='night'] #top { background: #000c23 !important; }
 :root[data-hero='night'] .hero-copy::before { background: none; }
 :root[data-hero='night'] .hero-shade { background: linear-gradient(180deg, rgba(5,7,47,.5) 0%, rgba(5,7,47,0) 18%); }
 @media (min-width: 768px) { :root[data-hero='night'] .hero-shade { background: radial-gradient(ellipse 46% 52% at 50% 50%, rgba(5,7,47,.45), rgba(5,7,47,0) 78%), linear-gradient(180deg, rgba(5,7,47,.5) 0%, rgba(5,7,47,0) 20%); } }
 :root[data-hero='night'] .hdr::before { background: linear-gradient(180deg, rgba(5, 7, 47, .7) 0%, rgba(5, 7, 47, .3) 50%, transparent 100%); }
-@media (prefers-reduced-motion: reduce) { .hero-plate img { transition: none !important; } }
 
 /* night: no purple tints (bottom fade, text shadows) – navy only */
 :root[data-hero='night'] .hero-bottomfade { background-image: linear-gradient(180deg, rgba(0,12,35,0) 0%, rgba(2,14,48,.7) 55%, var(--bg) 100%) !important; }
@@ -868,3 +846,43 @@ html:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61
 /* public bracket page: logo on one side, buttons on the other (no back button) */
 .pv-logo { margin-inline: 0; }
 .pv-tools { margin-inline-start: auto; }
+
+/* champions + tournaments: clearer artwork (light and dark) */
+.champ-card.has-img::before { filter: saturate(1) contrast(1.03) brightness(.95); }
+.champ-card.has-img::after { background: linear-gradient(180deg, rgba(8,12,44,.05), rgba(8,12,44,.35) 32%, rgba(8,12,44,.88) 58%, rgba(8,12,44,.97) 80%); }
+:root[data-hero='day'] .news-card:not(.on-art) .tour-img { filter: saturate(1.05) brightness(1.04); }
+:root[data-hero='day'] .news-card:not(.on-art) .tour-fade { background: linear-gradient(to top, rgba(var(--bg-rgb), 1) 0%, rgba(var(--bg-rgb), .92) 52%, rgba(var(--bg-rgb), .5) 100%); }
+:root[data-hero='day'] .news-card:not(.on-art) .tour-img ~ div h3, :root[data-hero='day'] .news-card:not(.on-art) .tour-img ~ div p, :root[data-hero='day'] .news-card:not(.on-art) .tour-img ~ div span { text-shadow: 0 0 10px rgba(255,255,255,.85), 0 0 2px rgba(255,255,255,.9); }
+
+
+/* ── hero v20: new scene. One "plate" (the picture) holds the background, the floating props and the dice, so they always stay aligned.
+   Desktop picture is 1672×941; phone picture is 941×1672 and sits at the bottom with the sky colour above it. ── */
+.hs { position: absolute; inset: 0; container-type: size; overflow: hidden; }
+.hs-stage { position: absolute; inset: 0; }
+.hs-plate { position: absolute; left: var(--pl); top: var(--pt); width: var(--pw); height: var(--ph); }
+.hs-d { --pw: max(100cqw, calc(100cqh * 1.7769)); --ph: calc(var(--pw) / 1.7769); --pl: calc((100cqw - var(--pw)) * .5); --pt: calc((100cqh - var(--ph)) * .12); }
+/* phone: props + dice stay at the top, the landscape stays at the bottom, the clean sky band between them (rows 520–680 of the 941×1672 picture) stretches to fill any screen height */
+.hs-m { --pw: 100cqw; --pl: 0px; --pt: 0px; --ph: 100cqh; --top: calc(var(--pw) * 520 / 941); --bot: calc(var(--pw) * 992 / 941); --mid: max(0px, calc(100cqh - var(--top) - var(--bot))); }
+.hs-slices { position: absolute; inset: 0; }
+.hs-slices i { position: absolute; left: 0; right: 0; display: block; background-image: var(--src); background-repeat: no-repeat; }
+.hs-slices .hs-top { top: 0; height: calc(var(--top) + 1px); background-size: 100% auto; background-position: 0 0; }
+.hs-slices .hs-bot { bottom: 0; height: var(--bot); background-size: 100% auto; background-position: 0 100%; }
+.hs-slices .hs-mid { top: var(--top); height: calc(var(--mid) + 1px); background-size: 100% calc(var(--mid) * 1672 / 160); background-position: 0 calc(var(--mid) * -520 / 160); }
+.hs-bg { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; display: block; user-select: none; transition: opacity .6s ease; }
+.hs-night { opacity: 0; }
+:root[data-hero='night'] .hs-night { opacity: 1; }
+:root[data-hero='night'] .hs-bg:not(.hs-night) { opacity: 0; }
+.hs-float { position: absolute; height: auto; max-width: none; user-select: none; pointer-events: none; will-change: transform; animation: hs-float var(--dur, 6s) ease-in-out var(--del, 0s) infinite; }
+@keyframes hs-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(calc(var(--amp, .6) * -1cqw)) rotate(3deg); } }
+.is-paused .hs-float { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .hs-float { animation: none !important; } .hs-bg { transition: none !important; } }
+/* phones: the copy starts right under the dice (the dice bottom sits at 100svh − 118.6vw: it is 976/2092 of the way down a 941×2092 picture that sits at the bottom) */
+@media (max-width: 767px) { .hero-wrap { padding-top: max(8.5rem, calc(53vw + 2.2rem)); } }
+/* hero v20: no oversize margin (the plate must match the screen so props at the edges are not cropped), lighter top shade so the props stay clear */
+.hero-art-fix, #top .art-layer { inset: -8px; }
+#top .hero-topshade { background: linear-gradient(180deg, rgba(7,10,38,.38), transparent 11%); }
+@media (max-width: 767px) { #top .hero-topshade { background: linear-gradient(180deg, rgba(20,34,120,.3), transparent 9%); } }
+:root[data-hero='day'] #top .hero-topshade { background: linear-gradient(180deg, rgba(60,70,170,.28), transparent 10%); }
+
+/* hero v21 (desktop): copy a little higher, buttons a little closer to the tagline */
+@media (min-width: 768px) { .hero-copy { transform: translateY(-4.2svh); } .hero-desc { margin-bottom: 4rem; } }
