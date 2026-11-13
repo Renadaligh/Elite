@@ -204,8 +204,8 @@ function FocusPicker({ src, pos, onChange }: { src: string; pos: string; onChang
   const drag = useRef<{ x: number; y: number; px: number; py: number; w: number; h: number } | null>(null);
   const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)));
   const frames = [
-    { key: 'card', label: x('كرت البطولة'), w: 15, h: 16 },
-    { key: 'wide', label: x('الكرت الكبير'), w: 28, h: 8.5 },
+    { key: 'card', label: x('كرت البطولة'), w: 16, h: 8 },
+    { key: 'wide', label: x('الكرت الكبير (كمبيوتر)'), w: 24, h: 13 },
   ];
   function down(e: React.PointerEvent<HTMLDivElement>, w: number, h: number) {
     const r = e.currentTarget.getBoundingClientRect();
@@ -234,7 +234,6 @@ function FocusPicker({ src, pos, onChange }: { src: string; pos: string; onChang
               className="relative cursor-grab touch-none select-none overflow-hidden rounded-xl border active:cursor-grabbing" style={{ width: `${f.w}rem`, maxWidth: '100%', aspectRatio: `${f.w} / ${f.h}`, borderColor: 'var(--glass-b)' }}
             >
               <img src={src} alt="" draggable={false} onLoad={(e) => setRatio(e.currentTarget.naturalWidth / Math.max(1, e.currentTarget.naturalHeight))} className="pointer-events-none h-full w-full object-cover" style={{ objectPosition: `${px}% ${py}%` }} />
-              <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,12,44,.95) 0%, rgba(8,12,44,.55) 50%, rgba(8,12,44,.1) 100%)' }} />
             </div>
             <span className="text-[.74rem] font-medium">{f.label}</span>
           </div>
