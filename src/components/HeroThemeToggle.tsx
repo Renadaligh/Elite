@@ -5,10 +5,10 @@ import { MoonIcon, SunIcon } from './icons';
 type Mode = 'day' | 'night';
 const KEY = 'plato-hero';
 
-/** Switches the home-page hero between the day picture and the night picture. The choice is remembered on this device. */
+/** Switches the whole site between dark (default, night hero) and light (day hero). The choice is remembered on this device. */
 export default function HeroThemeToggle() {
   const { lang } = useI18n();
-  const [mode, setMode] = useState<Mode>(() => (document.documentElement.dataset.hero === 'night' ? 'night' : 'day'));
+  const [mode, setMode] = useState<Mode>(() => (document.documentElement.dataset.hero === 'day' ? 'day' : 'night'));
   useEffect(() => {
     document.documentElement.dataset.hero = mode;
     try { localStorage.setItem(KEY, mode); } catch { /* private mode */ }

@@ -3,28 +3,26 @@ import { champion, ffaChampion, ffaRows, groupLabel, groupSub, isCurrent, isLeag
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
 const CW = 210, CH = 62, RH = CH / 2, GX = 60, GY = 18, PAD = 36, HEAD = 96, FOOT = 72;
 
-/** Header-style brand mark (cube · plato | ninja) + site address, drawn at the bottom corner of every image. */
-const IMG: { cube?: HTMLImageElement; ninja?: HTMLImageElement } = {};
+/** Header-style brand mark (cube · plato) + site address, drawn at the bottom corner of every image. */
+const IMG: { cube?: HTMLImageElement } = {};
 const loadImg = (src: string) => new Promise<HTMLImageElement | undefined>((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(undefined); i.src = src; });
 async function preloadBrand() {
-  if (IMG.cube && IMG.ninja) return;
+  if (IMG.cube) return;
   const b = import.meta.env.BASE_URL;
   try { await document.fonts?.load('500 24px Ubuntu'); } catch { /* optional */ }
-  [IMG.cube, IMG.ninja] = await Promise.all([loadImg(`${b}brand/cube.png`), loadImg(`${b}brand/ninja.png`)]);
+  IMG.cube = await loadImg(`${b}brand/cube.png`);
 }
 function brandMark(c: CanvasRenderingContext2D, W: number, cy: number, rtl: boolean, family: string) {
-  const ch = 26, nh = 18, gap = 8;
-  const cw = IMG.cube ? (ch * IMG.cube.width) / IMG.cube.height : 0, nw = IMG.ninja ? (nh * IMG.ninja.width) / IMG.ninja.height : 0;
+  const ch = 26, gap = 8;
+  const cw = IMG.cube ? (ch * IMG.cube.width) / IMG.cube.height : 0;
   c.save(); c.textBaseline = 'middle'; c.textAlign = 'left';
   c.font = '500 24px Ubuntu, sans-serif'; const pw = c.measureText('plato').width;
-  const total = cw + (cw ? gap : 0) + pw + 10 + 1 + 10 + nw;
+  const total = cw + (cw ? gap : 0) + pw;
   let x = (W - total) / 2; // centred under the bracket
   const mid = W / 2;
   c.fillStyle = '#fff';
   if (IMG.cube) { c.drawImage(IMG.cube, x, cy - ch / 2, cw, ch); x += cw + gap; }
-  c.font = '500 24px Ubuntu, sans-serif'; c.fillText('plato', x, cy + 1); x += pw + 10;
-  c.globalAlpha = 0.4; c.fillRect(x, cy - 11, 1, 22); c.globalAlpha = 1; x += 11;
-  if (IMG.ninja) c.drawImage(IMG.ninja, x, cy - nh / 2, nw, nh);
+  c.font = '500 24px Ubuntu, sans-serif'; c.fillText('plato', x, cy + 1);
   c.fillStyle = '#9aa0b8'; c.font = `600 12px ${family}`; c.textAlign = 'center'; c.fillText('plato-ar.com', mid, cy + 28);
   c.restore();
 }

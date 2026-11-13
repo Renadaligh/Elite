@@ -71,7 +71,7 @@ function ThemeBtn({ theme, set, s }: { theme: Theme; set: (t: Theme) => void; s:
 }
 
 function Splash({ theme }: { theme: Theme }) {
-  return <div className="st-splash" data-st={theme}><BrandLockup /><div className="st-bar"><b /></div></div>;
+  return <div className="st-splash" data-st={theme}><BrandLockup ninja={false} /><div className="st-bar"><b /></div></div>;
 }
 
 
@@ -161,7 +161,7 @@ function LoginScreen({ s, providers, theme, setTheme }: { s: St; providers: Prov
     <div className="st-login" dir={dir} data-st={theme}>
       <aside className="st-panel">
         <div className="st-rise flex items-center justify-between" style={d(0)}>
-          <BrandLockup />
+          <BrandLockup ninja={false} />
           <div className="flex items-center gap-2"><ThemeBtn theme={theme} set={setTheme} s={s} /><LanguageSwitcher /></div>
         </div>
         <div className="st-form">
@@ -335,7 +335,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
     <div className="st-app" dir={dir} data-st={theme}>
       <aside className="st-side">
         <div className="st-side-top">
-          <BrandLockup />
+          <BrandLockup ninja={false} />
           <span className="st-tool">{s.tool}</span>
           <nav className="st-nav">
             {nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} aria-current={sec === n.k ? 'page' : undefined}><Ic d={n.i} />{n.label}</a>)}

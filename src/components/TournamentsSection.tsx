@@ -87,8 +87,8 @@ function MajorBadge() {
   return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>Major</span>;
 }
 
-/** Elite ninja mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
-const NINJA = `url(${import.meta.env.BASE_URL}brand/ninja.png) center / contain no-repeat`;
+/** Dice mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
+const NINJA = `url(${import.meta.env.BASE_URL}brand/dice.png) center / contain no-repeat`;
 const NinjaMark = () => <span aria-hidden="true" className="tour-ninja" style={{ WebkitMask: NINJA, mask: NINJA }} />;
 
 function Featured({ x, s }: { x: Tournament; s: TournamentStatus }) {

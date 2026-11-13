@@ -25,6 +25,7 @@ const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
 const EN: Record<string, string> = {
+  'الوضع الداكن': 'Dark mode', 'الوضع الفاتح': 'Light mode',
  'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic',
 
   'تحديث': 'Update', 'بطولة': 'Tournament', 'مجتمع': 'Community', 'فعالية': 'Event',
@@ -73,6 +74,31 @@ const EN: Record<string, string> = {
 };
 
 Object.assign(EN, {"ما عندك صلاحية لهذا الإجراء": "You do not have permission for this action", "اسم المستخدم": "Username", "كلمة المرور": "Password", "الحساب مقفل. تواصل مع الأدمن الرئيسي لفتحه": "This account is locked. Contact the main admin to unlock it", "الحساب موقوف. تواصل مع الأدمن الرئيسي": "This account is disabled. Contact the main admin", "انتهت صلاحية كلمة المرور المؤقتة. اطلب من الأدمن الرئيسي كلمة جديدة": "The temporary password expired. Ask the main admin for a new one", "اسم المستخدم أو كلمة المرور غير صحيحة": "Wrong username or password", "محاولات متبقية": "attempts left", "كلمة المرور لازم تكون 10 أحرف على الأقل": "The password must be at least 10 characters", "كلمتا المرور غير متطابقتين": "The passwords do not match", "كلمة المرور الحالية غير صحيحة": "The current password is wrong", "اختر كلمة مختلفة عن الحالية وعن اسم المستخدم": "Choose a password different from the current one and from the username", "كلمة المرور الحالية": "Current password", "كلمة المرور الجديدة (10 أحرف على الأقل)": "New password (at least 10 characters)", "أعد كتابة كلمة المرور الجديدة": "Repeat the new password", "اختر كلمة مرور جديدة": "Choose a new password", "الحساب": "Account", "كلمة المرور الحالية مؤقتة. لازم تغيّرها قبل المتابعة": "The current password is temporary. You must change it before continuing", "جارٍ الحفظ…": "Saving…", "حفظ ومتابعة": "Save and continue", "تسجيل خروج": "Sign out", "تم تغيير كلمة المرور": "Password changed", "تغيير كلمة المرور": "Change password", "الإداريين": "Admins", "أنشئ حسابات وحدد صلاحيات كل أدمن": "Create accounts and set each admin's permissions", "+ أدمن جديد": "+ New admin", "الأدمن الرئيسي": "Main admin", "أدمن": "Admin", "موقوف": "Disabled", "مقفل": "Locked", "كلمة مؤقتة": "Temp password", "كل الصلاحيات": "All permissions", "آخر دخول": "Last login", "فتح الحساب": "Unlock", "الصلاحيات": "Permissions", "كلمة مرور جديدة": "New password", "إنشاء كلمة مرور مؤقتة جديدة؟ بتنتهي جلساته الحالية": "Create a new temporary password? His current sessions will end", "تفعيل": "Enable", "إيقاف": "Disable", "تم فتح الحساب": "Account unlocked", "تم تفعيل الحساب": "Account enabled", "تم إيقاف الحساب": "Account disabled", "تم حفظ الصلاحيات": "Permissions saved", "جارٍ التحميل…": "Loading…", "أدمن جديد": "New admin", "اسم المستخدم (إنجليزي، ما يتغير بعد الإنشاء)": "Username (English, cannot be changed later)", "بيتولّد له كلمة مرور مؤقتة تظهر لك مرة وحدة، ويغيّرها عند أول دخول": "A temporary password is generated, shown to you once, and he changes it at first sign-in", "جارٍ الإنشاء…": "Creating…", "إنشاء الحساب": "Create account", "تعذّر تحميل الحسابات": "Could not load accounts", "اسم المستخدم مستخدم من قبل": "That username is taken", "تعذّر إنشاء الحساب": "Could not create the account", "تعذّر تنفيذ العملية": "Could not complete the action", "اسم المستخدم: 3 إلى 24 حرف إنجليزي صغير أو رقم أو _": "Username: 3 to 24 lowercase English letters, digits or _", "اختر صلاحية واحدة على الأقل": "Choose at least one permission", "محرر أخبار": "News editor", "منظم بطولات": "Tournament organizer", "مدير ألعاب": "Games manager", "كامل": "Full", "إضافة": "Add", "عرض": "View", "بدون صلاحيات": "No permissions", "كلمة المرور المؤقتة": "Temporary password", "سلّمها للأدمن بنفسك. تظهر مرة وحدة فقط، وصلاحيتها 7 أيام، وبيُطلب منه يغيّرها عند أول دخول": "Hand it to the admin yourself. It is shown once only, valid for 7 days, and he must change it at first sign-in", "نسخ": "Copy", "تم النسخ": "Copied", "تم": "Done"});
+
+type AdTheme = 'dark' | 'light';
+/** Dashboard theme: stored on <html data-ad> while the dashboard is open so dialogs follow it too. */
+function useAdTheme(): [AdTheme, () => void] {
+  const [t, setT] = useState<AdTheme>(() => { try { return localStorage.getItem('elite-ad-theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; } });
+  useEffect(() => {
+    document.documentElement.dataset.ad = t;
+    try { localStorage.setItem('elite-ad-theme', t); } catch { /* private mode */ }
+    return () => { delete document.documentElement.dataset.ad; };
+  }, [t]);
+  return [t, () => setT((v) => (v === 'light' ? 'dark' : 'light'))];
+}
+const AdCtx = createContext<{ theme: AdTheme; toggle: () => void }>({ theme: 'dark', toggle: () => undefined });
+function AdThemeBtn() {
+  const { theme, toggle } = useContext(AdCtx);
+  const { x } = useX();
+  const light = theme === 'light', label = light ? x('الوضع الداكن') : x('الوضع الفاتح');
+  return (
+    <button type="button" className="st-theme" aria-label={label} title={label} onClick={toggle}>
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {light ? <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" /> : <><circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></>}
+      </svg>
+    </button>
+  );
+}
 
 function useX() {
   const { lang } = useI18n();
@@ -150,7 +176,7 @@ const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const btnP = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[.9rem] font-bold text-white transition hover:-translate-y-px disabled:opacity-60';
 const gradBtn = { background: 'linear-gradient(135deg,#7a4dff,#4a5cff)', boxShadow: '0 8px 22px -8px rgba(110,90,255,.7)' };
 const btnG = 'inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-[.85rem] font-semibold transition hover:bg-[var(--glass)]';
-const ninja = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no-repeat`, mask: `url(${BASE}brand/ninja.png) center / contain no-repeat` };
+const ninja = { WebkitMask: `url(${BASE}brand/dice.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice.png) center / contain no-repeat` };
 
 /** Downscale big photos in the browser (max 1800px, WebP) before upload. GIFs and failures are sent as-is. */
 async function shrink(file: File): Promise<Blob> {
@@ -1079,11 +1105,11 @@ function AuthShell({ children, onSubmit, title, sub }: { children: ReactNode; on
   const { x } = useX();
   return (
     <section className="admin-bg relative grid min-h-[100svh] place-items-center overflow-hidden px-5 py-10">
-      <div className="absolute end-4 top-4 z-10 flex gap-2"><LanguageSwitcher /></div>
+      <div className="absolute end-4 top-4 z-10 flex gap-2"><AdThemeBtn /><LanguageSwitcher /></div>
       <div aria-hidden="true" className="pointer-events-none absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#7a4dff,transparent 70%)' }} />
       <form onSubmit={onSubmit} className="relative w-full max-w-[26rem] rounded-[1.75rem] border p-8 shadow-2xl" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white" style={gradBtn}>
-          <span aria-hidden="true" className="inline-block h-7 w-11 bg-current" style={ninja} />
+          <span aria-hidden="true" className="inline-block h-9 w-9 bg-current" style={ninja} />
         </div>
         <h1 className="mt-5 text-center text-[1.55rem] font-extrabold">{title}</h1>
         <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>{sub}</p>
@@ -1430,7 +1456,7 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 }
 
 /* ---------- Shell ---------- */
-export default function AdminPage() {
+function AdminInner() {
   const { x } = useX();
   const [key, setKey] = useState(getKey);
   const [me, setMe] = useState<Me | null>(getMe);
@@ -1456,7 +1482,7 @@ export default function AdminPage() {
     <ToastHost><PermCtx.Provider value={can}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
-          <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-4 w-6 bg-current" style={ninja} /></span>
+          <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-5 w-5 bg-current" style={ninja} /></span>
           <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Elite</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
         </div>
         <nav className="flex flex-col gap-1">
@@ -1491,6 +1517,7 @@ export default function AdminPage() {
           <div className="flex shrink-0 items-center gap-2">
             <a href="#/" className="pill hidden lg:inline-flex" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
             <button type="button" onClick={logout} className="pill" style={{ gap: '.4rem' }} aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /><span className="hidden lg:inline">{x('تسجيل خروج')}</span></button>
+            <AdThemeBtn />
             <LanguageSwitcher />
           </div>
         </header>
@@ -1528,4 +1555,9 @@ export default function AdminPage() {
       {pwOpen && <PwDrawer k={key} me={me} onClose={() => setPwOpen(false)} />}
     </div></PermCtx.Provider></ToastHost>
   );
+}
+
+export default function AdminPage() {
+  const [theme, toggle] = useAdTheme();
+  return <AdCtx.Provider value={{ theme, toggle }}><AdminInner /></AdCtx.Provider>;
 }

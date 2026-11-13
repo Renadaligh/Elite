@@ -197,7 +197,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offs
 
 
 /* Tournament cards: faint Elite ninja mark in the bottom corner */
-.tour-ninja { position: absolute; z-index: 0; bottom: .8rem; inset-inline-end: .9rem; width: 4.6rem; height: 2.85rem; background: #fff; opacity: .16; pointer-events: none; }
+.tour-ninja { position: absolute; z-index: 0; bottom: .8rem; inset-inline-end: .9rem; width: 3.4rem; height: 3.4rem; background: #fff; opacity: .16; pointer-events: none; }
 /* Champion card using the tournament's own image */
 .champ-card.has-img::before { background: var(--champ-bg) var(--champ-pos, center) / cover no-repeat; filter: saturate(.9) contrast(1.05) brightness(.8); }
 
@@ -461,10 +461,11 @@ html, body { max-width: 100%; overflow-x: clip; }
 .st-acc { max-width: 48rem; }
 
 /* ---- theme: dark (default) / light for the bracket studio ---- */
-.st-root, .st-app, .st-login, .st-splash, .st-hero { --s-bg: #070a26; --s-panel: #0b1038; --s-panel-a: rgba(11,16,56,.82); --s-card: #101647; --s-card2: #151c58; --s-fg: #fff; --s-mut: #9aa0b8; --s-dim: #6c7088; --s-soft: #c9cde0; --s-line: rgba(255,255,255,.08); --s-line2: rgba(255,255,255,.16); --s-hov: rgba(255,255,255,.06); }
+.st-root, .st-app, .st-login, .st-splash, .st-hero { --s-bg: #050b2b; --s-panel: #09133f; --s-panel-a: rgba(9,19,63,.84); --s-card: #0e1a58; --s-card2: #142470; --s-fg: #f4f7ff; --s-mut: #9fb0e6; --s-dim: #6f80b8; --s-soft: #cfd8ff; --s-line: rgba(140,170,255,.13); --s-line2: rgba(150,175,255,.24); --s-hov: rgba(130,160,255,.09); }
 .st-app, .st-login, .st-splash { background: var(--s-bg); color: var(--s-fg); }
-[data-st=light] { --s-bg: #f3f4f8; --s-panel: #fff; --s-panel-a: rgba(255,255,255,.92); --s-card: #fff; --s-card2: #f1f2f7; --s-fg: #14151c; --s-mut: #5b6076; --s-dim: #8a8fa6; --s-soft: #3b3f55; --s-line: rgba(20,21,28,.1); --s-line2: rgba(20,21,28,.18); --s-hov: rgba(20,21,28,.06);
-  --bg: #f3f4f8; --text: #14151c; --muted: #5b6076; --glass: rgba(255,255,255,.9); --glass-b: rgba(20,21,28,.14); --dialog: #fff; --surface: #fff; --line: rgba(20,21,28,.14); color-scheme: light; }
+[data-st=dark] .st-app, [data-st=dark] .st-login { background: radial-gradient(60% 40% at 85% -5%, rgba(122,77,255,.16), transparent 70%), radial-gradient(55% 45% at 0% 0%, rgba(40,110,255,.16), transparent 70%), var(--s-bg); }
+[data-st=light] { --s-bg: #eef2fb; --s-panel: #fff; --s-panel-a: rgba(255,255,255,.92); --s-card: #fff; --s-card2: #e8eefc; --s-fg: #101a3d; --s-mut: #55608a; --s-dim: #8a8fa6; --s-soft: #34406a; --s-line: rgba(20,21,28,.1); --s-line2: rgba(20,21,28,.18); --s-hov: rgba(20,21,28,.06);
+  --bg: #eef2fb; --text: #101a3d; --muted: #55608a; --glass: rgba(255,255,255,.9); --glass-b: rgba(20,21,28,.14); --dialog: #fff; --surface: #fff; --line: rgba(20,21,28,.14); color-scheme: light; }
 [data-st=light] .st-bc:hover, [data-st=light] .st-stat { box-shadow: 0 1px 2px rgba(20,21,28,.06); }
 .st-new, .st-av, .st-mail button[type=submit], .st-inl button { color: #fff; }
 .st-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -806,3 +807,19 @@ html, body { max-width: 100%; overflow-x: clip; }
 :root[data-hero='night'] .hero-name img { filter: drop-shadow(0 2px 10px rgba(0,10,40,.7)); }
 :root[data-hero='night'] .hero-desc { text-shadow: 0 2px 10px rgba(0,10,40,.9), 0 0 3px rgba(0,10,40,.6); }
 :root[data-hero='night'] .hero-main { box-shadow: 0 12px 30px -8px rgba(30,90,255,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+
+
+/* ---- dashboard themes: dark = blues with a violet touch, light = cool white ---- */
+:root[data-ad='dark'] { --bg: #050b2b; --bg-rgb: 5, 11, 43; --text: #f4f7ff; --muted: #a3b3ea; --glass: rgba(14,26,88,.6); --glass-b: rgba(150,175,255,.2); --nav-solid: rgba(6,14,52,.84); --dialog: #0b1650; --link-on: #9db4ff; --chip-bg: rgba(0,0,0,.28); --chip-b: rgba(150,175,255,.22); --track: rgba(150,175,255,.18); --skel-a: rgba(150,175,255,.05); --skel-b: rgba(150,175,255,.11); }
+:root[data-ad='light'] { --bg: #eef2fb; --bg-rgb: 238, 242, 251; --text: #101a3d; --muted: #55608a; --glass: rgba(255,255,255,.92); --glass-b: rgba(16,26,61,.14); --nav-solid: rgba(246,248,254,.92); --dialog: #fff; --link-on: #3b5bdb; --chip-bg: rgba(16,26,61,.06); --chip-b: rgba(16,26,61,.14); --track: rgba(16,26,61,.12); --shadow: rgba(16,26,61,.18); --skel-a: rgba(16,26,61,.05); --skel-b: rgba(16,26,61,.1); color-scheme: light; }
+:root[data-ad='dark'] body, :root[data-ad='light'] body { background: var(--bg); }
+:root[data-ad='dark'] .admin-bg { background: radial-gradient(70% 55% at 85% 0%, rgba(122,77,255,.22), transparent 70%), radial-gradient(60% 50% at 10% 10%, rgba(40,110,255,.22), transparent 70%), linear-gradient(180deg, #08123d, #050b2b); }
+:root[data-ad='light'] .admin-bg { background: radial-gradient(70% 55% at 85% 0%, rgba(122,77,255,.14), transparent 70%), radial-gradient(60% 50% at 10% 10%, rgba(60,120,255,.16), transparent 70%), linear-gradient(180deg, #f6f8ff, #e9eefb); }
+:root[data-ad='light'] .admin-page .shadow-2xl, :root[data-ad='light'] .admin-bg form { box-shadow: 0 24px 50px -28px rgba(16,26,61,.35); }
+:root[data-ad='light'] .admin-page .bg-black\/55 { background: rgba(16,26,61,.4); }
+.admin-bg .st-theme, .admin-page .st-theme, header .st-theme { border-color: var(--glass-b); background: var(--glass); color: var(--text); }
+
+
+/* ---- site light mode (the sun/moon button): dark is the default, light = day hero + cool-white pages ---- */
+:root[data-hero='day'] { --bg: #f2f5fc; --bg-rgb: 242, 245, 252; --text: #101a3d; --muted: #55608a; --glass: rgba(255,255,255,.88); --glass-b: rgba(16,26,61,.14); --nav-solid: rgba(246,248,254,.9); --dialog: #fff; --link-on: #3b5bdb; --chip-bg: rgba(16,26,61,.06); --chip-b: rgba(16,26,61,.14); --track: rgba(16,26,61,.12); --shadow: rgba(16,26,61,.18); --skel-a: rgba(16,26,61,.05); --skel-b: rgba(16,26,61,.1); --art-a: #dfe7fb; --art-b: #f2f5fc; --card-dim: none; color-scheme: light; }
+:root[data-hero='day'] body { background: var(--bg); }

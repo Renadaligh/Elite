@@ -25,7 +25,7 @@ function useDate() {
 }
 
 const BASE = import.meta.env.BASE_URL;
-const ninjaMask = { WebkitMask: `url(${BASE}brand/ninja.png) center / contain no-repeat`, mask: `url(${BASE}brand/ninja.png) center / contain no-repeat` } as const;
+const ninjaMask = { WebkitMask: `url(${BASE}brand/dice.png) center / contain no-repeat`, mask: `url(${BASE}brand/dice.png) center / contain no-repeat` } as const;
 
 /** Winner's name, plus the team members (team tournaments). */
 const useWinner = (x: Tournament) => {
@@ -46,7 +46,7 @@ function ChampionCard({ x }: { x: Tournament }) {
   return (
     <article className={`champ-card group ${x.image ? 'has-img' : ''}`} style={{ ['--champ-bg' as string]: x.image ? `url("${x.image}")` : `url(${BASE}art/hero-scene.webp)`, ['--champ-pos' as string]: x.imagePos || 'center' }}>
       <div className="flex items-center justify-between">
-        <span aria-hidden="true" className="inline-block h-[1.3rem] w-[2.1rem] bg-white" style={ninjaMask} />
+        <span aria-hidden="true" className="inline-block h-[1.5rem] w-[1.5rem] bg-white" style={ninjaMask} />
         <span className={`champ-mode ${w.isTeam ? 'is-team' : ''}`}>{w.isTeam ? t.chTeam : t.chSolo}</span>
       </div>
       <div className="flex-1" />
@@ -79,7 +79,7 @@ function ArchiveRow({ x }: { x: Tournament }) {
   return (
     <li className="flex items-center gap-4 rounded-2xl border p-3 pe-5" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
       <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl" style={{ background: '#0a0f33', border: '1px solid var(--glass-b)', color: '#fff' }}>
-        <span aria-hidden="true" className="inline-block h-4 w-7 bg-current" style={ninjaMask} />
+        <span aria-hidden="true" className="inline-block h-5 w-5 bg-current" style={ninjaMask} />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
