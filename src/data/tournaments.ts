@@ -17,6 +17,7 @@ export interface Tournament {
   endsAt: string;
   /** Free text so any currency works, e.g. "10,000 SAR". */
   prize: Localized;
+  /** total 0 = unlimited seats. */
   slots: { filled: number; total: number };
   /** solo = one Plato ID; team = team name + captain + members. Default solo. */
   mode?: 'solo' | 'team';
@@ -34,7 +35,7 @@ export interface Tournament {
   /** Names of the winning team's members (team tournaments only). */
   winnerMembers?: string[];
   /** Made by a visitor with the bracket tool (not by the site team). */
-  community?: { bracketId: string; organizer: string };
+  community?: { bracketId: string; organizer: string; review?: 'pending' | 'approved' | 'rejected'; reviewNote?: string };
   /** Live bracket (single/double elimination), updated from the dashboard. */
   bracket?: Bracket;
   /** Live stream link + on/off switch: nothing is shown to visitors unless streamLive is true. */

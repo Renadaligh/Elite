@@ -57,7 +57,7 @@ const EN: Record<string, string> = {
   'اسم البطولة': 'Tournament name', 'اللعبة': 'Game', 'النوع': 'Type', 'فردي (Plato ID)': 'Solo (Plato ID)',
   'فرق (اسم الفريق + القائد + الأعضاء)': 'Teams (team name + captain + members)', 'النظام': 'Format', 'فردي · أسرع لفة': 'Solo · Fastest lap',
   'الجائزة': 'Prize', '5,000 ريال': '5,000 SAR', 'البداية (توقيت الرياض)': 'Start (Riyadh time)', 'النهاية (توقيت الرياض)': 'End (Riyadh time)',
-  'العدد الأقصى': 'Max slots', 'المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)': 'Registered now (auto-increments on each sign-up)',
+  'العدد الأقصى': 'Max slots', 'تحديد عدد المقاعد': 'Limit the seats', 'الكل': 'All', 'بطولات Plato AR': 'Plato AR tournaments', 'بطولات المستخدمين': 'Community tournaments', 'غير محدود': 'Unlimited', 'قيد المراجعة': 'Under review', 'مرفوضة': 'Rejected', 'مقبولة': 'Approved', 'قبول': 'Approve', 'رفض': 'Reject', 'سبب الرفض (يظهر لصاحب البطولة)': 'Reason for rejection (the owner sees it)', 'تأكيد الرفض': 'Confirm rejection', 'طلبات بطولات المستخدمين بانتظار مراجعتك': 'Community tournaments waiting for your review', 'فتح البراكت': 'Open bracket', 'اكتب سبب الرفض': 'Write the reason', 'تمت المراجعة': 'Review saved', 'المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)': 'Registered now (auto-increments on each sign-up)',
   'رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)': 'External registration link (optional, replaces the site form)',
   'الفائز (بعد الانتهاء)': 'Winner (after it ends)', 'صورة الفائز (طولية 9:16، اختياري)': 'Winner portrait (tall 9:16, optional)', 'أو الصق رابط': 'or paste a link', 'اختر صورة من جهازك': 'Choose from your device', 'جارٍ الرفع…': 'Uploading…', 'فشل رفع الصورة': 'Image upload failed', 'التخزين غير مفعّل بعد (R2)': 'Storage is not enabled yet (R2)', 'إزالة': 'Remove', 'منشورة (تظهر في الموقع)': 'Published (visible on the site)',
   'ما فيه بطولات بعد.': 'No tournaments yet.', 'مباشرة': 'Live', 'قادمة': 'Upcoming', 'منتهية': 'Completed',
@@ -334,6 +334,39 @@ const toInput = (iso: string) => {
 const fromInput = (v: string) => (v ? `${v}:00+03:00` : '');
 const when = (iso: string) => toInput(iso).replace('T', ' ');
 
+
+/** Review of a community tournament: approve, or reject with a reason the owner sees. */
+function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: boolean; onDone: () => void }) {
+  const { x } = useX();
+  const toast = useToast();
+  const [rej, setRej] = useState(false);
+  const [note, setNote] = useState('');
+  const c = r.community!;
+  async function send(status: 'approved' | 'rejected', n = '') {
+    try { await api(`/tournaments/${r.id}/review`, { method: 'PUT', key: k, body: JSON.stringify({ status, note: n }) }); toast.ok(x('تمت المراجعة')); setRej(false); setNote(''); onDone(); }
+    catch { toast.err(x('تعذّر تنفيذ العملية')); }
+  }
+  return (
+    <div className="w-full border-t pt-3" style={{ borderColor: 'var(--glass-b)' }}>
+      <div className="flex flex-wrap items-center gap-2">
+        <a className={btnG} style={{ borderColor: 'var(--glass-b)' }} href={`#/bracket/${c.bracketId}`} target="_blank" rel="noopener noreferrer">{x('فتح البراكت')}</a>
+        {can && c.review !== 'approved' && <button className={btnP} style={gradBtn} onClick={() => send('approved')}>{x('قبول')}</button>}
+        {can && c.review !== 'rejected' && !rej && <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} onClick={() => setRej(true)}>{x('رفض')}</button>}
+        {c.review === 'rejected' && c.reviewNote && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{c.reviewNote}</span>}
+      </div>
+      {rej && (
+        <div className="mt-2.5 grid gap-2">
+          <textarea rows={2} dir="auto" maxLength={300} className={inp} style={{ borderColor: 'var(--glass-b)' }} placeholder={x('سبب الرفض (يظهر لصاحب البطولة)')} value={note} onChange={(e) => setNote(e.target.value)} />
+          <div className="flex gap-2">
+            <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} disabled={!note.trim()} onClick={() => send('rejected', note.trim())}>{x('تأكيد الرفض')}</button>
+            <button className={btnG} style={{ borderColor: 'var(--glass-b)' }} onClick={() => setRej(false)}>{x('إلغاء')}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Overview ---------- */
 function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const can = useCan();
@@ -472,7 +505,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 }
 
 /* ---------- Tournaments ---------- */
-const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en: '' }, format: { ar: '', en: '' }, prize: { ar: '', en: '' }, startsAt: '', endsAt: '', slots: { filled: 0, total: 16 }, mode: 'solo', tier: 'regular', registerUrl: '', image: '', winner: { ar: '', en: '' }, winnerMembers: [], published: true });
+const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en: '' }, format: { ar: '', en: '' }, prize: { ar: '', en: '' }, startsAt: '', endsAt: '', slots: { filled: 0, total: 0 }, mode: 'solo', tier: 'regular', registerUrl: '', image: '', winner: { ar: '', en: '' }, winnerMembers: [], published: true });
 const ST_TONE = { live: 'red', upcoming: 'amber', completed: 'gray' } as const;
 const ST_AR = { live: 'مباشرة', upcoming: 'قادمة', completed: 'منتهية' } as const;
 
@@ -634,22 +667,32 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
     load();
   }
   const now = Date.now();
+  const [src, setSrc] = useState<'all' | 'site' | 'users'>('all');
+  const srcN = (k: 'all' | 'site' | 'users') => (k === 'all' ? rows.length : rows.filter((r) => (k === 'users') === !!r.community).length);
+  const shown = src === 'all' ? rows : rows.filter((r) => (src === 'users') === !!r.community);
+  const pendingN = rows.filter((r) => r.community?.review === 'pending').length;
 
   return (
     <div>
       <PageHead title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button> : undefined} />
+      <div className="mb-3 flex flex-wrap gap-2">
+        {(['all', 'site', 'users'] as const).map((k) => (
+          <button key={k} type="button" aria-pressed={src === k} onClick={() => setSrc(k)} className="rounded-full border px-4 py-1.5 text-[.85rem] font-semibold transition" style={src === k ? { ...gradBtn, color: '#fff', borderColor: 'transparent' } : { borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{k === 'all' ? x('الكل') : k === 'site' ? x('بطولات Plato AR') : x('بطولات المستخدمين')} ({srcN(k)})</button>
+        ))}
+      </div>
       <div className="flex flex-col gap-2.5">
-        {rows.map((r) => {
+        {pendingN > 0 && <Card className="p-3.5 text-[.9rem] font-bold"><span style={{ color: '#ffb02e' }}>{x('طلبات بطولات المستخدمين بانتظار مراجعتك')} ({pendingN})</span></Card>}
+        {[...shown].sort((a, b) => Number(b.community?.review === 'pending') - Number(a.community?.review === 'pending')).map((r) => {
           const st = statusOf(r, now);
-          const pct = Math.min(100, (r.slots.filled / Math.max(1, r.slots.total)) * 100);
+          const pct = r.slots.total > 0 ? Math.min(100, (r.slots.filled / r.slots.total) * 100) : 0;
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">Major</Badge>}{r.community && <Badge tone="green">{x('مجتمع')}{r.community.organizer ? ` · ${r.community.organizer}` : ''}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">Major</Badge>}{r.community && <Badge tone="green">{x('مجتمع')}{r.community.organizer ? ` · ${r.community.organizer}` : ''}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
                 <div className="mt-1 text-[.8rem]" dir="ltr" style={{ color: 'var(--muted)', textAlign: lang === 'ar' ? 'right' : 'left' }}>{when(r.startsAt)}</div>
               </div>
               <div className="w-36">
-                <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.filled}/{r.slots.total}</span></div>
+                <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.total > 0 ? `${r.slots.filled}/${r.slots.total}` : `${r.slots.filled} / ∞`}</span></div>
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
@@ -657,6 +700,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
+              {r.community && <ReviewBox k={k} r={r} can={can('tournaments', 'edit')} onDone={load} />}
             </Card>
           );
         })}
@@ -678,7 +722,12 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={x('البداية (توقيت الرياض)')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
               <Field label={x('النهاية (توقيت الرياض)')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></Field>
-              <Field label={x('العدد الأقصى')}><input type="number" min={1} className={inp} style={bd} value={f.slots.total} onChange={(e) => setF({ ...f, slots: { ...f.slots, total: Number(e.target.value) } })} /></Field>
+              <Field label={x('تحديد عدد المقاعد')}>
+                <div className="flex items-center gap-3">
+                  <button type="button" role="switch" aria-checked={f.slots.total > 0} aria-label={x('تحديد عدد المقاعد')} className={`st-sw ${f.slots.total > 0 ? 'on' : ''}`} onClick={() => setF({ ...f, slots: { ...f.slots, total: f.slots.total > 0 ? 0 : 16 } })}><i /></button>
+                  {f.slots.total > 0 ? <input type="number" min={1} className={inp} style={bd} value={f.slots.total} onChange={(e) => setF({ ...f, slots: { ...f.slots, total: Math.max(1, Number(e.target.value)) } })} /> : <span style={{ color: 'var(--muted)' }}>{x('غير محدود')} ∞</span>}
+                </div>
+              </Field>
               <Field label={x('المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)')}><input type="number" min={0} className={inp} style={bd} value={f.slots.filled} onChange={(e) => setF({ ...f, slots: { ...f.slots, filled: Number(e.target.value) } })} /></Field>
             </div>
             <Field label={x('رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)')}><input dir="ltr" className={inp} style={bd} value={f.registerUrl ?? ''} placeholder="https://…" onChange={(e) => setF({ ...f, registerUrl: e.target.value })} /></Field>

@@ -31,7 +31,7 @@ export const announceTournament = (env: Env, request: Request, id: string, v: { 
     description: 'سجّل الحين من صفحة البطولة في الموقع.',
     fields: [
       { name: 'الموعد', value: fmtDate(v.startsAt) || '—', inline: true },
-      { name: 'المقاعد', value: `${v.total} ${v.mode === 'team' ? 'فريق' : 'لاعب'}`, inline: true },
+      { name: 'المقاعد', value: v.total > 0 ? `${v.total} ${v.mode === 'team' ? 'فريق' : 'لاعب'}` : 'غير محدود', inline: true },
       ...(v.prize.ar ? [{ name: 'الجائزة', value: v.prize.ar.slice(0, 200), inline: true }] : []),
     ],
   });

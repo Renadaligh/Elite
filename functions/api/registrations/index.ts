@@ -11,7 +11,7 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const t = await env.DB.prepare('SELECT name_en, filled, total, starts_at FROM tournaments WHERE id=? AND published=1').bind(tid).first<{ name_en: string; filled: number; total: number; starts_at: string }>();
   if (!t) return json({ ok: false, error: 'unknown' }, 404);
   if (tid.startsWith('u-') && Date.now() >= Date.parse(t.starts_at)) return json({ ok: false, error: 'closed' }, 409); // community tournaments close when they start
-  if (t.filled >= t.total) return json({ ok: false, error: 'full' }, 409);
+  if (t.total > 0 && t.filled >= t.total) return json({ ok: false, error: 'full' }, 409);
   if (team && await env.DB.prepare("SELECT 1 AS x FROM registrations WHERE tournament_id=? AND mode='team' AND lower(trim(team_name))=lower(trim(?))").bind(tid, teamName).first()) return json({ ok: false, error: 'duplicate_team' }, 409);
   try {
     await env.DB.prepare('INSERT INTO registrations (tournament_id,tournament_name,mode,plato_id,team_name,members,lang) VALUES (?,?,?,?,?,?,?)')
@@ -19,7 +19,7 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   } catch {
     return json({ ok: false, error: 'duplicate' }, 409);
   }
-  await env.DB.prepare('UPDATE tournaments SET filled = MIN(total, filled + 1) WHERE id=?').bind(tid).run();
+  await env.DB.prepare('UPDATE tournaments SET filled = CASE WHEN total > 0 THEN MIN(total, filled + 1) ELSE filled + 1 END WHERE id=?').bind(tid).run();
   return json({ ok: true });
 };
 

@@ -3,19 +3,19 @@ import { api } from '../services/api';
 import { useGames } from '../hooks/useGames';
 
 /** Owner panel in the bracket tool: list this bracket as a public tournament people can register for, and see who registered. */
-interface Listing { gameId: string; name: string; prize: string; startsAt: string; endsAt: string; total: number; filled: number; mode: 'solo' | 'team'; published: boolean }
+interface Listing { gameId: string; name: string; prize: string; startsAt: string; endsAt: string; total: number; filled: number; mode: 'solo' | 'team'; published: boolean; review?: 'pending' | 'approved' | 'rejected'; reviewNote?: string }
 interface Reg { id: number; mode: string; plato_id: string; team_name: string; members: string; created_at: string }
 
 const T = {
   ar: {
     title: 'نشر كبطولة للتسجيل', d: 'تظهر بطولتك في قسم البطولات بالموقع ويسجّل فيها الناس مباشرة، وتشوف المسجلين هنا.', needShare: 'فعّل «رابط العرض» أولاً حتى تقدر تنشر البطولة.',
-    name: 'اسم البطولة', game: 'اللعبة', pick: 'اختر لعبة', start: 'البداية (توقيت الرياض)', end: 'النهاية (توقيت الرياض)', slots: 'عدد المقاعد', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة (اختياري)',
+    name: 'اسم البطولة', game: 'اللعبة', pick: 'اختر لعبة', start: 'البداية (توقيت الرياض)', end: 'النهاية (توقيت الرياض)', slots: 'عدد المقاعد', limitSeats: 'تحديد عدد المقاعد', unlimited: 'غير محدود', stPending: 'قيد المراجعة: ننتظر موافقة الفريق قبل ظهورها في الموقع.', stApproved: 'مقبولة ومنشورة في الموقع.', stRejected: 'مرفوضة', stRejectedHint: 'عدّل البطولة واضغط «نشر / حفظ» لإعادة إرسالها للمراجعة.', sent: 'أُرسلت للمراجعة', editNote: 'تغيير الاسم أو اللعبة أو الجائزة أو التواريخ يعيدها للمراجعة.', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة (اختياري)',
     show: 'ظاهرة في الموقع', save: 'نشر / حفظ', saved: 'تم الحفظ', remove: 'إلغاء النشر', removeAsk: 'تلغي نشر البطولة وتحذف قائمة المسجلين؟', fail: 'تعذّر الحفظ', migrate: 'لازم تشغّل أوامر قاعدة البيانات الجديدة (schema.sql) أولاً.', limit: 'وصلت الحد الأعلى للبطولات المنشورة (10).', bad: 'اكتب الاسم وحدد تواريخ صحيحة (النهاية بعد البداية).',
     regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', refresh: 'تحديث', del: 'حذف', delAsk: 'حذف هذا التسجيل؟', use: 'أضفهم للبراكت', useAsk: 'يضيف المسجلين لقائمة اللاعبين ويعيد بناء البراكت (تُمسح النتائج الحالية، وتقدر ترجع بزر «تراجع»). متأكد؟', captain: 'القائد', registered: 'مسجّل', closes: 'التسجيل يقفل عند بداية البطولة.',
   },
   en: {
     title: 'Publish as a tournament', d: 'Your tournament shows in the site\'s Tournaments section, people register directly, and you see them here.', needShare: 'Turn on "view link" first to publish the tournament.',
-    name: 'Tournament name', game: 'Game', pick: 'Choose a game', start: 'Start (Riyadh time)', end: 'End (Riyadh time)', slots: 'Slots', mode: 'Registration', solo: 'Solo', team: 'Team', prize: 'Prize (optional)',
+    name: 'Tournament name', game: 'Game', pick: 'Choose a game', start: 'Start (Riyadh time)', end: 'End (Riyadh time)', slots: 'Slots', limitSeats: 'Limit the seats', unlimited: 'Unlimited', stPending: 'Under review: waiting for the team\'s approval before it shows on the site.', stApproved: 'Approved and live on the site.', stRejected: 'Rejected', stRejectedHint: 'Edit the tournament and press "Publish / save" to send it for review again.', sent: 'Sent for review', editNote: 'Changing the name, game, prize or dates sends it back to review.', mode: 'Registration', solo: 'Solo', team: 'Team', prize: 'Prize (optional)',
     show: 'Visible on the site', save: 'Publish / save', saved: 'Saved', remove: 'Unpublish', removeAsk: 'Unpublish the tournament and delete its registrations?', fail: 'Could not save', migrate: 'Run the new database statements (schema.sql) first.', limit: 'You reached the limit of published tournaments (10).', bad: 'Enter a name and valid dates (end after start).',
     regs: 'Registered', none: 'Nobody registered yet.', refresh: 'Refresh', del: 'Delete', delAsk: 'Delete this registration?', use: 'Add them to the bracket', useAsk: 'Adds the registrants to the player list and rebuilds the bracket (current results are cleared; Undo brings them back). Sure?', captain: 'Captain', registered: 'registered', closes: 'Registration closes when the tournament starts.',
   },
@@ -23,7 +23,7 @@ const T = {
 
 const toInput = (iso: string) => { if (!iso) return ''; if (/\+03:00$/.test(iso)) return iso.slice(0, 16); const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('sv-SE', { timeZone: 'Asia/Riyadh' }).replace(' ', 'T').slice(0, 16); };
 const fromInput = (v: string) => (v ? `${v}:00+03:00` : '');
-const empty = (): Listing => ({ gameId: '', name: '', prize: '', startsAt: '', endsAt: '', total: 16, filled: 0, mode: 'solo', published: true });
+const empty = (): Listing => ({ gameId: '', name: '', prize: '', startsAt: '', endsAt: '', total: 0, filled: 0, mode: 'solo', published: true });
 const fld = 'w-full rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
 
 export default function CommunityListing({ id, share, lang, title, onUse }: { id: string; share: boolean; lang: 'ar' | 'en'; title: string; onUse: (names: string[], ask: string) => void }) {
@@ -48,7 +48,7 @@ export default function CommunityListing({ id, share, lang, title, onUse }: { id
   async function save() {
     if (!f.name.trim() || !f.startsAt || (f.endsAt && Date.parse(f.endsAt) < Date.parse(f.startsAt))) { setMsg(t.bad); return; }
     setBusy(true); setMsg('');
-    try { await api(`/brackets/${id}/listing`, { method: 'PUT', body: JSON.stringify({ ...f, endsAt: f.endsAt || f.startsAt }) }); setListed(true); setMsg(t.saved); loadRegs(); }
+    try { const r = await api<{ review?: 'pending' | 'approved' | 'rejected' }>(`/brackets/${id}/listing`, { method: 'PUT', body: JSON.stringify({ ...f, endsAt: f.endsAt || f.startsAt }) }); setListed(true); setF((o) => ({ ...o, review: r.review ?? o.review, reviewNote: '' })); setMsg(r.review === 'pending' ? t.sent : t.saved); loadRegs(); }
     catch (e) { const d = (e as Error & { detail?: string }).detail; setMsg(d === 'migrate' ? t.migrate : d === 'limit' ? t.limit : d === 'invalid' ? t.bad : t.fail); }
     setBusy(false);
   }
@@ -66,6 +66,11 @@ export default function CommunityListing({ id, share, lang, title, onUse }: { id
     <div className="st-share" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
       <b>{t.title}</b>
       <p className="st-shn" style={{ marginTop: 4 }}>{t.d}</p>
+      {listed && f.review && (
+        <div className="mt-2 rounded-xl border px-3 py-2 text-[.86rem] font-semibold" style={{ borderColor: f.review === 'approved' ? 'rgba(46,204,140,.5)' : f.review === 'rejected' ? 'rgba(255,77,94,.5)' : 'rgba(255,176,46,.5)', color: f.review === 'approved' ? '#2ecc8c' : f.review === 'rejected' ? '#ff6b7a' : '#ffb02e' }}>
+          {f.review === 'pending' ? t.stPending : f.review === 'approved' ? t.stApproved : <>{t.stRejected}{f.reviewNote ? `: ${f.reviewNote}` : ''}<div style={{ fontWeight: 500, marginTop: 2 }}>{t.stRejectedHint}</div></>}
+        </div>
+      )}
       {!share ? <p className="st-shn">{t.needShare}</p> : (
         <div className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -73,11 +78,16 @@ export default function CommunityListing({ id, share, lang, title, onUse }: { id
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.game}<select className={fld} style={bd} value={f.gameId} onChange={(e) => setF({ ...f, gameId: e.target.value })}><option value="">{t.pick}</option>{games.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></label>
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.start}<input type="datetime-local" dir="ltr" className={`${fld} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} /></label>
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.end}<input type="datetime-local" dir="ltr" className={`${fld} dt-in`} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></label>
-            <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.slots}<input type="number" min={2} max={512} className={fld} style={bd} value={f.total} onChange={(e) => setF({ ...f, total: Math.max(2, Math.min(512, +e.target.value || 2)) })} /></label>
+            <div className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.slots}
+              <div className="flex items-center gap-3" style={{ minHeight: 42 }}>
+                <button type="button" role="switch" aria-checked={f.total > 0} aria-label={t.limitSeats} className={`st-sw ${f.total > 0 ? 'on' : ''}`} onClick={() => setF({ ...f, total: f.total > 0 ? 0 : 16 })}><i /></button>
+                {f.total > 0 ? <input type="number" min={2} max={4096} className={fld} style={bd} value={f.total} onChange={(e) => setF({ ...f, total: Math.max(2, Math.min(4096, +e.target.value || 2)) })} /> : <span>{t.unlimited} ∞</span>}
+              </div>
+            </div>
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.mode}<select className={fld} style={bd} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{t.solo}</option><option value="team">{t.team}</option></select></label>
             <label className="grid gap-1 text-[.82rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.prize}<input className={fld} style={bd} maxLength={80} value={f.prize} onChange={(e) => setF({ ...f, prize: e.target.value })} /></label>
           </div>
-          <div className="st-shh"><div><span>{t.show}</span><small>{t.closes}</small></div><button type="button" role="switch" aria-checked={f.published} aria-label={t.show} className={`st-sw ${f.published ? 'on' : ''}`} onClick={() => setF({ ...f, published: !f.published })}><i /></button></div>
+          <div className="st-shh"><div><span>{t.show}</span><small>{t.closes} {t.editNote}</small></div><button type="button" role="switch" aria-checked={f.published} aria-label={t.show} className={`st-sw ${f.published ? 'on' : ''}`} onClick={() => setF({ ...f, published: !f.published })}><i /></button></div>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" className="rounded-full border px-5 py-2 text-[.85rem] font-bold disabled:opacity-60" style={{ background: 'rgba(61,123,255,.2)', borderColor: 'rgba(143,178,255,.55)', color: 'var(--text)' }} disabled={busy} onClick={save}>{t.save}</button>
             {listed && <button type="button" className="rounded-full border px-4 py-2 text-[.85rem] font-semibold" style={{ borderColor: 'var(--glass-b)', color: '#ff7a8a' }} onClick={remove}>{t.remove}</button>}
@@ -86,7 +96,7 @@ export default function CommunityListing({ id, share, lang, title, onUse }: { id
           {listed && (
             <div className="st-shr">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span style={{ fontWeight: 700, fontSize: '.92rem' }}>{t.regs} · {f.filled}/{f.total}</span>
+                <span style={{ fontWeight: 700, fontSize: '.92rem' }}>{t.regs} · <bdi dir="ltr">{f.total > 0 ? `${f.filled}/${f.total}` : `${f.filled} / ∞`}</bdi></span>
                 <span className="flex gap-2">
                   <button type="button" className="cl-btn" onClick={loadRegs}>{t.refresh}</button>
                   {names.length > 0 && <button type="button" className="cl-btn on" onClick={() => onUse(names, t.useAsk)}>{t.use}</button>}

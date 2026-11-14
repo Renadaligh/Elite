@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
   tier TEXT NOT NULL DEFAULT 'regular',
   register_url TEXT NOT NULL DEFAULT '', image TEXT NOT NULL DEFAULT '',
   winner_en TEXT NOT NULL DEFAULT '', winner_ar TEXT NOT NULL DEFAULT '', winner_members TEXT NOT NULL DEFAULT '', image_pos TEXT NOT NULL DEFAULT '', bracket TEXT NOT NULL DEFAULT '', stream_url TEXT NOT NULL DEFAULT '', stream_live INTEGER NOT NULL DEFAULT 0,
-  owner_id TEXT NOT NULL DEFAULT '', bracket_id TEXT NOT NULL DEFAULT '',
+  owner_id TEXT NOT NULL DEFAULT '', bracket_id TEXT NOT NULL DEFAULT '', review TEXT NOT NULL DEFAULT 'approved', review_note TEXT NOT NULL DEFAULT '',
   published INTEGER NOT NULL DEFAULT 1
 );
 CREATE TABLE IF NOT EXISTS registrations (
@@ -57,6 +57,10 @@ CREATE TABLE IF NOT EXISTS games (
 --   Community tournaments (listed by bracket-tool users): run these two, one at a time.
 --   ALTER TABLE tournaments ADD COLUMN owner_id TEXT NOT NULL DEFAULT '';
 --   ALTER TABLE tournaments ADD COLUMN bracket_id TEXT NOT NULL DEFAULT '';
+--   Review of community tournaments (pending / approved / rejected; old rows stay approved): run these two, one at a time.
+--   ALTER TABLE tournaments ADD COLUMN review TEXT NOT NULL DEFAULT 'approved';
+--   ALTER TABLE tournaments ADD COLUMN review_note TEXT NOT NULL DEFAULT '';
+--   Seats: total = 0 means unlimited.
 
 -- Visitor accounts + the public bracket tool (Discord / Google sign-in). New installs get these from this file;
 -- existing databases: run each CREATE below once in the D1 console (one statement at a time).

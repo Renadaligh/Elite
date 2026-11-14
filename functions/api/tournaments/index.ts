@@ -3,7 +3,7 @@ import { body, json, jsonPublic, newId, num, safeUrl, str, type Ctx } from '../.
 import { logAdmin } from '../../_audit';
 import { guard, seesAll } from '../../_admin';
 
-type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number ; owner_id?: string; bracket_id?: string};
+type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number ; owner_id?: string; bracket_id?: string; review?: string; review_note?: string };
 /** The bracket is stored as JSON text; bad/empty text just means "no bracket". */
 const bracketOf = (s?: string) => { try { return s ? JSON.parse(s) : undefined; } catch { return undefined; } };
 type UB = { data: string; share: number; live: number; stream_url: string; organizer: string };
@@ -17,7 +17,7 @@ const out = (r: Row, admin = false, ub?: UB) => ({
   // The stream link is only public while the dashboard toggle is on.
   streamLive: ub ? !!ub.live && !!ub.stream_url : !!r.stream_live && !!r.stream_url, streamUrl: ub ? ((ub.live && ub.stream_url) || admin ? ub.stream_url || undefined : undefined) : admin || (r.stream_live && r.stream_url) ? r.stream_url || undefined : undefined,
   // Community tournament: made by a visitor with the bracket tool; the bracket and stream come from their saved bracket.
-  ...(r.bracket_id ? { community: { bracketId: r.bracket_id, organizer: ub?.organizer || '' } } : {}),
+  ...(r.bracket_id ? { community: { bracketId: r.bracket_id, organizer: ub?.organizer || '', review: r.review === 'pending' || r.review === 'rejected' ? r.review : 'approved', reviewNote: r.review_note || undefined } } : {}),
 });
 
 const pair = (v: unknown, max = 200) => { const o = (v ?? {}) as Record<string, unknown>; const en = str(o.en, max), ar = str(o.ar, max); return { en: en || ar, ar: ar || en }; };
@@ -30,12 +30,12 @@ export function parse(b: Record<string, unknown>) {
   const startsAt = str(b.startsAt, 40), endsAt = str(b.endsAt, 40) || startsAt;
   if ((!name.en && !name.ar) || !isoOk(startsAt) || !isoOk(endsAt)) return null;
   const s = (b.slots ?? {}) as Record<string, unknown>;
-  const total = Math.max(1, num(s.total, 1));
+  const total = num(s.total, 0); // 0 = unlimited seats
   const raw = Array.isArray(b.winnerMembers) ? b.winnerMembers.join('\n') : typeof b.winnerMembers === 'string' ? b.winnerMembers : '';
   const members = raw.split(/\r?\n/).map((m) => m.trim().slice(0, 40)).filter(Boolean).slice(0, 12).join('\n');
   return {
     game_id: str(b.gameId, 60).toLowerCase(), name, format, prize, winner, startsAt, endsAt,
-    filled: Math.min(num(s.filled, 0), total), total, mode: b.mode === 'team' ? 'team' : 'solo', tier: b.tier === 'major' ? 'major' : 'regular',
+    filled: total > 0 ? Math.min(num(s.filled, 0), total) : num(s.filled, 0), total, mode: b.mode === 'team' ? 'team' : 'solo', tier: b.tier === 'major' ? 'major' : 'regular',
     register_url: safeUrl(b.registerUrl), image: safeUrl(b.image), image_pos: posOf(b.imagePos), members, published: b.published === false ? 0 : 1,
   };
 }
@@ -55,7 +55,7 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
       for (const r of q.results) ub.set(r.id, r);
     } catch { /* share/live columns not added yet: community rows stay hidden */ }
   }
-  const rows = results.filter((r) => !r.bracket_id || all || ub.get(r.bracket_id)?.share);
+  const rows = results.filter((r) => !r.bracket_id || all || (ub.get(r.bracket_id)?.share && (r.review ?? 'approved') === 'approved'));
   const data = rows.map((r) => out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined));
   return all ? json(data) : jsonPublic(data);
 };

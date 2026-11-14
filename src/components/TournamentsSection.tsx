@@ -59,14 +59,15 @@ function useFmt() {
 
 function Facts({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
-  const full = x.slots.filled >= x.slots.total;
+  const unlimited = x.slots.total <= 0;
+  const full = !unlimited && x.slots.filled >= x.slots.total;
   return (
     <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-[.9rem] [&>*]:min-w-0 [&_dd]:break-words">
       <div><dt className="opacity-70">{t.tPrize}</dt><dd className="font-bold">{x.prize[lang]}</dd></div>
       <div><dt className="opacity-70">{t.tFormat}</dt><dd className="font-bold">{x.format[lang]}</dd></div>
       <div className="col-span-2">
-        <dt className="flex justify-between opacity-70"><span>{t.tTeams}</span><span>{full ? t.tFull : `${x.slots.filled}/${x.slots.total}`}</span></dt>
-        <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div></dd>
+        <dt className="flex justify-between opacity-70"><span>{t.tTeams}</span><span>{unlimited ? `${x.slots.filled} · ${t.tUnlimited}` : full ? t.tFull : `${x.slots.filled}/${x.slots.total}`}</span></dt>
+        {!unlimited && <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div></dd>}
       </div>
     </dl>
   );
@@ -76,7 +77,7 @@ export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   if (s === 'live' && x.bracket) return <a href={`#/tournaments/${x.id}`} className="btn-primary mt-5 self-start">{t.tBracket} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
-  if (s !== 'upcoming' || x.slots.filled >= x.slots.total) return null;
+  if (s !== 'upcoming' || (x.slots.total > 0 && x.slots.filled >= x.slots.total)) return null;
   if (x.registerUrl) return <a href={x.registerUrl} target="_blank" rel="noopener noreferrer" className="btn-primary mt-5 self-start">{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   return (
     <>
@@ -99,8 +100,8 @@ function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: bo
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
-    <div className="tc-im" style={x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {x.image && <img src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+    <div className="tc-im" style={x.community || x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
+      {x.image && !x.community && <img src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{x.community && <span className="comm-badge" title={x.community.organizer || undefined}>{lang === 'ar' ? 'مجتمع' : 'Community'}</span>}</div>
     </div>
   );
@@ -159,7 +160,7 @@ function TourCard({ x, s, feat, eager }: { x: Tournament; s: TournamentStatus; f
   const g = getGame(x.gameId);
   const showCd = s === 'upcoming' || (feat && s === 'live');
   return (
-    <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''}`}>
+    <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''} ${x.community ? 'tc-comm' : ''}`}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
@@ -185,8 +186,10 @@ export default function TournamentsSection() {
   const withStatus = sorted.map((x) => ({ x, s: statusOf(x, now) }));
   const count = (k: Tab) => (k === 'all' ? withStatus.length : withStatus.filter((r) => r.s === k).length);
   const list = tab === 'all' ? withStatus : withStatus.filter((r) => r.s === tab);
-  const featured = tab !== 'completed' && list[0] && list[0].s !== 'completed' ? list[0] : null;
-  const rest = featured ? list.slice(1) : list;
+  // the big card is only for the site's own tournaments (users' ones are plain cards without a picture)
+  const fi = tab === 'completed' ? -1 : list.findIndex((r) => r.s !== 'completed' && !r.x.community);
+  const featured = fi >= 0 ? list[fi] : null;
+  const rest = featured ? list.filter((_, i) => i !== fi) : list;
   const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
