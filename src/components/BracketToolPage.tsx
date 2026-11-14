@@ -1,6 +1,6 @@
 import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, swapSeats, toggleCurrent, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, swapSeats, toggleCurrent, renamePlayer, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -228,8 +228,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
         <div className={`grid min-w-0 gap-5 ${!editable && readOnly ? 'pv-body' : ''}`}>
           <div className={`flex flex-wrap items-center justify-between gap-3 ${!editable && readOnly ? 'pv-pad' : ''}`}>
             <div>
-              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
-                : <h2 className="text-[1.4rem] font-extrabold">{title}</h2>}
+              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.5rem] md:text-[1.6rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
+                : <h2 className="text-[1.7rem] md:text-[2rem] font-extrabold">{title}</h2>}
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
@@ -246,7 +246,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
             </div>
           )}
-          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onLive={editable && (br.format === 'single' || br.format === 'double') ? (mm) => edit(toggleCurrent(br, mm.id)) : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>
+          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onRename={editable && (br.format === 'single' || br.format === 'double') ? (i, v) => edit(renamePlayer(br, i, v)) : undefined} onLive={editable && (br.format === 'single' || br.format === 'double') ? (mm) => edit(toggleCurrent(br, mm.id)) : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>
           </div>
           {editable && (
             <div className="st-share" style={card}>

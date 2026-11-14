@@ -144,6 +144,13 @@ export function toggleCurrent(br: Bracket, id: string): Bracket {
   return { ...br, cur: cur.length ? cur : undefined };
 }
 
+/** Rename one player (everywhere they appear). Empty names are ignored. */
+export function renamePlayer(br: Bracket, i: number, name: string): Bracket {
+  const v = name.trim().slice(0, 40);
+  if (!v || i < 0 || i >= br.players.length || br.players[i] === v) return br;
+  return { ...br, players: br.players.map((p, k) => (k === i ? v : p)) };
+}
+
 export function setScore(br: Bracket, id: string, sa: string, sb: string): Bracket {
   return { ...br, matches: br.matches.map((m) => (m.id === id ? { ...m, sa: sa || undefined, sb: sb || undefined } : m)) };
 }

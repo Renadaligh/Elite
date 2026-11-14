@@ -39,8 +39,10 @@ export default function NewsCard({ item }: { item: NewsItem }) {
           {item.href ? <a href={item.href} className="news-link after:absolute after:inset-0">{title}</a> : title}
         </h3>
         <div ref={sum} className={open ? '' : 'news-sum'}><RichText className="text-[.95rem] leading-relaxed" style={{ color: 'var(--muted)' }} text={item.summary[lang]} /></div>
-        {(cut || open) && <button type="button" className="news-more" aria-expanded={open} onClick={() => setOpen((v) => !v)}>{open ? t.newsLess : t.newsMore}</button>}
-        {item.href && <span aria-hidden="true" className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--link-on)' }}>{t.newsRead} <span className="inline-block rtl:-scale-x-100">→</span></span>}
+        <div className="news-foot">
+          {(cut || open) && <button type="button" className="news-more" aria-expanded={open} onClick={() => setOpen((v) => !v)}>{open ? t.newsLess : t.newsMore}</button>}
+          {item.href && <span aria-hidden="true" className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--link-on)' }}>{t.newsRead} <span className="inline-block rtl:-scale-x-100">→</span></span>}
+        </div>
       </div>
     </article>
   );

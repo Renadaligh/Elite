@@ -165,9 +165,9 @@ export default function TournamentsSection() {
         <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.tournSub}</p>
       </div>
 
-      <div role="group" aria-label={t.tournTitle} className="mb-7 flex flex-wrap gap-2.5">
+      <div role="group" aria-label={t.tournTitle} className="gm-filters mb-7 flex flex-wrap gap-2.5">
         {TABS.map((k) => (
-          <button key={k} type="button" aria-pressed={tab === k} onClick={() => setTab(k)} className="rounded-full border px-4 py-2 text-[.9rem] font-semibold transition-colors" style={chip(tab === k)}>
+          <button key={k} type="button" aria-pressed={tab === k} onClick={(e) => { setTab(k); try { e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch { /* ignore */ } }} className="rounded-full border px-4 py-2 text-[.9rem] font-semibold transition-colors" style={chip(tab === k)}>
             {t[TAB_KEY[k]]} <span className="opacity-70">({count(k)})</span>
           </button>
         ))}

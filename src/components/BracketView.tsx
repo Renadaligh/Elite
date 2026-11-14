@@ -7,7 +7,7 @@ import FfaView from './FfaView';
 import GroupsView from './GroupsView';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
-interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** dashboard: typed scores beside the names */ onScore?: (m: BMatch, sa: string, sb: string) => void; /** dashboard: drag a first-round seat onto another to swap them */ onSwap?: (a: SeatRef, b: SeatRef) => void; /** dashboard: mark a ready match as «live now» (several at once are fine) */ onLive?: (m: BMatch) => void; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
+interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** dashboard: typed scores beside the names */ onScore?: (m: BMatch, sa: string, sb: string) => void; /** dashboard: drag a first-round seat onto another to swap them */ onSwap?: (a: SeatRef, b: SeatRef) => void; /** dashboard: mark a ready match as «live now» (several at once are fine) */ onLive?: (m: BMatch) => void; /** dashboard: rename a player right on the tree (pencil beside the name) */ onRename?: (i: number, name: string) => void; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
 
 function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: number) {
   const ar = lang === 'ar';
@@ -19,11 +19,22 @@ function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: numbe
   return ar ? `الجولة ${round}` : `Round ${round}`;
 }
 
-function Row({ name, state, score, win, lose, onClick, onScore, slot, grip, crown }: { crown?: boolean; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
+function Row({ name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename }: { crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
+  const [editing, setEditing] = useState(false);
   return (
     <div className={`br-row ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-drag={grip ? slot : undefined}>
       {grip && <span className="br-grip" data-grip={slot} aria-hidden="true">⠿</span>}
-      <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name">{name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
+      {editing && onRename ? (
+        <input className="br-rn" autoFocus dir="auto" maxLength={40} defaultValue={name} aria-label={name}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={(e) => { onRename(e.currentTarget.value); setEditing(false); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); else if (e.key === 'Escape') { e.currentTarget.value = name; e.currentTarget.blur(); } }} />
+      ) : (
+        <>
+          <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name">{name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
+          {onRename && <button type="button" className="br-edit" aria-label="✎" title="✎" onClick={(e) => { e.stopPropagation(); setEditing(true); }}>✎</button>}
+        </>
+      )}
       {onScore ? <input className="br-sc" dir="ltr" inputMode="decimal" maxLength={4} value={score ?? ''} aria-label={name} onChange={(e) => onScore(e.target.value)} />
         : score ? <span className="br-score">{score}</span> : win ? <span className="br-score br-check">✓</span> : null}
     </div>
@@ -46,7 +57,7 @@ export default function BracketView(p: Props) {
 }
 
 const TREE_W = 900; // px: the width a small bracket aims for on desktop
-function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive }: Props) {
+function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onRename }: Props) {
   const uid = useRef(`bv${Math.random().toString(36).slice(2)}`).current;
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
@@ -170,7 +181,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive }: P
     };
     const down = (e: PointerEvent) => {
       const t = e.target as HTMLElement;
-      if (e.button > 0 || t.closest('input,textarea,select,a,.br-toggle,.br-livebtn')) return;
+      if (e.button > 0 || t.closest('input,textarea,select,a,.br-toggle,.br-livebtn,.br-edit')) return;
       const grip = t.closest<HTMLElement>('[data-grip]');
       const row = (grip?.closest('.br-row') ?? t.closest('.br-row[data-drag]')) as HTMLElement | null;
       if (!row || root()?.contains(row) !== true) return;
@@ -211,7 +222,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive }: P
     let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
     const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,.br-edit,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return;
       on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
     };
     const move = (e: PointerEvent) => {
@@ -242,8 +253,8 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive }: P
           <button type="button" className={`br-livebtn ${isCurrent(bracket, m.id) ? 'on' : ''}`} aria-pressed={isCurrent(bracket, m.id)} title={lang === 'ar' ? 'مباشر الآن' : 'Live now'} aria-label={lang === 'ar' ? 'تحديد المباراة كمباشرة الآن' : 'Mark match as live now'} onClick={(e) => { e.stopPropagation(); onLive(m); }}><i /></button>
         )}
         {isCurrent(bracket, m.id) && !m.win && <span className="br-live">{lang === 'ar' ? 'الآن' : 'LIVE'}</span>}
-        <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} />
-        <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} />
+        <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+        <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
         {onPick && <span className="br-id">{m.id}</span>}
       </div>
     );
