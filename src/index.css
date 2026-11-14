@@ -963,7 +963,7 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 @media (max-width: 767px) {
   .hm-try { display: none; }
   .hero-name img { height: .86em; }
-  .hero-wrap { padding-top: max(8.5rem, calc(53vw + 1.7rem), calc(50svh - 6vw - 9.8rem)); }
+  .hero-wrap { padding-top: max(8.5rem, calc(53vw + 2.45rem), calc(50svh - 6vw - 9.05rem)); }
   .hero-name { margin-bottom: .6rem; }
   .hero-desc { font-size: .95rem; margin-bottom: .6rem; }
   .hero-cta { display: grid; grid-template-columns: auto auto; width: auto; max-width: none; gap: 8px; justify-content: center; }
