@@ -1049,7 +1049,8 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* news cards: same size, summary cut to 3 lines with «show more» */
 .news-card { height: 100%; }
-.news-sum { min-height: 4.63rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.news-sum { max-height: 4.63rem; min-height: 4.63rem; overflow: hidden; }
+.news-sum.is-cut { -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%); mask-image: linear-gradient(180deg, #000 62%, transparent 100%); }
 .news-title { min-height: calc(2 * 1.375em); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .news-more { position: relative; z-index: 2; align-self: flex-start; margin-top: auto; padding: 0; border: 0; background: none; font: inherit; font-size: .88rem; font-weight: 700; color: var(--link-on); cursor: pointer; }
 .news-more:hover { text-decoration: underline; }
@@ -1112,3 +1113,12 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .news-foot { margin-top: auto; display: flex; flex-direction: column; gap: .5rem; min-height: 3.4rem; justify-content: flex-end; }
 .news-foot .news-more { margin-top: 0; }
 .m-rail { align-items: stretch; }
+
+/* random-game pill: no backdrop blur (WebKit clips the border next to a 3D child) and room for the spinning die */
+.gotd-btn { backdrop-filter: none; -webkit-backdrop-filter: none; background: color-mix(in srgb, #3d7bff 12%, var(--bg)); }
+@media (max-width: 767px) { .gotd-btn { padding-block: .7rem; } .die-scene { width: 3.1rem; height: 3.1rem; } .die-cube { --s: 14px; } }
+
+/* «view by rounds / tree» toggle: clearly a button, tinted with the accent */
+.br-toggle { padding: 8px 16px; font-size: .85rem; font-weight: 700; color: #cfe0ff; border-color: rgba(143,178,255,.55); background: rgba(61,123,255,.2); }
+.br-toggle:hover { background: rgba(61,123,255,.32); border-color: rgba(143,178,255,.85); }
+[data-st=light] .br-toggle, :root[data-hero='day'] .br-toggle:not([data-st=dark] *) { color: #3446e0; border-color: rgba(74,93,240,.5); background: rgba(74,93,240,.12); }

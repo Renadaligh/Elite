@@ -8,7 +8,7 @@ export const TAG_KEY: Record<NewsTag, keyof Dict> = { update: 'tagUpdate', tourn
 const TAG_DOT: Record<NewsTag, string> = { update: '#8fb2ff', tournament: '#ffb02e', community: '#8b98d8', event: '#7be07a' };
 
 
-export default function NewsCard({ item }: { item: NewsItem }) {
+export default function NewsCard({ item, eager }: { item: NewsItem; eager?: boolean }) {
   const { lang, t } = useI18n();
   const date = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(item.date));
   const title = item.title[lang];
@@ -25,7 +25,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
   return (
     <article className="news-card news-card-hover group">
       <div className="news-art">
-        {item.image && <img src={item.image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
+        {item.image && <img src={item.image} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-5">
         <div className="flex items-center gap-3 text-[.82rem]" style={{ color: 'var(--muted)' }}>
@@ -38,7 +38,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
         <h3 className="news-title text-[1.15rem] font-semibold leading-snug">
           {item.href ? <a href={item.href} className="news-link after:absolute after:inset-0">{title}</a> : title}
         </h3>
-        <div ref={sum} className={open ? '' : 'news-sum'}><RichText className="text-[.95rem] leading-relaxed" style={{ color: 'var(--muted)' }} text={item.summary[lang]} /></div>
+        <div ref={sum} className={open ? '' : `news-sum${cut ? ' is-cut' : ''}`}><RichText className="text-[.95rem] leading-relaxed" style={{ color: 'var(--muted)' }} text={item.summary[lang]} /></div>
         <div className="news-foot">
           {(cut || open) && <button type="button" className="news-more" aria-expanded={open} onClick={() => setOpen((v) => !v)}>{open ? t.newsLess : t.newsMore}</button>}
           {item.href && <span aria-hidden="true" className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--link-on)' }}>{t.newsRead} <span className="inline-block rtl:-scale-x-100">→</span></span>}

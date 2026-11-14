@@ -46,7 +46,7 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
-  'البراكت': 'Bracket', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'البراكت': 'Bracket', 'إعادة البناء': 'Rebuild', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
   'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
   'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
   'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
@@ -187,11 +187,11 @@ async function shrink(file: File): Promise<Blob> {
 async function shrinkNow(file: File): Promise<Blob> {
   try {
     const bmp = await createImageBitmap(file);
-    const r = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+    const r = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
     const c = document.createElement('canvas');
     c.width = Math.round(bmp.width * r); c.height = Math.round(bmp.height * r);
     c.getContext('2d')?.drawImage(bmp, 0, 0, c.width, c.height);
-    const out = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/webp', 0.88));
+    const out = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/webp', 0.82));
     return out && out.size < file.size ? out : file;
   } catch { return file; }
 }
@@ -486,7 +486,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [shuf, setShuf] = useState(false);
   const [lo, setLo] = useState(fmtInit());
   const [sel, setSel] = useState<string | null>(null);
-  const [editP, setEditP] = useState(false);
+  const [, setEditP] = useState(false);
   const [url, setUrl] = useState(t0.streamUrl ?? '');
   const [live, setLive] = useState(!!t0.streamLive);
   const ver = useRef(0); // bumps on every edit, so a save that ends late never marks newer edits as saved
@@ -556,18 +556,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <BracketActions bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} onRename={br.format === 'single' || br.format === 'double' ? (i, v) => upd(renamePlayer(br, i, v)) : undefined} onLive={br.format === 'single' || br.format === 'double' ? (mm) => upd(toggleCurrent(br, mm.id)) : undefined} onScore={(mm, sa, sb) => upd(setScore(br, mm.id, sa, sb))} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} live /></div>
-            <div className="rounded-xl border p-3" style={bd}>
-              <button type="button" className={btnG} style={bd} onClick={() => setEditP((v) => !v)}>{x('تعديل أسماء اللاعبين')} {editP ? '▲' : '▼'}</button>
-              {editP && (
-                <div className="mt-3 grid gap-3">
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {br.players.map((p, i) => <label key={i} className="flex items-center gap-2 text-[.8rem]"><span className="w-6 text-center" style={{ color: 'var(--muted)' }}>{i + 1}</span><input dir="auto" className={inp} style={bd} value={p} onChange={(e) => rename(i, e.target.value)} /></label>)}
-                  </div>
-                  <p className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{x('تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:')}</p>
-                  <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('تعديل القائمة وإعادة البناء')}</button></div>
-                </div>
-              )}
-            </div>
+            <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>
             {m && R && (
               <div className="sticky bottom-0 z-10 flex flex-wrap items-end gap-3 rounded-xl border p-3 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>
                 <b className="self-center">{m.id}</b>

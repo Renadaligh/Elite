@@ -53,7 +53,7 @@ export default function NewsPage() {
         {status === 'ready' && shown.length === 0 && <p style={{ color: 'var(--muted)' }}>{t.newsEmpty}</p>}
         {status === 'ready' && shown.length > 0 && (
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {shown.map((n) => <NewsCard key={n.id} item={n} />)}
+            {shown.map((n, i) => <NewsCard key={n.id} item={n} eager={i < 4} />)}
           </div>
         )}
       </div>

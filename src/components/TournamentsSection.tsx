@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import RegisterDialog from './RegisterDialog';
 import { getGame } from '../data/games';
 import { useGames } from '../hooks/useGames';
@@ -93,35 +93,65 @@ function MajorBadge() {
 /** Dice mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
 
 /** Image on top (full colour, no overlay) with the status chips on it; the text sits below on a plain surface. */
-function Media({ x, s }: { x: Tournament; s: TournamentStatus }) {
+function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: boolean }) {
   useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
     <div className="tc-im" style={x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {x.image && <img src={x.image} alt="" loading="lazy" decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+      {x.image && <img src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</div>
     </div>
   );
 }
 
-/** Team tournaments: the winning team's player names as pills, six first and «show all» for the rest. */
-const MEMBERS_SHOWN = 6;
+/** Team tournaments: the winning team's player names as pills on ONE line; whatever does not fit goes behind «show all» (one long name may take the whole line). */
 function WinnerMembers({ x }: { x: Tournament }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
-  const members = x.mode === 'team' ? (x.winnerMembers ?? []).flatMap((m) => m.split('|')).map((m) => m.trim()).filter(Boolean) : [];
+  const [n, setN] = useState(1);
+  const box = useRef<HTMLUListElement>(null);
+  const meas = useRef<HTMLDivElement>(null);
+  const members = useMemo(() => (x.mode === 'team' ? (x.winnerMembers ?? []).flatMap((m) => m.split('|')).map((m) => m.trim()).filter(Boolean) : []), [x.mode, x.winnerMembers]);
+  const key = members.join('|');
+  useLayoutEffect(() => {
+    const c = box.current, m = meas.current;
+    if (!c || !m || open) return;
+    const calc = () => {
+      const W = c.clientWidth, GAP = 6;
+      const kids = Array.from(m.children) as HTMLElement[];
+      const b = kids.pop()?.offsetWidth ?? 0;
+      const ws = kids.map((k) => k.offsetWidth);
+      const total = ws.reduce((a, w, i) => a + w + (i ? GAP : 0), 0);
+      if (total <= W) { setN(ws.length); return; }
+      let k = 0, used = 0;
+      while (k < ws.length) { const nx = used + (k ? GAP : 0) + ws[k]; if (nx + GAP + b > W) break; used = nx; k++; }
+      setN(Math.max(1, k));
+    };
+    calc();
+    const ro = new ResizeObserver(calc); ro.observe(c);
+    return () => ro.disconnect();
+  }, [key, lang, open]);
   if (!members.length) return null;
-  const shown = open ? members : members.slice(0, MEMBERS_SHOWN);
+  const shown = open ? members : members.slice(0, n);
+  const pill = 'min-w-0 truncate rounded-full px-2.5 py-1 text-[.8rem]';
+  const more = members.length > n;
   return (
-    <ul className="mt-2.5 flex flex-wrap gap-1.5">
-      {shown.map((m, i) => <li key={`${m}-${i}`} dir="auto" className="rounded-full px-2.5 py-1 text-[.8rem]" style={{ background: 'var(--tc-pill)' }}>{m}</li>)}
-      {members.length > MEMBERS_SHOWN && <li><button type="button" className="rounded-full px-2.5 py-1 text-[.8rem] font-bold" style={{ color: 'var(--link-on)' }} onClick={() => setOpen((v) => !v)}>{open ? t.chShowLess : t.chShowAll}</button></li>}
-    </ul>
+    <div className="relative mt-2.5 min-w-0 max-w-full">
+      <ul ref={box} className={`flex gap-1.5 ${open ? 'flex-wrap' : 'flex-nowrap overflow-hidden'}`}>
+        {shown.map((m, i) => <li key={`${m}-${i}`} dir="auto" className={pill} style={{ background: 'var(--tc-pill)' }}>{m}</li>)}
+        {(open ? members.length > 1 : more) && <li className="shrink-0"><button type="button" className="rounded-full px-2.5 py-1 text-[.8rem] font-bold" style={{ color: 'var(--link-on)' }} onClick={() => setOpen((v) => !v)}>{open ? t.chShowLess : t.chShowAll}</button></li>}
+      </ul>
+      {/* hidden twin used only to measure how many names fit on one line */}
+      <div ref={meas} aria-hidden="true" className="pointer-events-none invisible absolute start-0 top-0 flex w-max gap-1.5">
+        {members.map((m, i) => <span key={`${m}-${i}`} dir="auto" className="whitespace-nowrap rounded-full px-2.5 py-1 text-[.8rem]">{m}</span>)}
+        <span className="whitespace-nowrap rounded-full px-2.5 py-1 text-[.8rem] font-bold">{t.chShowAll}</span>
+      </div>
+    </div>
   );
 }
 
-function TourCard({ x, s, feat }: { x: Tournament; s: TournamentStatus; feat?: boolean }) {
+function TourCard({ x, s, feat, eager }: { x: Tournament; s: TournamentStatus; feat?: boolean; eager?: boolean }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   useGames();
@@ -129,7 +159,7 @@ function TourCard({ x, s, feat }: { x: Tournament; s: TournamentStatus; feat?: b
   const showCd = s === 'upcoming' || (feat && s === 'live');
   return (
     <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''}`}>
-      <Media x={x} s={s} />
+      <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
         <h3 className={`${feat ? 'text-[clamp(1.3rem,2.4vw,1.9rem)] font-extrabold' : 'text-[1.15rem] font-bold'} mt-0.5 leading-snug [overflow-wrap:anywhere]`}>{x.name[lang]}</h3>
@@ -183,8 +213,8 @@ export default function TournamentsSection() {
       {status === 'ready' && list.length === 0 && <p style={{ color: 'var(--muted)' }}>{t.tEmpty}</p>}
       {status === 'ready' && list.length > 0 && (
         <div className="m-rail md:block">
-          {featured && <TourCard feat x={featured.x} s={featured.s} />}
-          {rest.length > 0 && <div className="m-cont">{rest.map((r) => <TourCard key={r.x.id} x={r.x} s={r.s} />)}</div>}
+          {featured && <TourCard feat eager x={featured.x} s={featured.s} />}
+          {rest.length > 0 && <div className="m-cont">{rest.map((r, i) => <TourCard key={r.x.id} x={r.x} s={r.s} eager={i < 4} />)}</div>}
         </div>
       )}
     </section>

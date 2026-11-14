@@ -50,7 +50,7 @@ export default function NewsSection() {
 
       {status === 'ready' && items.length > 0 && (
         <div className="m-rail">
-          <div className="m-cont">{items.map((n) => <NewsCard key={n.id} item={n} />)}</div>
+          <div className="m-cont">{items.map((n, i) => <NewsCard key={n.id} item={n} eager={i < 4} />)}</div>
         </div>
       )}
     </section>
