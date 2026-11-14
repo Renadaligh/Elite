@@ -16,8 +16,8 @@ select, select option { background-color: var(--dialog); color: var(--text); }
 .on-art { --text: #fff; --muted: rgba(255, 255, 255, .8); --glass-b: rgba(255, 255, 255, .22); --chip-bg: rgba(0, 0, 0, .3); --chip-b: rgba(255, 255, 255, .2); --track: rgba(255, 255, 255, .15); color: #fff; }
 html { scroll-padding-top: 6rem; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
-body { margin: 0; background: var(--bg); color: var(--text); font-family: Poppins, Tajawal, system-ui, sans-serif; overflow-x: hidden; }
-[dir='rtl'] body { font-family: Tajawal, Poppins, system-ui, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Outfit, Poppins, Tajawal, system-ui, sans-serif; overflow-x: hidden; }
+[dir='rtl'] body { font-family: Outfit, Tajawal, Poppins, system-ui, sans-serif; }
 a:focus-visible, button:focus-visible { outline: 3px solid #7fe3ff; outline-offset: 3px; }
 
 /* ---- Latest News ---- */
@@ -1159,6 +1159,10 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-bar .br-toggle { margin-bottom: 0; }
 .pv .br-bar { margin: 0 14px 10px; }
 .pv .br-bar .br-toggle { margin: 0; }
-.br-top { cursor: pointer; }
+.br-top { cursor: pointer; -webkit-appearance: none; appearance: none; line-height: 1.2; padding-inline-end: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23cfe0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-size: 11px 8px; background-position: right 13px center; }
+[dir='rtl'] .br-top { background-position: left 13px center; }
+[data-st=light] .br-top, :root[data-hero='day'] .br-top { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%233446e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E"); }
 .br-top option { background: #0e1850; color: #fff; }
 [data-st=light] .br-top option, :root[data-hero='day'] .br-top option { background: #fff; color: #1f1858; }
