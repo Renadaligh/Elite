@@ -1262,3 +1262,6 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 [data-st=light] .bs-nm.lose { fill: #6b778c; }
 [data-st=light] .bs-mr.win { color: #0f2a5c; }
 [data-st=dark] .bs-mr.win { color: #fff; }
+
+/* every card header is 16:9, with or without a picture (no odd short cards) */
+.tc-im, .tc-comm .tc-im, .tc-pic .tc-im { height: auto; aspect-ratio: 16 / 9; }
