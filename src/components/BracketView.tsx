@@ -21,7 +21,7 @@ function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: numbe
 
 function Row({ name, state, score, win, lose, onClick, onScore, slot, grip }: { name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
   return (
-    <div className={`br-row ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot}>
+    <div className={`br-row ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-drag={grip ? slot : undefined}>
       {grip && <span className="br-grip" data-grip={slot} aria-hidden="true">⠿</span>}
       <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name">{name}</span></button>
       {onScore ? <input className="br-sc" dir="ltr" inputMode="decimal" maxLength={4} value={score ?? ''} aria-label={name} onChange={(e) => onScore(e.target.value)} />
@@ -53,7 +53,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
   const L = useMemo(() => layout(bracket), [bracket]);
   const champ = champion(bracket);
   const narrow = useNarrow();
-  const [tree, setTree] = useState(false); // phone: user asked for the full tree
+  const [tree, setTree] = useState(true); // phone: the full tree is the default, the round list is optional
   const [byRounds, setByRounds] = useState(false); // public view: optional rounds list
   const showTree = pub ? !byRounds : !narrow || tree;
   // Public view on a phone: columns shrink so the whole tree fits the screen; very big brackets keep readable columns and scroll sideways.
@@ -72,8 +72,10 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
       const n = Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0);
       if (!n) return undefined;
       const g = 14, av = bw - 24;
+      const maxLen = bracket.players.reduce((q, p) => Math.max(q, [...p].length), 6);
+      const nat = Math.min(320, Math.max(150, Math.round(maxLen * 7.6 + 78))); // widest a column can get (name + grip + score box)
       const c = Math.floor((av - g * n) / (n + 1)); // +1: the champion sits next to the last match
-      if (c >= 216) return undefined;
+      if (c >= nat) return undefined;
       const cw = Math.max(c, 142);
       return { '--cw': `${cw}px`, '--gap': `${g}px`, '--fs': `${cw >= 190 ? 13 : cw >= 160 ? 12 : 11.5}px` } as CSSProperties;
     }
@@ -130,42 +132,67 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
   }, [bracket, R, lang, rtl, showTree]);
 
   const swapRef = useRef(onSwap); swapRef.current = onSwap; const hasSwap = !!onSwap;
-  // Drag a first-round seat (the grip beside a name) onto another seat to swap the two. Works with mouse and touch.
+  // Drag a first-round player onto another seat to swap the two: hold the player's row (mouse: just drag; touch: press and hold) or use the grip. Works with mouse and touch.
   useEffect(() => {
     if (!hasSwap) return;
     const parse = (v: string | undefined): SeatRef | null => { if (!v) return null; const [id, side] = v.split('|'); return side === 'a' || side === 'b' ? { id, side } : null; };
-    let ghost: HTMLElement | null = null, from: SeatRef | null = null, over: HTMLElement | null = null, pid = -1, grabEl: HTMLElement | null = null;
+    let ghost: HTMLElement | null = null, from: SeatRef | null = null, over: HTMLElement | null = null, pid = -1, grabEl: HTMLElement | null = null, srcRow: HTMLElement | null = null;
+    let pend: { ref: SeatRef; row: HTMLElement; x: number; y: number; id: number; touch: boolean; timer?: number } | null = null;
     const root = () => document.querySelector<HTMLElement>(`[data-bv="${uid}"]`);
     const clear = () => { over?.classList.remove('is-drop'); over = null; };
+    const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
+    const endPend = () => { if (pend?.timer) window.clearTimeout(pend.timer); pend = null; };
     const end = (drop: boolean) => {
+      endPend();
       const tgt = over && parse(over.dataset.slot);
-      const a = from; ghost?.remove(); ghost = null; clear(); document.body.classList.remove('br-dragging');
+      const a = from, wasDrag = !!from; ghost?.remove(); ghost = null; clear(); document.body.classList.remove('br-dragging'); srcRow?.classList.remove('is-dragging');
       try { if (grabEl && pid >= 0) grabEl.releasePointerCapture(pid); } catch { /* ignore */ }
-      from = null; grabEl = null; pid = -1;
+      from = null; grabEl = null; pid = -1; srcRow = null;
+      if (wasDrag) { document.addEventListener('click', eat, { capture: true, once: true }); window.setTimeout(() => document.removeEventListener('click', eat, true), 400); }
       if (drop && a && tgt && !(a.id === tgt.id && a.side === tgt.side)) swapRef.current?.(a, tgt);
     };
+    const begin = (ref: SeatRef, row: HTMLElement, el: HTMLElement, id: number, x: number, y: number, touch: boolean) => {
+      from = ref; grabEl = el; pid = id; srcRow = row;
+      try { el.setPointerCapture(id); } catch { /* ignore */ }
+      ghost = document.createElement('div'); ghost.className = 'br-ghost'; ghost.textContent = row.querySelector('.br-name')?.textContent ?? '';
+      ghost.style.left = `${x}px`; ghost.style.top = `${y}px`; document.body.appendChild(ghost); document.body.classList.add('br-dragging'); row.classList.add('is-dragging');
+      if (touch) try { navigator.vibrate?.(12); } catch { /* ignore */ }
+    };
     const down = (e: PointerEvent) => {
-      const g = (e.target as HTMLElement).closest<HTMLElement>('[data-grip]');
-      if (!g || e.button > 0 || root()?.contains(g) !== true) return;
-      const ref = parse(g.dataset.grip); if (!ref) return;
-      e.preventDefault(); from = ref; grabEl = g; pid = e.pointerId;
-      try { g.setPointerCapture(e.pointerId); } catch { /* ignore */ }
-      ghost = document.createElement('div'); ghost.className = 'br-ghost'; ghost.textContent = g.parentElement?.querySelector('.br-name')?.textContent ?? '';
-      ghost.style.left = `${e.clientX}px`; ghost.style.top = `${e.clientY}px`; document.body.appendChild(ghost); document.body.classList.add('br-dragging');
+      const t = e.target as HTMLElement;
+      if (e.button > 0 || t.closest('input,textarea,select,a,.br-toggle')) return;
+      const grip = t.closest<HTMLElement>('[data-grip]');
+      const row = (grip?.closest('.br-row') ?? t.closest('.br-row[data-drag]')) as HTMLElement | null;
+      if (!row || root()?.contains(row) !== true) return;
+      const ref = parse(row.dataset.drag); if (!ref) return;
+      if (grip) { e.preventDefault(); begin(ref, row, grip, e.pointerId, e.clientX, e.clientY, e.pointerType !== 'mouse'); return; }
+      const touch = e.pointerType !== 'mouse';
+      pend = { ref, row, x: e.clientX, y: e.clientY, id: e.pointerId, touch };
+      if (touch) pend.timer = window.setTimeout(() => { if (pend) { const q = pend; pend = null; begin(q.ref, q.row, q.row, q.id, q.x, q.y, true); } }, 280);
     };
     const move = (e: PointerEvent) => {
+      if (pend && !from) {
+        const d = Math.hypot(e.clientX - pend.x, e.clientY - pend.y);
+        if (pend.touch) { if (d > 10) endPend(); } else if (d > 5) { const q = pend; endPend(); begin(q.ref, q.row, q.row, q.id, e.clientX, e.clientY, false); }
+      }
       if (!from || !ghost) return;
       ghost.style.left = `${e.clientX}px`; ghost.style.top = `${e.clientY}px`;
       const t = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.br-row[data-slot]') ?? null;
-      if (t !== over) { clear(); if (t && root()?.contains(t)) { over = t; t.classList.add('is-drop'); } }
+      if (t !== over) { clear(); if (t && root()?.contains(t) && t !== srcRow) { over = t; t.classList.add('is-drop'); } }
       // edge auto-scroll: the page up/down, the bracket sideways
-      const r = root()?.getBoundingClientRect(); const sc = root();
+      const sc = root(); const r = sc?.getBoundingClientRect();
       if (e.clientY < 70) window.scrollBy(0, -14); else if (e.clientY > window.innerHeight - 70) window.scrollBy(0, 14);
       if (r && sc) { if (e.clientX < r.left + 50) sc.scrollLeft -= 14; else if (e.clientX > r.right - 50) sc.scrollLeft += 14; }
     };
     const up = () => end(true), cancel = () => end(false);
+    const noScroll = (e: TouchEvent) => { if (from && e.cancelable) e.preventDefault(); };
+    const noMenu = (e: Event) => { if (from || pend) e.preventDefault(); };
     document.addEventListener('pointerdown', down); document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', cancel);
-    return () => { document.removeEventListener('pointerdown', down); document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', cancel); end(false); };
+    document.addEventListener('touchmove', noScroll, { passive: false }); document.addEventListener('contextmenu', noMenu);
+    return () => {
+      document.removeEventListener('pointerdown', down); document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', cancel);
+      document.removeEventListener('touchmove', noScroll); document.removeEventListener('contextmenu', noMenu); end(false);
+    };
   }, [hasSwap, uid]);
 
   // desktop: grab the bracket with the mouse and drag it in any direction (sideways inside the bracket, up/down moves the page)
@@ -174,7 +201,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
     let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
     const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,input,textarea,select,a,[data-grip]')) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return;
       on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
     };
     const move = (e: PointerEvent) => {

@@ -987,9 +987,11 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
   .br-row { padding: 2px 8px; font-size: .82rem; min-height: 1.7rem; }
   .br-col-body { gap: 6px; }
   .br-main, .br-cols { gap: 20px; }
-  .br-col { flex: 0 0 216px; min-width: 216px; }
-  .br-final { flex: 0 0 216px; }
+  /* columns grow with the longest name (+ a small gap after it), never wider than 21rem */
+  .br-col, .br-final { flex: 0 0 auto; width: max-content; min-width: 150px; max-width: 21rem; }
+  .br-pick { padding-inline-end: 6px; }
 }
+.br-fit .br-col, .br-fit .br-final { width: var(--cw); max-width: var(--cw); }
 .br-fit .br-sc { width: 1.7rem; height: 1.35rem; font-size: var(--fs); }
 .br-fit .br-row { padding: 4px 6px; }
 .br-fit .br-grip { width: .8rem; font-size: .8rem; margin-inline-start: -2px; }
@@ -1010,5 +1012,10 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 }
 
 /* bracket editor page: use the whole content width (no 72rem cap) so big brackets fit without scrolling */
-.st-page.st-wide { max-width: none; }
+.st-page.st-wide { max-width: none; padding-inline: clamp(.75rem, 2.4vw, 2.75rem); }
 .st-page.st-wide .st-stage { width: 100%; justify-self: stretch; min-width: 0; }
+
+/* press-and-hold drag on the whole player row (mouse: drag; touch: hold) */
+.br-row[data-drag] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.br-row[data-drag] .br-pick { -webkit-touch-callout: none; touch-action: pan-x pan-y; }
+.br-row.is-dragging { opacity: .45; }
