@@ -3,10 +3,11 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, swapSeats, renamePlayer, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, addPlayers, draftBracket, hasResults, isCurrent, toggleCurrent, setScore, setWinner, shuffled, swapSeats, renamePlayer, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
+import { AddPlayerBar, RegistrantsPanel } from './AddPlayers';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -57,7 +58,7 @@ const EN: Record<string, string> = {
   'اسم البطولة': 'Tournament name', 'اللعبة': 'Game', 'النوع': 'Type', 'فردي (Plato ID)': 'Solo (Plato ID)',
   'فرق (اسم الفريق + القائد + الأعضاء)': 'Teams (team name + captain + members)', 'النظام': 'Format', 'فردي · أسرع لفة': 'Solo · Fastest lap',
   'الجائزة': 'Prize', '5,000 ريال': '5,000 SAR', 'البداية (توقيت الرياض)': 'Start (Riyadh time)', 'النهاية (توقيت الرياض)': 'End (Riyadh time)',
-  'العدد الأقصى': 'Max slots', 'تحديد عدد المقاعد': 'Limit the seats', 'الكل': 'All', 'بطولات Plato AR': 'Plato AR tournaments', 'بطولات المستخدمين': 'Community tournaments', 'غير محدود': 'Unlimited', 'قيد المراجعة': 'Under review', 'مرفوضة': 'Rejected', 'مقبولة': 'Approved', 'قبول': 'Approve', 'رفض': 'Reject', 'سبب الرفض (يظهر لصاحب البطولة)': 'Reason for rejection (the owner sees it)', 'تأكيد الرفض': 'Confirm rejection', 'طلبات بطولات المستخدمين بانتظار مراجعتك': 'Community tournaments waiting for your review', 'فتح البراكت': 'Open bracket', 'اكتب سبب الرفض': 'Write the reason', 'تمت المراجعة': 'Review saved', 'المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)': 'Registered now (auto-increments on each sign-up)',
+  'العدد الأقصى': 'Max slots', 'تحديد عدد المقاعد': 'Limit the seats', 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟': 'Adding players after matches started clears the current results (Undo brings them back). Sure?', 'تحديث الصفحة': 'Refresh', 'الكل': 'All', 'بطولات Plato AR': 'Plato AR tournaments', 'بطولات المستخدمين': 'Community tournaments', 'غير محدود': 'Unlimited', 'قيد المراجعة': 'Under review', 'مرفوضة': 'Rejected', 'مقبولة': 'Approved', 'قبول': 'Approve', 'رفض': 'Reject', 'سبب الرفض (يظهر لصاحب البطولة)': 'Reason for rejection (the owner sees it)', 'تأكيد الرفض': 'Confirm rejection', 'طلبات بطولات المستخدمين بانتظار مراجعتك': 'Community tournaments waiting for your review', 'فتح البراكت': 'Open bracket', 'اكتب سبب الرفض': 'Write the reason', 'تمت المراجعة': 'Review saved', 'المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)': 'Registered now (auto-increments on each sign-up)',
   'رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)': 'External registration link (optional, replaces the site form)',
   'الفائز (بعد الانتهاء)': 'Winner (after it ends)', 'صورة الفائز (طولية 9:16، اختياري)': 'Winner portrait (tall 9:16, optional)', 'أو الصق رابط': 'or paste a link', 'اختر صورة من جهازك': 'Choose from your device', 'جارٍ الرفع…': 'Uploading…', 'فشل رفع الصورة': 'Image upload failed', 'التخزين غير مفعّل بعد (R2)': 'Storage is not enabled yet (R2)', 'إزالة': 'Remove', 'منشورة (تظهر في الموقع)': 'Published (visible on the site)',
   'ما فيه بطولات بعد.': 'No tournaments yet.', 'مباشرة': 'Live', 'قادمة': 'Upcoming', 'منتهية': 'Completed',
@@ -296,11 +297,22 @@ function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray' | 
   const c = { green: '#27c27a', amber: '#ffb02e', red: '#ff4d5e', gray: '#8d93ad', blue: '#8fb2ff' }[tone];
   return <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[.74rem] font-bold" style={{ color: c, background: `color-mix(in srgb, ${c} 15%, transparent)` }}><i className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />{children}</span>;
 }
-function PageHead({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) {
+/** Reload button for the pages whose data changes while the dashboard is open (registrations, tournaments…). */
+function RefreshBtn({ onClick }: { onClick: () => unknown }) {
+  const { x } = useX();
+  const [spin, setSpin] = useState(false);
+  return (
+    <button type="button" className={btnG} style={{ borderColor: 'var(--glass-b)' }} title={x('تحديث الصفحة')} aria-label={x('تحديث الصفحة')} onClick={() => { setSpin(true); Promise.resolve(onClick()).catch(() => undefined).finally(() => window.setTimeout(() => setSpin(false), 600)); }}>
+      <svg viewBox="0 0 24 24" className={`h-4 w-4 ${spin ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12a9 9 0 11-3-6.7" /><path d="M21 4v5h-5" /></svg>
+      {x('تحديث الصفحة')}
+    </button>
+  );
+}
+function PageHead({ title, sub, action, refresh }: { title: string; sub?: string; action?: ReactNode; refresh?: () => unknown }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div><h1 className="text-[1.6rem] font-extrabold leading-tight">{title}</h1>{sub && <p className="mt-1 text-[.92rem]" style={{ color: 'var(--muted)' }}>{sub}</p>}</div>
-      {action}
+      {(action || refresh) && <div className="flex flex-wrap items-center gap-2">{refresh && <RefreshBtn onClick={refresh} />}{action}</div>}
     </div>
   );
 }
@@ -351,7 +363,7 @@ function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: 
       <div className="flex flex-wrap items-center gap-2">
         <a className={btnG} style={{ borderColor: 'var(--glass-b)' }} href={`#/bracket/${c.bracketId}`} target="_blank" rel="noopener noreferrer">{x('فتح البراكت')}</a>
         {can && c.review !== 'approved' && <button className={btnP} style={gradBtn} onClick={() => send('approved')}>{x('قبول')}</button>}
-        {can && c.review !== 'rejected' && !rej && <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} onClick={() => setRej(true)}>{x('رفض')}</button>}
+        {can && c.review === 'pending' && !rej && <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} onClick={() => setRej(true)}>{x('رفض')}</button>}
         {c.review === 'rejected' && c.reviewNote && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{c.reviewNote}</span>}
       </div>
       {rej && (
@@ -374,11 +386,12 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const [news, setNews] = useState<Adm<NewsItem>[]>([]);
   const [tours, setTours] = useState<Adm<Tournament>[]>([]);
   const [regs, setRegs] = useState<Reg[]>([]);
-  useEffect(() => {
-    api<Adm<NewsItem>[]>('/news', { key: k }).then(setNews).catch(() => undefined);
-    api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setTours).catch(() => undefined);
-    if (can('regs', 'view')) api<Reg[]>('/registrations', { key: k }).then(setRegs).catch(() => undefined);
-  }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const load = () => Promise.all([
+    api<Adm<NewsItem>[]>('/news', { key: k }).then(setNews).catch(() => undefined),
+    api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setTours).catch(() => undefined),
+    can('regs', 'view') ? api<Reg[]>('/registrations', { key: k }).then(setRegs).catch(() => undefined) : Promise.resolve(),
+  ]);
+  useEffect(() => { void load(); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   const now = Date.now();
   const upcoming = tours.filter((t) => t.published !== false && statusOf(t, now) === 'upcoming').length;
   const live = tours.filter((t) => t.published !== false && statusOf(t, now) === 'live').length;
@@ -390,7 +403,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   ];
   return (
     <div>
-      <PageHead title={x('نظرة عامة')} sub={x('ملخص سريع لكل شيء في الموقع')} />
+      <PageHead title={x('نظرة عامة')} sub={x('ملخص سريع لكل شيء في الموقع')} refresh={load} />
       <div className="grid gap-4 sm:grid-cols-3">
         {stats.map((s) => (
           <button key={s.label} type="button" onClick={() => go(s.tab)} className="text-start">
@@ -458,7 +471,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الأخبار')} (${rows.length})`} sub={x('أضف وعدّل أخبار الموقع')} action={can('news', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyNews()); }}>{x('+ خبر جديد')}</button> : undefined} />
+      <PageHead refresh={load} title={`${x('الأخبار')} (${rows.length})`} sub={x('أضف وعدّل أخبار الموقع')} action={can('news', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyNews()); }}>{x('+ خبر جديد')}</button> : undefined} />
       <div className="flex flex-col gap-2.5">
         {rows.map((r) => (
           <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -545,9 +558,10 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
-    if (list.length < 2) { toast.err(x('أدخل لاعبَين على الأقل')); return; }
     if (fmt === 'rr' && list.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
-    upd(generate(fmt, shuf ? shuffled(list) : list, hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined)); setSel(null);
+    const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
+    // fewer than 2 names: an empty draft; players are added afterwards (typed, or with + from the registrants)
+    upd(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts)); setSel(null);
   }
   function pick(m: BMatch, side: 'a' | 'b') {
     if (!br) return;
@@ -555,6 +569,17 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     upd(setWinner(br, m.id, m.win === side ? undefined : side));
   }
   const rename = (i: number, v: string) => br && upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
+  const [regs, setRegs] = useState<Reg[]>([]);
+  const loadRegs = useCallback(() => { api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined); }, [k, t0.id]);
+  useEffect(() => { loadRegs(); }, [loadRegs]);
+  function addToBracket(add: string[]) {
+    const have = new Set((br?.players ?? []).map((p) => p.trim().toLowerCase()));
+    if (!add.some((n) => n.trim() && !have.has(n.trim().toLowerCase()))) return;
+    if (!br) { upd(addPlayers(draftBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined), add)); return; }
+    if (br.format === 'rr' && br.players.length + add.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
+    if (hasResults(br) && !window.confirm(x('إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟'))) return;
+    upd(addPlayers(br, add)); setSel(null);
+  }
   function rebuild() {
     if (!br || !window.confirm(x('إعادة البناء تمسح النتائج الحالية. متأكد؟'))) return;
     setNames(br.players.join('\n')); setFmt(br.format); upd(null); setSel(null); setEditP(false);
@@ -591,6 +616,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           </div>
         </div>
 
+        <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={regs} players={br?.players ?? []} onAdd={addToBracket} onRefresh={loadRegs} />
+
         {!br ? (
           <div className="grid gap-4 rounded-xl border p-4" style={bd}>
             <b>{x('البراكت')}</b>
@@ -605,6 +632,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} onRename={(i, v) => upd(renamePlayer(br, i, v))} onLive={br.format === 'single' || br.format === 'double' ? (mm) => upd(toggleCurrent(br, mm.id)) : undefined} onScore={(mm, sa, sb) => upd(setScore(br, mm.id, sa, sb))} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} live /></div>
+            <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} />
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>
             {m && R && (
               <div className="sticky bottom-0 z-10 flex flex-wrap items-end gap-3 rounded-xl border p-3 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>
@@ -674,7 +702,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
 
   return (
     <div>
-      <PageHead title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button> : undefined} />
+      <PageHead refresh={load} title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button> : undefined} />
       <div className="mb-3 flex flex-wrap gap-2">
         {(['all', 'site', 'users'] as const).map((k) => (
           <button key={k} type="button" aria-pressed={src === k} onClick={() => setSrc(k)} className="rounded-full border px-4 py-1.5 text-[.85rem] font-semibold transition" style={src === k ? { ...gradBtn, color: '#fff', borderColor: 'transparent' } : { borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{k === 'all' ? x('الكل') : k === 'site' ? x('بطولات Plato AR') : x('بطولات المستخدمين')} ({srcN(k)})</button>
@@ -1005,7 +1033,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={can('games', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '', tournamentOnly: false, details: emptyDetails() }); }}>{x('+ لعبة جديدة')}</button> : undefined} />
+      <PageHead refresh={load} title={`${x('الألعاب')} (${shown.length})`} sub={x('أضف وعدّل صور وأسماء الألعاب')} action={can('games', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF({ id: '', custom: true, hidden: false, name: { ar: '', en: '' }, tagline: { ar: '', en: '' }, genre: 'Arcade', image: '', tournamentOnly: false, details: emptyDetails() }); }}>{x('+ لعبة جديدة')}</button> : undefined} />
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative min-w-[14rem] flex-1">
           <SearchI className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
@@ -1117,7 +1145,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('التسجيلات')} (${shown.length})`} sub={x('من سجّل في كل بطولة')} action={<button className={btnP} style={gradBtn} onClick={exportCsv} disabled={!shown.length}>{x('تصدير CSV')}</button>} />
+      <PageHead refresh={load} title={`${x('التسجيلات')} (${shown.length})`} sub={x('من سجّل في كل بطولة')} action={<button className={btnP} style={gradBtn} onClick={exportCsv} disabled={!shown.length}>{x('تصدير CSV')}</button>} />
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="relative min-w-[14rem] flex-1">
           <SearchI className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
@@ -1422,7 +1450,7 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   };
   return (
     <div className="space-y-4">
-      <p className="text-[.95rem] opacity-70">{x('سجل دائم لا يمكن تعديله أو حذفه. يعرض من فعل ماذا ومتى')}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-[.95rem] opacity-70">{x('سجل دائم لا يمكن تعديله أو حذفه. يعرض من فعل ماذا ومتى')}</p><RefreshBtn onClick={() => load(false)} /></div>
       <div className="flex flex-wrap gap-2">
         <select className={sel} value={f.user} onChange={(e) => setF({ ...f, user: e.target.value })} aria-label={x('الأدمن')}>
           <option value="">{x('كل الإداريين')}</option>{users.map((u) => <option key={u} value={u}>{u}</option>)}
@@ -1485,7 +1513,7 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
   return (
     <div>
-      <PageHead title={`${x('الإداريين')} (${rows.length})`} sub={x('أنشئ حسابات وحدد صلاحيات كل أدمن')} action={<button className={btnP} style={gradBtn} onClick={() => setAdd({ username: '', perms: {} })}>{x('+ أدمن جديد')}</button>} />
+      <PageHead refresh={load} title={`${x('الإداريين')} (${rows.length})`} sub={x('أنشئ حسابات وحدد صلاحيات كل أدمن')} action={<button className={btnP} style={gradBtn} onClick={() => setAdd({ username: '', perms: {} })}>{x('+ أدمن جديد')}</button>} />
       <div className="flex flex-col gap-3">
         {rows.map((r) => (
           <Card key={r.username} className="p-4">

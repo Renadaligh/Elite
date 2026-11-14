@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { TrophyIcon } from './icons';
-import { champion, isCurrent, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
+import { champion, isCurrent, isDraft, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
 import FfaView from './FfaView';
 import GroupsView from './GroupsView';
+import { DraftBox } from './AddPlayers';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
 interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** dashboard: typed scores beside the names */ onScore?: (m: BMatch, sa: string, sb: string) => void; /** dashboard: drag a first-round seat onto another to swap them */ onSwap?: (a: SeatRef, b: SeatRef) => void; /** dashboard: mark a ready match as «live now» (several at once are fine) */ onLive?: (m: BMatch) => void; /** dashboard: rename a player right on the tree (pencil beside the name) */ onRename?: (i: number, name: string) => void; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
@@ -50,6 +51,8 @@ function useNarrow() {
 
 export default function BracketView(p: Props) {
   const b = p.bracket;
+  const { lang } = useI18n();
+  if (isDraft(b)) return <DraftBox lang={lang} players={b.players} onRemove={p.onChange ? (i) => p.onChange?.({ ...b, players: b.players.filter((_, j) => j !== i) }) : undefined} />;
   if (isLeague(b)) return <LeagueView bracket={b} onChange={p.onChange} onRename={p.onRename} live={p.live} />;
   if (b.format === 'ffa') return <FfaView bracket={b} onChange={p.onChange} onRename={p.onRename} />;
   if (b.format === 'groups') return <GroupsView bracket={b} onChange={p.onChange} onRename={p.onRename} live={p.live} />;

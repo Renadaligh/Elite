@@ -28,10 +28,14 @@ function cleanMatches(raw: unknown, max: number): Record<string, unknown>[] | nu
 export function cleanBracket(v: unknown) {
   const o = v as Record<string, unknown>;
   if (!o || !FORMATS.includes(o.format as string) || !Array.isArray(o.players)) return null;
-  if (o.players.length < 2 || o.players.length > MAX_PLAYERS) return null;
+  if (o.players.length > MAX_PLAYERS) return null;
   const f = o.format as string;
   const elim = f === 'single' || f === 'double';
   const players = o.players.map((p) => txt(p, 40).trim());
+  if (players.length < 2) { // a draft: players are listed, nothing is drawn yet
+    const x = (o.opts ?? {}) as Record<string, unknown>;
+    return { format: f, players, matches: [], ...(elim ? {} : { opts: { win: num(x.win, 1), draw: num(x.draw, 0.5), loss: num(x.loss, 0), ...(x.double === true ? { double: true } : {}), ...(x.low === true ? { low: true } : {}), ...(x.koFormat === 'double' ? { koFormat: 'double' } : x.koFormat === 'single' ? { koFormat: 'single' } : {}), ...(typeof x.rounds === 'number' ? { rounds: Math.min(30, Math.max(1, x.rounds | 0)) } : {}), ...(typeof x.groups === 'number' ? { groups: Math.min(8, Math.max(2, x.groups | 0)) } : {}), ...(typeof x.adv === 'number' ? { adv: Math.min(8, Math.max(1, x.adv | 0)) } : {}) } }) };
+  }
   const matches = f === 'ffa' ? [] : cleanMatches(o.matches, Math.max(elim ? 80 : 300, players.length * (elim ? 2 : 40)));
   if (!matches) return null;
   // Current matches: an array of known match ids (an old single string is accepted too).

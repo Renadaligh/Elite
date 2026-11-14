@@ -101,7 +101,7 @@ function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: bo
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
     <div className="tc-im" style={x.community || x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {x.image && !x.community && <img src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+      {x.image && <img src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{x.community && <span className="comm-badge" title={x.community.organizer || undefined}>{lang === 'ar' ? 'مجتمع' : 'Community'}</span>}</div>
     </div>
   );
@@ -160,7 +160,7 @@ function TourCard({ x, s, feat, eager }: { x: Tournament; s: TournamentStatus; f
   const g = getGame(x.gameId);
   const showCd = s === 'upcoming' || (feat && s === 'live');
   return (
-    <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''} ${x.community ? 'tc-comm' : ''}`}>
+    <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''} ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}

@@ -1,11 +1,13 @@
 import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, swapSeats, toggleCurrent, renamePlayer, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, addPlayers, draftBracket, hasResults, isDraft, resolve, setScore, setWinner, shuffled, swapSeats, toggleCurrent, renamePlayer, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
 import CommunityListing from './CommunityListing';
+import { AddPlayerBar } from './AddPlayers';
+import BracketSheetAny from './BracketSheetAny';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import BracketView from './BracketView';
 import EmailLogin from './EmailLogin';
@@ -166,17 +168,21 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
-    if (list.length < 2) { setMsg(tx.need); return; }
     if (fmt === 'rr' && list.length > MAX_RR) { setMsg(tx.maxRr); return; }
-    edit(generate(fmt, shuf ? shuffled(list) : list, hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined)); setSel(null);
+    const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
+    // fewer than 2 names: an empty draft, players are added later (typed or from the registrants)
+    edit(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts)); setSel(null);
   }
   const pick = (m: BMatch, side: 'a' | 'b') => { if (!br) return; setSel(m.id); edit(setWinner(br, m.id, m.win === side ? undefined : side)); };
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
-  function addRegistrants(add: string[], ask: string) {
-    if (!br || !window.confirm(ask)) return;
+  function addToBracket(add: string[]) {
+    if (!br) return;
     const have = new Set(br.players.map((p) => p.trim().toLowerCase()));
-    const next = [...br.players, ...add.filter((n) => !have.has(n.trim().toLowerCase()))];
-    setNames(next.join('\n')); setFmt(br.format); edit(null); setSel(null); setEditP(false);
+    if (!add.some((n) => n.trim() && !have.has(n.trim().toLowerCase()))) return;
+    if (br.format === 'rr' && br.players.length + add.length > MAX_RR) { setMsg(tx.maxRr); return; }
+    // players join without a rebuild: the bracket is redrawn around them. Only if results exist does it ask first (they are cleared; Undo brings them back).
+    if (hasResults(br) && !window.confirm(lang === 'ar' ? 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟' : 'Adding players after matches started clears the current results (Undo brings them back). Sure?')) return;
+    edit(addPlayers(br, add)); setSel(null); setMsg('');
   }
   function rebuild() { if (!br || !window.confirm(tx.rebuildAsk)) return; setNames(br.players.join('\n')); setFmt(br.format); edit(null); setSel(null); setEditP(false); }
 
@@ -225,6 +231,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   const R = br ? resolve(br) : null;
   const champ = br ? champion(br) : null;
   const editable = mine;
+  const sheetView = !editable && !!readOnly && !!br && !isDraft(br) ; // public view link: the whole bracket on one white sheet
 
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
@@ -250,13 +257,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
       ) : (
         <div className={`grid min-w-0 gap-5 ${!editable && readOnly ? 'pv-body' : ''}`}>
           <div className={`flex flex-wrap items-center justify-between gap-3 ${!editable && readOnly ? 'pv-pad' : ''}`}>
-            <div>
+            {!sheetView && <div>
               {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.5rem] md:text-[1.6rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
                 : <h2 className="text-[1.7rem] md:text-[2rem] font-extrabold">{title}</h2>}
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
-            </div>
+            </div>}
             <div className="flex flex-wrap items-center gap-2.5">
-              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} bracket={br} title={shownTitle} url={url} />
+              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={shownTitle} url={editable && id ? viewUrl : url} />
               {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>
@@ -269,8 +276,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
             </div>
           )}
-          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onRename={editable ? (i, v) => edit(renamePlayer(br, i, v)) : undefined} onLive={editable && (br.format === 'single' || br.format === 'double') ? (mm) => edit(toggleCurrent(br, mm.id)) : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>
+          {sheetView ? <BracketSheetAny bracket={br} title={shownTitle} lang={lang === 'en' ? 'en' : 'ar'} /> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onRename={editable ? (i, v) => edit(renamePlayer(br, i, v)) : undefined} onLive={editable && (br.format === 'single' || br.format === 'double') ? (mm) => edit(toggleCurrent(br, mm.id)) : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
           </div>
+          {editable && <AddPlayerBar lang={lang} onAdd={addToBracket} />}
           {editable && (
             <div className="st-share" style={card}>
               <b>{tx.shTitle}</b>
@@ -299,7 +307,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
-          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} onUse={addRegistrants} />}
+          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} players={br?.players ?? []} onAdd={addToBracket} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>
       )}

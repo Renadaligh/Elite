@@ -25,6 +25,6 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
 
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const a = await guard(request, env, 'regs', 'view'); if (a instanceof Response) return a;
-  const { results } = await env.DB.prepare('SELECT * FROM registrations ORDER BY id DESC').all();
+  const { results } = await env.DB.prepare("SELECT * FROM registrations WHERE tournament_id NOT LIKE 'u-%' ORDER BY id DESC").all();
   return json(results);
 };

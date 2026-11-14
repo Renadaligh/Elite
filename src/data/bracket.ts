@@ -80,6 +80,27 @@ export function generate(format: BFormat, players: string[], opts?: Partial<Leag
   return { format, players: names, matches };
 }
 
+/** A bracket with fewer than 2 players is a draft: players are listed but nothing is drawn yet. Adding the 2nd player builds it. */
+export const isDraft = (br: Bracket) => br.players.length < 2;
+export function draftBracket(format: BFormat, players: string[] = [], opts?: Partial<LeagueOpts>): Bracket {
+  const o = format === 'single' || format === 'double' ? undefined : { ...defaultOpts(format, players.length), ...opts };
+  return { format, players: players.map((p) => p.trim()).filter(Boolean), matches: [], ...(o ? { opts: o } : {}) };
+}
+/** Has anything been played / scored / marked live yet? (Adding players after that clears the results.) */
+export function hasResults(br: Bracket): boolean {
+  const played = (m: BMatch) => !!m.win || !!m.sa || !!m.sb;
+  return br.matches.some(played) || !!br.ko?.matches.some(played) || !!br.fs?.some((r) => r.some((v) => v !== '' && v != null)) || !!br.cur?.length;
+}
+/** Adds players (new names only) and redraws. Keeps the seeding order and the rules. Only call it when there are no results, or after the user agreed to clear them. */
+export function addPlayers(br: Bracket, add: string[]): Bracket {
+  const have = new Set(br.players.map((p) => p.trim().toLowerCase()));
+  const fresh: string[] = [];
+  for (const n of add.map((a) => a.trim()).filter(Boolean)) { const k = n.toLowerCase(); if (!have.has(k)) { have.add(k); fresh.push(n); } }
+  const players = [...br.players, ...fresh];
+  const keep = br.opts ? { win: br.opts.win, draw: br.opts.draw, loss: br.opts.loss, double: br.opts.double, koFormat: br.opts.koFormat, low: br.opts.low, ...(br.format === 'ffa' ? { rounds: br.opts.rounds } : {}) } : undefined;
+  return players.length < 2 ? draftBracket(br.format, players, keep) : generate(br.format, players, keep);
+}
+
 /** Works out who is in every match (byes advance automatically). */
 export function resolve(br: Bracket): Map<string, Resolved> {
   const M = new Map<string, Resolved>();
@@ -157,6 +178,7 @@ export function setScore(br: Bracket, id: string, sa: string, sb: string): Brack
 
 /** The tournament champion (winner of the last match), if decided. */
 export function champion(br: Bracket): number | null {
+  if (isDraft(br)) return null;
   if (isLeague(br)) return leagueChampion(br);
   if (br.format === 'ffa') return ffaChampion(br);
   if (br.format === 'groups') { const k = koSub(br); const w = k ? champion(k) : null; return w === null || !br.ko ? null : br.ko.seed[w]; }
