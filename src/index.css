@@ -1265,3 +1265,8 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* every card header is 16:9, with or without a picture (no odd short cards) */
 .tc-im, .tc-comm .tc-im, .tc-pic .tc-im { height: auto; aspect-ratio: 16 / 9; }
+
+/* league / groups / leaderboard sheet: rounded like the tree */
+.bs-tw { border-radius: 12px; }
+.bs-m { border-radius: 10px; }
+.bs-rd h4 { border-radius: 8px; }
