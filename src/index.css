@@ -1218,3 +1218,4 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 /* public view page: the sheet sits directly on the page, no frame */
 .pv-root .bs-sheet { --bs-bg: var(--bg); background: transparent; border: 0 !important; border-radius: 0; box-shadow: none; padding: 14px clamp(12px, 3vw, 32px) 24px; }
 @media (max-width: 767px) { .pv-root .bs-sheet { padding: 10px 8px 16px; } }
+.br-match.is-ghost { visibility: hidden; pointer-events: none; }

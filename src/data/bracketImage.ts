@@ -1,4 +1,4 @@
-import { champion, ffaChampion, ffaRows, groupLabel, groupSub, isCurrent, isLeague, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
+import { champion, ffaChampion, ffaRows, groupLabel, groupSub, hasBye, isCurrent, isLeague, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
 
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
 const CW = 210, CH = 62, RH = CH / 2, GX = 60, GY = 18, PAD = 36, HEAD = 96, FOOT = 72;
@@ -248,16 +248,16 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     if (left === 2) return lang2 === 'ar' ? 'ربع النهائي' : 'Quarterfinals';
     return lang2 === 'ar' ? `الجولة ${round}` : `Round ${round}`;
   };
-  L.winners.forEach((ms, ci) => colName(rn(lang, 'W', ms[0].round, L.winners.length), ci, TOP + OFF - 14));
-  L.losers.forEach((ms, ci) => colName(rn(lang, 'L', ms[0].round, L.losers.length), ci, lTop + OFF - 14));
+  L.winners.forEach((ms, ci) => ms.some((m) => !hasBye(R, m.id)) && colName(rn(lang, 'W', ms[0].round, L.winners.length), ci, TOP + OFF - 14));
+  L.losers.forEach((ms, ci) => ms.some((m) => !hasBye(R, m.id)) && colName(rn(lang, 'L', ms[0].round, L.losers.length), ci, lTop + OFF - 14));
   if (L.final) colName(rtl ? 'النهائي الكبير' : 'Grand Final', cols, (pos.get(L.final.id)?.y ?? TOP) - 14);
 
   // connectors
   c.lineWidth = 1.5;
   for (const m of br.matches) {
-    const to = pos.get(m.id); if (!to) continue;
+    const to = pos.get(m.id); if (!to || hasBye(R, m.id)) continue;
     for (const s of [m.a, m.b]) {
-      if (!('w' in s)) continue;
+      if (!('w' in s) || hasBye(R, s.w)) continue;
       const from = pos.get(s.w); if (!from) continue;
       const x1 = rtl ? X(from.x) : X(from.x) + CW, x2 = rtl ? X(to.x) + CW : X(to.x), y1 = from.y + RH, y2 = to.y + RH, mx = (x1 + x2) / 2;
       c.strokeStyle = R.get(s.w)?.win != null ? '#3d7bff' : P.border2;
@@ -268,7 +268,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   // cards
   const nm = (w: Who) => (w === 'bye' ? 'BYE' : w === null ? (rtl ? 'لم يُحدد' : 'TBD') : br.players[w] || '—');
   for (const m of br.matches) {
-    const p = pos.get(m.id); if (!p) continue;
+    const p = pos.get(m.id); if (!p || hasBye(R, m.id)) continue;
     const r = R.get(m.id)!;
     const x = X(p.x), isBye = r.a === 'bye' || r.b === 'bye', live = isCurrent(br, m.id) && !m.win;
     c.globalAlpha = isBye ? 0.45 : 1;

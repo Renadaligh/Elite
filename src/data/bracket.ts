@@ -101,6 +101,9 @@ export function addPlayers(br: Bracket, add: string[]): Bracket {
   return players.length < 2 ? draftBracket(br.format, players, keep) : generate(br.format, players, keep);
 }
 
+/** A match with an empty seat (BYE): nothing is played, so every view hides it and lets the player simply wait in the next round. */
+export const hasBye = (R: Map<string, Resolved>, id: string) => { const r = R.get(id); return !!r && (r.a === 'bye' || r.b === 'bye'); };
+
 /** Works out who is in every match (byes advance automatically). */
 export function resolve(br: Bracket): Map<string, Resolved> {
   const M = new Map<string, Resolved>();

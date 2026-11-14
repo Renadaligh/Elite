@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { isCurrent, layout, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
+import { hasBye, isCurrent, layout, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
  *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
@@ -34,9 +34,9 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
       let bottom = y0;
       rounds.forEach((ms, r) => {
         const x = PAD + r * (BW + NUMW + GAP);
-        heads.push({ x, y: y0 - HEAD, label: rName(ar, tag, ms[0].round, rounds.length) });
+        if (ms.some((m) => !hasBye(R, m.id))) heads.push({ x, y: y0 - HEAD, label: rName(ar, tag, ms[0].round, rounds.length) });
         ms.forEach((m, i) => {
-          nums.set(m.id, ++n);
+          if (!hasBye(R, m.id)) nums.set(m.id, ++n);
           const fy = [m.a, m.b].map((s) => ('w' in s ? pos.get(s.w) : undefined)).filter((p): p is Pos => !!p);
           const y = fy.length === 2 ? (fy[0].y + fy[1].y) / 2 : fy.length === 1 ? fy[0].y : y0 + (i + 0.5) * P * (r === 0 || !rounds[r - 1] ? 1 : Math.max(1, rounds[r - 1].length / ms.length));
           pos.set(m.id, { x, y });
@@ -121,14 +121,14 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
   };
   const lines: JSX.Element[] = [];
   for (const m of bracket.matches) {
-    const c = g.pos.get(m.id); if (!c) continue;
-    const xs = [m.a, m.b].map((s) => ('w' in s ? g.pos.get(s.w) : undefined)).filter((q): q is Pos => !!q);
+    const c = g.pos.get(m.id); if (!c || hasBye(g.R, m.id)) continue;
+    const xs = [m.a, m.b].map((s) => ('w' in s && !hasBye(g.R, s.w) ? g.pos.get(s.w) : undefined)).filter((q): q is Pos => !!q);
     for (const f of xs) {
       const x1 = f.x + BW + NUMW, x2 = c.x, xm = x1 + (x2 - x1) / 2;
       lines.push(<path key={`${m.id}-${f.x}-${f.y}`} d={`M${x1},${f.y} H${xm} V${c.y} H${x2}`} className="bs-ln" fill="none" strokeWidth="1" />);
     }
   }
-  const all = [...g.L.winners.flat(), ...g.L.losers.flat(), ...(g.L.final ? [g.L.final] : [])];
+  const all = [...g.L.winners.flat(), ...g.L.losers.flat(), ...(g.L.final ? [g.L.final] : [])].filter((m) => !hasBye(g.R, m.id));
 
   return (
     <div ref={wrap} className="bs-sheet" dir="ltr">

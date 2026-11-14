@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { TrophyIcon } from './icons';
-import { champion, isCurrent, isDraft, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
+import { champion, hasBye, isCurrent, isDraft, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
 import FfaView from './FfaView';
@@ -142,10 +142,11 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
       const o = root.getBoundingClientRect();
       const out: { d: string; on: boolean }[] = [];
       for (const m of bracket.matches) {
+        if (hasBye(R, m.id)) continue;
         const to = els.current.get(m.id); if (!to) continue;
         const tb = to.getBoundingClientRect();
         for (const s of [m.a, m.b]) {
-          if (!('w' in s)) continue;
+          if (!('w' in s) || hasBye(R, s.w)) continue;
           const from = els.current.get(s.w); if (!from) continue;
           const fb = from.getBoundingClientRect();
           const x1 = (rtl ? fb.left : fb.right) - o.left, y1 = fb.top + fb.height / 2 - o.top, x2 = (rtl ? tb.right : tb.left) - o.left, y2 = tb.top + tb.height / 2 - o.top, mx = (x1 + x2) / 2;
@@ -257,7 +258,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
     const sa = seat('a'), sb = seat('b');
     const crowned = (side: 'a' | 'b') => champ !== null && m.id === finalId && !isBye && m.win === side; // the trophy sits next to the champion's name in the last match
     return (
-      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); else els.current.delete(m.id); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
+      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); else els.current.delete(m.id); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye is-ghost' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
         {onLive && !m.win && !isBye && typeof r.a === 'number' && typeof r.b === 'number' && (
           <button type="button" className={`br-livebtn ${isCurrent(bracket, m.id) ? 'on' : ''}`} aria-pressed={isCurrent(bracket, m.id)} title={lang === 'ar' ? 'مباشر الآن' : 'Live now'} aria-label={lang === 'ar' ? 'تحديد المباراة كمباشرة الآن' : 'Mark match as live now'} onClick={(e) => { e.stopPropagation(); onLive(m); }}><i /></button>
         )}
