@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { hasBye, isCurrent, layout, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
@@ -18,6 +18,7 @@ interface Pos { x: number; y: number }
 
 export default function BracketSheet({ bracket, title, lang }: { bracket: Bracket; title: string; lang: 'ar' | 'en' }) {
   const ar = lang === 'ar';
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const wrap = useRef<HTMLDivElement>(null);
   const scr = useRef<HTMLDivElement>(null);
   const [avail, setAvail] = useState(0);
@@ -99,8 +100,9 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
     const hasWin = !!m.win;
     return (
       <g key={m.id}>
+        <clipPath id={`${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')}`}><rect x={p.x} y={p.y - RH} width={BW} height={RH * 2} rx={9} /></clipPath>
         {isCurrent(bracket, m.id) && !m.win && <text className="bs-live" x={p.x} y={p.y - RH - 4} fontSize="10" fontWeight="800">● LIVE</text>}
-        {rows.map((row, k) => {
+        <g clipPath={`url(#${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')})`}>{rows.map((row, k) => {
           const y = p.y - RH + k * RH;
           const bye = row.w === 'bye';
           return (
@@ -114,7 +116,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
               {row.sc ? <text className="bs-sc" x={p.x + BW - 8} y={y + RH / 2 + 4} fontSize="12" fontWeight="700" textAnchor="end">{row.sc}</text> : row.win && m.win ? <text className="bs-ck" x={p.x + BW - 9} y={y + RH / 2 + 4} fontSize="12" fontWeight="800" textAnchor="end">✓</text> : null}
             </g>
           );
-        })}
+        })}</g>
         <text className="bs-no" x={p.x + BW + 5} y={p.y + 4} fontSize="10">{g.nums.get(m.id)}</text>
       </g>
     );
