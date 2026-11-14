@@ -1270,3 +1270,8 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .bs-tw { border-radius: 12px; }
 .bs-m { border-radius: 10px; }
 .bs-rd h4 { border-radius: 8px; }
+
+.bs-cup { stroke: #e9a800; }
+[data-st=dark] .bs-cup { stroke: #ffc933; }
+.bs-cupi { display: inline-block; vertical-align: -.2em; margin-inline-start: .4rem; color: #e9a800; }
+[data-st=dark] .bs-cupi { color: #ffc933; }

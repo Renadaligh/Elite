@@ -269,7 +269,9 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
       c.fillStyle = win ? P.winBg : P.card; c.fillRect(p.x + SEED, y + 1, BW - SEED, RHs - 2);
       c.fillStyle = P.soft; c.font = `500 11px ${family}`; txt(sd(w), p.x + SEED / 2, y + RHs / 2 + 1, 'center', SEED - 4);
       c.fillStyle = win ? P.win : lose ? P.lose : P.fg; c.font = `${win ? 800 : 500} 13px ${family}`;
-      txt(nm(w), p.x + SEED + 8, y + RHs / 2 + 1, 'left', BW - SEED - 40);
+      const crown = win && champion(br) !== null && m.id === (L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id);
+      txt(nm(w), p.x + SEED + 8, y + RHs / 2 + 1, 'left', BW - SEED - (crown ? 66 : 40));
+      if (crown) trophy(c, p.x + BW - (sc ? 54 : 42), y + RHs / 2 + 1, 15);
       if (sc || win) { c.fillStyle = win ? P.win : P.fg; c.font = `800 12px ${family}`; txt(sc || '✓', p.x + BW - 8, y + RHs / 2 + 1, 'right', 28); }
     });
     c.restore();

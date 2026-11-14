@@ -1,4 +1,5 @@
-import { ffaRows, groupLabel, groupSub, isCurrent, koSub, leagueRounds, outcome, roundMatches, standings, type BMatch, type Bracket } from '../data/bracket';
+import { TrophyIcon } from './icons';
+import { ffaChampion, ffaRows, leagueChampion, groupLabel, groupSub, isCurrent, koSub, leagueRounds, outcome, roundMatches, standings, type BMatch, type Bracket } from '../data/bracket';
 import BracketSheet from './BracketSheet';
 
 /** Public view link for EVERY format, in the same sheet style as the elimination sheet:
@@ -9,14 +10,14 @@ function Head({ title }: { title: string }) {
   return <div className="bs-top"><b dir="auto">{title}</b><span>plato-ar.com</span></div>;
 }
 
-function Table({ br, adv, ar }: { br: Bracket; adv?: number; ar: boolean }) {
+function Table({ br, adv, ar, champ }: { br: Bracket; adv?: number; ar: boolean; champ?: number | null }) {
   const S = standings(br);
   return (
     <div className="bs-tw"><table className="bs-tbl">
       <thead><tr><th>#</th><th className="l">{ar ? 'اللاعب' : 'Player'}</th><th>{ar ? 'لعب' : 'P'}</th><th>{ar ? 'فوز' : 'W'}</th><th>{ar ? 'تعادل' : 'D'}</th><th>{ar ? 'خسارة' : 'L'}</th><th>+/−</th><th>{ar ? 'نقاط' : 'Pts'}</th></tr></thead>
       <tbody>{S.map((s, i) => (
         <tr key={s.p} className={adv && i < adv ? 'adv' : ''}>
-          <td>{i + 1}</td><td className="l" dir="auto">{br.players[s.p] || '—'}</td><td>{s.played}</td><td>{s.w}</td><td>{s.d}</td><td>{s.l}</td>
+          <td>{i + 1}</td><td className="l" dir="auto">{br.players[s.p] || '—'}{champ === s.p && <TrophyIcon className="bs-cupi h-4 w-4" aria-label="winner" />}</td><td>{s.played}</td><td>{s.w}</td><td>{s.d}</td><td>{s.l}</td>
           <td dir="ltr">{s.gf - s.ga > 0 ? '+' : ''}{s.gf - s.ga}</td><td className="pts">{s.pts}</td>
         </tr>
       ))}</tbody>
@@ -50,7 +51,7 @@ export default function BracketSheetAny({ bracket: br, title, lang }: { bracket:
   if (br.format === 'single' || br.format === 'double') return <BracketSheet bracket={br} title={title} lang={lang} />;
 
   if (br.format === 'rr' || br.format === 'swiss') {
-    return <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} /><Table br={br} ar={ar} /><Rounds br={br} ar={ar} /></div>;
+    return <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} /><Table br={br} ar={ar} champ={leagueChampion(br)} /><Rounds br={br} ar={ar} /></div>;
   }
 
   if (br.format === 'ffa') {
@@ -59,7 +60,7 @@ export default function BracketSheetAny({ bracket: br, title, lang }: { bracket:
       <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} />
         <div className="bs-tw"><table className="bs-tbl">
           <thead><tr><th>#</th><th className="l">{ar ? 'اللاعب' : 'Player'}</th><th>{ar ? 'الجولات' : 'Rounds'}</th><th>{ar ? 'الأفضل' : 'Best'}</th><th>{ar ? 'المجموع' : 'Total'}</th></tr></thead>
-          <tbody>{rows.map((r, i) => <tr key={r.p} className={i === 0 ? 'adv' : ''}><td>{i + 1}</td><td className="l" dir="auto">{br.players[r.p]}</td><td>{r.played}</td><td>{r.best ?? '—'}</td><td className="pts">{r.total}</td></tr>)}</tbody>
+          <tbody>{rows.map((r, i) => <tr key={r.p} className={i === 0 ? 'adv' : ''}><td>{i + 1}</td><td className="l" dir="auto">{br.players[r.p]}{i === 0 && ffaChampion(br) === r.p && <TrophyIcon className="bs-cupi h-4 w-4" aria-label="winner" />}</td><td>{r.played}</td><td>{r.best ?? '—'}</td><td className="pts">{r.total}</td></tr>)}</tbody>
         </table></div>
         <div className="bs-rd"><h4 dir={ar ? "rtl" : "ltr"}>{ar ? 'نتائج الجولات' : 'Round scores'}{br.opts?.low ? (ar ? ' · الأقل أفضل' : ' · lower is better') : ''}</h4></div>
         <div className="bs-tw"><table className="bs-tbl">
