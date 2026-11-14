@@ -50,9 +50,9 @@ function useNarrow() {
 
 export default function BracketView(p: Props) {
   const b = p.bracket;
-  if (isLeague(b)) return <LeagueView bracket={b} onChange={p.onChange} live={p.live} />;
-  if (b.format === 'ffa') return <FfaView bracket={b} onChange={p.onChange} />;
-  if (b.format === 'groups') return <GroupsView bracket={b} onChange={p.onChange} live={p.live} />;
+  if (isLeague(b)) return <LeagueView bracket={b} onChange={p.onChange} onRename={p.onRename} live={p.live} />;
+  if (b.format === 'ffa') return <FfaView bracket={b} onChange={p.onChange} onRename={p.onRename} />;
+  if (b.format === 'groups') return <GroupsView bracket={b} onChange={p.onChange} onRename={p.onRename} live={p.live} />;
   return <TreeView {...p} />;
 }
 
@@ -78,18 +78,24 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
     on(); const ro = new ResizeObserver(on); ro.observe(el); return () => ro.disconnect();
   }, [showTree]);
   const single = bracket.format !== 'double';
-  const nCols = L.winners.length + (L.final ? 1 : 0);
+  // «Top N»: show only the last rounds of a big single-elimination bracket (like Challonge's Full / Top 32 / Top 16 / Top 8)
+  const [top, setTop] = useState(0);
+  const m1 = L.winners[0]?.length ?? 0;
+  const topOpts = bracket.format === 'single' ? [32, 16, 8].filter((n) => n / 2 < m1) : [];
+  const topN = topOpts.includes(top) ? top : 0;
+  const Wv = topN ? L.winners.filter((ms) => ms.length <= topN / 2) : L.winners;
+  const nCols = Wv.length + (L.final ? 1 : 0);
   const fitStyle = (() => {
     // Desktop: shrink the columns so the whole tree fits the width (like Challonge); very big brackets keep readable columns and scroll sideways.
     if (!narrow && showTree && bw) {
-      const n = Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0);
+      const n = Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0);
       if (!n) return undefined;
       const g = 14, av = bw - 24;
       const maxLen = bracket.players.reduce((q, p) => Math.max(q, [...p].length), 6);
       const nat = Math.min(320, Math.max(150, Math.round(maxLen * 7.6 + 78))); // widest a column can get (name + grip + score box)
       const tc = n; // columns on screen
       const cAvail = Math.floor((av - g * (tc - 1)) / tc); // the most a column can take so everything fits
-      const cWant = Math.floor((TREE_W - g * (tc - 1)) / tc); // a small bracket opens at a comfortable size, about as wide as the stream
+      const cWant = tc >= 6 ? 220 : Math.floor((TREE_W - g * (tc - 1)) / tc); // a small bracket opens at a comfortable size (about as wide as the stream); a big one (32+ players) gets Challonge-sized columns
       const cw = cAvail < nat ? Math.max(cAvail, 142) : Math.min(cAvail, Math.max(nat, Math.min(cWant, 236)));
       return { '--cw': `${cw}px`, '--gap': `${g}px`, '--fs': `${cw >= 210 ? 14 : cw >= 190 ? 13 : cw >= 160 ? 12 : 11.5}px` } as CSSProperties;
     }
@@ -188,6 +194,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
       const ref = parse(row.dataset.drag); if (!ref) return;
       if (grip) { e.preventDefault(); begin(ref, row, grip, e.pointerId, e.clientX, e.clientY, e.pointerType !== 'mouse'); return; }
       const touch = e.pointerType !== 'mouse';
+      if (!touch) return; // mouse: seats are swapped from the grip only, so dragging anywhere else pans the bracket
       pend = { ref, row, x: e.clientX, y: e.clientY, id: e.pointerId, touch };
       if (touch) pend.timer = window.setTimeout(() => { if (pend) { const q = pend; pend = null; begin(q.ref, q.row, q.row, q.id, q.x, q.y, true); } }, 280);
     };
@@ -222,7 +229,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
     let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
     const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,.br-edit,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,.br-edit,input,textarea,select,a,[data-grip]')) return;
       on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
     };
     const move = (e: PointerEvent) => {
@@ -248,7 +255,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
     const sa = seat('a'), sb = seat('b');
     const crowned = (side: 'a' | 'b') => champ !== null && m.id === finalId && !isBye && m.win === side; // the trophy sits next to the champion's name in the last match
     return (
-      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
+      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); else els.current.delete(m.id); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
         {onLive && !m.win && !isBye && typeof r.a === 'number' && typeof r.b === 'number' && (
           <button type="button" className={`br-livebtn ${isCurrent(bracket, m.id) ? 'on' : ''}`} aria-pressed={isCurrent(bracket, m.id)} title={lang === 'ar' ? 'مباشر الآن' : 'Live now'} aria-label={lang === 'ar' ? 'تحديد المباراة كمباشرة الآن' : 'Mark match as live now'} onClick={(e) => { e.stopPropagation(); onLive(m); }}><i /></button>
         )}
@@ -265,7 +272,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
       <div className="br-cols">
         {rounds.map((ms, i) => (
           <div key={i} className="br-col">
-            <div className="br-round">{roundName(lang, br, ms[0].round, rounds.length)}</div>
+            <div className="br-round">{roundName(lang, br, ms[0].round, br === 'W' ? L.winners.length : rounds.length)}</div>
             <div className="br-col-body">{ms.map(card)}</div>
           </div>
         ))}
@@ -287,6 +294,13 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
     <button type="button" className="br-toggle" onClick={() => setTree((v) => !v)}>{tree ? (lang === 'ar' ? 'عرض بالجولات' : 'Round view') : (lang === 'ar' ? 'عرض الشجرة كاملة' : 'Full tree')}</button>
   );
 
+  const topSel = topOpts.length > 0 && (
+    <select className="br-toggle br-top" value={topN} aria-label="Top" onChange={(e) => setTop(Number(e.target.value))}>
+      <option value={0}>{lang === 'ar' ? 'الشجرة كاملة' : 'Full bracket'}</option>
+      {topOpts.map((n) => <option key={n} value={n}>{lang === 'ar' ? `أفضل ${n}` : `Top ${n}`}</option>)}
+    </select>
+  );
+
   if (!showTree) {
     return (
       <div className="br-mobile" dir={dir} data-bv={uid}>
@@ -303,14 +317,14 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
 
   return (
     <div ref={box} data-bv={uid} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''}`} style={fitStyle} dir={dir}>
-      {toggle}
-      <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
+      {(toggle || topSel) && <div className="br-bar">{toggle}{topSel}</div>}
+      <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
         </svg>
         <div className="br-main">
           <div className="br-stack">
-            {section(bracket.format === 'double' ? (lang === 'ar' ? 'فرع الفائزين' : 'Winners bracket') : '', L.winners, 'W')}
+            {section(bracket.format === 'double' ? (lang === 'ar' ? 'فرع الفائزين' : 'Winners bracket') : '', Wv, 'W')}
             {L.losers.length > 0 && section(lang === 'ar' ? 'فرع الخاسرين' : 'Losers bracket', L.losers, 'L')}
           </div>
           {L.final && (

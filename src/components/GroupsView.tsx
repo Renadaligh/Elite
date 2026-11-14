@@ -5,7 +5,7 @@ import BracketView from './BracketView';
 import LeagueView from './LeagueView';
 
 /** Two stages: a tab per group (round robin tables) and a Knockout tab once the groups are finished. */
-export default function GroupsView({ bracket: br, onChange, live }: { bracket: Bracket; onChange?: (b: Bracket) => void; live?: boolean }) {
+export default function GroupsView({ bracket: br, onChange, onRename, live }: { bracket: Bracket; onChange?: (b: Bracket) => void; onRename?: (i: number, v: string) => void; live?: boolean }) {
   const { lang, dir } = useI18n();
   const ar = lang === 'ar';
   const G = br.groups ?? [];
@@ -25,7 +25,7 @@ export default function GroupsView({ bracket: br, onChange, live }: { bracket: B
       {sel >= 0 && G[sel] && (
         <>
           <p className="mb-3 text-[.8rem]" style={{ color: 'var(--muted)' }}>{ar ? `يتأهل من كل مجموعة: ${br.opts?.adv ?? 2}` : `${br.opts?.adv ?? 2} advance from each group`}</p>
-          <LeagueView key={sel} bracket={groupSub(br, sel)} advance={br.opts?.adv ?? 2} live={live} onChange={onChange ? (s) => onChange(groupMerge(br, sel, s)) : undefined} />
+          <LeagueView key={sel} onRename={onRename ? (i, v) => onRename(br.groups![sel][i], v) : undefined} bracket={groupSub(br, sel)} advance={br.opts?.adv ?? 2} live={live} onChange={onChange ? (s) => onChange(groupMerge(br, sel, s)) : undefined} />
         </>
       )}
       {sel === -1 && ksub && (

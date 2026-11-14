@@ -7,6 +7,7 @@ import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, isCurrent, toggleCur
 import BracketView from './BracketView';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
+import { useBracketHistory } from '../hooks/useBracketHistory';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import { ArrowIcon, TrophyIcon } from './icons';
@@ -452,7 +453,7 @@ function NewsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
             <Field label={x('الملخص (عربي)')}><textarea rows={5} placeholder={x('اكتب كل نقطة في سطر يبدأ بـ -')} className={inp} style={bd} value={f.summary.ar} onChange={(e) => setF({ ...f, summary: { ...f.summary, ar: e.target.value } })} /></Field>
             <Field label="Summary (English)"><textarea dir="ltr" rows={5} placeholder="Write each point on its own line starting with -" className={inp} style={bd} value={f.summary.en} onChange={(e) => setF({ ...f, summary: { ...f.summary, en: e.target.value } })} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('التاريخ')}><input type="date" className={inp} style={bd} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} required /></Field>
+              <Field label={x('التاريخ')}><input type="date" dir="ltr" className={`${inp} dt-in`} style={bd} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} required /></Field>
               <Field label={x('التصنيف')}>
                 <select className={sel} style={bd} value={f.tag} onChange={(e) => setF({ ...f, tag: e.target.value as NewsTag })}>
                   {(Object.keys(TAG_AR) as NewsTag[]).map((g) => <option key={g} value={g}>{x(TAG_AR[g])}</option>)}
@@ -492,7 +493,22 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const ver = useRef(0); // bumps on every edit, so a save that ends late never marks newer edits as saved
   const failed = useRef(-1);
   const typing = useRef(false); // the stream link is being typed: don't autosave half a link (use the save button)
-  const upd = (b: Bracket | null) => { ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
+  const hist = useBracketHistory<Bracket>();
+  const upd = (b: Bracket | null) => { if (br) hist.record(br); ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
+  const applyHist = (b: Bracket | undefined) => { if (!b) return; ver.current += 1; typing.current = false; setBr(b); setDirty(true); setSel(null); };
+  const doUndo = () => { if (br) applyHist(hist.undo(br)); };
+  const doRedo = () => { if (br) applyHist(hist.redo(br)); };
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (!(e.ctrlKey || e.metaKey) || (k !== 'z' && k !== 'y')) return;
+      if ((e.target as HTMLElement | null)?.closest('input,textarea,select,[contenteditable]')) return;
+      e.preventDefault();
+      if (k === 'y' || e.shiftKey) doRedo(); else doUndo();
+    };
+    window.addEventListener('keydown', on);
+    return () => window.removeEventListener('keydown', on);
+  });
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
@@ -554,8 +570,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
-            <BracketActions bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
-            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} onRename={br.format === 'single' || br.format === 'double' ? (i, v) => upd(renamePlayer(br, i, v)) : undefined} onLive={br.format === 'single' || br.format === 'double' ? (mm) => upd(toggleCurrent(br, mm.id)) : undefined} onScore={(mm, sa, sb) => upd(setScore(br, mm.id, sa, sb))} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} live /></div>
+            <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
+            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} onRename={(i, v) => upd(renamePlayer(br, i, v))} onLive={br.format === 'single' || br.format === 'double' ? (mm) => upd(toggleCurrent(br, mm.id)) : undefined} onScore={(mm, sa, sb) => upd(setScore(br, mm.id, sa, sb))} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} live /></div>
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>
             {m && R && (
               <div className="sticky bottom-0 z-10 flex flex-wrap items-end gap-3 rounded-xl border p-3 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>
@@ -660,8 +676,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
             {pair('prize', x('الجائزة'), 'Prize', x('5,000 ريال'))}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('البداية (توقيت الرياض)')}><input type="datetime-local" className={inp} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
-              <Field label={x('النهاية (توقيت الرياض)')}><input type="datetime-local" className={inp} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></Field>
+              <Field label={x('البداية (توقيت الرياض)')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
+              <Field label={x('النهاية (توقيت الرياض)')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></Field>
               <Field label={x('العدد الأقصى')}><input type="number" min={1} className={inp} style={bd} value={f.slots.total} onChange={(e) => setF({ ...f, slots: { ...f.slots, total: Number(e.target.value) } })} /></Field>
               <Field label={x('المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)')}><input type="number" min={0} className={inp} style={bd} value={f.slots.filled} onChange={(e) => setF({ ...f, slots: { ...f.slots, filled: Number(e.target.value) } })} /></Field>
             </div>
@@ -1063,7 +1079,25 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           {tournaments.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select>
       </div>
-      <Card className="overflow-x-auto">
+      {/* phones: one card per registration, no sideways scrolling */}
+      <div className="grid gap-3 md:hidden">
+        {shown.map((r) => (
+          <Card key={r.id} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-bold [overflow-wrap:anywhere]">{r.tournament_name}</div>
+                <div className="mt-1 text-[.95rem] font-semibold" dir="ltr" style={{ textAlign: 'start' }}>{r.plato_id}</div>
+              </div>
+              {can('regs', 'delete') && <button className="shrink-0 p-1" style={{ color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-[18px] w-[18px]" /></button>}
+            </div>
+            {r.team_name && <div className="mt-2 text-[.88rem]"><span style={{ color: 'var(--muted)' }}>{x('الفريق')}: </span>{r.team_name}</div>}
+            {r.members && <div className="mt-1 whitespace-pre-line text-[.85rem] [overflow-wrap:anywhere]" dir="ltr" style={{ textAlign: 'start' }}>{r.members}</div>}
+            <div className="mt-2 text-[.78rem]" dir="ltr" style={{ textAlign: 'start', color: 'var(--muted)' }}>{r.created_at}</div>
+          </Card>
+        ))}
+        {!shown.length && <Card className="p-8 text-center" ><span style={{ color: 'var(--muted)' }}>{x('ما فيه تسجيلات بعد.')}</span></Card>}
+      </div>
+      <Card className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[42rem] text-[.88rem]">
           <thead><tr style={{ color: 'var(--muted)' }}>{[x('البطولة'), 'Plato ID', x('الفريق'), x('الأعضاء'), x('التاريخ'), ''].map((h, i) => <th key={i} className="px-4 py-3 text-center text-[.78rem] font-bold uppercase tracking-wide">{h}</th>)}</tr></thead>
           <tbody>

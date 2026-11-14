@@ -5,6 +5,7 @@ import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
+import { useBracketHistory } from '../hooks/useBracketHistory';
 import BracketView from './BracketView';
 import EmailLogin from './EmailLogin';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
@@ -143,7 +144,22 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
 
   const ver = useRef(0); // bumps on every edit, so a save that finishes late never marks newer edits as saved
   const failed = useRef(-1); // edit number whose autosave failed (no retry loop)
-  const edit = (b: Bracket | null) => { ver.current += 1; setBr(b); setDirty(true); setMsg(''); };
+  const hist = useBracketHistory<Bracket>();
+  const edit = (b: Bracket | null) => { if (br) hist.record(br); ver.current += 1; setBr(b); setDirty(true); setMsg(''); };
+  const applyHist = (b: Bracket | undefined) => { if (!b) return; ver.current += 1; setBr(b); setDirty(true); setMsg(''); setSel(null); };
+  const doUndo = () => { if (br) applyHist(hist.undo(br)); };
+  const doRedo = () => { if (br) applyHist(hist.redo(br)); };
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (!(e.ctrlKey || e.metaKey) || (k !== 'z' && k !== 'y')) return;
+      if ((e.target as HTMLElement | null)?.closest('input,textarea,select,[contenteditable]')) return;
+      e.preventDefault();
+      if (k === 'y' || e.shiftKey) doRedo(); else doUndo();
+    };
+    window.addEventListener('keydown', on);
+    return () => window.removeEventListener('keydown', on);
+  });
   const url = id ? `${base()}#/view/${id}` : `${base()}#/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
 
@@ -233,7 +249,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <BracketActions bracket={br} title={shownTitle} url={url} />
+              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} bracket={br} title={shownTitle} url={url} />
               {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>
@@ -246,7 +262,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
             </div>
           )}
-          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onRename={editable && (br.format === 'single' || br.format === 'double') ? (i, v) => edit(renamePlayer(br, i, v)) : undefined} onLive={editable && (br.format === 'single' || br.format === 'double') ? (mm) => edit(toggleCurrent(br, mm.id)) : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>
+          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onRename={editable ? (i, v) => edit(renamePlayer(br, i, v)) : undefined} onLive={editable && (br.format === 'single' || br.format === 'double') ? (mm) => edit(toggleCurrent(br, mm.id)) : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>
           </div>
           {editable && (
             <div className="st-share" style={card}>

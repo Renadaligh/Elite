@@ -1122,3 +1122,43 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-toggle { padding: 8px 16px; font-size: .85rem; font-weight: 700; color: #cfe0ff; border-color: rgba(143,178,255,.55); background: rgba(61,123,255,.2); }
 .br-toggle:hover { background: rgba(61,123,255,.32); border-color: rgba(143,178,255,.85); }
 [data-st=light] .br-toggle, :root[data-hero='day'] .br-toggle:not([data-st=dark] *) { color: #3446e0; border-color: rgba(74,93,240,.5); background: rgba(74,93,240,.12); }
+
+/* ---- league formats (round robin / swiss / groups / free-for-all): centred, card-like, same language as the tree ---- */
+.lg { max-width: 54rem; margin-inline: auto; }
+.lg-table-wrap { border-radius: 16px; background: rgba(255,255,255,.03); box-shadow: 0 14px 34px -22px rgba(0,0,0,.7); }
+.lg-table { font-size: .95rem; }
+.lg-table td, .lg-table th { padding-block: .7rem !important; white-space: nowrap; }
+.lg-table tr.is-top { background: rgba(61,123,255,.16); }
+.lg-table td .br-edit { display: inline-grid; vertical-align: middle; margin-inline-start: .35rem; opacity: .5; }
+.lg-table tr:hover .br-edit { opacity: .9; }
+.lg-table td .br-rn { width: min(14rem, 100%); }
+.lg-table td .br-crown { display: inline-block; vertical-align: -.15em; }
+.lg .br-chips { justify-content: center; margin: 22px 0 12px !important; }
+.lg .br-chip { padding: 8px 18px; font-size: .9rem; }
+.lg > p { text-align: center; font-size: .85rem !important; margin-bottom: 14px !important; }
+.lg-grid { grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 14px; }
+.lg-grid .br-match { border-radius: 14px; box-shadow: 0 10px 24px -16px rgba(0,0,0,.7); }
+.lg-grid .br-match:has(.br-livebtn) { overflow: visible; }
+.lg-grid .br-row { padding-block: .55rem; }
+.lg-grid .br-name { display: flex; align-items: center; min-width: 0; }
+.lg-in { width: 58px; padding: 6px; }
+.lg > .mt-4 { justify-content: center; }
+@media (max-width: 767px) { .lg-table td, .lg-table th { padding-inline: .35rem !important; padding-block: .6rem !important; } .lg-table { font-size: .88rem; } .lg-grid { grid-template-columns: 1fr; } }
+
+/* back-to-top: the glow is a plain radial gradient behind the button (a big box-shadow gets cut into a rectangle by iOS Safari on a fixed, transformed element) */
+.btt { box-shadow: 0 4px 10px rgba(61,123,255,.35) !important; isolation: isolate; }
+.btt::before { content: ''; position: absolute; inset: -55%; z-index: -1; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(61,123,255,.42) 0%, rgba(61,123,255,.18) 38%, rgba(61,123,255,0) 68%); }
+:root[data-hero='day'] .btt::before { background: radial-gradient(circle, rgba(74,93,240,.34) 0%, rgba(74,93,240,.14) 38%, rgba(74,93,240,0) 68%); }
+
+/* date pickers on phones: iOS gives them a wide intrinsic size and centred text; make them behave like the other fields */
+.dt-in { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; width: 100%; height: 2.75rem; text-align: start; }
+.dt-in::-webkit-date-and-time-value { text-align: start; min-height: 1.2em; margin: 0; }
+.dt-in::-webkit-calendar-picker-indicator { opacity: .7; }
+
+.br-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.br-bar .br-toggle { margin-bottom: 0; }
+.pv .br-bar { margin: 0 14px 10px; }
+.pv .br-bar .br-toggle { margin: 0; }
+.br-top { cursor: pointer; }
+.br-top option { background: #0e1850; color: #fff; }
+[data-st=light] .br-top option, :root[data-hero='day'] .br-top option { background: #fff; color: #1f1858; }
