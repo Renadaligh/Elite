@@ -1155,7 +1155,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .dt-in::-webkit-date-and-time-value { text-align: start; min-height: 1.2em; margin: 0; }
 .dt-in::-webkit-calendar-picker-indicator { opacity: .7; }
 
-.br-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.br-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; position: sticky; inset-inline-start: 0; width: fit-content; max-width: 100%; z-index: 4; } /* stays put while the tree scrolls sideways */
 .br-bar .br-toggle { margin-bottom: 0; }
 .pv .br-bar { margin: 0 14px 10px; }
 .pv .br-bar .br-toggle { margin: 0; }
@@ -1166,3 +1166,9 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 [data-st=light] .br-top, :root[data-hero='day'] .br-top { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%233446e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E"); }
 .br-top option { background: #0e1850; color: #fff; }
 [data-st=light] .br-top option, :root[data-hero='day'] .br-top option { background: #fff; color: #1f1858; }
+
+/* community tournaments */
+.cl-btn { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--glass-b); font-size: .8rem; font-weight: 700; color: var(--text); }
+.cl-btn.on { background: rgba(61,123,255,.2); border-color: rgba(143,178,255,.55); }
+.comm-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: .68rem; font-weight: 700; letter-spacing: .02em; color: #9fe6c4; background: rgba(46,204,140,.14); border: 1px solid rgba(46,204,140,.4); }
+[data-st=light] .comm-badge, :root[data-hero='day'] .comm-badge { color: #0f7a52; background: rgba(15,150,100,.1); border-color: rgba(15,150,100,.4); }

@@ -194,7 +194,6 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
       const ref = parse(row.dataset.drag); if (!ref) return;
       if (grip) { e.preventDefault(); begin(ref, row, grip, e.pointerId, e.clientX, e.clientY, e.pointerType !== 'mouse'); return; }
       const touch = e.pointerType !== 'mouse';
-      if (!touch) return; // mouse: seats are swapped from the grip only, so dragging anywhere else pans the bracket
       pend = { ref, row, x: e.clientX, y: e.clientY, id: e.pointerId, touch };
       if (touch) pend.timer = window.setTimeout(() => { if (pend) { const q = pend; pend = null; begin(q.ref, q.row, q.row, q.id, q.x, q.y, true); } }, 280);
     };
@@ -229,7 +228,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive, onR
     let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
     const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,.br-edit,input,textarea,select,a,[data-grip]')) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,.br-edit,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return; // dragging a player swaps seats; empty space pans
       on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
     };
     const move = (e: PointerEvent) => {

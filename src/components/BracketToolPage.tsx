@@ -5,6 +5,7 @@ import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
+import CommunityListing from './CommunityListing';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import BracketView from './BracketView';
 import EmailLogin from './EmailLogin';
@@ -171,6 +172,12 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   }
   const pick = (m: BMatch, side: 'a' | 'b') => { if (!br) return; setSel(m.id); edit(setWinner(br, m.id, m.win === side ? undefined : side)); };
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
+  function addRegistrants(add: string[], ask: string) {
+    if (!br || !window.confirm(ask)) return;
+    const have = new Set(br.players.map((p) => p.trim().toLowerCase()));
+    const next = [...br.players, ...add.filter((n) => !have.has(n.trim().toLowerCase()))];
+    setNames(next.join('\n')); setFmt(br.format); edit(null); setSel(null); setEditP(false);
+  }
   function rebuild() { if (!br || !window.confirm(tx.rebuildAsk)) return; setNames(br.players.join('\n')); setFmt(br.format); edit(null); setSel(null); setEditP(false); }
 
   async function save() {
@@ -292,6 +299,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
+          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} onUse={addRegistrants} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>
       )}

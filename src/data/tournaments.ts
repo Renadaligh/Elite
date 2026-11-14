@@ -33,6 +33,8 @@ export interface Tournament {
   /** Winner portrait (tall, ~9:16). Path under /public or full URL. */
   /** Names of the winning team's members (team tournaments only). */
   winnerMembers?: string[];
+  /** Made by a visitor with the bracket tool (not by the site team). */
+  community?: { bracketId: string; organizer: string };
   /** Live bracket (single/double elimination), updated from the dashboard. */
   bracket?: Bracket;
   /** Live stream link + on/off switch: nothing is shown to visitors unless streamLive is true. */

@@ -3,18 +3,21 @@ import { body, json, jsonPublic, newId, num, safeUrl, str, type Ctx } from '../.
 import { logAdmin } from '../../_audit';
 import { guard, seesAll } from '../../_admin';
 
-type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number };
+type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number ; owner_id?: string; bracket_id?: string};
 /** The bracket is stored as JSON text; bad/empty text just means "no bracket". */
 const bracketOf = (s?: string) => { try { return s ? JSON.parse(s) : undefined; } catch { return undefined; } };
-const out = (r: Row, admin = false) => ({
+type UB = { data: string; share: number; live: number; stream_url: string; organizer: string };
+const out = (r: Row, admin = false, ub?: UB) => ({
   id: r.id, gameId: r.game_id, name: { en: r.name_en, ar: r.name_ar }, format: { en: r.format_en, ar: r.format_ar }, prize: { en: r.prize_en, ar: r.prize_ar },
   startsAt: r.starts_at, endsAt: r.ends_at, slots: { filled: r.filled, total: r.total }, mode: r.mode === 'team' ? 'team' : 'solo', tier: r.tier === 'major' ? 'major' : 'regular',
   registerUrl: r.register_url || undefined, image: r.image || undefined, imagePos: r.image_pos || undefined,
   winner: r.winner_en || r.winner_ar ? { en: r.winner_en || r.winner_ar, ar: r.winner_ar || r.winner_en } : undefined, winnerMembers: r.winner_members ? r.winner_members.split('\n') : undefined, published: !!r.published,
   // Finished tournaments keep their bracket in the database for the dashboard only; visitors never get it.
-  bracket: admin || Date.now() <= Date.parse(r.ends_at) ? bracketOf(r.bracket) : undefined,
+  bracket: admin || Date.now() <= Date.parse(r.ends_at) ? bracketOf(ub ? ub.data : r.bracket) : undefined,
   // The stream link is only public while the dashboard toggle is on.
-  streamLive: !!r.stream_live && !!r.stream_url, streamUrl: admin || (r.stream_live && r.stream_url) ? r.stream_url || undefined : undefined,
+  streamLive: ub ? !!ub.live && !!ub.stream_url : !!r.stream_live && !!r.stream_url, streamUrl: ub ? ((ub.live && ub.stream_url) || admin ? ub.stream_url || undefined : undefined) : admin || (r.stream_live && r.stream_url) ? r.stream_url || undefined : undefined,
+  // Community tournament: made by a visitor with the bracket tool; the bracket and stream come from their saved bracket.
+  ...(r.bracket_id ? { community: { bracketId: r.bracket_id, organizer: ub?.organizer || '' } } : {}),
 });
 
 const pair = (v: unknown, max = 200) => { const o = (v ?? {}) as Record<string, unknown>; const en = str(o.en, max), ar = str(o.ar, max); return { en: en || ar, ar: ar || en }; };
@@ -43,7 +46,18 @@ export const opens = (v: { published: number; endsAt: string; winner: { en: stri
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const all = await seesAll(request, env, 'tournaments');
   const { results } = await env.DB.prepare(`SELECT * FROM tournaments ${all ? '' : 'WHERE published = 1'} ORDER BY starts_at DESC`).all<Row>();
-  return all ? json(results.map((r) => out(r, all))) : jsonPublic(results.map((r) => out(r, all)));
+  // Community rows take their bracket / stream from the owner's saved bracket, and only show while its view link is published.
+  const ids = results.map((r) => r.bracket_id).filter(Boolean) as string[];
+  const ub = new Map<string, UB>();
+  if (ids.length) {
+    try {
+      const q = await env.DB.prepare(`SELECT b.id, b.data, b.share, b.live, b.stream_url, u.name AS organizer FROM user_brackets b LEFT JOIN users u ON u.id = b.user_id WHERE b.id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all<UB & { id: string }>();
+      for (const r of q.results) ub.set(r.id, r);
+    } catch { /* share/live columns not added yet: community rows stay hidden */ }
+  }
+  const rows = results.filter((r) => !r.bracket_id || all || ub.get(r.bracket_id)?.share);
+  const data = rows.map((r) => out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined));
+  return all ? json(data) : jsonPublic(data);
 };
 
 export const onRequestPost = async ({ request, env }: Ctx) => {

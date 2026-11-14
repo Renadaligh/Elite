@@ -8,8 +8,9 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const tid = str(b.tournamentId, 80), plato = str(b.platoId, 80), team = b.mode === 'team';
   const teamName = str(b.teamName, 80), members = str(b.members, 600);
   if (!tid || !plato || (team && (!teamName || !members))) return json({ ok: false, error: 'required' }, 400);
-  const t = await env.DB.prepare('SELECT name_en, filled, total FROM tournaments WHERE id=? AND published=1').bind(tid).first<{ name_en: string; filled: number; total: number }>();
+  const t = await env.DB.prepare('SELECT name_en, filled, total, starts_at FROM tournaments WHERE id=? AND published=1').bind(tid).first<{ name_en: string; filled: number; total: number; starts_at: string }>();
   if (!t) return json({ ok: false, error: 'unknown' }, 404);
+  if (tid.startsWith('u-') && Date.now() >= Date.parse(t.starts_at)) return json({ ok: false, error: 'closed' }, 409); // community tournaments close when they start
   if (t.filled >= t.total) return json({ ok: false, error: 'full' }, 409);
   if (team && await env.DB.prepare("SELECT 1 AS x FROM registrations WHERE tournament_id=? AND mode='team' AND lower(trim(team_name))=lower(trim(?))").bind(tid, teamName).first()) return json({ ok: false, error: 'duplicate_team' }, 409);
   try {
