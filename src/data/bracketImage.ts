@@ -6,7 +6,7 @@ const CW = 210, CH = 62, RH = CH / 2, GX = 60, GY = 18, PAD = 36, HEAD = 96, FOO
 /** Header-style brand mark (cube · plato) + site address, drawn at the bottom corner of every image. */
 
 /** Colours of the picture. Dark by default; light when the page being viewed is in light mode. */
-const DARK = { bg: '#050b2b', fg: '#fff', mut: '#9fb0e6', dim: '#6f80b8', soft: '#d6defa', lose: '#7f8fc4', panel: '#0e1a58', card: '#142470', head: 'rgba(150,175,255,.1)', line: 'rgba(150,175,255,.12)', line2: 'rgba(150,175,255,.16)', border: 'rgba(150,175,255,.22)', border2: 'rgba(150,175,255,.3)', acc: '#8fb2ff', glow: .13, win: '#5eead4', winBg: 'rgba(34,197,160,.2)', chA: '#1a1f6a', chB: '#0b0f3a', chRing: '#3d7bff', chGlow: 'rgba(61,123,255,.5)' };
+const DARK = { bg: '#050b2b', fg: '#fff', mut: '#9fb0e6', dim: '#6f80b8', soft: '#d6defa', lose: '#7f8fc4', panel: '#0e1a58', card: '#142470', head: 'rgba(150,175,255,.1)', line: 'rgba(150,175,255,.12)', line2: 'rgba(150,175,255,.16)', border: 'rgba(150,175,255,.22)', border2: 'rgba(150,175,255,.3)', acc: '#8fb2ff', glow: .13, win: '#aebbff', winBg: 'rgba(110,130,255,.26)', chA: '#1a1f6a', chB: '#0b0f3a', chRing: '#3d7bff', chGlow: 'rgba(61,123,255,.5)' };
 const LIGHT = { bg: '#f4eefc', fg: '#2b2160', mut: '#6d62a0', dim: '#8d84b8', soft: '#463b84', lose: '#9a91c2', panel: '#ffffff', card: '#ffffff', head: 'rgba(43,33,96,.06)', line: 'rgba(43,33,96,.08)', line2: 'rgba(43,33,96,.1)', border: 'rgba(43,33,96,.16)', border2: 'rgba(43,33,96,.24)', acc: '#4a5df0', glow: .1, win: '#4a5df0', winBg: '#d9cdf6', chA: '#8d9bf8', chB: '#b49cf4', chRing: '#6577f5', chGlow: 'rgba(101,119,245,.35)' };
 let P: typeof DARK = DARK;
 /** Light when the bracket page on screen is light (dashboard / public view carry data-st, the main site uses data-hero). */
@@ -204,7 +204,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   const champ = champion(br);
   const lastId = L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id;
   const champCol = cols + (L.final ? 1 : 0);   // the champion sits right after the last match
-  const W = PAD * 2 + (champCol + (champ !== null ? 1 : 0)) * (CW + GX) - GX;
+  const W = PAD * 2 + champCol * (CW + GX) - GX; // the trophy sits next to the winner's name, no separate champion box
   const H = bottom + FOOT;
   const k = fit(scale, W, H);
   const cv = document.createElement('canvas');
@@ -280,6 +280,10 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
       c.fillStyle = win ? P.fg : lose || typeof w !== 'number' ? P.lose : P.soft;
       c.font = `${win ? 700 : 500} 14px ${family}`; c.textBaseline = 'middle';
       txt(nm(w), rtl ? x + CW - 12 : x + 12, y + RH / 2 + 1, 'start', CW - 56);
+      if (win && champ !== null && m.id === lastId) { // champion: gold trophy right after the name
+        const tw = Math.min(c.measureText(nm(w)).width, CW - 56);
+        trophy(c, rtl ? x + CW - 12 - tw - 13 : x + 12 + tw + 13, y + RH / 2 + 1, 16);
+      }
       if (sc || win) { c.font = `800 14px ${family}`; c.fillStyle = win && !sc ? P.win : P.fg; c.textAlign = 'end'; txt(sc || '✓', rtl ? x + 12 : x + CW - 12, y + RH / 2 + 1, rtl ? 'start' : 'end', 30); }
     });
     c.fillStyle = P.line2; c.fillRect(x, p.y + RH, CW, 1);
@@ -289,20 +293,6 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     c.globalAlpha = 1;
   }
 
-  // champion: next to the last match, joined to it by a line
-  const lp = lastId ? pos.get(lastId) : undefined;
-  if (champ !== null && lp) {
-    const x = X(champCol * (CW + GX)), y = lp.y;
-    const lx1 = rtl ? X(lp.x) : X(lp.x) + CW, lx2 = rtl ? x + CW : x;
-    c.lineWidth = 1.5; c.strokeStyle = '#3d7bff'; c.beginPath(); c.moveTo(lx1, y + RH); c.lineTo(lx2, y + RH); c.stroke();
-    c.save();
-    rr(x, y, CW, CH, 14);
-    const gr = c.createLinearGradient(x, y, x + CW, y + CH); gr.addColorStop(0, P.chA); gr.addColorStop(1, P.chB);
-    c.fillStyle = gr; c.fill(); c.restore();
-    c.fillStyle = '#fff'; c.textBaseline = 'middle';
-    trophy(c, x + CW / 2, y + 20, 22);
-    c.font = `800 17px ${family}`; txt(br.players[champ], x + CW / 2, y + 45, 'center', CW - 24);
-  }
   c.fillStyle = P.dim; c.font = `600 12px ${family}`; c.textBaseline = 'middle';
   brandMark(c, W, H - 46, rtl, family);
   c.textAlign = 'start';

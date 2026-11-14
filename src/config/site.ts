@@ -6,7 +6,7 @@ export const NAV: { href: string; key: keyof Dict }[] = [
   { href: '#news', key: 'navNews' },
   { href: '#games', key: 'navGames' },
   { href: '#tournaments', key: 'navTournaments' },
-  { href: '#champions', key: 'navChampions' },
+  // { href: '#leaderboard', key: 'navLeaderboard' }, // add with SHOW_LEADERBOARD
   // { href: '#/bracket', key: 'navBracket' }, // hidden for now (reachable from the sign-in icon)
   // { href: '#community', key: 'navCommunity' }, // hidden for now
   // { href: '#support', key: 'navSupport' }, // hidden for now
@@ -23,3 +23,6 @@ export const SOCIALS = {
 
 /** Support Us: the store that funds the community. */
 export const STORE = { url: 'https://unlimited-blue.com', name: 'Unlimited Blue' } as const;
+
+/** Top-3 leaderboard section on the home page. Built but hidden for now: set to true to show it. */
+export const SHOW_LEADERBOARD = false;

@@ -10,7 +10,8 @@ import GamePage from './components/GamePage';
 import TournamentPage from './components/TournamentPage';
 import BracketStudio, { PublicView } from './components/BracketStudio';
 import TournamentsSection from './components/TournamentsSection';
-import ChampionsSection from './components/ChampionsSection';
+import LeaderboardSection from './components/LeaderboardSection';
+import { SHOW_LEADERBOARD } from './config/site';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import AdminPage from './components/AdminPage';
@@ -38,7 +39,7 @@ function Pages() {
             <NewsSection />
             <GamesSection />
             <TournamentsSection />
-            <ChampionsSection />
+            {SHOW_LEADERBOARD && <LeaderboardSection />}
             {/* <SupportSection /> */}
           </>
         )}

@@ -17,3 +17,4 @@ public/bg/
 sheet-template/
 src/config/sheets.ts
 src/services/sheet.ts
+src/components/ChampionsSection.tsx  (champions section removed)

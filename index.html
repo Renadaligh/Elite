@@ -34,10 +34,10 @@
     .al-c { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; }
     .al-dw { position: relative; height: 130px; width: 120px; perspective: 500px; }
     .al-jump { position: absolute; left: 50%; bottom: 22px; width: 0; height: 0; animation: al-jump 1.6s cubic-bezier(.33,0,.3,1) infinite; }
-    .al-cube { position: absolute; left: -30px; bottom: 0; width: 60px; height: 60px; transform-style: preserve-3d; animation: al-spin 1.6s cubic-bezier(.33,0,.3,1) infinite; }
+    .al-cube { position: absolute; left: -30px; bottom: 0; width: 60px; height: 60px; transform-style: preserve-3d; will-change: transform; animation: al-spin 1.6s cubic-bezier(.33,0,.3,1) infinite; }
     @keyframes al-jump { 0% { transform: translateY(0); } 45% { transform: translateY(-52px); } 80%, 100% { transform: translateY(0); } }
-    @keyframes al-spin { 0% { transform: rotateX(-25deg) rotateY(-30deg) rotateZ(0); } 80%, 100% { transform: rotateX(335deg) rotateY(330deg) rotateZ(360deg); } }
-    .al-f { position: absolute; inset: 0; border-radius: 11px; background: linear-gradient(135deg, var(--f1), var(--f2)); display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 9px; box-sizing: border-box; backface-visibility: hidden; }
+    @keyframes al-spin { 0% { transform: rotateX(-25deg) rotateY(-30deg) rotate3d(.55, .8, .25, 0deg); } 80%, 100% { transform: rotateX(-25deg) rotateY(-30deg) rotate3d(.55, .8, .25, 360deg); } }
+    .al-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 11px; background: linear-gradient(135deg, var(--f1), var(--f2)); display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 9px; box-sizing: border-box; backface-visibility: hidden; }
     .al-f:after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--shade, transparent); }
     .al-f i { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--pl), var(--pip) 70%); box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 -1px 2px rgba(0,0,0,.25); place-self: center; }
     .al-f1 { transform: translateZ(30px); } .al-f2 { transform: rotateY(90deg) translateZ(30px); --shade: rgba(20,20,80,.22); } .al-f3 { transform: rotateY(180deg) translateZ(30px); --shade: rgba(20,20,80,.12); }

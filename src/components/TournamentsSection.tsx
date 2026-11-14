@@ -105,6 +105,22 @@ function Media({ x, s }: { x: Tournament; s: TournamentStatus }) {
   );
 }
 
+/** Team tournaments: the winning team's player names as pills, six first and «show all» for the rest. */
+const MEMBERS_SHOWN = 6;
+function WinnerMembers({ x }: { x: Tournament }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const members = x.mode === 'team' ? (x.winnerMembers ?? []).flatMap((m) => m.split('|')).map((m) => m.trim()).filter(Boolean) : [];
+  if (!members.length) return null;
+  const shown = open ? members : members.slice(0, MEMBERS_SHOWN);
+  return (
+    <ul className="mt-2.5 flex flex-wrap gap-1.5">
+      {shown.map((m, i) => <li key={`${m}-${i}`} dir="auto" className="rounded-full px-2.5 py-1 text-[.8rem]" style={{ background: 'var(--tc-pill)' }}>{m}</li>)}
+      {members.length > MEMBERS_SHOWN && <li><button type="button" className="rounded-full px-2.5 py-1 text-[.8rem] font-bold" style={{ color: 'var(--link-on)' }} onClick={() => setOpen((v) => !v)}>{open ? t.chShowLess : t.chShowAll}</button></li>}
+    </ul>
+  );
+}
+
 function TourCard({ x, s, feat }: { x: Tournament; s: TournamentStatus; feat?: boolean }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
@@ -121,6 +137,7 @@ function TourCard({ x, s, feat }: { x: Tournament; s: TournamentStatus; feat?: b
         <Facts x={x} />
         {showCd && <div className="mt-4"><Countdown to={s === 'live' ? x.endsAt : x.startsAt} label={s === 'live' ? t.tEndsIn : t.tStartsIn} /></div>}
         {s === 'completed' && x.winner && <p className="tc-win"><span style={{ color: 'var(--muted)' }}>{t.tWinner}</span><b>{x.winner[lang]}</b></p>}
+        {s === 'completed' && x.winner && <WinnerMembers x={x} />}
         <Register x={x} s={s} />
       </div>
     </article>

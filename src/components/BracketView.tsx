@@ -7,7 +7,7 @@ import FfaView from './FfaView';
 import GroupsView from './GroupsView';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
-interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** dashboard: typed scores beside the names */ onScore?: (m: BMatch, sa: string, sb: string) => void; /** dashboard: drag a first-round seat onto another to swap them */ onSwap?: (a: SeatRef, b: SeatRef) => void; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
+interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** dashboard: typed scores beside the names */ onScore?: (m: BMatch, sa: string, sb: string) => void; /** dashboard: drag a first-round seat onto another to swap them */ onSwap?: (a: SeatRef, b: SeatRef) => void; /** dashboard: mark a ready match as «live now» (several at once are fine) */ onLive?: (m: BMatch) => void; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
 
 function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: number) {
   const ar = lang === 'ar';
@@ -46,7 +46,7 @@ export default function BracketView(p: Props) {
 }
 
 const TREE_W = 900; // px: the width a small bracket aims for on desktop
-function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
+function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive }: Props) {
   const uid = useRef(`bv${Math.random().toString(36).slice(2)}`).current;
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
@@ -169,7 +169,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
     };
     const down = (e: PointerEvent) => {
       const t = e.target as HTMLElement;
-      if (e.button > 0 || t.closest('input,textarea,select,a,.br-toggle')) return;
+      if (e.button > 0 || t.closest('input,textarea,select,a,.br-toggle,.br-livebtn')) return;
       const grip = t.closest<HTMLElement>('[data-grip]');
       const row = (grip?.closest('.br-row') ?? t.closest('.br-row[data-drag]')) as HTMLElement | null;
       if (!row || root()?.contains(row) !== true) return;
@@ -210,7 +210,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
     let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
     const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,.br-livebtn,input,textarea,select,a,[data-grip],.br-row[data-drag]')) return;
       on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
     };
     const move = (e: PointerEvent) => {
@@ -237,6 +237,9 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
     const crowned = (side: 'a' | 'b') => champ !== null && m.id === finalId && !isBye && m.win === side; // the trophy sits next to the champion's name in the last match
     return (
       <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
+        {onLive && !m.win && !isBye && typeof r.a === 'number' && typeof r.b === 'number' && (
+          <button type="button" className={`br-livebtn ${isCurrent(bracket, m.id) ? 'on' : ''}`} aria-pressed={isCurrent(bracket, m.id)} title={lang === 'ar' ? 'مباشر الآن' : 'Live now'} aria-label={lang === 'ar' ? 'تحديد المباراة كمباشرة الآن' : 'Mark match as live now'} onClick={(e) => { e.stopPropagation(); onLive(m); }}><i /></button>
+        )}
         {isCurrent(bracket, m.id) && !m.win && <span className="br-live">{lang === 'ar' ? 'الآن' : 'LIVE'}</span>}
         <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} />
         <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} />

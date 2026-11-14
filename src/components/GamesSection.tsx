@@ -93,11 +93,11 @@ export default function GamesSection() {
         <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.gamesSub}</p>
       </div>
 
-      <div className="mx-auto mt-7 flex max-w-[65rem] flex-wrap items-center justify-center gap-2" role="group" aria-label={lang === 'ar' ? 'تصفية الألعاب حسب التصنيف' : 'Filter games by category'}>
+      <div className="gm-filters mx-auto mt-7 flex max-w-[65rem] flex-wrap items-center justify-center gap-2" role="group" aria-label={lang === 'ar' ? 'تصفية الألعاب حسب التصنيف' : 'Filter games by category'}>
         {[{en: 'All', ar: 'الكل'}, ...categories].map((c, i) => {
           const id = i === 0 ? 'all' : c.en;
           const selected = category === id;
-          return <button key={id} type="button" aria-pressed={selected} onClick={() => chooseCategory(id)}
+          return <button key={id} type="button" aria-pressed={selected} onClick={(e) => { chooseCategory(id); try { e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch { /* ignore */ } }}
             className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200"
             style={{ borderColor: selected ? '#8fb2ff' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
               background: selected ? 'linear-gradient(115deg,#3d7bff,#2a2fa8)' : 'var(--glass)' }}>
