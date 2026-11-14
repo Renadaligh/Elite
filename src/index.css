@@ -1232,3 +1232,18 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .tc-cd b { font-size: 1rem; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .tc-body .btn-primary { margin-top: auto; align-self: stretch; justify-content: center; width: 100%; }
 .tc-win { margin-top: 0; }
+
+/* rename pencil: solid and bigger */
+.br-edit { width: 1.7rem; height: 1.7rem; }
+.br-edit .br-pen { width: 1.05rem; height: 1.05rem; }
+.br-edit:hover { color: #fff; }
+@media (max-width: 767px) { .br-fit .br-edit { width: 1.2rem; height: 1.4rem; margin-inline: -3px; } .br-fit .br-edit .br-pen { width: .78rem; height: .78rem; } }
+
+/* tournament image shows whole (16:9 = 1920x1080); no image = slim colour band; button centred and shorter */
+.tc-pic .tc-im { height: auto; aspect-ratio: 16 / 9; }
+.tc-body .btn-primary { align-self: center; width: auto; min-width: 9.5rem; padding-inline: 1.6rem; }
+
+/* light mode: boxes must stand out from the lavender page */
+[data-st=light] .bs-sheet, .pv-root[data-st=light] .bs-sheet { --bs-fg: #1b1450; --bs-mut: #6d62a0; --bs-hd: #cfc0f3; --bs-hdt: #2b2160; --bs-seed: #b9a8ec; --bs-row: #e3d9f8; --bs-win: #a9c2ff; --bs-line: rgba(60,48,130,.75); --bs-sn: #33287f; }
+[data-st=light] .bs-nm.lose { fill: #6d62a0; }
+[data-st=light] .bs-mr.win { color: #10104a; }

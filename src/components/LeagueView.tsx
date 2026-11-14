@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrophyIcon } from './icons';
+import { PencilIcon, TrophyIcon } from './icons';
 import { dropLastRound, isCurrent, leagueChampion, leagueRounds, nextSwissRound, outcome, roundDone, roundMatches, setLeagueScore, standings, toggleCurrent, type BMatch, type Bracket } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 
@@ -10,7 +10,7 @@ interface Props { bracket: Bracket; onChange?: (b: Bracket) => void; /** pencil 
 export function Nm({ name, onRename, className }: { name: string; onRename?: (v: string) => void; className?: string }) {
   const [ed, setEd] = useState(false);
   if (ed && onRename) return <input autoFocus dir="auto" maxLength={40} defaultValue={name} className="br-rn" onBlur={(e) => { onRename(e.currentTarget.value); setEd(false); }} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }} />;
-  return <span className={className}>{name}{onRename && <button type="button" className="br-edit" aria-label="✎" title="✎" onClick={() => setEd(true)}>✎</button>}</span>;
+  return <span className={className}>{name}{onRename && <button type="button" className="br-edit" aria-label="Rename" title="Rename" onClick={() => setEd(true)}><PencilIcon className="br-pen" /></button>}</span>;
 }
 
 export default function LeagueView({ bracket: br, onChange, onRename, live, advance }: Props) {

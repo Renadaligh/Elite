@@ -151,7 +151,7 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
   const g = getGame(x.gameId);
   const showCd = s === 'upcoming' || s === 'live';
   return (
-    <article className={`tc ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
+    <article className={`tc ${x.image ? 'tc-pic' : ''} ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}

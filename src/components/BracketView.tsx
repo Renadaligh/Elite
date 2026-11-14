@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { TrophyIcon } from './icons';
+import { PencilIcon, TrophyIcon } from './icons';
 import { champion, hasBye, isCurrent, isDraft, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
@@ -33,7 +33,7 @@ function Row({ name, state, score, win, lose, onClick, onScore, slot, grip, crow
       ) : (
         <>
           <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name">{name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
-          {onRename && <button type="button" className="br-edit" aria-label="✎" title="✎" onClick={(e) => { e.stopPropagation(); setEditing(true); }}>✎</button>}
+          {onRename && <button type="button" className="br-edit" aria-label="Rename" title="Rename" onClick={(e) => { e.stopPropagation(); setEditing(true); }}><PencilIcon className="br-pen" /></button>}
         </>
       )}
       {onScore ? <input className="br-sc" dir="ltr" inputMode="decimal" maxLength={4} value={score ?? ''} aria-label={name} onChange={(e) => onScore(e.target.value)} />

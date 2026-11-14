@@ -3,7 +3,7 @@ import { hasBye, isCurrent, layout, resolve, type BMatch, type Bracket, type Who
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
  *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
-const BW = 232, SEED = 28, RH = 25, GAP = 66, NUMW = 24, P = 72, HEAD = 30, SEC_GAP = 56, PAD = 10;
+const BW = 180, SEED = 24, RH = 25, GAP = 48, NUMW = 22, P = 72, HEAD = 30, SEC_GAP = 56, PAD = 10;
 
 function rName(ar: boolean, br: 'W' | 'L', round: number, total: number) {
   if (br === 'L') return ar ? `الخاسرين ${round}` : `Losers R${round}`;
@@ -88,7 +88,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
 
   const inner = Math.max(0, avail - 28);
   const fitS = inner > 0 ? inner / g.W : 1;
-  const scale = phone ? Math.min(1, Math.max(0.36, fitS)) : Math.min(1, Math.max(0.66, fitS)); // phone: never smaller than 0.36 (same size as Challonge), bigger brackets scroll sideways
+  const scale = phone ? Math.min(1, Math.max(0.42, fitS)) : Math.min(1, Math.max(0.66, fitS)); // phone: never smaller than 0.42 (same size as Challonge), bigger brackets scroll sideways
   const name = (w: Who) => (typeof w === 'number' ? bracket.players[w] ?? '' : w === 'bye' ? 'BYE' : '');
   const seed = (w: Who) => (typeof w === 'number' ? String(w + 1) : '');
 
@@ -108,7 +108,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
               <rect className="bs-seed" x={p.x} y={y + 1} width={SEED} height={RH - 2} />
               <text className="bs-sn" x={p.x + SEED / 2} y={y + RH / 2 + 4} fontSize="11" textAnchor="middle">{seed(row.w)}</text>
               <rect className={row.win ? 'bs-row win' : 'bs-row'} x={p.x + SEED} y={y + 1} width={BW - SEED} height={RH - 2} />
-              <svg x={p.x + SEED + 8} y={y + 1} width={BW - SEED - 40} height={RH - 2} overflow="hidden">
+              <svg x={p.x + SEED + 8} y={y + 1} width={BW - SEED - 34} height={RH - 2} overflow="hidden">
                 <text className={`bs-nm${row.win ? ' win' : ''}${bye ? ' bye' : hasWin && !row.win ? ' lose' : ''}`} x="0" y={RH / 2 + 3} fontSize="13">{name(row.w)}</text>
               </svg>
               {row.sc ? <text className="bs-sc" x={p.x + BW - 8} y={y + RH / 2 + 4} fontSize="12" fontWeight="700" textAnchor="end">{row.sc}</text> : row.win && m.win ? <text className="bs-ck" x={p.x + BW - 9} y={y + RH / 2 + 4} fontSize="12" fontWeight="800" textAnchor="end">✓</text> : null}
