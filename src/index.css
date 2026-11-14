@@ -962,10 +962,10 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 /* phones: compact copy block (name → tagline → buttons sized to their text) so everything sits above the chess towers */
 @media (max-width: 767px) {
   .hm-try { display: none; }
-  .hero-name img { height: 1.0em; }
+  .hero-name img { height: .86em; }
   .hero-wrap { padding-top: max(8.5rem, calc(53vw + 1.7rem), calc(50svh - 6vw - 9.8rem)); }
-  .hero-name { margin-bottom: .85rem; }
-  .hero-desc { font-size: .95rem; margin-bottom: 1.4rem; }
+  .hero-name { margin-bottom: .6rem; }
+  .hero-desc { font-size: .95rem; margin-bottom: .6rem; }
   .hero-cta { display: grid; grid-template-columns: auto auto; width: auto; max-width: none; gap: 8px; justify-content: center; }
   .hero-cta .hero-main { grid-column: 1 / -1; justify-self: center; width: auto; height: 2.6rem; font-size: .92rem; padding-inline: 1.5rem; }
   .hero-cta .hero-sec { width: auto; height: 2.35rem; font-size: .84rem; padding-inline: 1.1rem; }
