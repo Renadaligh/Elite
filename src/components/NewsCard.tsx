@@ -15,7 +15,7 @@ export default function NewsCard({ item }: { item: NewsItem }) {
   return (
     <article className="news-card news-card-hover group">
       <div className="news-art">
-        {item.image && <img src={item.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
+        {item.image && <img src={item.image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
       </div>
       <div className="flex flex-col gap-2.5 p-5">
         <div className="flex items-center gap-3 text-[.82rem]" style={{ color: 'var(--muted)' }}>

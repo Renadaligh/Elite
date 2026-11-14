@@ -11,7 +11,7 @@ function OfficialGameImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   return failed ? <div className="gcard-art" /> : (
-    <img src={src} alt="" draggable={false} loading="lazy" onError={() => setFailed(true)} className={`absolute inset-0 h-full w-full object-cover ${/^https?:/.test(src) ? 'scale-[1.35] origin-center' : 'object-top'}`} />
+    <img src={src} alt="" draggable={false} loading="lazy" decoding="async" onError={() => setFailed(true)} className={`absolute inset-0 h-full w-full object-cover ${/^https?:/.test(src) ? 'scale-[1.35] origin-center' : 'object-top'}`} />
   );
 }
 

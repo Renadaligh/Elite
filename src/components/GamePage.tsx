@@ -110,7 +110,7 @@ export default function GamePage({ id }: { id: string }) {
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {g.images.map((src, i) => (
                 <li key={i} className="aspect-video overflow-hidden rounded-2xl border" style={card}>
-                  <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </li>
               ))}
             </ul>
