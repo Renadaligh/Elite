@@ -1022,6 +1022,16 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* desktop: the tree sits in the middle of the page and grows to both sides with its size (full width when it has to fit) */
 @media (min-width: 768px) {
-  .br-scroll:not(.br-fit) .br-wrap { width: max-content; min-width: 0; margin-inline: auto; }
-  .br-scroll:not(.br-fit) .br-main { width: auto; }
+  .br-scroll:not(.br-fit):not(.pv) .br-wrap { width: max-content; min-width: 0; margin-inline: auto; }
+  .br-scroll:not(.br-fit):not(.pv) .br-main { width: auto; }
+}
+
+/* editor page (desktop): the boxes under the tree follow the tree's width, a little wider, centred */
+@media (min-width: 768px) {
+  .st-page.st-wide .st-stage > :not(.st-brcard):not(.stream-box-wrap) { width: min(100%, max(34rem, calc(var(--tw, 0px) + 4rem))); justify-self: center; }
+}
+
+/* public view page (desktop): the stream is smaller, centred */
+@media (min-width: 768px) {
+  .pv-body .stream-box-wrap { width: min(100% - 28px, 44rem) !important; margin-inline: auto !important; }
 }

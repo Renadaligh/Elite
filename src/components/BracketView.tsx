@@ -101,6 +101,12 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
   const els = useRef(new Map<string, HTMLElement>());
   const [lines, setLines] = useState<{ d: string; on: boolean }[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  // tell the editor page how wide the tree is, so the boxes under it can match it (--tw on .st-stage)
+  useEffect(() => {
+    const st = box.current?.closest<HTMLElement>('.st-stage'); if (!st || !size.w) return undefined;
+    st.style.setProperty('--tw', `${size.w}px`);
+    return () => { st.style.removeProperty('--tw'); };
+  }, [size.w]);
 
   const nm = (w: Who) => (w === 'bye' ? 'BYE' : w === null ? (lang === 'ar' ? 'لم يُحدد' : 'TBD') : bracket.players[w] || '—');
   const stateOf = (w: Who): 'bye' | 'tbd' | 'ok' => (w === 'bye' ? 'bye' : w === null ? 'tbd' : 'ok');
