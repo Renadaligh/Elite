@@ -1041,3 +1041,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 }
 
 .br-crown { flex: none; width: 1.05em; height: 1.05em; margin-inline-start: .4em; color: #ffc93c; filter: drop-shadow(0 0 4px rgba(255,201,60,.45)); }
+
+/* view page: the language button gets the same tinted fill as the other buttons */
+.pv-tools .pill { background: var(--glass); border-color: var(--glass-b); }
+.pv-tools .pill:hover { background: var(--dialog, var(--glass)); }
