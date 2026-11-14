@@ -104,11 +104,12 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onLive }: P
   const els = useRef(new Map<string, HTMLElement>());
   const [lines, setLines] = useState<{ d: string; on: boolean }[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  // tell the editor page how wide the tree is, so the boxes under it can match it (--tw on .st-stage)
+  // tell the editor page how wide the tree is (--tw), so the boxes under it can match it; they are siblings of .st-stage, so the variable goes on the parent too
   useEffect(() => {
     const st = box.current?.closest<HTMLElement>('.st-stage'); if (!st || !size.w) return undefined;
-    st.style.setProperty('--tw', `${size.w}px`);
-    return () => { st.style.removeProperty('--tw'); };
+    const host = st.parentElement;
+    st.style.setProperty('--tw', `${size.w}px`); host?.style.setProperty('--tw', `${size.w}px`);
+    return () => { st.style.removeProperty('--tw'); host?.style.removeProperty('--tw'); };
   }, [size.w]);
 
   const nm = (w: Who) => (w === 'bye' ? 'BYE' : w === null ? (lang === 'ar' ? 'لم يُحدد' : 'TBD') : bracket.players[w] || '—');

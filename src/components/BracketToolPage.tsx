@@ -1,5 +1,5 @@
 import { streamEmbed } from '../data/stream';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, swapSeats, toggleCurrent, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
@@ -141,7 +141,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   // Guests keep their work in the browser, so signing in (a page round-trip) never loses it.
   useEffect(() => { if (id) return; try { localStorage.setItem(DRAFT, JSON.stringify({ title, names, fmt, br })); } catch { /* private mode */ } }, [id, title, names, fmt, br]);
 
-  const edit = (b: Bracket | null) => { setBr(b); setDirty(true); setMsg(''); };
+  const ver = useRef(0); // bumps on every edit, so a save that finishes late never marks newer edits as saved
+  const failed = useRef(-1); // edit number whose autosave failed (no retry loop)
+  const edit = (b: Bracket | null) => { ver.current += 1; setBr(b); setDirty(true); setMsg(''); };
   const url = id ? `${base()}#/view/${id}` : `${base()}#/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
 
@@ -159,17 +161,25 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     if (!br) return;
     if (!auth.user) { setLogin(true); return; }
     setBusy(true); setMsg('');
+    const sent = ver.current;
     try {
       const body = JSON.stringify({ title: shownTitle, bracket: br });
-      if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); setDirty(false); setMsg(tx.saved); }
+      if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); if (ver.current === sent) setDirty(false); setMsg(tx.saved); }
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
         try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
         window.location.hash = `#/bracket/${r.id}`;
       }
-    } catch (e) { setMsg((e as Error & { detail?: string }).detail === 'limit' ? tx.limit : tx.saveFail); }
+    } catch (e) { failed.current = sent; setMsg((e as Error & { detail?: string }).detail === 'limit' ? tx.limit : tx.saveFail); }
     setBusy(false);
   }
+  // saved brackets save themselves ~1.5 s after the last change (new, unsaved ones still need the button: they have no name/link yet)
+  useEffect(() => {
+    if (!id || !mine || !dirty || busy || !br || !auth.user || failed.current === ver.current) return undefined;
+    const h = window.setTimeout(() => { void save(); }, 1500);
+    return () => window.clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, mine, dirty, busy, br, title, auth.user]);
   async function flip(k: 'share' | 'live', on: boolean) {
     if (!id) return;
     (k === 'share' ? setShare : setLive)(on);
@@ -218,7 +228,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
         <div className={`grid min-w-0 gap-5 ${!editable && readOnly ? 'pv-body' : ''}`}>
           <div className={`flex flex-wrap items-center justify-between gap-3 ${!editable && readOnly ? 'pv-pad' : ''}`}>
             <div>
-              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} />
+              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.2rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
                 : <h2 className="text-[1.4rem] font-extrabold">{title}</h2>}
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>

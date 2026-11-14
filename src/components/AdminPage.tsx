@@ -489,7 +489,10 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [editP, setEditP] = useState(false);
   const [url, setUrl] = useState(t0.streamUrl ?? '');
   const [live, setLive] = useState(!!t0.streamLive);
-  const upd = (b: Bracket | null) => { setBr(b); setDirty(true); };
+  const ver = useRef(0); // bumps on every edit, so a save that ends late never marks newer edits as saved
+  const failed = useRef(-1);
+  const typing = useRef(false); // the stream link is being typed: don't autosave half a link (use the save button)
+  const upd = (b: Bracket | null) => { ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
@@ -510,12 +513,22 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const m = br && sel ? br.matches.find((i) => i.id === sel) : undefined;
   const R = br ? resolve(br) : null;
 
-  async function save() {
+  async function save(auto = false) {
+    const sent = ver.current;
     try {
       await api(`/tournaments/${t0.id}/bracket`, { method: 'PUT', body: JSON.stringify({ bracket: br, streamUrl: url, streamLive: live }), key: k });
-      setDirty(false); toast.ok(x('تم حفظ البراكت')); onSaved();
-    } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تعذّر تنفيذ العملية'))); }
+      if (ver.current === sent) setDirty(false);
+      if (!auto) toast.ok(x('تم حفظ البراكت'));
+      onSaved();
+    } catch (err) { failed.current = sent; if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تعذّر تنفيذ العملية'))); }
   }
+  // changes save themselves ~1.5 s after the last edit
+  useEffect(() => {
+    if (!dirty || !br || typing.current || failed.current === ver.current) return undefined;
+    const h = window.setTimeout(() => { void save(true); }, 1500);
+    return () => window.clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, br, url, live]);
   const champ = br ? champion(br) : null;
 
   return (
@@ -524,8 +537,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         <div className="rounded-xl border p-4" style={bd}>
           <b className="mb-3 block">{x('البث المباشر')}</b>
           <div className="grid gap-3">
-            <Field label={x('رابط البث (Twitch / YouTube / Kick)')}><input dir="ltr" className={inp} style={bd} value={url} placeholder="https://twitch.tv/…" onChange={(e) => { setUrl(e.target.value); setDirty(true); }} /></Field>
-            <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={live} onChange={(e) => { setLive(e.target.checked); setDirty(true); }} />{x('تشغيل البث للزوار')} <span style={{ color: 'var(--muted)' }}>· {x('إيقافه = لا شيء يظهر للزوار')}</span></label>
+            <Field label={x('رابط البث (Twitch / YouTube / Kick)')}><input dir="ltr" className={inp} style={bd} value={url} placeholder="https://twitch.tv/…" onChange={(e) => { setUrl(e.target.value); ver.current += 1; typing.current = true; setDirty(true); }} /></Field>
+            <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={live} onChange={(e) => { setLive(e.target.checked); ver.current += 1; setDirty(true); }} />{x('تشغيل البث للزوار')} <span style={{ color: 'var(--muted)' }}>· {x('إيقافه = لا شيء يظهر للزوار')}</span></label>
           </div>
         </div>
 
@@ -573,7 +586,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         )}
 
         <div className="flex flex-wrap items-center gap-3 border-t pt-4" style={bd}>
-          <button type="button" className={btnP} style={gradBtn} onClick={save}>{x('حفظ البراكت')}</button>
+          <button type="button" className={btnP} style={gradBtn} onClick={() => { void save(); }}>{x('حفظ البراكت')}</button>
           {br && <button type="button" className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { if (window.confirm(x('حذف البراكت وإعادة البدء؟'))) { upd(null); setSel(null); } }}>{x('حذف البراكت')}</button>}
           <button type="button" className={btnG} style={bd} onClick={onClose}>{x('إلغاء')}</button>
           {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}

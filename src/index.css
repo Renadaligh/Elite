@@ -1028,7 +1028,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* editor page (desktop): the boxes under the tree follow the tree's width, a little wider, centred */
 @media (min-width: 768px) {
-  .st-page.st-wide .st-stage > :not(.st-brcard):not(.stream-box-wrap) { width: min(100%, max(34rem, calc(var(--tw, 0px) + 4rem))); justify-self: center; }
+  .st-page.st-wide .st-stage ~ div { width: min(100%, max(34rem, calc(var(--tw, 0px) + 4rem))); justify-self: center; }
 }
 
 /* public view page (desktop): the stream is smaller, centred */
