@@ -1022,8 +1022,8 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* desktop: the tree sits in the middle of the page and grows to both sides with its size (full width when it has to fit) */
 @media (min-width: 768px) {
-  .br-scroll:not(.br-fit):not(.pv) .br-wrap { width: max-content; min-width: 0; margin-inline: auto; }
-  .br-scroll:not(.br-fit):not(.pv) .br-main { width: auto; }
+  .br-scroll:not(.pv) .br-wrap { width: max-content; min-width: 0; margin-inline: auto; }
+  .br-scroll:not(.pv) .br-main { width: auto; }
 }
 
 /* editor page (desktop): the boxes under the tree follow the tree's width, a little wider, centred */
@@ -1033,5 +1033,11 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* public view page (desktop): the stream is smaller, centred */
 @media (min-width: 768px) {
-  .pv-body .stream-box-wrap { width: min(100% - 28px, 44rem) !important; margin-inline: auto !important; }
+  .pv-body .stream-box-wrap { width: min(100% - 28px, 54rem) !important; margin-inline: auto !important; }
+  .pv .br-wrap { max-width: none; width: max-content; min-width: 0; margin-inline: auto; }
+  .pv .br-main { width: auto; }
+  /* dashboard: the stream is as wide as on the view page */
+  .st-page .st-stage .stream-box-wrap { width: min(100%, 54rem) !important; justify-self: center; }
 }
+
+.br-crown { flex: none; width: 1.05em; height: 1.05em; margin-inline-start: .4em; color: #ffc93c; filter: drop-shadow(0 0 4px rgba(255,201,60,.45)); }
