@@ -3,7 +3,7 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, isCurrent, toggleCurrent, setScore, setWinner, shuffled, swapSeats, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
@@ -542,7 +542,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <BracketActions bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
-            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} live /></div>
+            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} onScore={(mm, sa, sb) => upd(setScore(br, mm.id, sa, sb))} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} live /></div>
             <div className="rounded-xl border p-3" style={bd}>
               <button type="button" className={btnG} style={bd} onClick={() => setEditP((v) => !v)}>{x('تعديل أسماء اللاعبين')} {editP ? '▲' : '▼'}</button>
               {editP && (

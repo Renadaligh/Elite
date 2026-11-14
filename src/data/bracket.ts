@@ -121,6 +121,23 @@ export function setWinner(br: Bracket, id: string, side?: 'a' | 'b'): Bracket {
   return { ...br, cur: cur.length ? cur : undefined, matches: br.matches.map((m) => (m.id === id ? { ...m, win: side } : clear.has(m.id) ? { ...m, win: undefined, sa: undefined, sb: undefined } : m)) };
 }
 
+/** Swaps two first-round seats (a player or a bye). Only while neither match has a result; scores of those matches are cleared. */
+export interface SeatRef { id: string; side: 'a' | 'b' }
+export function swapSeats(br: Bracket, x: SeatRef, y: SeatRef): Bracket | null {
+  const mx = br.matches.find((m) => m.id === x.id), my = br.matches.find((m) => m.id === y.id);
+  if (!mx || !my || mx.win || my.win) return null;
+  const sx = mx[x.side], sy = my[y.side];
+  const seat = (v: Slot) => 'p' in v || 'bye' in v;
+  if (!seat(sx) || !seat(sy)) return null;
+  const clr = (m: BMatch): BMatch => ({ ...m, sa: undefined, sb: undefined });
+  return { ...br, matches: br.matches.map((m) => {
+    if (m.id === mx.id && m.id === my.id) return clr({ ...m, [x.side]: sy, [y.side]: sx });
+    if (m.id === mx.id) return clr({ ...m, [x.side]: sy });
+    if (m.id === my.id) return clr({ ...m, [y.side]: sx });
+    return m;
+  }) };
+}
+
 export const isCurrent = (br: Bracket, id: string) => !!br.cur?.includes(id);
 export function toggleCurrent(br: Bracket, id: string): Bracket {
   const cur = isCurrent(br, id) ? br.cur!.filter((c) => c !== id) : [...(br.cur ?? []), id];

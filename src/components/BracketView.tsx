@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { TrophyIcon } from './icons';
-import { champion, isCurrent, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type Who } from '../data/bracket';
+import { champion, isCurrent, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
 import FfaView from './FfaView';
 import GroupsView from './GroupsView';
 
 /** Draws a bracket. With `onPick` (dashboard) a click on a player makes them the winner of that match. */
-interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
+interface Props { bracket: Bracket; onPick?: (m: BMatch, side: 'a' | 'b') => void; selected?: string | null; /** league formats: edit callback (scores typed in the cards) */ onChange?: (b: Bracket) => void; live?: boolean; /** dashboard: typed scores beside the names */ onScore?: (m: BMatch, sa: string, sb: string) => void; /** dashboard: drag a first-round seat onto another to swap them */ onSwap?: (a: SeatRef, b: SeatRef) => void; /** public view page: full tree by default, round-header bar, fit to the screen */ pub?: boolean }
 
 function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: number) {
   const ar = lang === 'ar';
@@ -19,12 +19,14 @@ function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: numbe
   return ar ? `الجولة ${round}` : `Round ${round}`;
 }
 
-function Row({ name, state, score, win, lose, onClick }: { name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void }) {
+function Row({ name, state, score, win, lose, onClick, onScore, slot, grip }: { name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
   return (
-    <button type="button" disabled={!onClick} onClick={onClick} className={`br-row ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`}>
-      <span className="br-name">{name}</span>
-      {score ? <span className="br-score">{score}</span> : win ? <span className="br-score br-check">✓</span> : null}
-    </button>
+    <div className={`br-row ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot}>
+      {grip && <span className="br-grip" data-grip={slot} aria-hidden="true">⠿</span>}
+      <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name">{name}</span></button>
+      {onScore ? <input className="br-sc" dir="ltr" inputMode="decimal" maxLength={4} value={score ?? ''} aria-label={name} onChange={(e) => onScore(e.target.value)} />
+        : score ? <span className="br-score">{score}</span> : win ? <span className="br-score br-check">✓</span> : null}
+    </div>
   );
 }
 
@@ -43,7 +45,8 @@ export default function BracketView(p: Props) {
   return <TreeView {...p} />;
 }
 
-function TreeView({ bracket, onPick, selected, pub }: Props) {
+function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
+  const uid = useRef(`bv${Math.random().toString(36).slice(2)}`).current;
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
   const R = useMemo(() => resolve(bracket), [bracket]);
@@ -68,14 +71,14 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
     if (!narrow && showTree && bw) {
       const n = Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0);
       if (!n) return undefined;
-      const g = 22, av = bw - 28;
+      const g = 14, av = bw - 24;
       const c = Math.floor((av - g * n) / (n + 1)); // +1: the champion sits next to the last match
       if (c >= 232) return undefined;
       const cw = Math.max(c, 142);
       return { '--cw': `${cw}px`, '--gap': `${g}px`, '--fs': `${cw >= 190 ? 13 : cw >= 160 ? 12 : 11.5}px` } as CSSProperties;
     }
-    if (!pub || !narrow || !single || !bw || !nCols) return undefined;
-    const gap = 16, avail = bw - 24;
+    if (!narrow || !single || !bw || !nCols || !showTree) return undefined;
+    const gap = 12, avail = bw - 20;
     let cw = Math.floor((avail - gap * (nCols - 1)) / nCols);
     if (cw < 58) cw = 84;
     const fs = cw >= 104 ? 12.5 : cw >= 78 ? 10.5 : 8.5;
@@ -117,7 +120,8 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
           out.push({ d: `M${x1} ${y1} H${mx} V${y2} H${x2}`, on: R.get(s.w)?.win != null });
         }
       }
-      setLines(out); setSize({ w: root.scrollWidth, h: root.scrollHeight });
+      const mainEl = root.querySelector<HTMLElement>('.br-main');
+      setLines(out); setSize({ w: mainEl?.offsetWidth ?? root.offsetWidth, h: mainEl?.offsetHeight ?? root.offsetHeight });
     };
     calc();
     const ro = new ResizeObserver(calc); if (wrap.current) ro.observe(wrap.current);
@@ -125,13 +129,52 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
     return () => ro.disconnect();
   }, [bracket, R, lang, rtl, showTree]);
 
+  const swapRef = useRef(onSwap); swapRef.current = onSwap; const hasSwap = !!onSwap;
+  // Drag a first-round seat (the grip beside a name) onto another seat to swap the two. Works with mouse and touch.
+  useEffect(() => {
+    if (!hasSwap) return;
+    const parse = (v: string | undefined): SeatRef | null => { if (!v) return null; const [id, side] = v.split('|'); return side === 'a' || side === 'b' ? { id, side } : null; };
+    let ghost: HTMLElement | null = null, from: SeatRef | null = null, over: HTMLElement | null = null, pid = -1, grabEl: HTMLElement | null = null;
+    const root = () => document.querySelector<HTMLElement>(`[data-bv="${uid}"]`);
+    const clear = () => { over?.classList.remove('is-drop'); over = null; };
+    const end = (drop: boolean) => {
+      const tgt = over && parse(over.dataset.slot);
+      const a = from; ghost?.remove(); ghost = null; clear(); document.body.classList.remove('br-dragging');
+      try { if (grabEl && pid >= 0) grabEl.releasePointerCapture(pid); } catch { /* ignore */ }
+      from = null; grabEl = null; pid = -1;
+      if (drop && a && tgt && !(a.id === tgt.id && a.side === tgt.side)) swapRef.current?.(a, tgt);
+    };
+    const down = (e: PointerEvent) => {
+      const g = (e.target as HTMLElement).closest<HTMLElement>('[data-grip]');
+      if (!g || e.button > 0 || root()?.contains(g) !== true) return;
+      const ref = parse(g.dataset.grip); if (!ref) return;
+      e.preventDefault(); from = ref; grabEl = g; pid = e.pointerId;
+      try { g.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      ghost = document.createElement('div'); ghost.className = 'br-ghost'; ghost.textContent = g.parentElement?.querySelector('.br-name')?.textContent ?? '';
+      ghost.style.left = `${e.clientX}px`; ghost.style.top = `${e.clientY}px`; document.body.appendChild(ghost); document.body.classList.add('br-dragging');
+    };
+    const move = (e: PointerEvent) => {
+      if (!from || !ghost) return;
+      ghost.style.left = `${e.clientX}px`; ghost.style.top = `${e.clientY}px`;
+      const t = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.br-row[data-slot]') ?? null;
+      if (t !== over) { clear(); if (t && root()?.contains(t)) { over = t; t.classList.add('is-drop'); } }
+      // edge auto-scroll: the page up/down, the bracket sideways
+      const r = root()?.getBoundingClientRect(); const sc = root();
+      if (e.clientY < 70) window.scrollBy(0, -14); else if (e.clientY > window.innerHeight - 70) window.scrollBy(0, 14);
+      if (r && sc) { if (e.clientX < r.left + 50) sc.scrollLeft -= 14; else if (e.clientX > r.right - 50) sc.scrollLeft += 14; }
+    };
+    const up = () => end(true), cancel = () => end(false);
+    document.addEventListener('pointerdown', down); document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', cancel);
+    return () => { document.removeEventListener('pointerdown', down); document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', cancel); end(false); };
+  }, [hasSwap, uid]);
+
   // desktop: grab the bracket with the mouse and drag it in any direction (sideways inside the bracket, up/down moves the page)
   useEffect(() => {
     const el = box.current; if (!el) return;
     let on = false, moved = false, sx = 0, sy = 0, sl = 0, sp = 0;
     const eat = (ev: Event) => { ev.stopPropagation(); ev.preventDefault(); };
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,input,textarea,select,a')) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as HTMLElement).closest('.br-toggle,input,textarea,select,a,[data-grip]')) return;
       on = true; moved = false; sx = e.clientX; sy = e.clientY; sl = el.scrollLeft; sp = window.scrollY;
     };
     const move = (e: PointerEvent) => {
@@ -152,11 +195,14 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
     const r = R.get(m.id) as Resolved;
     const isBye = r.a === 'bye' || r.b === 'bye';
     const can = (w: Who) => !!onPick && typeof w === 'number' && !isBye;
+    const seat = (side: 'a' | 'b') => { const v = m[side]; return !!onSwap && !m.win && ('p' in v || 'bye' in v) ? { slot: `${m.id}|${side}`, grip: 'p' in v } : { slot: undefined, grip: false }; };
+    const sc = !!onScore && !isBye && typeof r.a === 'number' && typeof r.b === 'number';
+    const sa = seat('a'), sb = seat('b');
     return (
       <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye' : ''} ${selected === m.id ? 'is-sel' : ''} ${isCurrent(bracket, m.id) && !m.win ? 'is-cur' : ''}`}>
         {isCurrent(bracket, m.id) && !m.win && <span className="br-live">{lang === 'ar' ? 'الآن' : 'LIVE'}</span>}
-        <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} />
-        <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} />
+        <Row name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} />
+        <Row name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} />
         {onPick && <span className="br-id">{m.id}</span>}
       </div>
     );
@@ -198,7 +244,7 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
 
   if (!showTree) {
     return (
-      <div className="br-mobile" dir={dir}>
+      <div className="br-mobile" dir={dir} data-bv={uid}>
         {toggle}
         {branches.length > 1 && <div className="br-chips">{branches.map((b) => chip(sbr === b, bname(b), () => { setSbr(b); setSrd(b === 'W' ? 1 : b === 'L' ? 1 : 1); }, b))}</div>}
         {sbr !== 'F' && <div className="br-chips">{rounds.map((ms) => chip(ms[0].round === rounds[ri]?.[0].round, roundName(lang, sbr as 'W' | 'L', ms[0].round, rounds.length), () => setSrd(ms[0].round), String(ms[0].round)))}</div>}
@@ -211,7 +257,7 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
   }
 
   return (
-    <div ref={box} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''}`} style={fitStyle} dir={dir}>
+    <div ref={box} data-bv={uid} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''}`} style={fitStyle} dir={dir}>
       {toggle}
       <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>

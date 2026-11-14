@@ -1,6 +1,6 @@
 import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, resolve, setScore, setWinner, shuffled, swapSeats, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -236,7 +236,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               <div className="stream-box"><iframe src={embed} title="stream" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
             </div>
           )}
-          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} pub={!!readOnly && !editable} /></div>
+          <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onPick={editable ? pick : undefined} selected={sel} onChange={editable ? edit : undefined} onScore={editable ? (mm, sa, sb) => edit(setScore(br, mm.id, sa, sb)) : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>
           </div>
           {editable && (
             <div className="st-share" style={card}>
@@ -264,18 +264,6 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
                   )}
                 </>
               )}
-            </div>
-          )}
-          {editable && m && R && (
-            <div className="flex flex-wrap items-end gap-3 rounded-xl border p-3" style={card}>
-              <b className="self-center">{m.id}</b>
-              <label className="grid gap-1 text-[.8rem]" style={{ color: 'var(--muted)' }}>{tx.score}
-                <span className="flex items-center gap-2" dir="ltr">
-                  <input className={`${inp} !w-16 text-center`} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={4} value={m.sa ?? ''} onChange={(e) => edit(setScore(br, m.id, e.target.value, m.sb ?? ''))} />–
-                  <input className={`${inp} !w-16 text-center`} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={4} value={m.sb ?? ''} onChange={(e) => edit(setScore(br, m.id, m.sa ?? '', e.target.value))} />
-                </span>
-              </label>
-              {m.win && <button type="button" className={pill} style={card} onClick={() => edit(setWinner(br, m.id, undefined))}>{tx.undo}</button>}
             </div>
           )}
           {editable && (
