@@ -37,16 +37,9 @@ function Countdown({ to, label }: { to: string; label: string }) {
     [Math.floor(ms / 864e5), 'cdDays'], [Math.floor(ms / 36e5) % 24, 'cdHours'], [Math.floor(ms / 6e4) % 60, 'cdMins'], [Math.floor(ms / 1e3) % 60, 'cdSecs'],
   ];
   return (
-    <div>
-      <div className="mb-2 text-[.82rem] font-semibold opacity-85">{label}</div>
-      <div className="flex w-full gap-2 sm:gap-2.5" role="timer" aria-label={label}>
-        {parts.map(([n, k]) => (
-          <div key={k} className="min-w-0 flex-1 rounded-xl border px-1.5 py-2 text-center sm:min-w-[3.6rem] sm:flex-none sm:px-2.5" style={{ background: 'var(--chip-bg)', borderColor: 'var(--chip-b)' }}>
-            <div className="text-[1.3rem] font-extrabold leading-none tabular-nums sm:text-[1.5rem]">{String(n).padStart(2, '0')}</div>
-            <div className="mt-1 truncate text-[.7rem] opacity-80">{t[k]}</div>
-          </div>
-        ))}
-      </div>
+    <div className="tc-cd" role="timer" aria-label={label}>
+      <span>{label}</span>
+      <b dir="ltr">{parts.map(([n, k], i) => <span key={k} title={t[k]}>{i ? ' : ' : ''}{String(n).padStart(2, '0')}</span>)}</b>
     </div>
   );
 }
@@ -61,14 +54,12 @@ function Facts({ x }: { x: Tournament }) {
   const { t, lang } = useI18n();
   const unlimited = x.slots.total <= 0;
   const full = !unlimited && x.slots.filled >= x.slots.total;
+  const seats = unlimited ? `${x.slots.filled} · ${t.tUnlimited}` : full ? t.tFull : `${x.slots.filled}/${x.slots.total}`;
   return (
-    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-[.9rem] [&>*]:min-w-0 [&_dd]:break-words">
-      <div><dt className="opacity-70">{t.tPrize}</dt><dd className="font-bold">{x.prize[lang]}</dd></div>
-      <div><dt className="opacity-70">{t.tFormat}</dt><dd className="font-bold">{x.format[lang]}</dd></div>
-      <div className="col-span-2">
-        <dt className="flex justify-between opacity-70"><span>{t.tTeams}</span><span>{unlimited ? `${x.slots.filled} · ${t.tUnlimited}` : full ? t.tFull : `${x.slots.filled}/${x.slots.total}`}</span></dt>
-        {!unlimited && <dd><div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (x.slots.filled / x.slots.total) * 100)}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div></dd>}
-      </div>
+    <dl className="tc-facts">
+      <div><dt>{t.tPrize}</dt><dd>{x.prize[lang] || '—'}</dd></div>
+      <div><dt>{t.tFormat}</dt><dd>{x.format[lang]}</dd></div>
+      <div><dt>{t.tTeams}</dt><dd>{seats}</dd></div>
     </dl>
   );
 }
@@ -76,12 +67,12 @@ function Facts({ x }: { x: Tournament }) {
 export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  if (s === 'live' && x.bracket) return <a href={`#/tournaments/${x.id}`} className="btn-primary mt-5 self-start">{t.tBracket} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
+  if (s === 'live' && x.bracket) return <a href={`#/tournaments/${x.id}`} className="btn-primary">{t.tBracket} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   if (s !== 'upcoming' || (x.slots.total > 0 && x.slots.filled >= x.slots.total)) return null;
-  if (x.registerUrl) return <a href={x.registerUrl} target="_blank" rel="noopener noreferrer" className="btn-primary mt-5 self-start">{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
+  if (x.registerUrl) return <a href={x.registerUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   return (
     <>
-      <button type="button" className="btn-primary mt-5 self-start" onClick={() => setOpen(true)}>{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></button>
+      <button type="button" className="btn-primary" onClick={() => setOpen(true)}>{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></button>
       {open && <RegisterDialog x={x} onClose={() => setOpen(false)} />}
     </>
   );
@@ -153,21 +144,21 @@ function WinnerMembers({ x }: { x: Tournament }) {
   );
 }
 
-function TourCard({ x, s, feat, eager }: { x: Tournament; s: TournamentStatus; feat?: boolean; eager?: boolean }) {
+function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: boolean }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   useGames();
   const g = getGame(x.gameId);
-  const showCd = s === 'upcoming' || (feat && s === 'live');
+  const showCd = s === 'upcoming' || s === 'live';
   return (
-    <article className={`tc ${feat ? 'tc-feat md:mb-6' : ''} ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
+    <article className={`tc ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
-        <h3 className={`${feat ? 'text-[clamp(1.3rem,2.4vw,1.9rem)] font-extrabold' : 'text-[1.15rem] font-bold'} mt-0.5 leading-snug [overflow-wrap:anywhere]`}>{x.name[lang]}</h3>
+        <h3 className="mt-0.5 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time></p>
         <Facts x={x} />
-        {showCd && <div className="mt-4"><Countdown to={s === 'live' ? x.endsAt : x.startsAt} label={s === 'live' ? t.tEndsIn : t.tStartsIn} /></div>}
+        {showCd && <div><Countdown to={s === 'live' ? x.endsAt : x.startsAt} label={s === 'live' ? t.tEndsIn : t.tStartsIn} /></div>}
         {s === 'completed' && x.winner && <p className="tc-win"><span style={{ color: 'var(--muted)' }}>{t.tWinner}</span><b>{x.winner[lang]}</b></p>}
         {s === 'completed' && x.winner && <WinnerMembers x={x} />}
         <Register x={x} s={s} />
@@ -186,10 +177,6 @@ export default function TournamentsSection() {
   const withStatus = sorted.map((x) => ({ x, s: statusOf(x, now) }));
   const count = (k: Tab) => (k === 'all' ? withStatus.length : withStatus.filter((r) => r.s === k).length);
   const list = tab === 'all' ? withStatus : withStatus.filter((r) => r.s === tab);
-  // the big card is only for the site's own tournaments (users' ones are plain cards without a picture)
-  const fi = tab === 'completed' ? -1 : list.findIndex((r) => r.s !== 'completed' && !r.x.community);
-  const featured = fi >= 0 ? list[fi] : null;
-  const rest = featured ? list.filter((_, i) => i !== fi) : list;
   const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
 
   return (
@@ -216,10 +203,7 @@ export default function TournamentsSection() {
       )}
       {status === 'ready' && list.length === 0 && <p style={{ color: 'var(--muted)' }}>{t.tEmpty}</p>}
       {status === 'ready' && list.length > 0 && (
-        <div className="m-rail md:block">
-          {featured && <TourCard feat eager x={featured.x} s={featured.s} />}
-          {rest.length > 0 && <div className="m-cont">{rest.map((r, i) => <TourCard key={r.x.id} x={r.x} s={r.s} eager={i < 4} />)}</div>}
-        </div>
+        <div className="m-rail md:block"><div className="m-cont">{list.map((r, i) => <TourCard key={r.x.id} x={r.x} s={r.s} eager={i < 6} />)}</div></div>
       )}
     </section>
   );

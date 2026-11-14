@@ -958,7 +958,6 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 @media (min-width: 768px) { .tc-user { align-self: start; } } /* no stretching to the height of the neighbouring picture cards: that left a big empty block */
 .tc-comm .tc-im { aspect-ratio: auto; height: 3.4rem; background: linear-gradient(135deg, #0f9d77, #2a6fd6); }
 .tc [role=timer] > div { background: var(--tc-pill) !important; border-color: transparent !important; }
-@media (min-width: 1024px) { .tc-feat { display: grid; grid-template-columns: 1.2fr 1fr; } .tc-feat .tc-im { aspect-ratio: auto; height: auto; align-self: stretch; min-height: 14rem; } }
 @media (prefers-reduced-motion: reduce) { .tc, .tc:hover { transition: none; transform: none; } }
 
 /* phones: compact copy block (name → tagline → buttons sized to their text) so everything sits above the chess towers */
@@ -1219,3 +1218,17 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .pv-root .bs-sheet { --bs-bg: var(--bg); background: transparent; border: 0 !important; border-radius: 0; box-shadow: none; padding: 14px clamp(12px, 3vw, 32px) 24px; }
 @media (max-width: 767px) { .pv-root .bs-sheet { padding: 10px 8px 16px; } }
 .br-match.is-ghost { visibility: hidden; pointer-events: none; }
+
+/* ---- tournaments: uniform compact cards (no giant featured card) ---- */
+.tc-im { aspect-ratio: auto; height: 5.5rem; }
+.tc-user { align-self: stretch !important; }
+.tc-comm .tc-im { height: 5.5rem; }
+.tc-body { gap: .85rem; padding: 1rem 1.1rem 1.1rem; }
+.tc-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: 0; }
+.tc-facts > div { min-width: 0; padding: .5rem .65rem; border-radius: .75rem; background: var(--tc-pill); }
+.tc-facts dt { font-size: .68rem; opacity: .7; }
+.tc-facts dd { margin: 0; font-size: .86rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.tc-cd { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .8rem; opacity: .92; }
+.tc-cd b { font-size: 1rem; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.tc-body .btn-primary { margin-top: auto; align-self: stretch; justify-content: center; width: 100%; }
+.tc-win { margin-top: 0; }

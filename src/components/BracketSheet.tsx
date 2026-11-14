@@ -88,7 +88,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
 
   const inner = Math.max(0, avail - 28);
   const fitS = inner > 0 ? inner / g.W : 1;
-  const scale = phone ? Math.min(1, fitS) : Math.min(1, Math.max(0.66, fitS));
+  const scale = phone ? Math.min(1, Math.max(0.36, fitS)) : Math.min(1, Math.max(0.66, fitS)); // phone: never smaller than 0.36 (same size as Challonge), bigger brackets scroll sideways
   const name = (w: Who) => (typeof w === 'number' ? bracket.players[w] ?? '' : w === 'bye' ? 'BYE' : '');
   const seed = (w: Who) => (typeof w === 'number' ? String(w + 1) : '');
 
