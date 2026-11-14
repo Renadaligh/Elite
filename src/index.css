@@ -594,8 +594,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 /* stream + bracket share one width: the stream's size at minimum, growing with the bracket; columns stretch to fill it */
 .st-stage{display:grid;gap:1.25rem;justify-self:center;max-width:100%;min-width:min(100%,calc(50svh*16/9))}
 .st-stage .stream-box{max-width:none}
-.st-stage .br-wrap{min-width:100%;margin-inline:0}
-.st-stage .br-col{flex:1 1 232px}
+.st-stage .br-wrap{min-width:0;margin-inline:0}
 .st-stage .br-champcol{flex:0 0 auto}
 
 /* news summary: intro line + red bullet points */
@@ -990,8 +989,6 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
   .br-main, .br-cols { gap: 20px; }
   .br-col { flex: 0 0 216px; min-width: 216px; }
   .br-final { flex: 0 0 216px; }
-  /* the studio's bracket card may use nearly the whole screen width */
-  .st-stage { width: min(96vw, 1760px); max-width: none; }
 }
 .br-fit .br-sc { width: 1.7rem; height: 1.35rem; font-size: var(--fs); }
 .br-fit .br-row { padding: 4px 6px; }
@@ -1011,3 +1008,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
   .br-fit .br-id, .br-fit .br-grip { display: none; }
   .br-fit .br-sc { width: 1.35rem; height: 1.1rem; font-size: 9px; border-radius: 4px; }
 }
+
+/* bracket editor page: use the whole content width (no 72rem cap) so big brackets fit without scrolling */
+.st-page.st-wide { max-width: none; }
+.st-page.st-wide .st-stage { width: 100%; justify-self: stretch; min-width: 0; }

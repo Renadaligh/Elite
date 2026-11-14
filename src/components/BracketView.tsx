@@ -73,7 +73,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap }: Props) {
       if (!n) return undefined;
       const g = 14, av = bw - 24;
       const c = Math.floor((av - g * n) / (n + 1)); // +1: the champion sits next to the last match
-      if (c >= 232) return undefined;
+      if (c >= 216) return undefined;
       const cw = Math.max(c, 142);
       return { '--cw': `${cw}px`, '--gap': `${g}px`, '--fs': `${cw >= 190 ? 13 : cw >= 160 ? 12 : 11.5}px` } as CSSProperties;
     }

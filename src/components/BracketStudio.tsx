@@ -351,7 +351,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
         </div>
       </aside>
       <main className="st-main">
-        <div key={`${sec}:${id ?? ''}`} className="st-page">
+        <div key={`${sec}:${id ?? ''}`} className={`st-page ${editing ? 'st-wide' : ''}`}>
           {editing ? (
             <>
               <a href="#/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
