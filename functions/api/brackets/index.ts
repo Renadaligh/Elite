@@ -13,7 +13,7 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
   return json(results.map((r) => {
     let format = 'single', players = 0, status = 'new';
     try { const b = JSON.parse(r.data); format = b.format; players = b.players.length; status = bracketStatus(b); } catch { /* keep defaults */ }
-    return { id: r.id, title: r.title, format, players, status, share: !!r.share, live: !!r.live, updatedAt: r.updated_at };
+    return { id: r.id, title: r.title, format, players, status, share: true, live: !!r.live, updatedAt: r.updated_at };
   }));
 };
 

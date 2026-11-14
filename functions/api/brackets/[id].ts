@@ -17,10 +17,9 @@ export const onRequestGet = async ({ request, env, params }: Ctx) => {
   if (!r) return json({ error: 'not_found' }, 404);
   const u = await currentUser(request, env);
   const mine = !!u && u.id === r.user_id;
-  if (!mine && !r.share) return json({ error: 'private' }, 403);
   let bracket = null; try { bracket = JSON.parse(r.data); } catch { /* corrupt row */ }
   const streamLive = !!r.live && !!r.stream_url;
-  return json({ id: r.id, title: r.title, bracket, owner: mine ? r.owner ?? '' : '', mine, share: !!r.share, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
+  return json({ id: r.id, title: r.title, bracket, owner: mine ? r.owner ?? '' : '', mine, share: true, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
 };
 
 export const onRequestPut = async ({ request, env, params }: Ctx) => {

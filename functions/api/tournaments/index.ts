@@ -55,7 +55,7 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
       for (const r of q.results) ub.set(r.id, r);
     } catch { /* share/live columns not added yet: community rows stay hidden */ }
   }
-  const rows = results.filter((r) => !r.bracket_id || all || (ub.get(r.bracket_id)?.share && (r.review ?? 'approved') === 'approved'));
+  const rows = results.filter((r) => !r.bracket_id || all || (ub.has(r.bracket_id) && (r.review ?? 'approved') === 'approved'));
   const data = rows.map((r) => out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined));
   return all ? json(data) : jsonPublic(data);
 };

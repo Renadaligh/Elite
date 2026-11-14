@@ -105,7 +105,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   const [owner, setOwner] = useState('');
   const [mine, setMine] = useState(!id);
   const [state, setState] = useState<'load' | 'ok' | 'missing' | 'private'>(id ? 'load' : 'ok');
-  const [share, setShare] = useState(false);
+  const share = true; // the view link is always on
   const [live, setLive] = useState(false);
   const [streamUrl, setStreamUrl] = useState('');
   const [streamOn, setStreamOn] = useState(false);
@@ -120,7 +120,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   useEffect(() => {
     if (!id) return;
     api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; share: boolean; live: boolean; streamLive?: boolean; streamUrl?: string }>(`/brackets/${id}`)
-      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setShare(r.share); setLive(r.live); setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive); setState('ok'); })
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setLive(r.live); setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
@@ -209,12 +209,12 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     return () => window.clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, mine, dirty, busy, br, title, auth.user]);
-  async function flip(k: 'share' | 'live', on: boolean) {
+  async function flip(k: 'live', on: boolean) {
     if (!id) return;
-    (k === 'share' ? setShare : setLive)(on);
+    setLive(on);
     if (k === 'live') setStreamOn(on && !!streamUrl);
     try { await api(`/brackets/${id}`, { method: 'PATCH', body: JSON.stringify({ [k]: on }) }); }
-    catch { (k === 'share' ? setShare : setLive)(!on); if (k === 'live') setStreamOn(!on && !!streamUrl); setMsg(tx.shFail); }
+    catch { setLive(!on); if (k === 'live') setStreamOn(!on && !!streamUrl); setMsg(tx.shFail); }
   }
   async function saveStream() {
     if (!id) return;
@@ -287,7 +287,6 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
                   <div className="st-shr">
                     <div className="st-shh">
                       <div><span>{tx.shView}</span><small>{tx.shViewD}</small></div>
-                      <button type="button" role="switch" aria-checked={share} aria-label={tx.shView} className={`st-sw ${share ? 'on' : ''}`} onClick={() => flip('share', !share)}><i /></button>
                     </div>
                     {share && <div className="st-shl"><input readOnly dir="ltr" value={viewUrl} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink('share', viewUrl)}>{copied === 'share' ? tx.shCopied : tx.shCopy}</button></div>}
                   </div>

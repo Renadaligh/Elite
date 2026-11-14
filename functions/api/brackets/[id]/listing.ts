@@ -37,7 +37,6 @@ export const onRequestPut = async (ctx: Ctx) => {
   if (!u) return denied();
   const b = await mineBracket(ctx, u.id);
   if (!b) return json({ error: 'not_found' }, 404);
-  if (!b.share) return json({ error: 'share_required' }, 400);
   const x = await body(ctx.request);
   const name = str(x.name, 80), startsAt = str(x.startsAt, 40), endsAt = str(x.endsAt, 40) || startsAt;
   if (!name || !isoOk(startsAt) || !isoOk(endsAt) || Date.parse(endsAt) < Date.parse(startsAt)) return json({ error: 'invalid' }, 400);

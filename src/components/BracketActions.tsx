@@ -23,7 +23,7 @@ export default function BracketActions({ bracket, title, url, undo, linkOk }: { 
   }
   function copyLink() {
     if (linkOk === false) { flash(ar ? 'فعّل «رابط العرض» أولاً' : 'Turn on the view link first'); return; }
-    if (!window.open(url, '_blank', 'noopener')) window.location.href = url;
+    const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; document.body.appendChild(a); a.click(); a.remove();
   }
   const b = 'inline-flex items-center justify-center gap-2 rounded-full border px-4 max-sm:h-10 max-sm:w-10 max-sm:px-0 py-2 text-[.85rem] font-semibold transition-opacity disabled:opacity-60';
   const st = { borderColor: 'var(--glass-b)', background: 'var(--glass)' };

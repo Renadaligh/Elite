@@ -211,7 +211,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
     } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
   }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { if (!r.share) { say(s.needShare); return; } try { await navigator.clipboard.writeText(`${base()}#/view/${r.id}`); say(s.copied); } catch { say(`${base()}#/view/${r.id}`); } }
+  async function copy(r: Row) { try { await navigator.clipboard.writeText(`${base()}#/view/${r.id}`); say(s.copied); } catch { say(`${base()}#/view/${r.id}`); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
