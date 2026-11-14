@@ -1247,3 +1247,18 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 [data-st=light] .bs-sheet, .pv-root[data-st=light] .bs-sheet { --bs-fg: #1b1450; --bs-mut: #6d62a0; --bs-hd: #cfc0f3; --bs-hdt: #2b2160; --bs-seed: #b9a8ec; --bs-row: #e3d9f8; --bs-win: #a9c2ff; --bs-line: rgba(60,48,130,.75); --bs-sn: #33287f; }
 [data-st=light] .bs-nm.lose { fill: #6d62a0; }
 [data-st=light] .bs-mr.win { color: #10104a; }
+
+/* ---- public view page: its own calm palettes (not tied to the site theme) ---- */
+.pv-root[data-st=dark] { --bg: #0f1423; --bg-rgb: 15, 20, 35; --text: #e8edf8; --muted: #8a95b2; --glass: rgba(255,255,255,.06); --glass-b: rgba(138,149,178,.28); --dialog: #1a2236; color-scheme: dark; }
+.pv-root[data-st=light] { --bg: #f3f5f9; --bg-rgb: 243, 245, 249; --text: #1c2433; --muted: #6b778c; --glass: #fff; --glass-b: rgba(28,36,51,.16); --dialog: #fff; color-scheme: light; }
+.pv-root[data-st=dark] .pv-top { background: #0b101d; border-bottom-color: rgba(138,149,178,.2); }
+.pv-root[data-st=light] .pv-top { background: #fff; border-bottom-color: rgba(28,36,51,.12); }
+.pv-root[data-st=light] .pv-logo img { filter: brightness(0) opacity(.85); }
+[data-st=dark] .bs-sheet, .pv-root[data-st=dark] .bs-sheet { --bs-bg: #0f1423; --bs-fg: #e8edf8; --bs-mut: #8a95b2; --bs-hd: #26314a; --bs-hdt: #c9d3ea; --bs-seed: #26314a; --bs-row: #1a2236; --bs-win: #2f5fd0; --bs-line: #55627f; --bs-sn: #a9b6d3; --bs-live: #ff6b6b; border-color: rgba(138,149,178,.22); }
+[data-st=light] .bs-sheet, .pv-root[data-st=light] .bs-sheet { --bs-bg: #f3f5f9; --bs-fg: #1c2433; --bs-mut: #6b778c; --bs-hd: #d0d8e6; --bs-hdt: #1c2433; --bs-seed: #d0d8e6; --bs-row: #e4e9f2; --bs-win: #bfd4ff; --bs-line: #8795ad; --bs-sn: #3d4a63; --bs-live: #d93025; border-color: rgba(28,36,51,.14); }
+.pv-root .bs-sheet { --bs-bg: var(--bg); }
+[data-st=dark] .bs-nm.win, [data-st=dark] .bs-row.win ~ .bs-nm.win { fill: #fff; }
+[data-st=light] .bs-nm.win { fill: #0f2a5c; }
+[data-st=light] .bs-nm.lose { fill: #6b778c; }
+[data-st=light] .bs-mr.win { color: #0f2a5c; }
+[data-st=dark] .bs-mr.win { color: #fff; }
