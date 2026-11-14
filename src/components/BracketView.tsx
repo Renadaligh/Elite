@@ -64,6 +64,16 @@ function TreeView({ bracket, onPick, selected, pub }: Props) {
   const single = bracket.format !== 'double';
   const nCols = L.winners.length + (L.final ? 1 : 0);
   const fitStyle = (() => {
+    // Desktop: shrink the columns so the whole tree fits the width (like Challonge); very big brackets keep readable columns and scroll sideways.
+    if (!narrow && showTree && bw) {
+      const n = Math.max(L.winners.length, L.losers.length) + (L.final ? 1 : 0);
+      if (!n) return undefined;
+      const g = 22, av = bw - 28;
+      const c = Math.floor((av - g * n) / (n + 1)); // +1: the champion sits next to the last match
+      if (c >= 232) return undefined;
+      const cw = Math.max(c, 142);
+      return { '--cw': `${cw}px`, '--gap': `${g}px`, '--fs': `${cw >= 190 ? 13 : cw >= 160 ? 12 : 11.5}px` } as CSSProperties;
+    }
     if (!pub || !narrow || !single || !bw || !nCols) return undefined;
     const gap = 16, avail = bw - 24;
     let cw = Math.floor((avail - gap * (nCols - 1)) / nCols);
