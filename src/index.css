@@ -1215,7 +1215,9 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .tc-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: 0; }
 .tc-facts > div { min-width: 0; padding: .5rem .65rem; border-radius: .75rem; background: var(--tc-pill); }
 .tc-facts dt { font-size: .68rem; opacity: .7; }
-.tc-facts dd { margin: 0; font-size: .86rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.tc-facts dd { margin: 0; font-size: .86rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; min-height: 2.5em; }
+.tc-facts { align-items: stretch; }
+.tc-facts > div { display: flex; flex-direction: column; gap: .15rem; }
 .tc-cd { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .8rem; opacity: .92; }
 .tc-cd b { font-size: 1rem; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .tc-body .btn-primary { margin-top: auto; align-self: stretch; justify-content: center; width: 100%; }
