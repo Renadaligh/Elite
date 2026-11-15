@@ -275,7 +275,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
-          {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') ? tx.hintL : tx.hint}</p>}
+          {editable && br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hintL}</p>}
           <div className="st-stage">
           {embed && (
             <div className="stream-box-wrap" style={{ marginInline: 'auto', width: '100%' }}>
