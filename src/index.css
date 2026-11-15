@@ -1348,3 +1348,9 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .gm-dots{display:flex;justify-content:center;gap:.4rem;margin-top:.8rem}
 .gm-dots button{width:.5rem;height:.5rem;border-radius:999px;background:var(--glass-b);transition:width .2s}
 .gm-dots button.on{width:1.5rem;background:var(--link-on)}
+
+/* hero buttons: same width and height so the pair looks balanced; the secondary gets a little more presence next to the bright main one */
+.hero-cta{display:grid!important;grid-template-columns:1fr 1fr;gap:10px;width:min(92vw,22.5rem)!important;max-width:100%!important;margin-inline:auto}
+.hero-cta .hero-main,.hero-cta .hero-sec{width:100%;justify-content:center;padding-inline:.6rem}
+.hero-cta .hero-sec{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.55);font-weight:700}
+@media (min-width:768px){.hero-cta{width:27rem!important;gap:12px}.hero-cta .hero-main,.hero-cta .hero-sec{padding-inline:1rem}}
