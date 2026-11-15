@@ -1303,11 +1303,14 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .jn-stat span:not(.jn-dot){color:var(--muted)}
 .jn-dot{width:10px;height:10px;border-radius:50%;background:#27c27a;flex:none}.jn-dot.off{background:#ff6b7a}
 
-/* hero: two buttons side by side on every screen (tool + games) */
-.hero-cta{display:flex!important;flex-wrap:nowrap;justify-content:center;align-items:stretch;gap:10px;width:min(30rem,100%)!important;max-width:100%!important}
-.hero-cta .hero-main,.hero-cta .hero-sec{grid-column:auto;flex:1 1 0;min-width:0;width:auto;height:3.1rem;padding-inline:.9rem;font-size:.9rem;white-space:normal;text-align:center;line-height:1.2}
-.hero-cta .hero-main{flex:1.5 1 0}
-@media (max-width:480px){.hero-cta{gap:8px}.hero-cta .hero-main,.hero-cta .hero-sec{height:2.9rem;padding-inline:.6rem;font-size:.82rem}.hero-cta .hm-ic{display:none}.hero-cta .hm-try{display:none}}
+/* hero: two buttons side by side on every screen. Tool on the left, games on the right (direction forced so it is the same in Arabic and English). */
+.hero-cta{display:flex!important;direction:ltr;flex-wrap:nowrap;justify-content:center;align-items:center;gap:10px;width:auto!important;max-width:100%!important}
+.hero-cta .hero-main,.hero-cta .hero-sec{grid-column:auto;flex:0 1 auto;min-width:0;width:auto;height:2.9rem;padding-inline:1.15rem;font-size:.9rem;white-space:nowrap;text-align:center;line-height:1.2}
+.hero-cta .hero-main{gap:.55rem}
+.hero-cta .hm-ic{display:block;flex:none;width:19px;height:19px}
+.hero-cta .hm-try{display:none}
+@media (max-width:480px){.hero-cta{gap:8px}.hero-cta .hero-main,.hero-cta .hero-sec{height:2.75rem;padding-inline:.9rem;font-size:.84rem}.hero-cta .hero-main{gap:.45rem}.hero-cta .hm-ic{width:17px;height:17px}}
+@media (max-width:767px){.hero-copy .hero-desc{margin-bottom:2.7rem}}
 
 /* header Discord button: icon only on phones, icon + name from sm up */
 .hdr-discord{gap:.45rem;padding-inline:0;min-width:2.5rem;justify-content:center}
