@@ -1356,4 +1356,4 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 @media (min-width:768px){.hero-cta{width:27rem!important;gap:12px}.hero-cta .hero-main,.hero-cta .hero-sec{padding-inline:1rem}}
 
 /* phones: the two hero buttons stacked, same width */
-@media (max-width:767px){.hero-cta{grid-template-columns:1fr!important;width:min(78vw,17rem)!important;gap:10px}.hero-cta .hero-main,.hero-cta .hero-sec{height:2.9rem;font-size:.92rem}}
+@media (max-width:767px){.hero-cta{grid-template-columns:1fr!important;width:min(62vw,13.75rem)!important;gap:9px}.hero-cta .hero-main,.hero-cta .hero-sec{height:2.9rem;font-size:.92rem}}
