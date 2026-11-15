@@ -1365,10 +1365,10 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 [data-st=light] .wn-card:not(.none) .wn-sel{color:rgba(43,29,0,.8)}
 
 /* winner as a one-line pill in the same row as the save / link buttons */
-.wn-pillwrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.wn-card.wn-pill{flex-wrap:nowrap;gap:.5rem;height:38px;padding:0 .95rem;margin:0;max-width:100%;border-radius:999px;box-shadow:none}
+.wn-pillwrap{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;max-width:100%}
+.wn-card.wn-pill{flex:0 1 auto;min-width:0;flex-wrap:nowrap;gap:.5rem;height:38px;padding:0 .95rem;margin:0;max-width:100%;border-radius:999px;box-shadow:none}
 .wn-pill .wn-ico{width:19px;height:19px}.wn-pill b{font-size:.95rem;font-weight:800;color:#ffd56a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:14rem}
 .wn-pill small{font-size:.7rem;font-weight:700;color:rgba(255,224,150,.78);white-space:nowrap}
 .wn-pill.none b{color:var(--text);font-size:.85rem}
 [data-st=light] .wn-pill:not(.none) b{color:#241800}[data-st=light] .wn-pill:not(.none) small{color:rgba(43,29,0,.72)}
-.wn-psel{height:38px;max-width:12rem;border:1px solid var(--glass-b);border-radius:999px;background:var(--glass);color:var(--text);padding:0 .8rem;font:inherit;font-size:.85rem;font-weight:600}
+.wn-psel{height:38px;min-width:0;flex:0 1 auto;max-width:12rem;text-overflow:ellipsis;border:1px solid var(--glass-b);border-radius:999px;background:var(--glass);color:var(--text);padding:0 .8rem;font:inherit;font-size:.85rem;font-weight:600}

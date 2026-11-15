@@ -13,11 +13,11 @@ export default function WinnerCard({ bracket, lang, editable, onChange, pill }: 
       <div className="wn-pillwrap" role="group" aria-label={ar ? 'الفائز' : 'Winner'}>
         <div className={`wn-card wn-pill ${win === null ? 'none' : ''}`} title={win !== null ? (chosen ? (ar ? 'اختاره المنظم' : 'Chosen by the organiser') : ar ? 'من النتائج' : 'From the results') : undefined}>
           <TrophyIcon className="wn-ico" />
-          {win === null ? <b>{ar ? 'الفائز: لم يُحسم بعد' : 'Winner: not decided yet'}</b> : <><b dir="auto">{bracket.players[win]}</b><small>{ar ? 'بطل البطولة' : 'Champion'}</small></>}
+          {win === null ? <b>{ar ? 'لم يُحسم بعد' : 'Not decided'}</b> : <><b dir="auto">{bracket.players[win]}</b><small>{ar ? 'بطل البطولة' : 'Champion'}</small></>}
         </div>
         {editable && onChange && (
           <select className="wn-psel" aria-label={ar ? 'تحديد الفائز' : 'Set the winner'} value={chosen ? String(bracket.champ) : ''} onChange={(e) => onChange(setChampion(bracket, e.target.value === '' ? null : Number(e.target.value)))}>
-            <option value="">{auto === null ? (ar ? 'تحديد الفائز: تلقائي' : 'Set winner: automatic') : `${ar ? 'تلقائي' : 'Automatic'}: ${bracket.players[auto]}`}</option>
+            <option value="">{auto === null ? (ar ? 'تلقائي' : 'Automatic') : `${ar ? 'تلقائي' : 'Auto'}: ${bracket.players[auto]}`}</option>
             {bracket.players.map((p, i) => <option key={i} value={i}>{p}</option>)}
           </select>
         )}
