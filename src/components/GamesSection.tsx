@@ -3,7 +3,6 @@ import { SHOW_EXAMPLE_GAMES, type Game } from '../data/games';
 import { useSiteGames } from '../hooks/useGames';
 import GameOfDay from './GameOfDay';
 import { useI18n } from '../i18n/I18nProvider';
-import { ArrowIcon } from './icons';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -45,6 +44,15 @@ export default function GamesSection() {
   const games = useMemo(() => category === 'all' ? GAMES : GAMES.filter(g => g.genre.en === category), [category, GAMES]);
   const chooseCategory = (id: string) => { setCategory(id); setIndex(0); setLeaving(false); };
   const [leaving, setLeaving] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menu) return undefined;
+    const off = (e: Event) => { if (!barRef.current?.contains(e.target as Node)) setMenu(false); };
+    const esc = (e: globalThis.KeyboardEvent) => { if (e.key === 'Escape') setMenu(false); };
+    document.addEventListener('pointerdown', off); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', off); document.removeEventListener('keydown', esc); };
+  }, [menu]);
   const sign = dir === 'rtl' ? -1 : 1;
   const span = wide ? 2 : 1;
   const n = games.length;
@@ -85,28 +93,38 @@ export default function GamesSection() {
   const cw = wide ? 'clamp(210px, 19vw, 290px)' : 'min(60vw, 250px)';
   const stage: Vars = { '--cw': cw, '--wm': `url(${BASE}brand/cube-v2.png)`, height: 'calc(var(--cw) * 1.4 + 2.5rem)' };
   const active = games[index];
+  // frosted background: the active game's own art behind a thick frosted pane; the previous one stays underneath while the new one fades in
+  const bgOf = (g?: Game) => (g ? { id: g.id, src: g.image, a: g.colors[0], b: g.colors[1] } : null);
+  const [layers, setLayers] = useState(() => [bgOf(games[0])]);
+  useEffect(() => {
+    const nb = bgOf(active); if (!nb) return undefined;
+    setLayers((l) => (l[l.length - 1]?.id === nb.id ? l : [...l.slice(-1), nb]));
+    const h = window.setTimeout(() => setLayers((l) => l.slice(-1)), 700);
+    return () => window.clearTimeout(h);
+  }, [active?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <section id="games" aria-labelledby="games-title" className="relative scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="mx-auto max-w-[40rem] text-center">
-        <h2 id="games-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.gamesTitle}</h2>
-        <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.gamesSub}</p>
+    <section id="games" aria-labelledby="games-title" className="gm-frost relative isolate scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(5.5rem,10vw,7.5rem)]" style={{ backgroundColor: 'var(--bg)' }}>
+      <div aria-hidden="true" className="gm-bg">{layers.map((l, i) => l && <div key={l.id} className={`gm-layer ${i === layers.length - 1 && layers.length > 1 ? 'in' : ''}`} style={{ backgroundImage: l.src ? `url("${l.src}")` : `linear-gradient(160deg, ${l.a}, ${l.b})` }} />)}<div className="gm-pane" /></div>
+      <h2 id="games-title" className="sr-only">{t.gamesTitle}</h2>
+      <div ref={barRef} className="gm-bar mx-auto max-w-[30rem]">
+        <button type="button" className="gm-fbtn" aria-expanded={menu} aria-haspopup="true" onClick={() => setMenu((m) => !m)}>
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+          {lang === 'ar' ? 'فلتر' : 'Filter'}
+        </button>
+        <span className="gm-title" aria-live="polite">{active?.name[lang]}</span>
+        {menu && (
+          <div className="gm-menu" role="group" aria-label={lang === 'ar' ? 'تصفية الألعاب حسب التصنيف' : 'Filter games by category'}>
+            {[{ en: 'All', ar: 'الكل' }, ...categories].map((c, i) => {
+              const id = i === 0 ? 'all' : c.en;
+              const selected = category === id;
+              return <button key={id} type="button" aria-pressed={selected} onClick={() => { chooseCategory(id); setMenu(false); }} className={`gm-chip ${selected ? 'on' : ''}`}>
+                {c[lang]} <span className="ms-1 opacity-70">{i === 0 ? GAMES.length : GAMES.filter((g) => g.genre.en === id).length}</span>
+              </button>;
+            })}
+          </div>
+        )}
       </div>
-
-      <div className="gm-filters mx-auto mt-7 flex max-w-[65rem] flex-wrap items-center justify-center gap-2" role="group" aria-label={lang === 'ar' ? 'تصفية الألعاب حسب التصنيف' : 'Filter games by category'}>
-        {[{en: 'All', ar: 'الكل'}, ...categories].map((c, i) => {
-          const id = i === 0 ? 'all' : c.en;
-          const selected = category === id;
-          return <button key={id} type="button" aria-pressed={selected} onClick={(e) => { chooseCategory(id); try { e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch { /* ignore */ } }}
-            className="rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200"
-            style={{ borderColor: selected ? '#8fb2ff' : 'var(--glass-b)', color: selected ? '#fff' : 'var(--muted)',
-              background: selected ? 'linear-gradient(115deg,#3d7bff,#2a2fa8)' : 'var(--glass)' }}>
-            {c[lang]} <span className="ms-1 opacity-70">{i === 0 ? GAMES.length : GAMES.filter(g => g.genre.en === id).length}</span>
-          </button>;
-        })}
-      </div>
-
-      <GameOfDay games={GAMES} />
 
       <div className={`gstage mt-7 ${leaving ? 'is-leaving' : ''}`}>
         <div role="region" aria-roledescription="carousel" aria-label={t.gamesTitle} tabIndex={0} onKeyDown={onKey}
@@ -136,31 +154,20 @@ export default function GamesSection() {
                 {g.image ? <OfficialGameImage key={g.id} src={g.image} eager={Math.abs(o) <= 3} /> : <div className="gcard-art" />}
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(to top, rgba(7,10,38,.92) 0%,rgba(7,10,38,.7) 16%,rgba(7,10,38,.25) 40%,transparent 66%)'}} />
                 <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-5">
-                  <span className="text-[.78rem] font-semibold opacity-85">{g.genre[lang]}</span>
-                  <div className="text-[clamp(1.15rem,1.8vw,1.55rem)] font-extrabold leading-tight">{g.name[lang]}</div>
+                  <p className="text-[clamp(.88rem,1.3vw,1.05rem)] font-semibold leading-snug">{g.tagline[lang]}</p>
                 </div>
               </a>
             );
           })}
         </div>
 
-        <div className="mx-auto mt-6 max-w-[34rem] text-center" aria-live="polite">
-          <h3 className="text-[1.5rem] font-bold">{active.name[lang]}</h3>
-          <p className="mt-1.5" style={{ color: 'var(--muted)' }}>{active.tagline[lang]}</p>
-          <button type="button" className="btn-primary mt-5" onClick={() => go(active)}>
-            {t.gamesDetails} <ArrowIcon className="h-4 w-4 rtl:rotate-180" />
-          </button>
-        </div>
-
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button type="button" className="pill !px-0 disabled:opacity-35" onClick={() => step(-1)} disabled={index === 0} aria-label={t.gamesPrev}><ArrowIcon className="h-5 w-5 rotate-180 rtl:rotate-0" /></button>
-          <div className="flex gap-2">
-            {games.length <= 12 ? games.map((g, i) => (
-              <button key={g.id} type="button" aria-label={g.name[lang]} aria-current={i === index} onClick={() => setIndex(i)} className="h-2 rounded-full transition-all" style={{ width: i === index ? '1.6rem' : '.5rem', background: i === index ? 'var(--link-on)' : 'var(--glass-b)' }} />
-            )) : <span className="min-w-[5rem] text-center text-sm font-semibold tabular-nums" style={{color:'var(--muted)'}}>{index + 1} / {n}</span>}
+        <p className="gm-hint">{lang === 'ar' ? 'اضغط على البطاقة لتفاصيل اللعبة' : 'Tap the card for game details'}</p>
+        {games.length > 1 && games.length <= 12 && (
+          <div className="gm-dots">
+            {games.map((g, i) => <button key={g.id} type="button" aria-label={g.name[lang]} aria-current={i === index} onClick={() => setIndex(i)} className={i === index ? 'on' : ''} />)}
           </div>
-          <button type="button" className="pill !px-0 disabled:opacity-35" onClick={() => step(1)} disabled={index === n - 1} aria-label={t.gamesNext}><ArrowIcon className="h-5 w-5 rtl:rotate-180" /></button>
-        </div>
+        )}
+        <GameOfDay games={GAMES} />
       </div>
 
       {SHOW_EXAMPLE_GAMES && <p className="mt-6 text-center text-[.8rem]" style={{ color: 'var(--muted)', opacity: 0.75 }}>{t.gamesExample}</p>}
