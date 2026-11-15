@@ -1,4 +1,5 @@
 import type { Localized } from './news';
+import { GAME_TEXTS } from './gameTexts';
 
 /** Official names/categories based on Plato's games catalogue (October 2026).
  * Icon URL convention is based on the verified official Poker asset path.
@@ -34,7 +35,7 @@ const palette: Record<string, [string, string]> = {
   Sports: ['#2aa0e0','#12285a'], Word: ['#e0a93a','#2a2a66'],
 };
 // The official icon naming convention is not guaranteed for every game.
-const BASE_GAMES: Game[] = [
+const BASE_RAW: Game[] = [
   { id: 'match-it', name: L('Match It', 'Match It'), genre: genres.Arcade, tagline: L('Match the tiles and clear the board.', 'طابق البلاطات وأفرغ اللوحة.'), overview: L('Match the tiles and clear the board.', 'طابق البلاطات وأفرغ اللوحة.'), colors: palette.Arcade, image: '', tone: '#9227a2' },
   { id: 'poker', name: L('Poker', 'بوكر'), genre: genres.Card, tagline: L('Texas Hold’em poker with friends.', 'بوكر تكساس هولدم مع الأصدقاء.'), overview: L('Texas Hold’em poker with friends.', 'بوكر تكساس هولدم مع الأصدقاء.'), colors: palette.Card, image: '', tone: '#0a2292' },
   { id: 'ocho', name: L('Ocho', 'اوتشو'), genre: genres.Card, tagline: L('Match colors and numbers to empty your hand.', 'طابق الألوان والأرقام لتُنهي أوراقك أولًا.'), overview: L('Match colors and numbers to empty your hand.', 'طابق الألوان والأرقام لتُنهي أوراقك أولًا.'), colors: palette.Card, image: '', tone: '#6424d1' },
@@ -92,6 +93,8 @@ const BASE_GAMES: Game[] = [
   { id: 'deep-thots', name: L('Deep Thots', 'أفكار عميقة'), genre: genres.Social, tagline: L('Give unexpected answers to big questions.', 'أجب بإجابات طريفة عن أسئلة عميقة.'), overview: L('Give unexpected answers to big questions.', 'أجب بإجابات طريفة عن أسئلة عميقة.'), colors: palette.Social, image: '' },
   { id: 'go', name: L('Go', 'غو'), genre: genres.Board, tagline: L('Control territory on the board.', 'سيطر على المساحات على لوحة غو.'), overview: L('Control territory on the board.', 'سيطر على المساحات على لوحة غو.'), colors: palette.Board, image: '' },
 ];
+/** Built-in games carry their page texts from gameTexts.ts unless a game sets its own. */
+const BASE_GAMES: Game[] = BASE_RAW.map((b) => ({ ...b, texts: b.texts ?? GAME_TEXTS[b.id] }));
 
 /* ---------- Dashboard-managed games (D1 table "games") merged over the built-in list ---------- */
 export const GENRE_KEYS = Object.keys(genres);

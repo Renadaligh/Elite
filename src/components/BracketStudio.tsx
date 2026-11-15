@@ -12,7 +12,7 @@ import Header from './Header';
 import LanguageSwitcher from './LanguageSwitcher';
 
 /** Members' area of the bracket tool: a real sign-in screen, then a dashboard (no site header). Public links (#/bracket/<id>) stay in the normal site layout for guests. */
-const S = {
+export const S = {
   ar: {
     tool: 'أداة تنظيم البطولات', welcome: 'أهلاً بك في', welcome2: 'أداة تنظيم البطولات', sub: 'سجّل دخولك لإنشاء بطولاتك وإدارتها وحفظها في حسابك.',
     discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', twitch: 'Twitch', steam: 'Steam', orMail: 'أو بالبريد الإلكتروني', perks: 'ماذا ستحصل عليه',
@@ -58,8 +58,8 @@ const I = {
 };
 const Ic = ({ d, c = 'h-[18px] w-[18px]' }: { d: keyof typeof I; c?: string }) => <svg viewBox="0 0 24 24" className={c} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{I[d]}</svg>;
 
-type Theme = 'dark' | 'light';
-function ThemeBtn({ theme, set, s }: { theme: Theme; set: (t: Theme) => void; s: St }) {
+export type Theme = 'dark' | 'light';
+export function ThemeBtn({ theme, set, s }: { theme: Theme; set: (t: Theme) => void; s: St }) {
   const light = theme === 'light', label = light ? s.toDark : s.toLight;
   return (
     <button type="button" className="st-theme" aria-label={label} title={label} onClick={() => set(light ? 'dark' : 'light')}>

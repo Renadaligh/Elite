@@ -3,7 +3,7 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, addPlayers, draftBracket, hasResults, isCurrent, toggleCurrent, setScore, setWinner, shuffled, swapSeats, renamePlayer, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, addPlayers, draftBracket, hasResults, shuffled, swapSeats, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
@@ -27,6 +27,7 @@ const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
 const EN: Record<string, string> = {
+  'فيه أسماء مكررة، عدّلها أولاً': 'Some names are repeated, fix them first', 'هذا الاسم مستخدم عند لاعب آخر': 'This name is already used by another player',
   'الوضع الداكن': 'Dark mode', 'الوضع الفاتح': 'Light mode',
  'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic',
 
@@ -532,7 +533,6 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [names, setNames] = useState('');
   const [shuf, setShuf] = useState(false);
   const [lo, setLo] = useState(fmtInit());
-  const [sel, setSel] = useState<string | null>(null);
   const [, setEditP] = useState(false);
   const [url, setUrl] = useState(t0.streamUrl ?? '');
   const [live, setLive] = useState(!!t0.streamLive);
@@ -541,7 +541,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const typing = useRef(false); // the stream link is being typed: don't autosave half a link (use the save button)
   const hist = useBracketHistory<Bracket>();
   const upd = (b: Bracket | null) => { if (br) hist.record(br); ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
-  const applyHist = (b: Bracket | undefined) => { if (!b) return; ver.current += 1; typing.current = false; setBr(b); setDirty(true); setSel(null); };
+  const applyHist = (b: Bracket | undefined) => { if (!b) return; ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
   const doUndo = () => { if (br) applyHist(hist.undo(br)); };
   const doRedo = () => { if (br) applyHist(hist.redo(br)); };
   useEffect(() => {
@@ -558,17 +558,13 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
+    const dups = dupNames(list); if (dups.length) { toast.err(`${x('فيه أسماء مكررة، عدّلها أولاً')}: ${dups.join('، ')}`); return; }
     if (fmt === 'rr' && list.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
     // fewer than 2 names: an empty draft; players are added afterwards (typed, or with + from the registrants)
-    upd(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts)); setSel(null);
+    upd(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts));
   }
-  function pick(m: BMatch, side: 'a' | 'b') {
-    if (!br) return;
-    setSel(m.id);
-    upd(setWinner(br, m.id, m.win === side ? undefined : side));
-  }
-  const rename = (i: number, v: string) => br && upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
+  const rename = (i: number, v: string) => { if (!br) return; if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) }); };
   const [regs, setRegs] = useState<Reg[]>([]);
   const loadRegs = useCallback(() => { api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined); }, [k, t0.id]);
   useEffect(() => { loadRegs(); }, [loadRegs]);
@@ -578,14 +574,12 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     if (!br) { upd(addPlayers(draftBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined), add)); return; }
     if (br.format === 'rr' && br.players.length + add.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
     if (hasResults(br) && !window.confirm(x('إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟'))) return;
-    upd(addPlayers(br, add)); setSel(null);
+    upd(addPlayers(br, add));
   }
   function rebuild() {
     if (!br || !window.confirm(x('إعادة البناء تمسح النتائج الحالية. متأكد؟'))) return;
-    setNames(br.players.join('\n')); setFmt(br.format); upd(null); setSel(null); setEditP(false);
+    setNames(br.players.join('\n')); setFmt(br.format); upd(null); setEditP(false);
   }
-  const m = br && sel ? br.matches.find((i) => i.id === sel) : undefined;
-  const R = br ? resolve(br) : null;
 
   async function save(auto = false) {
     const sent = ver.current;
@@ -631,29 +625,15 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
-            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onPick={pick} selected={sel} onChange={upd} onRename={(i, v) => upd(renamePlayer(br, i, v))} onLive={br.format === 'single' || br.format === 'double' ? (mm) => upd(toggleCurrent(br, mm.id)) : undefined} onScore={(mm, sa, sb) => upd(setScore(br, mm.id, sa, sb))} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} live /></div>
-            <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} />
+            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div>
+            <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>
-            {m && R && (
-              <div className="sticky bottom-0 z-10 flex flex-wrap items-end gap-3 rounded-xl border p-3 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>
-                <b className="self-center">{m.id}</b>
-                <Field label={x('نتيجة المباراة (اختياري)')}>
-                  <div className="flex items-center gap-2" dir="ltr">
-                    <input className={`${inp} !w-16 text-center`} style={bd} maxLength={4} value={m.sa ?? ''} onChange={(e) => upd(setScore(br, m.id, e.target.value, m.sb ?? ''))} />
-                    <span>–</span>
-                    <input className={`${inp} !w-16 text-center`} style={bd} maxLength={4} value={m.sb ?? ''} onChange={(e) => upd(setScore(br, m.id, m.sa ?? '', e.target.value))} />
-                  </div>
-                </Field>
-                {!m.win && typeof R.get(m.id)?.a === 'number' && typeof R.get(m.id)?.b === 'number' && <button type="button" className={btnP} style={gradBtn} onClick={() => upd(toggleCurrent(br, m.id))}>{isCurrent(br, m.id) ? x('إلغاء "المباراة الحالية"') : x('تحديد كالمباراة الحالية')}</button>}
-                {m.win && <button type="button" className={btnG} style={bd} onClick={() => upd(setWinner(br, m.id, undefined))}>{x('تراجع (إلغاء الفائز)')}</button>}
-              </div>
-            )}
           </div>
         )}
 
         <div className="flex flex-wrap items-center gap-3 border-t pt-4" style={bd}>
           <button type="button" className={btnP} style={gradBtn} onClick={() => { void save(); }}>{x('حفظ البراكت')}</button>
-          {br && <button type="button" className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { if (window.confirm(x('حذف البراكت وإعادة البدء؟'))) { upd(null); setSel(null); } }}>{x('حذف البراكت')}</button>}
+          {br && <button type="button" className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { if (window.confirm(x('حذف البراكت وإعادة البدء؟'))) { upd(null); } }}>{x('حذف البراكت')}</button>}
           <button type="button" className={btnG} style={bd} onClick={onClose}>{x('إلغاء')}</button>
           {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}
         </div>
@@ -946,7 +926,7 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const load = useCallback(() => { api<GameRow[]>('/games', { key: k }).then((r) => { setRows(mergeGames(r)); setGone(r.find((i) => i.id === '__meta')?.deleted ?? []); }).catch(() => toast.err(x('تعذّر تحميل الألعاب'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
-  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: fullDetails(g.details) });
+  const toForm = (g: AdminGame): GForm => ({ id: g.id, custom: g.custom, hidden: g.hidden, name: { ar: g.name.ar, en: g.name.en }, tagline: { ar: g.tagline.ar, en: g.tagline.en }, genre: g.genreKey, image: g.image ?? '', tournamentOnly: !!g.tournamentOnly, details: fullDetails({ ...g.details, texts: g.details?.texts?.length ? g.details.texts : g.texts }) });
   const fail = (err: unknown, m: string) => { if ((err as Error).message === '401') onAuthFail(); else toast.err((err as Error).message === '403' ? x('ما عندك صلاحية لهذا الإجراء') : m); };
   const term = q.trim().toLowerCase();
   const shown = rows.filter((g) => (genre === 'all' || g.genreKey === genre) && (!term || `${g.name.ar} ${g.name.en} ${g.tagline.ar} ${g.tagline.en}`.toLowerCase().includes(term)));

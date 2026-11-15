@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
 import { readNames, splitNames } from '../data/importNames';
+import { nameKey } from '../data/bracket';
 
 /** Add players to a bracket without rebuilding it: type a name, or press + next to someone who registered. */
 const T = {
-  ar: { ph: 'أضف لاعب (اكتب الاسم واضغط +)', add: 'إضافة', regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', all: 'إضافة الكل', added: 'مضاف', refresh: 'تحديث', captain: 'القائد', m1: 'اسم ثم +', m2: 'لصق قائمة', m3: 'من ملف Excel', pastePh: 'اكتب أو الصق الأسماء، اسم في كل سطر', addList: 'إضافة القائمة', pickFile: 'اختر ملف Excel أو CSV', fileHint: 'يقرأ أول عمود فيه أسماء (xlsx أو csv أو txt). صف العنوان يُتجاهل.', fileBad: 'تعذّرت قراءة الملف، جرّب xlsx أو csv.', fileNone: 'ما لقيت أسماء في الملف.', n: 'اسم', draftTitle: 'ما بدأ البراكت بعد', draftBody: 'أضف لاعبَين على الأقل ويُبنى البراكت تلقائياً.', remove: 'حذف' },
-  en: { ph: 'Add a player (type a name, press +)', add: 'Add', regs: 'Registered', none: 'Nobody registered yet.', all: 'Add all', added: 'Added', refresh: 'Refresh', captain: 'Captain', m1: 'Name + +', m2: 'Paste a list', m3: 'From Excel file', pastePh: 'Type or paste names, one per line', addList: 'Add the list', pickFile: 'Choose an Excel or CSV file', fileHint: 'Reads the first column that has names (xlsx, csv or txt). A header row is ignored.', fileBad: 'Could not read the file, try xlsx or csv.', fileNone: 'No names found in the file.', n: 'names', draftTitle: 'The bracket has not started', draftBody: 'Add at least two players and it is drawn automatically.', remove: 'Remove' },
+  ar: { ph: 'أضف لاعب (اكتب الاسم واضغط +)', add: 'إضافة', regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', all: 'إضافة الكل', added: 'مضاف', refresh: 'تحديث', captain: 'القائد', m1: 'اسم ثم +', m2: 'لصق قائمة', m3: 'من ملف Excel', pastePh: 'اكتب أو الصق الأسماء، اسم في كل سطر', addList: 'إضافة القائمة', pickFile: 'اختر ملف Excel أو CSV', fileHint: 'يقرأ أول عمود فيه أسماء (xlsx أو csv أو txt). صف العنوان يُتجاهل.', fileBad: 'تعذّرت قراءة الملف، جرّب xlsx أو csv.', fileNone: 'ما لقيت أسماء في الملف.', n: 'اسم', draftTitle: 'ما بدأ البراكت بعد', draftBody: 'أضف لاعبَين على الأقل ويُبنى البراكت تلقائياً.', remove: 'حذف', dup1: 'هذا الاسم مضاف مسبقاً.', skip: (n: number) => `تم تجاهل ${n} اسم مكرر.` },
+  en: { ph: 'Add a player (type a name, press +)', add: 'Add', regs: 'Registered', none: 'Nobody registered yet.', all: 'Add all', added: 'Added', refresh: 'Refresh', captain: 'Captain', m1: 'Name + +', m2: 'Paste a list', m3: 'From Excel file', pastePh: 'Type or paste names, one per line', addList: 'Add the list', pickFile: 'Choose an Excel or CSV file', fileHint: 'Reads the first column that has names (xlsx, csv or txt). A header row is ignored.', fileBad: 'Could not read the file, try xlsx or csv.', fileNone: 'No names found in the file.', n: 'names', draftTitle: 'The bracket has not started', draftBody: 'Add at least two players and it is drawn automatically.', remove: 'Remove', dup1: 'This name is already in the list.', skip: (n: number) => `${n} duplicate name${n > 1 ? 's' : ''} skipped.` },
 };
 export const addTxt = (lang: 'ar' | 'en') => T[lang];
 
@@ -14,18 +15,20 @@ export const regName = (r: RegRow) => (r.mode === 'team' ? r.team_name : r.plato
 const line = 'rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
 const btn = 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-lg font-bold leading-none';
 
-export function AddPlayerBar({ lang, onAdd }: { lang: 'ar' | 'en'; onAdd: (names: string[]) => void }) {
+export function AddPlayerBar({ lang, onAdd, existing = [] }: { lang: 'ar' | 'en'; onAdd: (names: string[]) => void; existing?: string[] }) {
   const t = T[lang];
+  /** Drops names already in the bracket (and repeats inside the batch); returns how many were skipped. */
+  const fresh = (names: string[]) => { const have = new Set(existing.map(nameKey)); const out: string[] = []; for (const n of names) { const k = nameKey(n); if (k && !have.has(k)) { have.add(k); out.push(n); } } return { out, skipped: names.length - out.length }; };
   const [mode, setMode] = useState<'one' | 'list' | 'file'>('one');
   const [v, setV] = useState('');
   const [txt, setTxt] = useState('');
   const [msg, setMsg] = useState('');
   const file = useRef<HTMLInputElement>(null);
-  const go = () => { const n = v.trim().slice(0, 40); if (n) { onAdd([n]); setV(''); } };
-  const addList = () => { const names = splitNames(txt); if (names.length) { onAdd(names); setTxt(''); setMsg(`+${names.length}`); } };
+  const go = () => { const n = v.trim().slice(0, 40); if (!n) return; const f = fresh([n]); if (!f.out.length) { setMsg(t.dup1); return; } onAdd(f.out); setV(''); setMsg(''); };
+  const addList = () => { const f = fresh(splitNames(txt)); if (!f.out.length) { if (f.skipped) setMsg(t.dup1); return; } onAdd(f.out); setTxt(''); setMsg(`+${f.out.length}${f.skipped ? ` · ${t.skip(f.skipped)}` : ''}`); };
   const pick = async (f?: File) => {
     if (!f) return;
-    try { const names = await readNames(f); if (!names.length) { setMsg(t.fileNone); } else { onAdd(names); setMsg(`+${names.length}`); } } catch { setMsg(t.fileBad); }
+    try { const names = await readNames(f); if (!names.length) { setMsg(t.fileNone); } else { const f = fresh(names); if (!f.out.length) setMsg(t.dup1); else { onAdd(f.out); setMsg(`+${f.out.length}${f.skipped ? ` · ${t.skip(f.skipped)}` : ''}`); } } } catch { setMsg(t.fileBad); }
     if (file.current) file.current.value = '';
   };
   const tab = (k: typeof mode, label: string) => <button key={k} type="button" className={`br-chip ${mode === k ? 'on' : ''}`} onClick={() => { setMode(k); setMsg(''); }}>{label}</button>;
@@ -59,8 +62,8 @@ export function AddPlayerBar({ lang, onAdd }: { lang: 'ar' | 'en'; onAdd: (names
 
 export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh }: { lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void }) {
   const t = T[lang];
-  const have = new Set(players.map((p) => p.trim().toLowerCase()));
-  const todo = regs.map(regName).filter((n) => n && !have.has(n.toLowerCase()));
+  const have = new Set(players.map(nameKey));
+  const todo = regs.map(regName).filter((n, i, a) => n && !have.has(nameKey(n)) && a.findIndex((x) => nameKey(x) === nameKey(n)) === i);
   return (
     <div className="grid gap-2.5 rounded-xl border p-3.5" style={{ borderColor: 'var(--glass-b)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -73,7 +76,7 @@ export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh }: { la
       {regs.length === 0 ? <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.none}</p> : (
         <ul className="grid gap-1.5">
           {regs.map((r, i) => {
-            const n = regName(r), done = have.has(n.toLowerCase());
+            const n = regName(r), done = have.has(nameKey(n));
             return (
               <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)', opacity: done ? 0.6 : 1 }}>
                 <div className="min-w-0"><b dir="auto">{i + 1}. {n}</b>{r.mode === 'team' && <div dir="auto" className="truncate" style={{ color: 'var(--muted)', fontSize: '.78rem' }}>{t.captain}: {r.plato_id}{r.members ? ` · ${r.members.replace(/\n/g, '، ')}` : ''}</div>}</div>

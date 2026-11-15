@@ -1,13 +1,13 @@
 import { TrophyIcon } from './icons';
-import { ffaChampion, ffaRows, leagueChampion, groupLabel, groupSub, isCurrent, koSub, leagueRounds, outcome, roundMatches, standings, type BMatch, type Bracket } from '../data/bracket';
+import { ffaChampion, ffaRows, leagueChampion, groupLabel, groupSub, koSub, leagueRounds, outcome, roundMatches, standings, type BMatch, type Bracket } from '../data/bracket';
 import BracketSheet from './BracketSheet';
 
 /** Public view link for EVERY format, in the same sheet style as the elimination sheet:
  *  round robin / swiss = standings + every round, leaderboard = totals + score grid, groups = a table per group + the knockout sheet. */
 type Lang = 'ar' | 'en';
 
-function Head({ title }: { title: string }) {
-  return <div className="bs-top"><b dir="auto">{title}</b><span>plato-ar.com</span></div>;
+function Head({ title, org, ar }: { title: string; org?: string; ar?: boolean }) {
+  return <><div className="bs-top"><b dir="auto">{title}</b><span>plato-ar.com</span></div>{org && <div className="bs-org" dir="auto">{ar ? 'تنظيم' : 'By'}: {org}</div>}</>;
 }
 
 function Table({ br, adv, ar, champ }: { br: Bracket; adv?: number; ar: boolean; champ?: number | null }) {
@@ -28,7 +28,6 @@ function Table({ br, adv, ar, champ }: { br: Bracket; adv?: number; ar: boolean;
 function Rounds({ br, ar }: { br: Bracket; ar: boolean }) {
   const card = (m: BMatch) => {
     const o = outcome(br, m);
-    const cur = isCurrent(br, m.id) && !o;
     const side = (s: 'a' | 'b') => {
       const slot = m[s];
       const bye = 'bye' in slot;
@@ -39,7 +38,7 @@ function Rounds({ br, ar }: { br: Bracket; ar: boolean }) {
         </div>
       );
     };
-    return <div key={m.id} className="bs-m">{cur && <em>● LIVE</em>}{side('a')}{side('b')}</div>;
+    return <div key={m.id} className="bs-m">{side('a')}{side('b')}</div>;
   };
   return <>{leagueRounds(br).map((r) => (
     <div key={r} className="bs-rd"><h4 dir={ar ? "rtl" : "ltr"}>{ar ? `الجولة ${r}` : `Round ${r}`}</h4><div className="bs-mg">{roundMatches(br, r).map(card)}</div></div>
@@ -51,13 +50,13 @@ export default function BracketSheetAny({ bracket: br, title, lang }: { bracket:
   if (br.format === 'single' || br.format === 'double') return <BracketSheet bracket={br} title={title} lang={lang} />;
 
   if (br.format === 'rr' || br.format === 'swiss') {
-    return <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} /><Table br={br} ar={ar} champ={leagueChampion(br)} /><Rounds br={br} ar={ar} /></div>;
+    return <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} org={br.org} ar={ar} /><Table br={br} ar={ar} champ={leagueChampion(br)} /><Rounds br={br} ar={ar} /></div>;
   }
 
   if (br.format === 'ffa') {
     const rows = ffaRows(br), R = br.fs ?? [];
     return (
-      <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} />
+      <div className="bs-sheet bs-flow" dir="ltr"><Head title={title} org={br.org} ar={ar} />
         <div className="bs-tw"><table className="bs-tbl">
           <thead><tr><th>#</th><th className="l">{ar ? 'اللاعب' : 'Player'}</th><th>{ar ? 'الجولات' : 'Rounds'}</th><th>{ar ? 'الأفضل' : 'Best'}</th><th>{ar ? 'المجموع' : 'Total'}</th></tr></thead>
           <tbody>{rows.map((r, i) => <tr key={r.p} className={i === 0 ? 'adv' : ''}><td>{i + 1}</td><td className="l" dir="auto">{br.players[r.p]}{i === 0 && ffaChampion(br) === r.p && <TrophyIcon className="bs-cupi h-4 w-4" aria-label="winner" />}</td><td>{r.played}</td><td>{r.best ?? '—'}</td><td className="pts">{r.total}</td></tr>)}</tbody>

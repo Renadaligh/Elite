@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { champion, hasBye, isCurrent, layout, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
+import { champion, hasBye, layout, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
  *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
@@ -103,7 +103,6 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
     return (
       <g key={m.id}>
         <clipPath id={`${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')}`}><rect x={p.x} y={p.y - RH} width={BW} height={RH * 2} rx={9} /></clipPath>
-        {isCurrent(bracket, m.id) && !m.win && <text className="bs-live" x={p.x} y={p.y - RH - 4} fontSize="10" fontWeight="800">● LIVE</text>}
         <g clipPath={`url(#${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')})`}>{rows.map((row, k) => {
           const y = p.y - RH + k * RH;
           const bye = row.w === 'bye';
@@ -139,6 +138,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
   return (
     <div ref={wrap} className="bs-sheet" dir="ltr">
       <div className="bs-top"><b dir="auto">{title}</b><span>plato-ar.com</span></div>
+      {bracket.org && <div className="bs-org" dir="auto">{lang === 'ar' ? 'تنظيم' : 'By'}: {bracket.org}</div>}
       <div ref={scr} className="bs-scroll">
         <svg width={g.W * scale} height={g.H * scale} viewBox={`0 0 ${g.W} ${g.H}`} role="img" aria-label={title} fontFamily="Outfit, Tajawal, system-ui, sans-serif">
           {g.heads.map((h, i) => (

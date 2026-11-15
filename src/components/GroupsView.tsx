@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { dropKnockout, groupDone0, groupLabel, groupMerge, groupSub, groupsDone, koMerge, koSub, setWinner, startKnockout, type Bracket } from '../data/bracket';
+import { dropKnockout, groupDone0, groupLabel, groupMerge, groupSub, groupsDone, koMerge, koSub, startKnockout, type Bracket } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import BracketView from './BracketView';
 import LeagueView from './LeagueView';
 
 /** Two stages: a tab per group (round robin tables) and a Knockout tab once the groups are finished. */
-export default function GroupsView({ bracket: br, onChange, onRename, live }: { bracket: Bracket; onChange?: (b: Bracket) => void; onRename?: (i: number, v: string) => void; live?: boolean }) {
+export default function GroupsView({ bracket: br, onChange, onRename }: { bracket: Bracket; onChange?: (b: Bracket) => void; onRename?: (i: number, v: string) => void}) {
   const { lang, dir } = useI18n();
   const ar = lang === 'ar';
   const G = br.groups ?? [];
@@ -25,11 +25,11 @@ export default function GroupsView({ bracket: br, onChange, onRename, live }: { 
       {sel >= 0 && G[sel] && (
         <>
           <p className="mb-3 text-[.8rem]" style={{ color: 'var(--muted)' }}>{ar ? `يتأهل من كل مجموعة: ${br.opts?.adv ?? 2}` : `${br.opts?.adv ?? 2} advance from each group`}</p>
-          <LeagueView key={sel} onRename={onRename ? (i, v) => onRename(br.groups![sel][i], v) : undefined} bracket={groupSub(br, sel)} advance={br.opts?.adv ?? 2} live={live} onChange={onChange ? (s) => onChange(groupMerge(br, sel, s)) : undefined} />
+          <LeagueView key={sel} onRename={onRename ? (i, v) => onRename(br.groups![sel][i], v) : undefined} bracket={groupSub(br, sel)} advance={br.opts?.adv ?? 2} onChange={onChange ? (s) => onChange(groupMerge(br, sel, s)) : undefined} />
         </>
       )}
       {sel === -1 && ksub && (
-        <BracketView bracket={ksub} onPick={onChange ? (m, side) => onChange(koMerge(br, setWinner(ksub, m.id, m.win === side ? undefined : side))) : undefined} />
+        <BracketView bracket={ksub} onApply={onChange ? (nb) => onChange(koMerge(br, nb)) : undefined} />
       )}
       {onChange && (
         <div className="mt-5 flex flex-wrap items-center gap-3">

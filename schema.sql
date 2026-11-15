@@ -126,3 +126,15 @@ CREATE INDEX IF NOT EXISTS idx_admin_log_at ON admin_log(at);
 -- Optional hard lock at database level (run each as ONE statement): rows can then never be changed even by mistake.
 -- CREATE TRIGGER IF NOT EXISTS admin_log_no_update BEFORE UPDATE ON admin_log BEGIN SELECT RAISE(ABORT, 'append-only'); END;
 -- CREATE TRIGGER IF NOT EXISTS admin_log_no_delete BEFORE DELETE ON admin_log BEGIN SELECT RAISE(ABORT, 'append-only'); END;
+
+-- Registration link of a bracket (#/join/<id>): settings + sign-ups (run once; new tables, nothing existing changes)
+CREATE TABLE IF NOT EXISTS bracket_join (
+  bracket_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 0,
+  mode TEXT NOT NULL DEFAULT 'solo', cap INTEGER NOT NULL DEFAULT 0,
+  closes_at INTEGER NOT NULL DEFAULT 0, closed INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS bracket_signups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, bracket_id TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'solo',
+  plato_id TEXT NOT NULL, team_name TEXT NOT NULL DEFAULT '', members TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS bracket_signups_b ON bracket_signups (bracket_id, id);

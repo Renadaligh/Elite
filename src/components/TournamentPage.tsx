@@ -7,7 +7,6 @@ import { useI18n } from '../i18n/I18nProvider';
 import { ArrowIcon } from './icons';
 import BracketView from './BracketView';
 import BracketActions from './BracketActions';
-import { liveMatches } from '../data/bracket';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
 const ST = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' } as const;
@@ -33,7 +32,6 @@ export default function TournamentPage({ id }: { id: string }) {
   }
   const s = statusOf(x, Date.now());
   const g = getGame(x.gameId);
-  const live = s === 'completed' || !x.bracket ? [] : liveMatches(x.bracket);
   const embed = x.streamLive ? streamEmbed(x.streamUrl) : null;
   return (
     <article className={`page-in min-h-[100svh] pb-20 pt-[clamp(6.5rem,12vw,9rem)] ${WRAP}`} style={{ backgroundColor: 'var(--bg)' }}>
@@ -60,12 +58,6 @@ export default function TournamentPage({ id }: { id: string }) {
           <h2 className="text-[1.2rem] font-extrabold">{t.tBracketTitle}</h2>
           {x.bracket && s !== 'completed' && <BracketActions bracket={x.bracket} title={x.name[lang]} url={`${window.location.origin}${window.location.pathname}#/tournaments/${x.id}`} />}
         </div>
-        {live.map((cr, i) => (
-          <p key={i} className="mb-3 mr-3 inline-flex flex-wrap items-center gap-3 rounded-xl border px-4 py-2.5 text-[.95rem]" style={{ borderColor: '#3d7bff', background: 'rgba(61,123,255,.1)' }}>
-            <span className="rounded px-2 py-0.5 text-[.65rem] font-extrabold tracking-wider text-white" style={{ background: '#3d7bff' }}>{lang === 'ar' ? 'الآن' : 'LIVE'}</span>
-            <b>{cr.a}</b><span style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'ضد' : 'vs'}</span><b>{cr.b}</b>
-          </p>
-        ))}
         {x.bracket && s !== 'completed' ? <BracketView bracket={x.bracket} />
           : <p className="rounded-2xl border px-5 py-6" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{t.tNoBracket}</p>}
       </section>

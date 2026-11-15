@@ -1,4 +1,4 @@
-import { champion, ffaChampion, ffaRows, groupLabel, groupSub, hasBye, isCurrent, isLeague, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
+import { champion, ffaChampion, ffaRows, groupLabel, groupSub, hasBye, isLeague, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
 
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
 const PAD = 36, HEAD = 96, FOOT = 72;
@@ -54,6 +54,8 @@ function bg(c: CanvasRenderingContext2D, W: number, H: number, rtl: boolean) {
 /** Keeps the canvas inside what browsers (and iPhones: ~16M pixels) can draw, however big the bracket is. */
 const fit = (scale: number, W: number, H: number) => Math.min(scale, 8000 / W, 16000 / H, Math.sqrt(16_000_000 / (W * H)));
 
+const withOrg = (br: Bracket, ar: boolean, sub: string) => (br.org ? `${ar ? 'تنظيم' : 'By'}: ${br.org}${sub ? ' · ' + sub : ''}` : sub);
+
 interface Opts { title: string; lang: 'ar' | 'en'; scale?: number; light?: boolean }
 
 /** Gold trophy drawn on the canvas (no emoji fonts needed), centred at (cx, cy), `size` px square. */
@@ -108,7 +110,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
   c.fillStyle = P.fg; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic';
   txt(title, rtl ? W - PAD : PAD, 56, al, W - PAD * 2);
   c.fillStyle = P.mut; c.font = `600 13px ${family}`;
-  txt(br.format === 'swiss' ? (rtl ? 'سويسري' : 'Swiss') : (rtl ? 'دوري' : 'Round robin'), rtl ? W - PAD : PAD, 80, al, 300);
+  txt(withOrg(br, rtl, br.format === 'swiss' ? (rtl ? 'سويسري' : 'Swiss') : (rtl ? 'دوري' : 'Round robin')), rtl ? W - PAD : PAD, 80, al, W - PAD * 2);
 
   // standings
   const cols = [{ k: '#', w: 40 }, { k: rtl ? 'اللاعب' : 'Player', w: 0 }, { k: rtl ? 'لعب' : 'P', w: 44 }, { k: rtl ? 'فوز' : 'W', w: 44 }, { k: rtl ? 'تعادل' : 'D', w: 44 }, { k: rtl ? 'خسارة' : 'L', w: 44 }, { k: '+/−', w: 56 }, { k: rtl ? 'نقاط' : 'Pts', w: 58 }];
@@ -141,7 +143,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
     txt(rtl ? `الجولة ${r}` : `ROUND ${r}`, rtl ? W - PAD : PAD, y0 + 8, al, 300);
     roundMatches(br, r).forEach((m, i) => {
       const col = i % 3, row = Math.floor(i / 3), bx = sx(PAD + col * (MW + 12), MW), by = y0 + 28 + row * (MH + 12);
-      const bye = 'bye' in m.a || 'bye' in m.b, o = outcome(br, m), live = isCurrent(br, m.id) && !o;
+      const bye = 'bye' in m.a || 'bye' in m.b, o = outcome(br, m);
       c.globalAlpha = bye ? 0.5 : 1;
       rr(bx, by, MW, MH, 10); c.fillStyle = P.card; c.fill();
       c.save(); rr(bx, by, MW, MH, 10); c.clip();
@@ -155,7 +157,7 @@ function leagueBlob(br: Bracket, { title, lang, scale = 2 }: Opts): Promise<Blob
       });
       c.fillStyle = P.line2; c.fillRect(bx, by + MR, MW, 1);
       c.restore();
-      c.lineWidth = live ? 2.5 : 1; c.strokeStyle = live ? '#3d7bff' : P.border; rr(bx, by, MW, MH, 10); c.stroke();
+      c.lineWidth = 1; c.strokeStyle = P.border; rr(bx, by, MW, MH, 10); c.stroke();
       c.globalAlpha = 1;
     });
   });
@@ -236,6 +238,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   c.textBaseline = 'alphabetic';
   c.fillStyle = P.fg; c.font = `800 26px ${family}`; txt(title, IP, 46, 'left', W - IP * 2 - 130);
   c.fillStyle = P.mut; c.font = `600 13px ${family}`; txt('plato-ar.com', W - IP, 44, 'right', 130);
+  if (br.org) { c.font = `600 14px ${family}`; txt(`${lang === 'ar' ? 'تنظيم' : 'By'}: ${br.org}`, IP, 66, 'left', W - IP * 2); }
 
   // round names
   c.textBaseline = 'middle';
@@ -260,7 +263,6 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   for (const m of br.matches) {
     const p = pos.get(m.id); if (!p || hasBye(R, m.id)) continue;
     const r = R.get(m.id)!;
-    const live = isCurrent(br, m.id) && !m.win;
     c.save(); rr(p.x, p.y - RHs, BW, RHs * 2, 9); c.clip();
     c.fillStyle = P.bg; c.fillRect(p.x, p.y - RHs, BW, RHs * 2);
     ([['a', r.a, m.sa], ['b', r.b, m.sb]] as const).forEach(([side, w, sc], i) => {
@@ -276,7 +278,6 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     });
     c.restore();
     c.fillStyle = P.mut; c.font = `500 10px ${family}`; txt(String(nums.get(m.id) ?? ''), p.x + BW + 5, p.y + 1, 'left', NUMW);
-    if (live) { c.fillStyle = '#ff6b6b'; c.font = `800 10px ${family}`; txt('● LIVE', p.x, p.y - RHs - 7, 'left', 60); }
   }
 
   brandMark(c, W, H - 46, false, family);
@@ -301,7 +302,7 @@ function tableCanvas(opts: { title: string; sub: string; lang: 'ar' | 'en'; scal
   const txt = (str: string, x: number, y0: number, align: 'left' | 'right' | 'center', maxW: number) => { let t = str; while (t.length > 1 && c.measureText(t).width > maxW) t = t.slice(0, -1); c.textAlign = align; c.fillText(t === str ? t : `${t}…`, x, y0); };
   bg(c, W, H, rtl); c.fillStyle = '#3d7bff'; c.fillRect(0, 0, W, 4);
   c.fillStyle = P.fg; c.font = `800 28px ${family}`; c.textBaseline = 'alphabetic'; txt(opts.title, rtl ? W - PAD : PAD, 56, al, W - PAD * 2);
-  c.fillStyle = P.mut; c.font = `600 13px ${family}`; txt(opts.sub, rtl ? W - PAD : PAD, 80, al, 400);
+  c.fillStyle = P.mut; c.font = `600 13px ${family}`; txt(opts.sub, rtl ? W - PAD : PAD, 80, al, W - PAD * 2);
   const TW = W - PAD * 2;
   opts.blocks.forEach((b, bi) => {
     const top = tops[bi], th = RHt * (b.rows.length + 1);
@@ -336,7 +337,7 @@ function ffaCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): HTMLCanvasEle
   const ar = lang === 'ar', R = br.fs ?? [], rows = ffaRows(br), ch = ffaChampion(br);
   const head = ['#', ar ? 'اللاعب' : 'Player', ...R.map((_, i) => (ar ? `ج${i + 1}` : `R${i + 1}`)), ar ? 'المجموع' : 'Total'];
   const rw = Math.max(40, Math.min(70, Math.floor(520 / Math.max(1, R.length))));
-  return tableCanvas({ title, lang, scale, footer: true, sub: (ar ? 'لوحة صدارة' : 'Leaderboard') + (br.opts?.low ? (ar ? ' · الأقل أفضل' : ' · lower is better') : ''), champ: ch !== null ? br.players[ch] : undefined,
+  return tableCanvas({ title, lang, scale, footer: true, sub: withOrg(br, ar, (ar ? 'لوحة صدارة' : 'Leaderboard') + (br.opts?.low ? (ar ? ' · الأقل أفضل' : ' · lower is better') : '')), champ: ch !== null ? br.players[ch] : undefined,
     blocks: [{ head, widths: [40, 0, ...R.map(() => rw), 80], hi: ch !== null ? 1 : undefined, rows: rows.map((r, i) => [String(i + 1), br.players[r.p], ...R.map((x) => x[r.p] || '–'), String(r.total)]) }] });
 }
 
@@ -349,7 +350,7 @@ async function groupsBlob(br: Bracket, o: Opts): Promise<Blob> {
       rows: S.map((s, i) => [String(i + 1), sb.players[s.p], String(s.played), String(s.w), String(s.d), String(s.l), `${s.gf - s.ga > 0 ? '+' : ''}${s.gf - s.ga}`, String(s.pts)]) };
   });
   const k = koSub(br), ch = champion(br);
-  const top = tableCanvas({ title: o.title, lang: o.lang, scale: o.scale ?? 2, footer: !k, sub: ar ? 'مجموعات ثم إقصائيات' : 'Groups & knockout', blocks, champ: !k && ch !== null ? br.players[ch] : undefined });
+  const top = tableCanvas({ title: o.title, lang: o.lang, scale: o.scale ?? 2, footer: !k, sub: withOrg(br, ar, ar ? 'مجموعات ثم إقصائيات' : 'Groups & knockout'), blocks, champ: !k && ch !== null ? br.players[ch] : undefined });
   if (!k) return canvasBlob(top);
   const tree = await treeCanvas(k, { ...o, title: ar ? 'الإقصائيات' : 'Knockout' });
   const W = Math.max(top.width, tree.width), H = top.height + tree.height;

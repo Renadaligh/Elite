@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { PencilIcon, TrophyIcon } from './icons';
-import { dropLastRound, isCurrent, leagueChampion, leagueRounds, nextSwissRound, outcome, roundDone, roundMatches, setLeagueScore, standings, toggleCurrent, type BMatch, type Bracket } from '../data/bracket';
+import { dropLastRound, leagueChampion, leagueRounds, nextSwissRound, outcome, roundDone, roundMatches, setLeagueScore, standings, type BMatch, type Bracket } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 
 /** Round robin / swiss: standings table + one round at a time. With `onChange` (dashboard / tool) scores are typed straight into the cards. */
-interface Props { bracket: Bracket; onChange?: (b: Bracket) => void; /** pencil beside every name (dashboard / tool) */ onRename?: (i: number, v: string) => void; live?: boolean; /** highlight the top N rows (they qualify) */ advance?: number }
+interface Props { bracket: Bracket; onChange?: (b: Bracket) => void; /** pencil beside every name (dashboard / tool) */ onRename?: (i: number, v: string) => void; /** highlight the top N rows (they qualify) */ advance?: number }
 
 /** A player name with a pencil: tap it to rename in place (Enter / leaving the field saves). */
 export function Nm({ name, onRename, className }: { name: string; onRename?: (v: string) => void; className?: string }) {
@@ -13,7 +13,7 @@ export function Nm({ name, onRename, className }: { name: string; onRename?: (v:
   return <span className={className}>{name}{onRename && <button type="button" className="br-edit" aria-label="Rename" title="Rename" onClick={() => setEd(true)}><PencilIcon className="br-pen" /></button>}</span>;
 }
 
-export default function LeagueView({ bracket: br, onChange, onRename, live, advance }: Props) {
+export default function LeagueView({ bracket: br, onChange, onRename, advance }: Props) {
   const { lang, dir } = useI18n();
   const ar = lang === 'ar';
   const rounds = leagueRounds(br);
@@ -30,7 +30,6 @@ export default function LeagueView({ bracket: br, onChange, onRename, live, adva
   const card = (m: BMatch) => {
     const bye = 'bye' in m.a || 'bye' in m.b;
     const o = outcome(br, m);
-    const cur = isCurrent(br, m.id) && !o;
     const side = (s: 'a' | 'b') => {
       const slot = m[s];
       const isBye = 'bye' in slot;
@@ -47,10 +46,8 @@ export default function LeagueView({ bracket: br, onChange, onRename, live, adva
       );
     };
     return (
-      <div key={m.id} className={`br-match ${bye ? 'is-bye' : ''} ${cur ? 'is-cur' : ''}`} data-m={m.id}>
-        {cur && <span className="br-live">{ar ? 'الآن' : 'LIVE'}</span>}
+      <div key={m.id} className={`br-match ${bye ? 'is-bye' : ''} `} data-m={m.id}>
         {side('a')}{side('b')}
-        {onChange && live && !bye && !o && <button type="button" className={`br-livebtn ${cur ? 'on' : ''}`} aria-pressed={cur} title={cur ? (ar ? 'إلغاء "الآن"' : 'Unmark live') : (ar ? 'تحديد كمباراة حالية' : 'Mark as live')} onClick={() => onChange(toggleCurrent(br, m.id))}><i /></button>}
         {o === 'draw' && <span className="lg-draw">{ar ? 'تعادل' : 'Draw'}</span>}
       </div>
     );

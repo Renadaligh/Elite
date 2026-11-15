@@ -1,6 +1,9 @@
 import { body, json, str, type Ctx } from '../../_lib';
 import { guard } from '../../_admin';
 
+const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+const idsOf = (s: string) => s.split(/[\n,،;]+/).map(key).filter(Boolean);
+
 /** Public: register for a tournament. Admin: list all registrations. */
 export const onRequestPost = async ({ request, env }: Ctx) => {
   const b = await body(request);
@@ -12,7 +15,14 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   if (!t) return json({ ok: false, error: 'unknown' }, 404);
   if (tid.startsWith('u-') && Date.now() >= Date.parse(t.starts_at)) return json({ ok: false, error: 'closed' }, 409); // community tournaments close when they start
   if (t.total > 0 && t.filled >= t.total) return json({ ok: false, error: 'full' }, 409);
-  if (team && await env.DB.prepare("SELECT 1 AS x FROM registrations WHERE tournament_id=? AND mode='team' AND lower(trim(team_name))=lower(trim(?))").bind(tid, teamName).first()) return json({ ok: false, error: 'duplicate_team' }, 409);
+  // Nobody may appear twice: not twice in this form, and not as someone already registered (as a solo player, a captain or a team member).
+  const mine = [key(plato), ...(team ? idsOf(members) : [])];
+  if (new Set(mine).size !== mine.length) return json({ ok: false, error: 'duplicate_members' }, 400);
+  const { results: taken } = await env.DB.prepare('SELECT mode, plato_id, team_name, members FROM registrations WHERE tournament_id=? LIMIT 5000').bind(tid).all<{ mode: string; plato_id: string; team_name: string; members: string }>();
+  const used = new Set<string>();
+  for (const r of taken ?? []) { used.add(key(r.plato_id)); idsOf(r.members ?? '').forEach((m) => used.add(m)); }
+  if (team && (taken ?? []).some((r) => r.mode === 'team' && key(r.team_name) === key(teamName))) return json({ ok: false, error: 'duplicate_team' }, 409);
+  if (mine.some((m) => used.has(m))) return json({ ok: false, error: 'duplicate' }, 409);
   try {
     await env.DB.prepare('INSERT INTO registrations (tournament_id,tournament_name,mode,plato_id,team_name,members,lang) VALUES (?,?,?,?,?,?,?)')
       .bind(tid, t.name_en, team ? 'team' : 'solo', plato, teamName, members, b.lang === 'en' ? 'en' : 'ar').run();
