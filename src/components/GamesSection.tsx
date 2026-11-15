@@ -93,19 +93,8 @@ export default function GamesSection() {
   const cw = wide ? 'clamp(210px, 19vw, 290px)' : 'min(60vw, 250px)';
   const stage: Vars = { '--cw': cw, '--wm': `url(${BASE}brand/cube-v2.png)`, height: 'calc(var(--cw) * 1.4 + 2.5rem)' };
   const active = games[index];
-  // frosted background: the active game's own art behind a thick frosted pane; the previous one stays underneath while the new one fades in
-  const bgOf = (g?: Game) => (g ? { id: g.id, src: g.image, a: g.colors[0], b: g.colors[1] } : null);
-  const [layers, setLayers] = useState(() => [bgOf(games[0])]);
-  useEffect(() => {
-    const nb = bgOf(active); if (!nb) return undefined;
-    setLayers((l) => (l[l.length - 1]?.id === nb.id ? l : [...l.slice(-1), nb]));
-    const h = window.setTimeout(() => setLayers((l) => l.slice(-1)), 700);
-    return () => window.clearTimeout(h);
-  }, [active?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
-    <section id="games" aria-labelledby="games-title" className="gm-frost relative isolate scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(5.5rem,10vw,7.5rem)]" style={{ backgroundColor: 'var(--bg)' }}>
-      <div aria-hidden="true" className="gm-bg">{layers.map((l, i) => l && <div key={l.id} className={`gm-layer ${i === layers.length - 1 && layers.length > 1 ? 'in' : ''}`} style={{ backgroundImage: l.src ? `url("${l.src}")` : `linear-gradient(160deg, ${l.a}, ${l.b})` }} />)}<div className="gm-pane" /></div>
+    <section id="games" aria-labelledby="games-title" className="relative isolate scroll-mt-20 overflow-x-clip px-[clamp(1.1rem,7vw,6.9rem)] pb-[clamp(5.5rem,11vw,8.5rem)] pt-[clamp(7.5rem,13vw,9.5rem)]" style={{ backgroundColor: 'var(--bg)' }}>
       <h2 id="games-title" className="sr-only">{t.gamesTitle}</h2>
       <div ref={barRef} className="gm-bar mx-auto max-w-[30rem]">
         <button type="button" className="gm-fbtn" aria-expanded={menu} aria-haspopup="true" onClick={() => setMenu((m) => !m)}>
