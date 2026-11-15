@@ -45,7 +45,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
     <header data-solid={solid} className="hdr fixed inset-x-0 top-0 z-50">
       <div dir="ltr" className="flex items-center justify-between gap-4 px-[clamp(1rem,4vw,3.5rem)] py-3 sm:py-4">
         <BrandLockup collapsed={!solid} />
-        <nav dir={dir} aria-label="Primary" className={`hidden lg:block${solid ? '' : ' lg:absolute lg:left-1/2 lg:-translate-x-1/2'}`}>
+        <nav dir={dir} aria-label="Primary" className="hidden lg:absolute lg:left-1/2 lg:block lg:-translate-x-1/2">
           <ul className="flex items-center gap-[clamp(1rem,2.2vw,2.1rem)]">
             {NAV.map((n) => {
               const on = active === n.href;
