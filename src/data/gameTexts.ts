@@ -11,8 +11,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 20 إلى 60 دقيقة\nمهارة وحظ\nعدة لاعبين",
-    "en": "Approx. length: 20–60 min\nSkill and luck\nSeveral players"
+    "ar": "المدة التقريبية: 20 إلى 60 دقيقة\nعدة لاعبين",
+    "en": "Approx. length: 20–60 min\nSeveral players"
    }
   },
   {
@@ -73,8 +73,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nحظ ومهارة معاً\nعدة لاعبين",
-    "en": "Approx. length: 10–20 min\nLuck and skill\nSeveral players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nعدة لاعبين",
+    "en": "Approx. length: 10–20 min\nSeveral players"
    }
   },
   {
@@ -135,8 +135,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمهارة مع قليل من الحظ\nلاعبان أو 2 ضد 2",
-    "en": "Approx. length: 10–20 min\nSkill, a little luck\n1v1 or 2v2"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nلاعبان أو 2 ضد 2",
+    "en": "Approx. length: 10–20 min\n1v1 or 2v2"
    }
   },
   {
@@ -197,8 +197,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة مع قليل من الحظ\nلاعبان",
-    "en": "Approx. length: 5–10 min\nSkill, a little luck\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -259,8 +259,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة وتخطيط\nلاعبان",
-    "en": "Approx. length: 5–10 min\nSkill and planning\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -321,8 +321,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 15 دقيقة\nمهارة مع قليل من الحظ\nعدة لاعبين",
-    "en": "Approx. length: 5–15 min\nSkill, a little luck\nSeveral players"
+    "ar": "المدة التقريبية: 5 إلى 15 دقيقة\nعدة لاعبين",
+    "en": "Approx. length: 5–15 min\nSeveral players"
    }
   },
   {
@@ -383,8 +383,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nحظ ومهارة معاً\nمن 2 إلى 4 لاعبين، أو فريقان",
-    "en": "Approx. length: 15–30 min\nLuck and skill\n2–4 players, or two teams"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nمن 2 إلى 4 لاعبين، أو فريقان",
+    "en": "Approx. length: 15–30 min\n2–4 players, or two teams"
    }
   },
   {
@@ -445,8 +445,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 15 دقيقة\nمهارة مع قليل من الحظ\nحتى 4 لاعبين",
-    "en": "Approx. length: 10–15 min\nSkill, a little luck\nUp to 4 players"
+    "ar": "المدة التقريبية: 10 إلى 15 دقيقة\nحتى 4 لاعبين",
+    "en": "Approx. length: 10–15 min\nUp to 4 players"
    }
   },
   {
@@ -507,8 +507,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة وتخطيط\nلاعبان",
-    "en": "Approx. length: 5–10 min\nSkill and planning\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -569,8 +569,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 2 إلى 5 دقائق\nمهارة 100%\nخصمان عشوائيان أو صديق",
-    "en": "Approx. length: 2–5 min\nPure skill\nMatched opponents or a friend"
+    "ar": "المدة التقريبية: 2 إلى 5 دقائق\nخصمان عشوائيان أو صديق",
+    "en": "Approx. length: 2–5 min\nMatched opponents or a friend"
    }
   },
   {
@@ -631,8 +631,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 دقائق\nحظ ومهارة معاً\nلاعبان",
-    "en": "Approx. length: 10 min\nLuck and skill\n2 players"
+    "ar": "المدة التقريبية: 10 دقائق\nلاعبان",
+    "en": "Approx. length: 10 min\n2 players"
    }
   },
   {
@@ -693,8 +693,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمهارة مع قليل من الحظ\nلاعبان أو فريقان",
-    "en": "Approx. length: 10–20 min\nSkill, a little luck\n2 players or two teams"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nلاعبان أو فريقان",
+    "en": "Approx. length: 10–20 min\n2 players or two teams"
    }
   },
   {
@@ -755,8 +755,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة وسرعة\nمن 2 إلى 4 لاعبين",
-    "en": "Approx. length: 5–10 min\nSkill and speed\n2–4 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمن 2 إلى 4 لاعبين",
+    "en": "Approx. length: 5–10 min\n2–4 players"
    }
   },
   {
@@ -817,8 +817,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 3 إلى 8 دقائق\nمهارة وسرعة\nلاعبان",
-    "en": "Approx. length: 3–8 min\nSkill and speed\n2 players"
+    "ar": "المدة التقريبية: 3 إلى 8 دقائق\nلاعبان",
+    "en": "Approx. length: 3–8 min\n2 players"
    }
   },
   {
@@ -879,8 +879,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة وتخطيط\nلاعبان",
-    "en": "Approx. length: 5–10 min\nSkill and planning\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -941,8 +941,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nحظ بالدرجة الأولى\nمن 2 إلى 15 لاعباً",
-    "en": "Approx. length: 5–10 min\nMostly luck\n2–15 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمن 2 إلى 15 لاعباً",
+    "en": "Approx. length: 5–10 min\n2–15 players"
    }
   },
   {
@@ -1003,8 +1003,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 3 إلى 6 دقائق\nمهارة وسرعة\nلاعبان",
-    "en": "Approx. length: 3–6 min\nSkill and speed\n2 players"
+    "ar": "المدة التقريبية: 3 إلى 6 دقائق\nلاعبان",
+    "en": "Approx. length: 3–6 min\n2 players"
    }
   },
   {
@@ -1065,8 +1065,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 3 إلى 5 دقائق\nمهارة 100%\nخصم واحد",
-    "en": "Approx. length: 3–5 min\nPure skill\nOne opponent"
+    "ar": "المدة التقريبية: 3 إلى 5 دقائق\nخصم واحد",
+    "en": "Approx. length: 3–5 min\nOne opponent"
    }
   },
   {
@@ -1127,8 +1127,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 دقائق\nمهارة مع قليل من الحظ\nلاعبان",
-    "en": "Approx. length: 5 min\nSkill, a little luck\n2 players"
+    "ar": "المدة التقريبية: 5 دقائق\nلاعبان",
+    "en": "Approx. length: 5 min\n2 players"
    }
   },
   {
@@ -1189,8 +1189,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 3 إلى 8 دقائق\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 3–8 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 3 إلى 8 دقائق\nلاعبان",
+    "en": "Approx. length: 3–8 min\n2 players"
    }
   },
   {
@@ -1251,8 +1251,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 15 دقيقة\nحظ ومهارة معاً\nلاعبان",
-    "en": "Approx. length: 10–15 min\nLuck and skill\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 15 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–15 min\n2 players"
    }
   },
   {
@@ -1313,8 +1313,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 25 دقيقة\nحظ ومهارة معاً\nلاعبان",
-    "en": "Approx. length: 10–25 min\nLuck and skill\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 25 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–25 min\n2 players"
    }
   },
   {
@@ -1437,8 +1437,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 25 دقيقة\nمهارة مع قليل من الحظ\nلاعبان",
-    "en": "Approx. length: 15–25 min\nSkill, a little luck\n2 players"
+    "ar": "المدة التقريبية: 15 إلى 25 دقيقة\nلاعبان",
+    "en": "Approx. length: 15–25 min\n2 players"
    }
   },
   {
@@ -1499,8 +1499,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 20 إلى 45 دقيقة\nحظ ومهارة معاً\nمن 2 إلى 4 لاعبين",
-    "en": "Approx. length: 20–45 min\nLuck and skill\n2–4 players"
+    "ar": "المدة التقريبية: 20 إلى 45 دقيقة\nمن 2 إلى 4 لاعبين",
+    "en": "Approx. length: 20–45 min\n2–4 players"
    }
   },
   {
@@ -1561,8 +1561,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمهارة مع قليل من الحظ\nلاعبان",
-    "en": "Approx. length: 10–20 min\nSkill, a little luck\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–20 min\n2 players"
    }
   },
   {
@@ -1623,8 +1623,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 15 دقيقة\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 5–15 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 15 دقيقة\nلاعبان",
+    "en": "Approx. length: 5–15 min\n2 players"
    }
   },
   {
@@ -1685,8 +1685,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nحظ ومهارة معاً\nعدة لاعبين",
-    "en": "Approx. length: 5–10 min\nLuck and skill\nSeveral players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nعدة لاعبين",
+    "en": "Approx. length: 5–10 min\nSeveral players"
    }
   },
   {
@@ -1747,8 +1747,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 30 دقيقة\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 10–30 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 30 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–30 min\n2 players"
    }
   },
   {
@@ -1809,8 +1809,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 15 دقيقة\nحظ ومهارة معاً\nلاعبان",
-    "en": "Approx. length: 10–15 min\nLuck and skill\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 15 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–15 min\n2 players"
    }
   },
   {
@@ -1871,8 +1871,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 20 إلى 40 دقيقة\nمهارة وتعاون\n4 لاعبين في فريقين",
-    "en": "Approx. length: 20–40 min\nSkill and teamwork\n4 players in two teams"
+    "ar": "المدة التقريبية: 20 إلى 40 دقيقة\n4 لاعبين في فريقين",
+    "en": "Approx. length: 20–40 min\n4 players in two teams"
    }
   },
   {
@@ -1933,8 +1933,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 5–10 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -1995,8 +1995,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nخداع واستنتاج\n7 أو 9 لاعبين",
-    "en": "Approx. length: 15–30 min\nDeception and deduction\n7 or 9 players"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\n7 أو 9 لاعبين",
+    "en": "Approx. length: 15–30 min\n7 or 9 players"
    }
   },
   {
@@ -2057,8 +2057,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 5–10 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -2119,8 +2119,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 3 إلى 5 دقائق\nمهارة وسرعة\nخصم واحد",
-    "en": "Approx. length: 3–5 min\nSkill and speed\nOne opponent"
+    "ar": "المدة التقريبية: 3 إلى 5 دقائق\nخصم واحد",
+    "en": "Approx. length: 3–5 min\nOne opponent"
    }
   },
   {
@@ -2181,8 +2181,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة مع قليل من الحظ\nعدة لاعبين",
-    "en": "Approx. length: 5–10 min\nSkill, a little luck\nSeveral players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nعدة لاعبين",
+    "en": "Approx. length: 5–10 min\nSeveral players"
    }
   },
   {
@@ -2243,8 +2243,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nخداع ومهارة\n4 لاعبين",
-    "en": "Approx. length: 10–20 min\nBluffing and skill\n4 players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\n4 لاعبين",
+    "en": "Approx. length: 10–20 min\n4 players"
    }
   },
   {
@@ -2305,8 +2305,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 10–20 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–20 min\n2 players"
    }
   },
   {
@@ -2367,8 +2367,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nخداع ومهارة\nلاعبان أو فريقان",
-    "en": "Approx. length: 15–30 min\nBluffing and skill\n2 players or two teams"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nلاعبان أو فريقان",
+    "en": "Approx. length: 15–30 min\n2 players or two teams"
    }
   },
   {
@@ -2429,8 +2429,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 دقائق\nإبداع وتخمين\nرسام ومخمِّن",
-    "en": "Approx. length: 5 min\nCreativity and guessing\nOne drawer, one guesser"
+    "ar": "المدة التقريبية: 5 دقائق\nرسام ومخمِّن",
+    "en": "Approx. length: 5 min\nOne drawer, one guesser"
    }
   },
   {
@@ -2491,8 +2491,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمنطق وحظ\nمن 2 إلى 4 لاعبين",
-    "en": "Approx. length: 5–10 min\nLogic and luck\n2–4 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمن 2 إلى 4 لاعبين",
+    "en": "Approx. length: 5–10 min\n2–4 players"
    }
   },
   {
@@ -2553,8 +2553,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nمهارة مع قليل من الحظ\nعدة لاعبين",
-    "en": "Approx. length: 15–30 min\nSkill, a little luck\nSeveral players"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nعدة لاعبين",
+    "en": "Approx. length: 15–30 min\nSeveral players"
    }
   },
   {
@@ -2615,8 +2615,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nحظ وخداع بسيط\n4 لاعبين",
-    "en": "Approx. length: 5–10 min\nLuck and light bluffing\n4 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\n4 لاعبين",
+    "en": "Approx. length: 5–10 min\n4 players"
    }
   },
   {
@@ -2677,8 +2677,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمهارة مع قليل من الحظ\n4 لاعبين",
-    "en": "Approx. length: 10–20 min\nSkill, a little luck\n4 players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\n4 لاعبين",
+    "en": "Approx. length: 10–20 min\n4 players"
    }
   },
   {
@@ -2739,8 +2739,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 5–10 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -2801,8 +2801,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nمهارة مع قليل من الحظ\n4 لاعبين",
-    "en": "Approx. length: 15–30 min\nSkill, a little luck\n4 players"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\n4 لاعبين",
+    "en": "Approx. length: 15–30 min\n4 players"
    }
   },
   {
@@ -2863,8 +2863,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nاستراتيجية وحظ\nلاعبان",
-    "en": "Approx. length: 10–20 min\nStrategy and luck\n2 players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nلاعبان",
+    "en": "Approx. length: 10–20 min\n2 players"
    }
   },
   {
@@ -2925,8 +2925,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nمهارة وتخطيط\nلاعبان",
-    "en": "Approx. length: 5–10 min\nSkill and planning\n2 players"
+    "ar": "المدة التقريبية: 5 إلى 10 دقائق\nلاعبان",
+    "en": "Approx. length: 5–10 min\n2 players"
    }
   },
   {
@@ -2987,8 +2987,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nتفاوض وتحالفات\nعدة لاعبين",
-    "en": "Approx. length: 15–30 min\nNegotiation and alliances\nSeveral players"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nعدة لاعبين",
+    "en": "Approx. length: 15–30 min\nSeveral players"
    }
   },
   {
@@ -3049,8 +3049,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nذوق وفكاهة\nمن 3 إلى 5 لاعبين",
-    "en": "Approx. length: 15–30 min\nTaste and humour\n3–5 players"
+    "ar": "المدة التقريبية: 15 إلى 30 دقيقة\nمن 3 إلى 5 لاعبين",
+    "en": "Approx. length: 15–30 min\n3–5 players"
    }
   },
   {
@@ -3111,8 +3111,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 30 إلى 60 دقيقة\nتعاون وحظ\n5 لاعبين",
-    "en": "Approx. length: 30–60 min\nTeamwork and luck\n5 players"
+    "ar": "المدة التقريبية: 30 إلى 60 دقيقة\n5 لاعبين",
+    "en": "Approx. length: 30–60 min\n5 players"
    }
   },
   {
@@ -3173,8 +3173,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 15 إلى 25 دقيقة\nخداع واستنتاج\n6 لاعبين: 4 مجتمع و2 جواسيس",
-    "en": "Approx. length: 15–25 min\nDeception and deduction\n6 players: 4 Society, 2 Spies"
+    "ar": "المدة التقريبية: 15 إلى 25 دقيقة\n6 لاعبين: 4 مجتمع و2 جواسيس",
+    "en": "Approx. length: 15–25 min\n6 players: 4 Society, 2 Spies"
    }
   },
   {
@@ -3235,8 +3235,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nإبداع وفكاهة\nعدة لاعبين",
-    "en": "Approx. length: 10–20 min\nCreativity and humour\nSeveral players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nعدة لاعبين",
+    "en": "Approx. length: 10–20 min\nSeveral players"
    }
   },
   {
@@ -3297,8 +3297,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 20 إلى 60 دقيقة\nمهارة 100%\nلاعبان",
-    "en": "Approx. length: 20–60 min\nPure skill\n2 players"
+    "ar": "المدة التقريبية: 20 إلى 60 دقيقة\nلاعبان",
+    "en": "Approx. length: 20–60 min\n2 players"
    }
   },
   {
@@ -3421,8 +3421,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Quick facts"
    },
    "body": {
-    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمهارة وتخطيط\nمن 2 إلى 4 لاعبين",
-    "en": "Approx. length: 10–20 min\nSkill and planning\n2–4 players"
+    "ar": "المدة التقريبية: 10 إلى 20 دقيقة\nمن 2 إلى 4 لاعبين",
+    "en": "Approx. length: 10–20 min\n2–4 players"
    }
   },
   {
