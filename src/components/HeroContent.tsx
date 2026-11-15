@@ -33,7 +33,6 @@ export default function HeroContent() {
           <svg className="hm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 5h6v5H3zM3 14h6v5H3zM15 9.5h6v5h-6zM9 7.5h3v9M12 12h3" /></svg>
           <span>{lang === 'ar' ? <><span className="hm-try">جرّب </span>أداة تنظيم البطولات</> : <><span className="hm-try">Try the </span>Bracket Tool</>}</span>
         </a>
-        <a href="#tournaments" className="hero-sec" onClick={(e) => goTo(e, 'tournaments')}>{t.ctaTournaments}</a>
         <a href="#games" className="hero-sec" onClick={(e) => goTo(e, 'games')}>{t.ctaGames}</a>
       </div>
     </div>

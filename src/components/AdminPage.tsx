@@ -58,7 +58,7 @@ const EN: Record<string, string> = {
   'حذف هذه البطولة؟': 'Delete this tournament?', 'بطولة جديدة': 'New tournament', 'تعديل البطولة': 'Edit tournament',
   'اسم البطولة': 'Tournament name', 'اللعبة': 'Game', 'النوع': 'Type', 'فردي (Plato ID)': 'Solo (Plato ID)',
   'فرق (اسم الفريق + القائد + الأعضاء)': 'Teams (team name + captain + members)', 'النظام': 'Format', 'فردي · أسرع لفة': 'Solo · Fastest lap',
-  'الجائزة': 'Prize', '5,000 ريال': '5,000 SAR', 'البداية (توقيت الرياض)': 'Start (Riyadh time)', 'النهاية (توقيت الرياض)': 'End (Riyadh time)',
+  'الجائزة': 'Prize', '5,000 ريال': '5,000 SAR', 'البداية': 'Start', 'النهاية': 'End',
   'العدد الأقصى': 'Max slots', 'تحديد عدد المقاعد': 'Limit the seats', 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟': 'Adding players after matches started clears the current results (Undo brings them back). Sure?', 'تحديث الصفحة': 'Refresh', 'الكل': 'All', 'بطولات Plato AR': 'Plato AR tournaments', 'بطولات المستخدمين': 'Community tournaments', 'غير محدود': 'Unlimited', 'قيد المراجعة': 'Under review', 'مرفوضة': 'Rejected', 'مقبولة': 'Approved', 'قبول': 'Approve', 'رفض': 'Reject', 'سبب الرفض (يظهر لصاحب البطولة)': 'Reason for rejection (the owner sees it)', 'تأكيد الرفض': 'Confirm rejection', 'طلبات بطولات المستخدمين بانتظار مراجعتك': 'Community tournaments waiting for your review', 'فتح البراكت': 'Open bracket', 'اكتب سبب الرفض': 'Write the reason', 'تمت المراجعة': 'Review saved', 'المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)': 'Registered now (auto-increments on each sign-up)',
   'رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)': 'External registration link (optional, replaces the site form)',
   'الفائز (بعد الانتهاء)': 'Winner (after it ends)', 'صورة الفائز (طولية 9:16، اختياري)': 'Winner portrait (tall 9:16, optional)', 'أو الصق رابط': 'or paste a link', 'اختر صورة من جهازك': 'Choose from your device', 'جارٍ الرفع…': 'Uploading…', 'فشل رفع الصورة': 'Image upload failed', 'التخزين غير مفعّل بعد (R2)': 'Storage is not enabled yet (R2)', 'إزالة': 'Remove', 'منشورة (تظهر في الموقع)': 'Published (visible on the site)',
@@ -337,14 +337,14 @@ function Drawer({ title, onClose, children, wide }: { title: string; onClose: ()
   );
 }
 
-/* ---------- Riyadh date-time helpers (stored as ISO with +03:00) ---------- */
+/* ---------- date-time helpers: local time zone of whoever is editing ---------- */
+const pad2 = (n: number) => String(n).padStart(2, '0');
+/** The form works in the viewer's own time zone; the stored value is an absolute moment (ISO), shown to everyone in their own zone. */
 const toInput = (iso: string) => {
-  if (!iso) return '';
-  if (/\+03:00$/.test(iso)) return iso.slice(0, 16);
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('sv-SE', { timeZone: 'Asia/Riyadh' }).replace(' ', 'T').slice(0, 16);
+  return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
-const fromInput = (v: string) => (v ? `${v}:00+03:00` : '');
+const fromInput = (v: string) => { const d = new Date(v); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
 const when = (iso: string) => toInput(iso).replace('T', ' ');
 
 
@@ -728,8 +728,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
             {pair('prize', x('الجائزة'), 'Prize', x('5,000 ريال'))}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('البداية (توقيت الرياض)')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
-              <Field label={x('النهاية (توقيت الرياض)')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></Field>
+              <Field label={x('البداية')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
+              <Field label={x('النهاية')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></Field>
               <Field label={x('تحديد عدد المقاعد')}>
                 <div className="flex items-center gap-3">
                   <button type="button" role="switch" aria-checked={f.slots.total > 0} aria-label={x('تحديد عدد المقاعد')} className={`st-sw ${f.slots.total > 0 ? 'on' : ''}`} onClick={() => setF({ ...f, slots: { ...f.slots, total: f.slots.total > 0 ? 0 : 16 } })}><i /></button>
@@ -1405,8 +1405,8 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
     const q = new URLSearchParams();
     if (f.user) q.set('user', f.user);
     if (f.action) q.set('action', f.action);
-    if (f.from) q.set('from', String(new Date(`${f.from}T00:00:00+03:00`).getTime()));
-    if (f.to) q.set('to', String(new Date(`${f.to}T00:00:00+03:00`).getTime() + 86400000));
+    if (f.from) q.set('from', String(new Date(`${f.from}T00:00:00`).getTime()));
+    if (f.to) q.set('to', String(new Date(`${f.to}T00:00:00`).getTime() + 86400000));
     if (before) q.set('before', String(before));
     return q.toString();
   }, [f]);
@@ -1417,7 +1417,7 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
       .catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل السجل')); });
   }, [k, qs, rows]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load(false); }, [f, k]); // eslint-disable-line react-hooks/exhaustive-deps
-  const when = (t: number) => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'medium' });
+  const when = (t: number) => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { dateStyle: 'medium', timeStyle: 'medium' });
   const sel = 'h-10 rounded-xl border border-white/15 bg-white/[.06] px-3 text-[.9rem] text-inherit';
   const fmt = (d: string) => {
     if (!d) return null;
@@ -1475,7 +1475,7 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const load = useCallback(() => { api<AdminRow[]>('/admin/admins', { key: k }).then(setRows).catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل الحسابات')); }); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
   const fail = (e: unknown, m: string) => { const c = (e as Error).message; if (c === '401') onAuthFail(); else toast.err(c === '409' ? x('اسم المستخدم مستخدم من قبل') : m); };
-  const when2 = (t: number) => (t ? new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }) : '—');
+  const when2 = (t: number) => (t ? new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
   async function create() {
     if (!add || busy) return;

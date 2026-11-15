@@ -5,6 +5,7 @@ import { useTournaments } from '../hooks/useTournaments';
 import { statusOf, tournamentsForGame, type TournamentStatus } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { ArrowIcon } from './icons';
+import { useImageTones } from '../hooks/useImageTones';
 import { Register } from './TournamentsSection';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
@@ -24,11 +25,39 @@ function Block({ title, children, bare }: { title: string; children: ReactNode; 
   );
 }
 
+type GText = NonNullable<import('../data/games').Game['texts']>[number];
+const isBullets = (b: string) => { const l = b.split('\n').filter(Boolean); return l.length > 1 && l.every((x) => x.startsWith('• ')); };
+const bullets = (b: string) => b.split('\n').filter(Boolean).map((x) => x.replace(/^•\s*/, ''));
+/** The about section as a lead, chips for quick facts, a goal callout and divided sections (tips as ticks, tournament notes as numbered steps). Falls back to plain divided sections for custom paragraphs. */
+function GameTexts({ texts, lang }: { texts: GText[]; lang: 'ar' | 'en' }) {
+  const items = texts.map((x) => ({ title: x.title[lang], body: x.body[lang], isGoal: x.title.ar === 'الهدف' || x.title.en === 'Goal' })).filter((x) => x.title || x.body);
+  const facts = items.length > 2 && !isBullets(items[0].body) && items[0].body.split('\n').filter(Boolean).length <= 5 && items[0].body.split('\n').every((l) => l.length <= 60) ? items[0] : null;
+  const rest = facts ? items.slice(1) : items;
+  const lastBullets = rest.map((x, i) => (isBullets(x.body) ? i : -1)).filter((i) => i >= 0).pop();
+  let leadDone = false;
+  return (
+    <div className="gt">
+      {facts && <div className="gt-chips" role="list" aria-label={facts.title}>{facts.body.split('\n').filter(Boolean).map((f, i) => <span key={i} role="listitem" className="gt-chip">{f}</span>)}</div>}
+      {rest.map((x, i) => {
+        if (isBullets(x.body)) {
+          const steps = i === lastBullets && i > 0;
+          const List = steps ? 'ol' : 'ul';
+          return <section key={i} className="gt-sec">{x.title && <h2>{x.title}</h2>}<List className={steps ? 'gt-steps' : 'gt-ck'}>{bullets(x.body).map((b, k) => <li key={k}>{b}</li>)}</List></section>;
+        }
+        if (x.isGoal) return <div key={i} className="gt-goal">{x.title && <b>{x.title}: </b>}{x.body}</div>;
+        if (!leadDone) { leadDone = true; return <p key={i} className="gt-lead">{x.body}</p>; }
+        return <section key={i} className="gt-sec">{x.title && <h2>{x.title}</h2>}<p className="whitespace-pre-line">{x.body}</p></section>;
+      })}
+    </div>
+  );
+}
+
 /** Game page (#/games/<id>): header with tags, then about (≤2 texts), videos (≤4), images (≤4) and the game's tournaments. Sections with nothing added are not shown. */
 export default function GamePage({ id }: { id: string }) {
   const { t, lang } = useI18n();
   useGames();
   const g = getGame(id);
+  const tones = useImageTones(g?.image);
   const { items: allTours } = useTournaments();
   const [tab, setTab] = useState<Tab>('all');
   const now = Date.now();
@@ -47,7 +76,8 @@ export default function GamePage({ id }: { id: string }) {
     );
   }
 
-  const tone = g.tone ?? g.colors[0];
+  const tone = tones?.[0] ?? g.tone ?? g.colors[0];
+  const tone2 = tones?.[1] ?? tone;
   const rows = tournamentsForGame(allTours, g.id).map((x) => ({ x, s: statusOf(x, now) }))
     .sort((a, b) => ({ live: 0, upcoming: 1, completed: 2 })[a.s] - ({ live: 0, upcoming: 1, completed: 2 })[b.s] || Date.parse(b.x.startsAt) - Date.parse(a.x.startsAt));
   const count = (k: Tab) => (k === 'all' ? rows.length : rows.filter((r) => r.s === k).length);
@@ -57,7 +87,7 @@ export default function GamePage({ id }: { id: string }) {
 
   return (
     <article className="page-in relative isolate min-h-[100svh] overflow-x-clip" style={{ backgroundColor: 'var(--bg)' }}>
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem]" style={{ background: `radial-gradient(ellipse 70% 22rem at 50% 0, color-mix(in srgb, ${tone} 26%, transparent), transparent)` }} />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[38rem] transition-opacity duration-700" style={{ background: `radial-gradient(ellipse 62% 24rem at 30% 0, color-mix(in srgb, ${tone} 34%, transparent), transparent), radial-gradient(ellipse 58% 22rem at 75% 0, color-mix(in srgb, ${tone2} 26%, transparent), transparent)` }} />
       <div className={`mx-auto max-w-[72rem] pb-[clamp(3rem,8vw,6rem)] pt-[clamp(8rem,14vw,11rem)] ${WRAP}`}>
         <div className="mb-10">{back}</div>
 
@@ -76,16 +106,7 @@ export default function GamePage({ id }: { id: string }) {
         </header>
 
         {!!g.texts?.length && <Block title={t.gSecAbout} bare>
-          {(
-            <div className={`grid gap-4 ${g.texts.length > 1 ? 'md:grid-cols-2' : ''}`}>
-              {g.texts.map((x, i) => (
-                <div key={i}>
-                  {x.title[lang] && <h2 className="mb-3 text-[1.35rem] font-extrabold">{x.title[lang]}</h2>}
-                  <p className="whitespace-pre-line leading-relaxed" style={{ color: 'var(--muted)' }}>{x.body[lang]}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <GameTexts texts={g.texts} lang={lang} />
         </Block>}
 
         {!!g.videos?.length && <Block title={t.gSecVideos}>

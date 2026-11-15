@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
-import { NAV } from '../config/site';
+import { NAV, SOCIALS } from '../config/site';
 import BrandLockup from './BrandLockup';
 import HeroThemeToggle from './HeroThemeToggle';
-import { CloseIcon, MenuIcon } from './icons';
+import { CloseIcon, DiscordIcon, MenuIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'admin' }) {
@@ -60,6 +60,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
           </ul>
         </nav>
         <div className="flex items-center gap-2">
+          <a href={SOCIALS.discord} target="_blank" rel="noopener noreferrer" className="pill hdr-discord" aria-label="Discord"><DiscordIcon className="h-5 w-5" /><span>Discord</span></a>
           <HeroThemeToggle />
           <LanguageSwitcher />
           <button ref={burger} type="button" className="pill !px-0 lg:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t.closeMenu : t.menu}>
