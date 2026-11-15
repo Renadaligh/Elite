@@ -226,7 +226,9 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   cv.width = Math.round(W * k); cv.height = Math.round(H * k);
   const c = cv.getContext('2d')!;
   c.scale(k, k);
-  c.direction = 'ltr';
+  c.direction = ar ? 'rtl' : 'ltr';
+  // Arabic mirrors the whole sheet: first round on the right, final on the left, text and numbers on the opposite sides.
+  const mx = (x: number, w: number) => (ar ? W - x - w : x);
   const rr = (x: number, y: number, w: number, h: number, r: number) => { c.beginPath(); c.roundRect(x, y, w, h, r); };
   const txt = (s: string, x: number, y: number, align: CanvasTextAlign, maxW: number) => {
     let t = s;
@@ -236,15 +238,16 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
 
   c.fillStyle = P.bg; c.fillRect(0, 0, W, H);
   c.textBaseline = 'alphabetic';
-  c.fillStyle = P.fg; c.font = `800 26px ${family}`; txt(title, IP, 46, 'left', W - IP * 2 - 130);
-  c.fillStyle = P.mut; c.font = `600 13px ${family}`; txt('plato-ar.com', W - IP, 44, 'right', 130);
-  if (br.org) { c.font = `600 14px ${family}`; txt(`${lang === 'ar' ? 'تنظيم' : 'By'}: ${br.org}`, IP, 66, 'left', W - IP * 2); }
+  c.fillStyle = P.fg; c.font = `800 26px ${family}`; txt(title, ar ? W - IP : IP, 46, ar ? 'right' : 'left', W - IP * 2 - 130);
+  c.fillStyle = P.mut; c.font = `600 13px ${family}`; txt('plato-ar.com', ar ? IP : W - IP, 44, ar ? 'left' : 'right', 130);
+  if (br.org) { c.font = `600 14px ${family}`; txt(`${lang === 'ar' ? 'تنظيم' : 'By'}: ${br.org}`, ar ? W - IP : IP, 66, ar ? 'right' : 'left', W - IP * 2); }
 
   // round names
   c.textBaseline = 'middle';
   for (const h of heads) {
-    rr(h.x, h.y, BW, HD - 6, 6); c.fillStyle = P.head; c.fill();
-    c.fillStyle = P.soft; c.font = `600 12px ${family}`; txt(h.label, h.x + BW / 2, h.y + (HD - 6) / 2 + 1, 'center', BW - 10);
+    const hx = mx(h.x, BW);
+    rr(hx, h.y, BW, HD - 6, 6); c.fillStyle = P.head; c.fill();
+    c.fillStyle = P.soft; c.font = `600 12px ${family}`; txt(h.label, hx + BW / 2, h.y + (HD - 6) / 2 + 1, 'center', BW - 10);
   }
   // connectors (a hidden BYE match draws nothing)
   c.lineWidth = 1.2; c.strokeStyle = P.ln;
@@ -253,8 +256,8 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     for (const s of [m.a, m.b]) {
       if (!('w' in s) || hasBye(R, s.w)) continue;
       const f = pos.get(s.w); if (!f) continue;
-      const x1 = f.x + BW + NUMW, x2 = to.x, mx = x1 + (x2 - x1) / 2;
-      c.beginPath(); c.moveTo(x1, f.y); c.lineTo(mx, f.y); c.lineTo(mx, to.y); c.lineTo(x2, to.y); c.stroke();
+      const x1 = ar ? mx(f.x, BW) - NUMW : f.x + BW + NUMW, x2 = ar ? mx(to.x, BW) + BW : to.x, mid = x1 + (x2 - x1) / 2;
+      c.beginPath(); c.moveTo(x1, f.y); c.lineTo(mid, f.y); c.lineTo(mid, to.y); c.lineTo(x2, to.y); c.stroke();
     }
   }
   // matches
@@ -263,24 +266,26 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   for (const m of br.matches) {
     const p = pos.get(m.id); if (!p || hasBye(R, m.id)) continue;
     const r = R.get(m.id)!;
-    c.save(); rr(p.x, p.y - RHs, BW, RHs * 2, 9); c.clip();
-    c.fillStyle = P.bg; c.fillRect(p.x, p.y - RHs, BW, RHs * 2);
+    const bx = mx(p.x, BW);
+    c.save(); rr(bx, p.y - RHs, BW, RHs * 2, 9); c.clip();
+    c.fillStyle = P.bg; c.fillRect(bx, p.y - RHs, BW, RHs * 2);
     ([['a', r.a, m.sa], ['b', r.b, m.sb]] as const).forEach(([side, w, sc], i) => {
       const y = p.y - RHs + i * RHs, win = m.win === side, lose = !!m.win && !win;
-      c.fillStyle = P.head; c.fillRect(p.x, y + 1, SEED, RHs - 2);
-      c.fillStyle = win ? P.winBg : P.card; c.fillRect(p.x + SEED, y + 1, BW - SEED, RHs - 2);
-      c.fillStyle = P.soft; c.font = `500 11px ${family}`; txt(sd(w), p.x + SEED / 2, y + RHs / 2 + 1, 'center', SEED - 4);
+      const seedX = ar ? bx + BW - SEED : bx, bodyX = ar ? bx : bx + SEED;
+      c.fillStyle = P.head; c.fillRect(seedX, y + 1, SEED, RHs - 2);
+      c.fillStyle = win ? P.winBg : P.card; c.fillRect(bodyX, y + 1, BW - SEED, RHs - 2);
+      c.fillStyle = P.soft; c.font = `500 11px ${family}`; txt(sd(w), seedX + SEED / 2, y + RHs / 2 + 1, 'center', SEED - 4);
       c.fillStyle = win ? P.win : lose ? P.lose : P.fg; c.font = `${win ? 800 : 500} 13px ${family}`;
       const crown = win && champion(br) !== null && m.id === (L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id);
-      txt(nm(w), p.x + SEED + 8, y + RHs / 2 + 1, 'left', BW - SEED - (crown ? 66 : 40));
-      if (crown) trophy(c, p.x + BW - (sc ? 54 : 42), y + RHs / 2 + 1, 15);
-      if (sc || win) { c.fillStyle = win ? P.win : P.fg; c.font = `800 12px ${family}`; txt(sc || '✓', p.x + BW - 8, y + RHs / 2 + 1, 'right', 28); }
+      txt(nm(w), ar ? bx + BW - SEED - 8 : bx + SEED + 8, y + RHs / 2 + 1, ar ? 'right' : 'left', BW - SEED - (crown ? 66 : 40));
+      if (crown) trophy(c, ar ? bx + (sc ? 54 : 42) : bx + BW - (sc ? 54 : 42), y + RHs / 2 + 1, 15);
+      if (sc || win) { c.fillStyle = win ? P.win : P.fg; c.font = `800 12px ${family}`; txt(sc || '✓', ar ? bx + 8 : bx + BW - 8, y + RHs / 2 + 1, ar ? 'left' : 'right', 28); }
     });
     c.restore();
-    c.fillStyle = P.mut; c.font = `500 10px ${family}`; txt(String(nums.get(m.id) ?? ''), p.x + BW + 5, p.y + 1, 'left', NUMW);
+    c.fillStyle = P.mut; c.font = `500 10px ${family}`; txt(String(nums.get(m.id) ?? ''), ar ? bx - 5 : bx + BW + 5, p.y + 1, ar ? 'right' : 'left', NUMW);
   }
 
-  brandMark(c, W, H - 46, false, family);
+  brandMark(c, W, H - 46, ar, family);
   c.textAlign = 'start';
   return cv;
 }

@@ -95,8 +95,10 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
   const name = (w: Who) => (typeof w === 'number' ? bracket.players[w] ?? '' : w === 'bye' ? 'BYE' : '');
   const seed = (w: Who) => (typeof w === 'number' ? String(w + 1) : '');
 
+  // Arabic mirrors the sheet: first round on the right, the final on the left, names right-aligned, scores on the left.
+  const mx = (x: number, w: number) => (ar ? g.W - x - w : x);
   const matchEl = (m: BMatch) => {
-    const p = g.pos.get(m.id)!; const r = g.R.get(m.id);
+    const q = g.pos.get(m.id)!; const p = { x: mx(q.x, BW), y: q.y }; const r = g.R.get(m.id);
     if (!r) return null;
     const rows = [{ w: r.a, win: m.win === 'a' || (r.win === r.a && r.a !== null && r.b === 'bye'), sc: m.sa }, { w: r.b, win: m.win === 'b' || (r.win === r.b && r.b !== null && r.a === 'bye'), sc: m.sb }];
     const hasWin = !!m.win;
@@ -109,18 +111,18 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
           const crown = champ !== null && m.id === finalId && row.win;
           return (
             <g key={k}>
-              <rect className="bs-seed" x={p.x} y={y + 1} width={SEED} height={RH - 2} />
-              <text className="bs-sn" x={p.x + SEED / 2} y={y + RH / 2 + 4} fontSize="11" textAnchor="middle">{seed(row.w)}</text>
-              <rect className={row.win ? 'bs-row win' : 'bs-row'} x={p.x + SEED} y={y + 1} width={BW - SEED} height={RH - 2} />
-              <svg x={p.x + SEED + 8} y={y + 1} width={BW - SEED - (crown ? 60 : 34)} height={RH - 2} overflow="hidden">
-                <text className={`bs-nm${row.win ? ' win' : ''}${bye ? ' bye' : hasWin && !row.win ? ' lose' : ''}`} x="0" y={RH / 2 + 3} fontSize="13">{name(row.w)}</text>
+              <rect className="bs-seed" x={ar ? p.x + BW - SEED : p.x} y={y + 1} width={SEED} height={RH - 2} />
+              <text className="bs-sn" x={(ar ? p.x + BW - SEED : p.x) + SEED / 2} y={y + RH / 2 + 4} fontSize="11" textAnchor="middle">{seed(row.w)}</text>
+              <rect className={row.win ? 'bs-row win' : 'bs-row'} x={ar ? p.x : p.x + SEED} y={y + 1} width={BW - SEED} height={RH - 2} />
+              <svg x={ar ? p.x + BW - SEED - 8 - (BW - SEED - (crown ? 60 : 34)) : p.x + SEED + 8} y={y + 1} width={BW - SEED - (crown ? 60 : 34)} height={RH - 2} overflow="hidden">
+                <text className={`bs-nm${row.win ? ' win' : ''}${bye ? ' bye' : hasWin && !row.win ? ' lose' : ''}`} x={ar ? BW - SEED - (crown ? 60 : 34) : 0} textAnchor={ar ? 'end' : 'start'} y={RH / 2 + 3} fontSize="13">{name(row.w)}</text>
               </svg>
-              {crown && <g transform={`translate(${p.x + BW - (row.sc ? 46 : 44)},${y + 4}) scale(.7)`}><path className="bs-cup" d="M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></g>}
-              {row.sc ? <text className="bs-sc" x={p.x + BW - 8} y={y + RH / 2 + 4} fontSize="12" fontWeight="700" textAnchor="end">{row.sc}</text> : row.win && m.win ? <text className="bs-ck" x={p.x + BW - 9} y={y + RH / 2 + 4} fontSize="12" fontWeight="800" textAnchor="end">✓</text> : null}
+              {crown && <g transform={`translate(${ar ? p.x + (row.sc ? 29 : 27) : p.x + BW - (row.sc ? 46 : 44)},${y + 4}) scale(.7)`}><path className="bs-cup" d="M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></g>}
+              {row.sc ? <text className="bs-sc" x={ar ? p.x + 8 : p.x + BW - 8} y={y + RH / 2 + 4} fontSize="12" fontWeight="700" textAnchor={ar ? 'start' : 'end'}>{row.sc}</text> : row.win && m.win ? <text className="bs-ck" x={ar ? p.x + 9 : p.x + BW - 9} y={y + RH / 2 + 4} fontSize="12" fontWeight="800" textAnchor={ar ? 'start' : 'end'}>✓</text> : null}
             </g>
           );
         })}</g>
-        <text className="bs-no" x={p.x + BW + 5} y={p.y + 4} fontSize="10">{g.nums.get(m.id)}</text>
+        <text className="bs-no" x={ar ? p.x - 5 : p.x + BW + 5} y={p.y + 4} fontSize="10" textAnchor={ar ? 'end' : 'start'}>{g.nums.get(m.id)}</text>
       </g>
     );
   };
@@ -129,20 +131,20 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
     const c = g.pos.get(m.id); if (!c || hasBye(g.R, m.id)) continue;
     const xs = [m.a, m.b].map((s) => ('w' in s && !hasBye(g.R, s.w) ? g.pos.get(s.w) : undefined)).filter((q): q is Pos => !!q);
     for (const f of xs) {
-      const x1 = f.x + BW + NUMW, x2 = c.x, xm = x1 + (x2 - x1) / 2;
+      const x1 = ar ? mx(f.x, BW) - NUMW : f.x + BW + NUMW, x2 = ar ? mx(c.x, BW) + BW : c.x, xm = x1 + (x2 - x1) / 2;
       lines.push(<path key={`${m.id}-${f.x}-${f.y}`} d={`M${x1},${f.y} H${xm} V${c.y} H${x2}`} className="bs-ln" fill="none" strokeWidth="1" />);
     }
   }
   const all = [...g.L.winners.flat(), ...g.L.losers.flat(), ...(g.L.final ? [g.L.final] : [])].filter((m) => !hasBye(g.R, m.id));
 
   return (
-    <div ref={wrap} className="bs-sheet" dir="ltr">
+    <div ref={wrap} className="bs-sheet" dir={ar ? 'rtl' : 'ltr'}>
       <div className="bs-top"><b dir="auto">{title}</b><span>plato-ar.com</span></div>
       {bracket.org && <div className="bs-org" dir="auto">{lang === 'ar' ? 'تنظيم' : 'By'}: {bracket.org}</div>}
       <div ref={scr} className="bs-scroll">
-        <svg width={g.W * scale} height={g.H * scale} viewBox={`0 0 ${g.W} ${g.H}`} role="img" aria-label={title} fontFamily="Outfit, Tajawal, system-ui, sans-serif">
+        <svg width={g.W * scale} height={g.H * scale} viewBox={`0 0 ${g.W} ${g.H}`} role="img" aria-label={title} fontFamily="Outfit, Tajawal, system-ui, sans-serif" style={{ direction: 'ltr' }}>
           {g.heads.map((h, i) => (
-            <g key={i}><rect className="bs-hd" x={h.x} y={h.y} width={BW} height={HEAD - 6} rx="6" /><text className="bs-ht" x={h.x + BW / 2} y={h.y + (HEAD - 6) / 2 + 4} fontSize="12" fontWeight="600" textAnchor="middle">{h.label}</text></g>
+            <g key={i}><rect className="bs-hd" x={mx(h.x, BW)} y={h.y} width={BW} height={HEAD - 6} rx="6" /><text className="bs-ht" x={mx(h.x, BW) + BW / 2} y={h.y + (HEAD - 6) / 2 + 4} fontSize="12" fontWeight="600" textAnchor="middle">{h.label}</text></g>
           ))}
           {lines}
           {all.map(matchEl)}

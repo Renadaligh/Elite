@@ -269,13 +269,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>}
             <div className="flex flex-wrap items-center gap-2.5">
+              {!isDraft(br) && (champ !== null || editable) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable={editable} onChange={editable ? (b) => edit(b) : undefined} />}
               <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={shownTitle} url={editable && id ? viewUrl : url} />
               {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
           {editable && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') ? tx.hintL : tx.hint}</p>}
-          {!isDraft(br) && (champ !== null || editable) && <WinnerCard bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable={editable} onChange={editable ? (b) => edit(b) : undefined} />}
           <div className="st-stage">
           {embed && (
             <div className="stream-box-wrap" style={{ marginInline: 'auto', width: '100%' }}>
