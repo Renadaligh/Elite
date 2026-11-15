@@ -8,7 +8,7 @@ export interface Env {
   DISCORD_CLIENT_ID?: string; DISCORD_CLIENT_SECRET?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string;
   TWITCH_CLIENT_ID?: string; TWITCH_CLIENT_SECRET?: string; STEAM_API_KEY?: string; RESEND_API_KEY?: string; MAIL_FROM?: string; DISCORD_WEBHOOK_URL?: string; OWNER_USERNAME?: string;
 }
-export type Ctx = { request: Request; env: Env; params: Record<string, string> };
+export type Ctx = { request: Request; env: Env; params: Record<string, string>; waitUntil?: (p: Promise<unknown>) => void };
 
 export const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });

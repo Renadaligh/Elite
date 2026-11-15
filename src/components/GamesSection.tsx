@@ -6,11 +6,11 @@ import { useI18n } from '../i18n/I18nProvider';
 
 const BASE = import.meta.env.BASE_URL;
 
-function OfficialGameImage({ src, eager }: { src: string; eager?: boolean }) {
+function OfficialGameImage({ src, eager, first }: { src: string; eager?: boolean; first?: boolean }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   return failed ? <div className="gcard-art" /> : (
-    <img src={src} alt="" draggable={false} loading={eager ? 'eager' : 'lazy'} decoding="async" onError={() => setFailed(true)} className={`absolute inset-0 h-full w-full object-cover ${/^https?:/.test(src) ? 'scale-[1.35] origin-center' : 'object-top'}`} />
+    <img src={src} alt="" draggable={false} loading={eager ? 'eager' : 'lazy'} fetchPriority={first ? 'high' : eager ? 'auto' : 'low'} decoding="async" onError={() => setFailed(true)} className={`absolute inset-0 h-full w-full object-cover ${/^https?:/.test(src) ? 'scale-[1.35] origin-center' : 'object-top'}`} />
   );
 }
 
@@ -140,7 +140,7 @@ export default function GamesSection() {
                   if (drag.current.moved) return;
                   if (o === 0) go(g); else setIndex(i);
                 }}>
-                {g.image ? <OfficialGameImage key={g.id} src={g.image} eager={Math.abs(o) <= 3} /> : <div className="gcard-art" />}
+                {g.image ? <OfficialGameImage key={g.id} src={g.image} eager={Math.abs(o) <= 3} first={o === 0} /> : <div className="gcard-art" />}
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(to top, rgba(7,10,38,.92) 0%,rgba(7,10,38,.7) 16%,rgba(7,10,38,.25) 40%,transparent 66%)'}} />
                 <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-5">
                   <p className="text-[clamp(.88rem,1.3vw,1.05rem)] font-semibold leading-snug">{g.tagline[lang]}</p>
