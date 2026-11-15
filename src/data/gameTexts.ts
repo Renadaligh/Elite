@@ -37,8 +37,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُقال إن تكساس هولدم نشأت في ولاية تكساس الأمريكية في أوائل القرن العشرين، ثم دخلت مدينة لاس فيغاس في ستينيات القرن نفسه. وازدادت شهرتها حين صارت اللعبة الرئيسية في بطولة العالم للبوكر، ثم انتشرت عبر الإنترنت.",
@@ -99,8 +99,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يتوفر تاريخ موثّق للعبة بهذا الاسم، لكنها من عائلة «أونو» التي ابتكرها ميرل روبنز في ولاية أوهايو الأمريكية سنة 1971، ثم اشترتها شركة ماتيل سنة 1992.",
@@ -161,8 +161,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "خرج البلياردو من ألعاب العصا والكرة التي كانت تُلعب على العشب في أوروبا، وكان شكلها يشبه الكروكيه في القرن الرابع عشر. ثم انتقلت اللعبة إلى الداخل على طاولات، ويُقال إن الملك لويس الحادي عشر ملك فرنسا امتلك أول طاولة معروفة. وحلّت العصا الرفيعة محل العصا العريضة نحو سنة 1800.",
@@ -223,8 +223,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تذكر بعض الروايات أن أشكالاً من البولينغ عُرفت في مصر القديمة منذ آلاف السنين، لكن هذا غير مؤكد. أما أصل اللعبة الحديثة فيرتبط بأوروبا في العصور الوسطى، وانتشرت نسخة العشر قوارير في الولايات المتحدة، وتوحّدت قواعدها هناك سنة 1895 تقريباً.",
@@ -285,8 +285,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ألعاب مطابقة القطع انتشرت بقوة مع لعبة «بيجويلد» سنة 2001. أما دمج المطابقة مع معارك الأدوار والوحوش فاشتهر مع لعبة «بزل كويست» سنة 2007.",
@@ -347,8 +347,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يوجد تاريخ موثّق لهذه اللعبة تحديداً. وهي تنتمي إلى ألعاب المدفعية بالأدوار التي ظهرت منذ ثمانينيات القرن العشرين، ومن أشهرها «سكورتشد إيرث» سنة 1991 ثم «ورمز» سنة 1995.",
@@ -409,8 +409,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تعود «لودو» إلى لعبة «باتشيسي» الهندية، التي تُروى عنها قصص تقول إن الإمبراطور أكبر لعبها بقطع بشرية في ساحة قصره. وسُجّلت «لودو» ببراءة اختراع في إنجلترا سنة 1896 باسم ألفريد كولير.",
@@ -471,8 +471,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تعود رياضة الغولف إلى اسكتلندا في القرن الخامس عشر. وأما الغولف المصغّر فتُنسب بدايته إلى مطلع القرن العشرين في الولايات المتحدة، ويُذكر ملعب «توم ثامب غولف» الذي بُني في ولاية تينيسي سنة 1927 وانتشر انتشاراً واسعاً.",
@@ -533,8 +533,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تنظّمت قواعد كرة القدم الحديثة في إنجلترا سنة 1863 مع تأسيس اتحاد كرة القدم. وهذه اللعبة تستلهم كرة القدم في نسخة مصغّرة تُلعب بالأدوار.",
@@ -595,8 +595,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يوجد تاريخ موثّق لهذه اللعبة، وهي من ألعاب المهارة والتوقيت التي انتشرت مع الهواتف الذكية.",
@@ -657,8 +657,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه هذه اللعبة «يتزي» التي سوّقها إدوين لوي سنة 1956 بعد أن اشترى حقوقها من زوجين كنديين كانا يسميانها «لعبة اليخت». ثم اشترت شركة ميلتون برادلي حقوقها سنة 1973.",
@@ -719,8 +719,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُعتقد أن الكيرم نشأ في الهند، ويُقال إنه كان يُلعب في قصور الأمراء. ثم انتشر في جنوب آسيا والشرق الأوسط، وصار له اتحادات وبطولات دولية.",
@@ -781,8 +781,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه هذه اللعبة «بوغل»، التي ابتكرها آلان توروف سنة 1972 وأصدرتها شركة باركر براذرز سنة 1973.",
@@ -843,8 +843,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ترجع ألعاب الكتل المتساقطة إلى «تتريس» التي ابتكرها أليكسي باجيتنوف سنة 1984. وفكرة إرسال كتل مزعجة إلى الخصم عند تكوين السلاسل اشتهرت مع لعبة «بويو بويو» اليابانية سنة 1991.",
@@ -905,8 +905,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "الشفل بورد لعبة قديمة يُقال إنها عُرفت في إنجلترا في القرن الخامس عشر، أما هوكي الهواء فظهرت في مطلع سبعينيات القرن العشرين. وتجمع هذه اللعبة بين الفكرتين.",
@@ -967,8 +967,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُقال إن أصل اللعبة يعود إلى لعبة «اللوتو» الإيطالية في القرن السادس عشر. وفي سنة 1929 قدّم إدوين لوي في الولايات المتحدة نسخة باسم «بينو»، ثم صارت تُعرف باسم «بينغو».",
@@ -1029,8 +1029,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يوجد تاريخ موثّق لهذه اللعبة. وهي من ألعاب إرسال الوحدات وتدمير القاعدة التي ازدهرت في الألعاب الإلكترونية.",
@@ -1091,8 +1091,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "القوس والسهم من أقدم أدوات الإنسان، واستُخدما للصيد والحرب منذ آلاف السنين. وأُدرجت الرماية في الألعاب الأولمبية سنة 1900 في باريس، وعادت إليها بصورتها الحديثة سنة 1972.",
@@ -1153,8 +1153,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ابتكر جوزيف سيمبسون هذه اللعبة في مدينة فيلادلفيا الأمريكية نحو سنة 1908، وانتشرت في ملاهي الشواطئ والمدن الترفيهية.",
@@ -1215,8 +1215,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "أصدرت شركة ميلتون برادلي «كونكت فور» سنة 1974 من ابتكار هاوارد ويكسلر ونيد سترونغين. وفي سنة 1988 أثبتت حسابات حاسوبية أن اللاعب الأول يستطيع الفوز دائماً إذا لعب بلا أخطاء.",
@@ -1277,8 +1277,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "أقدم دومينو معروف جاء من الصين في عهد أسرة سونغ. أما الدومينو الأوروبي الحديث فظهر في فرنسا في منتصف القرن الثامن عشر، وسُجّل اسمه سنة 1762، ثم انتشر إلى بريطانيا وإيطاليا والنمسا وألمانيا. ولا يوجد دليل مؤكد على صلة بين الدومينو الصيني والأوروبي.",
@@ -1339,8 +1339,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تُعد طاولة الزهر من أقدم الألعاب المعروفة، ويُقال إن جذورها تعود إلى بلاد الرافدين منذ نحو خمسة آلاف سنة، وإن «اللعبة الملكية في أور» من أسلافها المحتملة. وعُرفت عند الرومان باسم «تابولا»، وفي العالم العربي باسم «الطاولة»، وأُضيف مكعب المضاعفة إليها في عشرينيات القرن العشرين في الولايات المتحدة.",
@@ -1401,8 +1401,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يوجد تاريخ للعبة، فهي غرفة للتواصل الصوتي بين اللاعبين.",
@@ -1463,8 +1463,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُنسب اختراع الكريبيج إلى الشاعر الإنجليزي السير جون ساكلينغ في أوائل القرن السابع عشر. وتميّزت اللعبة بلوح التسجيل ذي الثقوب الذي لا يزال يُستخدم حتى اليوم.",
@@ -1525,8 +1525,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تعود هذه الألعاب إلى «لعبة المالك» التي سجّلتها إليزابيث ماجي سنة 1904. وفي سنة 1935 أصدرت شركة باركر براذرز لعبة «مونوبولي» بنسخة تشارلز دارو، فانتشرت عالمياً.",
@@ -1587,8 +1587,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ابتكر إلوود بيكر لعبة «جين رومي» سنة 1909 في مدينة بروكلين الأمريكية، وانتشرت انتشاراً واسعاً في ثلاثينيات القرن العشرين.",
@@ -1649,8 +1649,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُحكى أن الجنود في العصور الوسطى في إنجلترا كانوا يرمون سهاماً قصيرة نحو قاعدة برميل أو جذع شجرة للتسلية. وتطورت اللعبة إلى لوحة بأرقام ثابتة، وصارت لعبة «501» من أشهر أنماطها في القرن العشرين.",
@@ -1711,8 +1711,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يُعرف مخترع اللعبة بدقة. وهي من أوراق الأطفال والعائلات التي شاعت في القرن العشرين، وتُشبه ألعاباً قديمة مثل «العائلات السعيدة» البريطانية.",
@@ -1773,8 +1773,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ظهرت اللعبة في الهند قبل نحو 1500 سنة باسم «تشاتورانغا»، ثم انتقلت إلى بلاد فارس فالعالم العربي، ومنه إلى أوروبا. وفي أواخر القرن الخامس عشر صارت الوزيرة والفيل أقوى قطعتين، فاستقرت اللعبة على شكلها الحالي. وأُقيمت أول بطولة عالمية رسمية سنة 1886.",
@@ -1835,8 +1835,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "كانت اللعبة تُلعب بالورقة والقلم قبل أن تُصنَّع تجارياً. وصدرت نسخة «سالفو» سنة 1931، ثم أصدرت شركة ميلتون برادلي لعبة «باتل شيب» بقطع بلاستيكية سنة 1967.",
@@ -1897,8 +1897,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ظهرت «سبيدز» في الولايات المتحدة في ثلاثينيات القرن العشرين تقريباً، وهي متفرعة عن لعبة «ويست» الإنجليزية القديمة.",
@@ -1959,8 +1959,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "المنقلة عائلة من الألعاب القديمة المنتشرة في إفريقيا والشرق الأوسط وآسيا، وتتعدد الروايات حول أصلها. ويُقال إن اسمها مأخوذ من الكلمة العربية «نقل»، لأن اللاعب ينقل البذور بين الحفر.",
@@ -2021,8 +2021,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ابتكر ديمتري دافيدوف لعبة «المافيا» سنة 1986 في جامعة موسكو الحكومية. ثم ابتكر أندرو بلوتكن نسخة «المستذئب» سنة 1997.",
@@ -2083,8 +2083,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "وصف عالم الرياضيات الفرنسي إدوارد لوكاس هذه اللعبة سنة 1889 باسم «بيبوبيبيت».",
@@ -2145,8 +2145,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "اخترع جيمس نايسميث كرة السلة في شهر ديسمبر سنة 1891 في مدينة سبرينغفيلد بولاية ماساتشوستس، مستخدماً سلتين من الخوخ معلّقتين على الجدار.",
@@ -2207,8 +2207,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ظهرت كرة تنس الطاولة في إنجلترا في أواخر القرن التاسع عشر. أما ألعاب رمي الكرات الصغيرة في الأكواب فانتشرت بين طلاب الجامعات، ولا يوجد تاريخ موثّق لهذه اللعبة تحديداً.",
@@ -2269,8 +2269,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لعبة ورق قديمة لا يُعرف مخترعها، وتُعرف بأسماء كثيرة مثل «تشيت» و«أنا أشك». ولا يوجد تاريخ موثّق دقيق لها.",
@@ -2331,8 +2331,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تنحدر لعبة الداما من لعبة «ألكيرك» القديمة. وظهرت نسخة تُلعب على رقعة الشطرنج في فرنسا في القرن الثاني عشر تقريباً، ثم نشأت النسخة الدولية على رقعة 10×10 في فرنسا في القرن الثامن عشر.",
@@ -2393,8 +2393,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُقال إن «تروكو» انحدرت من لعبة إسبانية قديمة، ثم انتقلت مع المهاجرين إلى الأرجنتين وأوروغواي والبرازيل، حيث تنوعت قواعدها.",
@@ -2455,8 +2455,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ابتكر روب أنجل لعبة «بيكشنري» سنة 1985 في مدينة سياتل الأمريكية، وانتشرت انتشاراً واسعاً بعد صدورها.",
@@ -2517,8 +2517,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "اشتهرت «كاسحة الألغام» حين أُدرجت ضمن نظام التشغيل ويندوز في تسعينيات القرن العشرين، لكن فكرتها أقدم من ذلك.",
@@ -2579,8 +2579,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه هذه اللعبة «سكرابل»، التي ابتكرها المهندس المعماري ألفريد بوتس سنة 1938، وسُمّيت «سكرابل» سنة 1948.",
@@ -2641,8 +2641,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تنحدر اللعبة من لعبة «العانس» (⁦Old Maid⁩)، وهي لعبة ورق أوروبية الأصل يُرجَّح أنها شاعت في القرن التاسع عشر. ولا يوجد تاريخ موثّق للنسخة نفسها.",
@@ -2703,8 +2703,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "يُقال إن اللعبة صينية الأصل، ثم انتشرت في الفلبين وجنوب شرق آسيا ومنها إلى مناطق أخرى. ولا يوجد تاريخ موثّق دقيق لنشأتها.",
@@ -2765,8 +2765,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ظهرت «ريفرسي» في إنجلترا سنة 1883، ويُنسب ابتكارها إلى لويس واترمان أو جون موليت. ثم أعاد الياباني غورو هاسيغاوا إحياءها سنة 1971 باسم «أوثيلو».",
@@ -2827,8 +2827,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تنتمي «القلوب» إلى عائلة ألعاب «ريفرسيس» الأوروبية القديمة، وصيغتها الحالية معروفة منذ القرن التاسع عشر. وزادت شهرتها مع إدراجها ضمن ويندوز في تسعينيات القرن العشرين.",
@@ -2889,8 +2889,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه اللعبة «ريسك»، التي ابتكرها المخرج الفرنسي ألبير لاموريس سنة 1957 باسم «غزو العالم».",
@@ -2951,8 +2951,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه اللعبة لعبة «ترايبل ترايد» التي ظهرت داخل «فاينل فانتسي 8» سنة 1999. ولا يوجد تاريخ موثّق لهذه اللعبة تحديداً.",
@@ -3013,8 +3013,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تستلهم اللعبة برامج البقاء التلفزيونية مثل «سورفايفر». ولا يوجد تاريخ موثّق للعبة نفسها.",
@@ -3075,8 +3075,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "فكرة الحَكَم الذي يختار أطرف بطاقة ظهرت في لعبة «أبلز تو أبلز» سنة 1999، ثم انتشرت في ألعاب حفلات كثيرة مشابهة.",
@@ -3137,8 +3137,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "ابتكر غاري غيغاكس وديف آرنسون لعبة «دنجنز آند دراجونز» سنة 1974، وصارت أساس ألعاب تقمّص الأدوار.",
@@ -3199,8 +3199,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه اللعبة «المقاومة» التي ابتكرها دون إسكريدج سنة 2009، و«أفالون» التي صدرت سنة 2012.",
@@ -3261,8 +3261,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه اللعبة ألعاب الحفلات مثل «كويبلاش» التي أصدرتها شركة «جاكبوكس» سنة 2015.",
@@ -3323,8 +3323,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "نشأت «غو» في الصين قبل أكثر من 2500 سنة، ويُقال إن عمرها أكبر من ذلك. ثم انتقلت إلى كوريا واليابان وصارت جزءاً من ثقافتهما. وفي سنة 2016 هزم برنامج «ألفاغو» الكوري لي سيدول.",
@@ -3385,8 +3385,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "لا يوجد تاريخ موثّق لهذه اللعبة. وتشبه ألعاب مطابقة البلاطات مثل «ماهجونغ سوليتير» الذي ظهر باسم «شنغهاي» سنة 1981.",
@@ -3447,8 +3447,8 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
   },
   {
    "title": {
-    "ar": "تاريخ مبسط",
-    "en": "A short history"
+    "ar": "تاريخ اللعبة",
+    "en": "Game history"
    },
    "body": {
     "ar": "تشبه اللعبة «بلوكوس» التي صممها الفرنسي برنار تافيتيان وصدرت سنة 2000.",
