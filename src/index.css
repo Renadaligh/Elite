@@ -1312,7 +1312,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .hero-cta .hm-ic{display:block;flex:none;width:19px;height:19px}
 .hero-cta .hm-try{display:none}
 @media (max-width:480px){.hero-cta{gap:8px}.hero-cta .hero-main,.hero-cta .hero-sec{height:2.75rem;padding-inline:.9rem;font-size:.84rem}.hero-cta .hero-main{gap:.45rem}.hero-cta .hm-ic{width:17px;height:17px}}
-@media (max-width:767px){.hero-copy .hero-desc{margin-bottom:2rem}.hero-wrap{padding-top:calc(40.55svh - 1.9rem)}}
+@media (max-width:767px){.hero-copy .hero-desc{margin-bottom:2rem}.hero-wrap{padding-top:calc(40.55svh - 1.1rem)}}
 /* desktop: slightly larger buttons */
 @media (min-width:768px){.hero-cta{gap:12px}.hero-cta .hero-main,.hero-cta .hero-sec{height:3.3rem;padding-inline:1.5rem;font-size:1.02rem}.hero-cta .hero-main{gap:.65rem}.hero-cta .hm-ic{width:22px;height:22px}}
 
