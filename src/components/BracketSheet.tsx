@@ -3,7 +3,7 @@ import { champion, hasBye, layout, resolve, type BMatch, type Bracket, type Who 
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
  *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
-const BW = 180, SEED = 24, RH = 25, GAP = 48, NUMW = 22, P = 72, HEAD = 30, SEC_GAP = 56, PAD = 10;
+const BW = 180, SEED = 24, RH = 22, GAP = 48, NUMW = 22, P = 52, HEAD = 30, SEC_GAP = 56, PAD = 10;
 
 function rName(ar: boolean, br: 'W' | 'L', round: number, total: number) {
   if (br === 'L') return ar ? `الخاسرين ${round}` : `Losers R${round}`;
@@ -104,7 +104,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
     const hasWin = !!m.win;
     return (
       <g key={m.id}>
-        <clipPath id={`${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')}`}><rect x={p.x} y={p.y - RH} width={BW} height={RH * 2} rx={9} /></clipPath>
+        <clipPath id={`${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')}`}><rect x={p.x} y={p.y - RH} width={BW} height={RH * 2} rx={6} /></clipPath>
         <g clipPath={`url(#${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')})`}>{rows.map((row, k) => {
           const y = p.y - RH + k * RH;
           const bye = row.w === 'bye';
@@ -115,7 +115,7 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
               <text className="bs-sn" x={(ar ? p.x + BW - SEED : p.x) + SEED / 2} y={y + RH / 2 + 4} fontSize="11" textAnchor="middle">{seed(row.w)}</text>
               <rect className={row.win ? 'bs-row win' : 'bs-row'} x={ar ? p.x : p.x + SEED} y={y + 1} width={BW - SEED} height={RH - 2} />
               <svg x={ar ? p.x + BW - SEED - 8 - (BW - SEED - (crown ? 60 : 34)) : p.x + SEED + 8} y={y + 1} width={BW - SEED - (crown ? 60 : 34)} height={RH - 2} overflow="hidden">
-                <text className={`bs-nm${row.win ? ' win' : ''}${bye ? ' bye' : hasWin && !row.win ? ' lose' : ''}`} x={ar ? BW - SEED - (crown ? 60 : 34) : 0} textAnchor={ar ? 'end' : 'start'} y={RH / 2 + 3} fontSize="13">{name(row.w)}</text>
+                <text className={`bs-nm${row.win ? ' win' : ''}${bye ? ' bye' : hasWin && !row.win ? ' lose' : ''}`} x={ar ? BW - SEED - (crown ? 60 : 34) : 0} textAnchor={ar ? 'end' : 'start'} y={RH / 2 + 3} fontSize="12.5">{name(row.w)}</text>
               </svg>
               {crown && <g transform={`translate(${ar ? p.x + (row.sc ? 29 : 27) : p.x + BW - (row.sc ? 46 : 44)},${y + 4}) scale(.7)`}><path className="bs-cup" d="M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></g>}
               {row.sc ? <text className="bs-sc" x={ar ? p.x + 8 : p.x + BW - 8} y={y + RH / 2 + 4} fontSize="12" fontWeight="700" textAnchor={ar ? 'start' : 'end'}>{row.sc}</text> : row.win && m.win ? <text className="bs-ck" x={ar ? p.x + 9 : p.x + BW - 9} y={y + RH / 2 + 4} fontSize="12" fontWeight="800" textAnchor={ar ? 'start' : 'end'}>✓</text> : null}

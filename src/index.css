@@ -1381,3 +1381,18 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .pv-root[data-jn] .btn-primary{background:var(--jn-ac);border-color:transparent;color:#fff}
 .pv-root[data-jn] .btn-primary{box-shadow:0 10px 28px color-mix(in srgb,var(--jn-ac) 50%,transparent)}
 .pv-root[data-jn] .btn-primary:hover{box-shadow:0 14px 36px color-mix(in srgb,var(--jn-ac) 70%,transparent)}
+.pv-root[data-jn] .pv-tools .pill{background:var(--glass)!important;border-color:var(--glass-b)!important;color:var(--text)!important}
+
+/* ---- compact bracket (Challonge-like spacing, same colours, softly rounded) ---- */
+.br-col{flex:0 0 212px;min-width:212px}
+.br-final{flex:0 0 212px}
+.br-row{padding:3px 8px;font-size:.84rem;gap:6px;line-height:1.25;min-height:24px}
+.br-col-body{gap:8px}
+.br-match{border-radius:7px}
+.br-lines path{stroke-width:1}
+.br-row .br-seed{align-self:stretch;min-width:26px;height:auto;margin-block:-3px;margin-inline:-8px 2px;padding:0 4px;border-radius:0;font-size:.7rem}
+.br-fit .br-row{padding:3px 5px;gap:3px}
+.br-fit .br-row .br-seed{margin-inline:-5px 1px}
+.br-fit .br-col-body{gap:6px}
+.br-fit .br-match{border-radius:6px}
+@media (pointer:coarse){.br-row{padding-block:5px;min-height:28px}.br-row .br-seed{margin-block:-5px}}

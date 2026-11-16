@@ -23,6 +23,11 @@ export async function joinDesc(env: Ctx['env'], id: string): Promise<string> {
   try { return (await env.DB.prepare('SELECT description FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ description: string }>())?.description ?? ''; } catch { return ''; }
 }
 
+/** Optional English title of the registration page (own query, works before the `title_en` column exists). */
+export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> {
+  try { return (await env.DB.prepare('SELECT title_en FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ title_en: string }>())?.title_en ?? ''; } catch { return ''; }
+}
+
 /** Cover picture + start date of the registration page. Separate query so the page keeps working before the two columns are added (see schema.sql). */
 export async function joinExtra(env: Ctx['env'], id: string): Promise<{ cover: string; startsAt: string }> {
   try { const r = await env.DB.prepare('SELECT cover, starts_at FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ cover: string; starts_at: string }>(); return { cover: r?.cover ?? '', startsAt: r?.starts_at ?? '' }; } catch { return { cover: '', startsAt: '' }; }
