@@ -193,6 +193,39 @@ function LoginScreen({ s, providers, theme, setTheme }: { s: St; providers: Prov
   );
 }
 
+type Notice = { id: string; bracketId: string; name: string; review: 'pending' | 'approved' | 'rejected'; note: string };
+const SEEN = 'plato-notices-seen';
+const seenSet = (): string[] => { try { return JSON.parse(localStorage.getItem(SEEN) || '[]') as string[]; } catch { return []; } };
+
+/** Review results shown inside the dashboard (for organizers who gave no email). Approved/rejected can be dismissed. */
+function Notices({ lang }: { lang: 'ar' | 'en' }) {
+  const [rows, setRows] = useState<Notice[]>([]);
+  const [seen, setSeen] = useState<string[]>(seenSet);
+  useEffect(() => { api<Notice[]>('/brackets/notices').then((r) => setRows(Array.isArray(r) ? r : [])).catch(() => undefined); }, []);
+  const ar = lang === 'ar';
+  const key = (n: Notice) => `${n.id}:${n.review}:${n.note}`;
+  const show = rows.filter((n) => n.review === 'pending' || !seen.includes(key(n)));
+  if (!show.length) return null;
+  const dismiss = (n: Notice) => { const v = [...seen, key(n)].slice(-100); setSeen(v); try { localStorage.setItem(SEEN, JSON.stringify(v)); } catch { /* ignore */ } };
+  return (
+    <div className="st-cards" style={{ marginBottom: '1rem' }} aria-label={ar ? 'الإشعارات' : 'Notifications'}>
+      {show.map((n) => (
+        <div key={key(n)} className="st-bc">
+          <div className="flex items-start justify-between gap-3">
+            <b className="st-bt">{n.name}</b>
+            <span className={`st-chip ${n.review === 'approved' ? 'done' : n.review === 'pending' ? 'live' : ''}`}>{n.review === 'approved' ? (ar ? 'تمت الموافقة' : 'Approved') : n.review === 'pending' ? (ar ? 'قيد المراجعة' : 'In review') : (ar ? 'مرفوضة' : 'Rejected')}</span>
+          </div>
+          {n.review === 'rejected' && n.note && <p className="st-meta">{ar ? 'السبب: ' : 'Reason: '}{n.note}</p>}
+          <div className="flex items-center justify-between gap-2">
+            {n.review === 'rejected' ? <a href={`#/bracket/${n.bracketId}`} className="st-meta" style={{ textDecoration: 'underline' }}>{ar ? 'عدّل وأعد الإرسال' : 'Edit and resubmit'}</a> : n.review === 'approved' ? <a href={`#/tournaments/${n.id}`} className="st-meta" style={{ textDecoration: 'underline' }}>{ar ? 'عرض في الموقع' : 'View on the site'}</a> : <span />}
+            {n.review !== 'pending' && <button type="button" className="st-meta" onClick={() => dismiss(n)}>{ar ? 'تم' : 'Dismiss'}</button>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type Row = { id: string; title: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string };
 
 function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
@@ -220,6 +253,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
         <div className="st-stat"><b>{cnt('live')}</b><span>{s.live}</span></div>
         <div className="st-stat"><b>{cnt('done')}</b><span>{s.done}</span></div>
       </div>
+      <Notices lang={lang} />
       <h2 className="st-h2">{s.recent}</h2>
       <p role="status" className="st-flash" style={{ opacity: flash ? 1 : 0 }}>{flash || '·'}</p>
       {rows && !rows.length && <div className="st-empty"><p>{s.empty}</p><a href="#/bracket/new" className="btn-primary">{s.emptyBtn}</a></div>}

@@ -1291,6 +1291,35 @@ function ForceChange({ k, me, onDone, onLogout }: { k: string; me: Me; onDone: (
   );
 }
 
+/** Each admin adds their own email: it is where "a tournament is waiting for review" reaches them. */
+function EmailDrawer({ k, onClose }: { k: string; onClose: () => void }) {
+  const { x } = useX();
+  const toast = useToast();
+  const [email, setEmail] = useState('');
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  useEffect(() => { api<{ email?: string }>('/admin/me', { key: k }).then((r) => { setEmail(r.email ?? ''); setReady(true); }).catch(() => setReady(true)); }, [k]);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true); setErr('');
+    try { await api('/admin/me', { method: 'PUT', key: k, body: JSON.stringify({ email: email.trim() }) }); toast.ok(x('تم حفظ الإيميل')); onClose(); }
+    catch (ex) { const m = (ex as Error).message; setErr(m === '400' ? x('الإيميل غير صحيح') : x('تعذّر الحفظ (تأكد من إضافة عمود الإيميل في قاعدة البيانات)')); }
+    setBusy(false);
+  }
+  return (
+    <Drawer title={x('إيميل الإشعارات')} onClose={onClose}>
+      <form onSubmit={submit}>
+        <p className="mb-3 text-[.88rem]" style={{ color: 'var(--muted)' }}>{x('يوصلك على هذا الإيميل تنبيه لما تنرسل بطولة جديدة للمراجعة. اختياري: اتركه فاضي وتشوف الإشعارات داخل لوحة الإدارة فقط (الجرس).')}</p>
+        <Field label={x('الإيميل')}><input type="email" dir="ltr" className={inp} style={{ borderColor: 'var(--glass-b)' }} value={email} maxLength={120} placeholder="name@example.com" autoComplete="email" disabled={!ready} onChange={(e) => setEmail(e.target.value)} /></Field>
+        <ErrBox text={err} />
+        <button type="submit" disabled={busy || !ready} className={`${btnP} mt-6 w-full`} style={gradBtn}>{busy ? x('جارٍ الحفظ…') : x('حفظ')}</button>
+      </form>
+    </Drawer>
+  );
+}
+
 function PwDrawer({ k, me, onClose }: { k: string; me: Me; onClose: () => void }) {
   const { x } = useX();
   const toast = useToast();
@@ -1547,6 +1576,43 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 }
 
 /* ---------- Shell ---------- */
+/** In-dashboard notifications: community tournaments waiting for review (works with no email at all). */
+function BellBtn({ k, go }: { k: string; go: () => void }) {
+  const { x, lang } = useX();
+  const [list, setList] = useState<Adm<Tournament>[]>([]);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    let on = true;
+    const load = () => { if (document.visibilityState === 'hidden') return; api<Adm<Tournament>[]>('/tournaments', { key: k }).then((r) => { if (on) setList(r.filter((t) => t.community?.review === 'pending')); }).catch(() => undefined); };
+    load();
+    const id = window.setInterval(load, 60000);
+    document.addEventListener('visibilitychange', load);
+    return () => { on = false; window.clearInterval(id); document.removeEventListener('visibilitychange', load); };
+  }, [k]);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="pill relative" style={{ gap: '.4rem' }} aria-label={x('الإشعارات')}>
+        <svg {...ic} strokeWidth={2} className="h-4 w-4" aria-hidden="true"><path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 004 0" /></svg>
+        {list.length > 0 && <span className="absolute -end-1 -top-1 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded-full px-1 text-[.68rem] font-extrabold text-white" style={{ background: '#e5484d' }}>{list.length}</span>}
+      </button>
+      {open && (
+        <Drawer title={x('الإشعارات')} onClose={() => setOpen(false)}>
+          {!list.length && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{x('لا توجد إشعارات جديدة')}</p>}
+          <div className="grid gap-2">
+            {list.map((t) => (
+              <button key={t.id} type="button" onClick={() => { setOpen(false); go(); }} className="rounded-xl border p-3 text-start" style={{ borderColor: 'var(--glass-b)' }}>
+                <div className="text-[.78rem] font-bold" style={{ color: '#d49b1f' }}>{x('بطولة جديدة بانتظار المراجعة')}</div>
+                <div className="mt-0.5 truncate font-extrabold">{t.name[lang] || t.name.ar || t.name.en}</div>
+                {t.community?.organizer && <div className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{t.community.organizer}</div>}
+              </button>
+            ))}
+          </div>
+        </Drawer>
+      )}
+    </>
+  );
+}
+
 function AdminInner() {
   const { x } = useX();
   const [key, setKey] = useState(getKey);
@@ -1554,6 +1620,7 @@ function AdminInner() {
   const [tab, setTab] = useState<Tab>('overview');
   const [menu, setMenu] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
+  const [mailOpen, setMailOpen] = useState(false);
   const pick = (id: Tab) => { setTab(id); setMenu(false); window.scrollTo({ top: 0 }); };
   const clear = useCallback(() => { try { sessionStorage.removeItem(KEY); sessionStorage.removeItem(ME); } catch { /* ignore */ } setKey(''); setMe(null); }, []);
   const logout = useCallback(() => { if (key) void fetch('/api/admin/logout', { method: 'POST', headers: { authorization: `Bearer ${key}` } }).catch(() => undefined); clear(); }, [key, clear]);
@@ -1596,6 +1663,7 @@ function AdminInner() {
             <div dir="ltr" className="truncate text-[.92rem] font-extrabold">{me.username}</div>
             <div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{me.role === 'owner' ? x('الأدمن الرئيسي') : x('أدمن')}</div>
             <button type="button" onClick={() => setPwOpen(true)} className="mt-2 text-[.82rem] font-semibold underline-offset-2 hover:underline" style={{ color: 'var(--muted)' }}>{x('تغيير كلمة المرور')}</button>
+            <button type="button" onClick={() => setMailOpen(true)} className="mt-1 block text-[.82rem] font-semibold underline-offset-2 hover:underline" style={{ color: 'var(--muted)' }}>{x('إيميل الإشعارات')}</button>
           </div>
         </div>
       </aside>
@@ -1611,6 +1679,7 @@ function AdminInner() {
           <div className="hidden text-[.9rem] font-semibold lg:block" style={{ color: 'var(--muted)' }}>{x(TAB_LABEL[tab])}</div>
           <div className="flex shrink-0 items-center gap-2">
             <button type="button" onClick={logout} className="pill lg:hidden" style={{ gap: '.4rem' }} aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button>
+            {tabs.includes('tournaments') && <BellBtn k={key} go={() => pick('tournaments')} />}
             <AdThemeBtn />
             <LanguageSwitcher />
           </div>
@@ -1630,6 +1699,7 @@ function AdminInner() {
               })}
               <div className="my-1 border-t" style={{ borderColor: 'var(--glass-b)' }} />
               <button type="button" onClick={() => { setMenu(false); setPwOpen(true); }} className="flex items-center gap-3 rounded-xl px-4 py-3 text-start text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><LockI className="h-5 w-5" /><span dir="ltr">{me.username}</span> · {x('تغيير كلمة المرور')}</button>
+              <button type="button" onClick={() => { setMenu(false); setMailOpen(true); }} className="flex items-center gap-3 rounded-xl px-4 py-3 text-start text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><LockI className="h-5 w-5" />{x('إيميل الإشعارات')}</button>
               <a href="#/" className="flex items-center gap-3 rounded-xl px-4 py-3 text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-5 w-5 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
             </nav>
           </div>
@@ -1647,6 +1717,7 @@ function AdminInner() {
         </main>
       </div>
       {pwOpen && <PwDrawer k={key} me={me} onClose={() => setPwOpen(false)} />}
+      {mailOpen && <EmailDrawer k={key} onClose={() => setMailOpen(false)} />}
     </div></PermCtx.Provider></ToastHost>
   );
 }
@@ -1655,3 +1726,5 @@ export default function AdminPage() {
   const [theme, toggle] = useAdTheme();
   return <AdCtx.Provider value={{ theme, toggle }}><AdminInner /></AdCtx.Provider>;
 }
+
+Object.assign(EN, {"الإشعارات": "Notifications", "لا توجد إشعارات جديدة": "No new notifications", "بطولة جديدة بانتظار المراجعة": "New tournament awaiting review", "إيميل الإشعارات": "Notification email", "تم حفظ الإيميل": "Email saved", "الإيميل غير صحيح": "That email looks wrong", "تعذّر الحفظ (تأكد من إضافة عمود الإيميل في قاعدة البيانات)": "Could not save (make sure the email column was added to the database)", "يوصلك على هذا الإيميل تنبيه لما تنرسل بطولة جديدة للمراجعة. اختياري: اتركه فاضي وتشوف الإشعارات داخل لوحة الإدارة فقط (الجرس).": "You get an alert at this email when a new tournament is sent for review. Optional: leave it empty and you will see notifications inside the admin panel only (the bell).", "الإيميل": "Email"});
