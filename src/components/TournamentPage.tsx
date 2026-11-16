@@ -31,7 +31,7 @@ export default function TournamentPage({ id }: { id: string }) {
     );
   }
   const s = statusOf(x, Date.now());
-  const dmy = (d: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
+  const dmy = (d: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(d));
   const g = getGame(x.gameId);
   const embed = x.streamLive ? streamEmbed(x.streamUrl) : null;
   return (

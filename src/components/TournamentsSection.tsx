@@ -47,7 +47,7 @@ function Countdown({ to, label }: { to: string; label: string }) {
 function useFmt() {
   const { lang } = useI18n();
   const loc = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB';
-  return (iso: string) => new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'long' }).format(new Date(iso));
+  return (iso: string) => new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 }
 
 function Facts({ x }: { x: Tournament }) {

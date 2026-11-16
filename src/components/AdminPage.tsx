@@ -342,9 +342,9 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 /** The form works in the viewer's own time zone; the stored value is an absolute moment (ISO), shown to everyone in their own zone. */
 const toInput = (iso: string) => {
   const d = new Date(iso);
-  return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
-const fromInput = (v: string, end = false) => { const d = new Date(`${v}T${end ? '23:59:59' : '00:00:00'}`); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
+const fromInput = (v: string) => { const d = new Date(v); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
 const when = (iso: string) => toInput(iso);
 
 
@@ -728,7 +728,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
             {pair('prize', x('الجائزة'), 'Prize', x('5,000 ريال'))}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('تاريخ بداية البطولة')}><input type="date" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
+              <Field label={x('تاريخ بداية البطولة')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
               <Field label={x('تحديد عدد المقاعد')}>
                 <div className="flex items-center gap-3">
                   <button type="button" role="switch" aria-checked={f.slots.total > 0} aria-label={x('تحديد عدد المقاعد')} className={`st-sw ${f.slots.total > 0 ? 'on' : ''}`} onClick={() => setF({ ...f, slots: { ...f.slots, total: f.slots.total > 0 ? 0 : 16 } })}><i /></button>

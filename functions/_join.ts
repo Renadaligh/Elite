@@ -18,6 +18,11 @@ export async function joinCount(env: Ctx['env'], id: string): Promise<number> {
   try { return (await env.DB.prepare('SELECT COUNT(*) AS n FROM bracket_signups WHERE bracket_id = ?').bind(id).first<{ n: number }>())?.n ?? 0; } catch { return 0; }
 }
 
+/** Optional description of the registration page. Own query: works before the `description` column exists. */
+export async function joinDesc(env: Ctx['env'], id: string): Promise<string> {
+  try { return (await env.DB.prepare('SELECT description FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ description: string }>())?.description ?? ''; } catch { return ''; }
+}
+
 /** Cover picture + start date of the registration page. Separate query so the page keeps working before the two columns are added (see schema.sql). */
 export async function joinExtra(env: Ctx['env'], id: string): Promise<{ cover: string; startsAt: string }> {
   try { const r = await env.DB.prepare('SELECT cover, starts_at FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ cover: string; starts_at: string }>(); return { cover: r?.cover ?? '', startsAt: r?.starts_at ?? '' }; } catch { return { cover: '', startsAt: '' }; }

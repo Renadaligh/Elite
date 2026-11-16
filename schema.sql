@@ -142,6 +142,7 @@ CREATE INDEX IF NOT EXISTS bracket_signups_b ON bracket_signups (bracket_id, id)
 -- Registration page picture + tournament start date (run once, each as ONE statement; the page keeps working without them, the picture / date just cannot be saved)
 -- ALTER TABLE bracket_join ADD COLUMN cover TEXT NOT NULL DEFAULT '';
 -- ALTER TABLE bracket_join ADD COLUMN starts_at TEXT NOT NULL DEFAULT '';
+-- ALTER TABLE bracket_join ADD COLUMN description TEXT NOT NULL DEFAULT '';
 -- Email notifications for community tournaments (review / approved / rejected): the address an organiser gives (optional column; without it the account's email is used)
 -- ALTER TABLE users ADD COLUMN notify_email TEXT NOT NULL DEFAULT '';
 -- Admins add their own email in the dashboard ("إيميل الإشعارات") to hear about tournaments waiting for review (needs RESEND_API_KEY + MAIL_FROM):

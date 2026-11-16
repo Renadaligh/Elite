@@ -61,7 +61,7 @@ export default function GamePage({ id }: { id: string }) {
   const { items: allTours } = useTournaments();
   const [tab, setTab] = useState<Tab>('all');
   const now = Date.now();
-  const date = (d: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(d));
+  const date = (d: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(d));
   const back = (
     <a href="#games" className="inline-flex items-center gap-2 text-[.95rem]" style={{ color: 'var(--muted)' }}>
       <ArrowIcon className="h-4 w-4 rotate-180 rtl:rotate-0" /> {t.gamesBack}

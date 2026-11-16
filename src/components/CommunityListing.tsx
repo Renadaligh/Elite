@@ -22,8 +22,8 @@ const T = {
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 /** Typed in the organiser's own time zone, stored as an absolute moment, shown to every visitor in theirs. */
-const toInput = (iso: string) => { const d = new Date(iso); return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
-const fromInput = (v: string, end = false) => { const d = new Date(`${v}T${end ? '23:59:59' : '00:00:00'}`); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
+const toInput = (iso: string) => { const d = new Date(iso); return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const fromInput = (v: string) => { const d = new Date(v); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
 const empty = (): Listing => ({ gameId: '', name: '', prize: '', startsAt: '', total: 0, filled: 0, mode: 'solo', published: true });
 const fld = 'w-full rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
 
@@ -76,7 +76,7 @@ export default function CommunityListing({ id, share, lang, title }: { id: strin
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.name}<input className={fld} style={bd} maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.game}<select className={fld} style={bd} value={f.gameId} onChange={(e) => setF({ ...f, gameId: e.target.value })}><option value="">{t.pick}</option>{games.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></label>
-            <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.start}<input type="date" dir="ltr" className={`${fld} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} /></label>
+            <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.start}<input type="datetime-local" dir="ltr" className={`${fld} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} /></label>
             <div className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.slots}
               <div className="flex items-center gap-3" style={{ minHeight: 42 }}>
                 <button type="button" role="switch" aria-checked={f.total > 0} aria-label={t.limitSeats} className={`st-sw ${f.total > 0 ? 'on' : ''}`} onClick={() => setF({ ...f, total: f.total > 0 ? 0 : 16 })}><i /></button>
