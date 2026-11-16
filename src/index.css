@@ -1414,3 +1414,17 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-medit{flex:0 0 26px}
 .br-medit .br-pen{width:14px;height:14px}
 .br-zm .br-round{margin-bottom:4px;padding:2px 0}
+
+/* toolbar lives OUTSIDE the scrolling tree so it never moves with it */
+.br-outer .br-bar{position:static;width:auto;margin-bottom:6px}
+.br-out-pv .br-bar{margin:0 14px 8px}
+/* zoom mode: same Challonge density as the fit mode (rows / gaps scale with zoom) */
+.br-zm .br-row{padding:calc(3px*var(--z)) calc(6px*var(--z));gap:calc(4px*var(--z));font-size:calc(.9rem*var(--z));min-height:calc(26px*var(--z))}
+.br-zm .br-col-body{gap:calc(7px*var(--z))}
+.br-zm .br-main,.br-zm .br-cols{gap:calc(26px*var(--z))}
+.br-zm .br-col,.br-zm .br-final{flex:0 0 calc(212px*var(--z));min-width:calc(212px*var(--z))}
+
+/* packed winners rounds when there are byes (positions set from JS) */
+.br-col-body.br-abs{display:block;position:relative;flex:none;justify-content:flex-start}
+.br-col-body.br-abs>.br-match{position:absolute;inset-inline:0;margin:0}
+.br-col-body.br-abs>.br-match.is-ghost{display:none}

@@ -1,4 +1,4 @@
-import { champion, ffaChampion, ffaRows, groupLabel, groupSub, hasBye, isLeague, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
+import { champion, ffaChampion, ffaRows, groupLabel, groupSub, hasBye, isLeague, packSlots, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
 
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
 const PAD = 36, HEAD = 96, FOOT = 72;
@@ -194,13 +194,14 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   };
   const place = (rounds: BMatch[][], y0: number, tag: 'W' | 'L') => {
     let bottom = y0;
+    const slots = packSlots(rounds, R);
     rounds.forEach((ms, r) => {
       const x = IP + r * (BW + NUMW + GAP);
       if (ms.some((m) => !hasBye(R, m.id))) heads.push({ x, y: y0 - HD, label: rn(tag, ms[0].round, rounds.length) });
-      ms.forEach((m, i) => {
+        ms.forEach((m) => {
+          if (hasBye(R, m.id)) { pos.delete(m.id); return; }
         if (!hasBye(R, m.id)) nums.set(m.id, ++n);
-        const fy = [m.a, m.b].map((s) => ('w' in s ? pos.get(s.w) : undefined)).filter(Boolean) as { x: number; y: number }[];
-        const y = fy.length === 2 ? (fy[0].y + fy[1].y) / 2 : fy.length === 1 ? fy[0].y : y0 + (i + 0.5) * PS * (r === 0 || !rounds[r - 1] ? 1 : Math.max(1, rounds[r - 1].length / ms.length));
+        const y = y0 + ((slots.get(m.id) ?? 0) + 0.5) * PS;
         pos.set(m.id, { x, y });
         bottom = Math.max(bottom, y + RHs + 8);
       });

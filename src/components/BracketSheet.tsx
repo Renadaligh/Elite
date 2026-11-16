@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { champion, hasBye, layout, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
+import { champion, hasBye, layout, packSlots, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
  *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
@@ -33,13 +33,14 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
     const heads: { x: number; y: number; label: string }[] = [];
     const place = (rounds: BMatch[][], y0: number, tag: 'W' | 'L') => {
       let bottom = y0;
+      const slots = packSlots(rounds, R);
       rounds.forEach((ms, r) => {
         const x = PAD + r * (BW + NUMW + GAP);
         if (ms.some((m) => !hasBye(R, m.id))) heads.push({ x, y: y0 - HEAD, label: rName(ar, tag, ms[0].round, rounds.length) });
-        ms.forEach((m, i) => {
+        ms.forEach((m) => {
+          if (hasBye(R, m.id)) { pos.delete(m.id); return; }
           if (!hasBye(R, m.id)) nums.set(m.id, ++n);
-          const fy = [m.a, m.b].map((s) => ('w' in s ? pos.get(s.w) : undefined)).filter((p): p is Pos => !!p);
-          const y = fy.length === 2 ? (fy[0].y + fy[1].y) / 2 : fy.length === 1 ? fy[0].y : y0 + (i + 0.5) * P * (r === 0 || !rounds[r - 1] ? 1 : Math.max(1, rounds[r - 1].length / ms.length));
+          const y = y0 + ((slots.get(m.id) ?? 0) + 0.5) * P;
           pos.set(m.id, { x, y });
           bottom = Math.max(bottom, y + RH + 8);
         });

@@ -125,6 +125,23 @@ function redraw(br: Bracket, players: string[]): Bracket {
 /** A match with an empty seat (BYE): nothing is played, so every view hides it and lets the player simply wait in the next round. */
 export const hasBye = (R: Map<string, Resolved>, id: string) => { const r = R.get(id); return !!r && (r.a === 'bye' || r.b === 'bye'); };
 
+/** Tight (Challonge-style) vertical slots for one branch: hidden BYE matches take no room, every visible first match gets its own slot,
+ *  a later match sits between its feeders (or level with its only feeder). Returns slot centres in units of one match slot. */
+export function packSlots(rounds: BMatch[][], R: Map<string, Resolved>): Map<string, number> {
+  const byId = new Map<string, BMatch>(); rounds.flat().forEach((m) => byId.set(m.id, m));
+  const out = new Map<string, number>(); let slot = 0;
+  const go = (m: BMatch) => {
+    if (out.has(m.id)) return;
+    const fs = [m.a, m.b].map((sl) => ('w' in sl && byId.has(sl.w) && !hasBye(R, sl.w) ? byId.get(sl.w)! : null)).filter((f): f is BMatch => !!f);
+    if (!fs.length) { out.set(m.id, slot++); return; }
+    fs.forEach(go);
+    out.set(m.id, fs.reduce((t, f) => t + out.get(f.id)!, 0) / fs.length);
+  };
+  for (const m of rounds[rounds.length - 1] ?? []) if (!hasBye(R, m.id)) go(m);
+  for (const m of rounds.flat()) if (!hasBye(R, m.id)) go(m);
+  return out;
+}
+
 /** Works out who is in every match (byes advance automatically). */
 export function resolve(br: Bracket): Map<string, Resolved> {
   const M = new Map<string, Resolved>();

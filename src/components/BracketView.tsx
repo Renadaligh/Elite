@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { PencilIcon, TrophyIcon } from './icons';
-import { champion, hasBye, isDraft, isLeague, layout, matchNumbers, nameKey, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
+import { champion, hasBye, isDraft, isLeague, layout, matchNumbers, packSlots, nameKey, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
 import FfaView from './FfaView';
@@ -175,6 +175,25 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   useLayoutEffect(() => {
     const calc = () => {
       const root = wrap.current; if (!root) return;
+      // Byes: hidden first-round matches take no room (like Challonge) – the winners rounds are packed tight and positioned by hand.
+      const bodies = Array.from(root.querySelectorAll<HTMLElement>('.br-stack .br-sec:first-child .br-col-body'));
+      const wr = L.winners;
+      const packed = wr.length > 0 && wr.some((ms) => ms.some((m) => hasBye(R, m.id))) && bodies.length === wr.length;
+      for (const bd of bodies) { bd.classList.toggle('br-abs', packed); if (!packed) { bd.style.removeProperty('height'); Array.from(bd.children).forEach((c) => (c as HTMLElement).style.removeProperty('top')); } }
+      if (packed) {
+        const first = wr.flat().find((m) => !hasBye(R, m.id));
+        const fe = first ? els.current.get(first.id) : undefined;
+        const h = fe?.offsetHeight || 0;
+        if (h) {
+          const gap = Math.max(4, Math.round(h * 0.16));
+          const Pp = h + gap, ys = new Map<string, number>();
+          let H = 0;
+          const sl = packSlots(wr, R);
+          for (const [id, v] of sl) { const y = v * Pp; ys.set(id, y); H = Math.max(H, y + h); }
+          bodies.forEach((bd) => { bd.style.height = `${H}px`; });
+          for (const [id, y] of ys) { const el = els.current.get(id); if (el) el.style.top = `${y}px`; }
+        }
+      }
       const o = root.getBoundingClientRect();
       const out: { d: string; on: boolean }[] = [];
       const nn: { x: number; y: number; n: number }[] = [];
@@ -374,7 +393,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   }
 
   return (
-    <div ref={box} data-bv={uid} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''} ${zoomable ? 'br-zm' : ''}`} style={zoomable ? ({ ...fitStyle, '--z': z } as CSSProperties) : fitStyle} dir={dir}>
+    <div className={`br-outer ${pub ? 'br-out-pv' : ''}`} dir={dir}>
       <div className="br-bar">{toggle}{topSel}
         <span className="br-sbox"><input type="search" className="br-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={lang === 'ar' ? 'ابحث باسم لاعب أو رقم مباراة' : 'Search a player or match no.'} aria-label={lang === 'ar' ? 'بحث' : 'Search'} />{qs && <i className="br-scount">{nHits ? nHits : (lang === 'ar' ? 'لا نتيجة' : 'None')}</i>}</span>
         {zoomable && <span className="br-zbar" role="group" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom'}>
@@ -383,6 +402,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
           <button type="button" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom in'} onClick={() => setZc(z + 0.15)}>+</button>
         </span>}
       </div>
+    <div ref={box} data-bv={uid} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''} ${zoomable ? 'br-zm' : ''}`} style={zoomable ? ({ ...fitStyle, '--z': z } as CSSProperties) : fitStyle} dir={dir}>
       <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
@@ -402,6 +422,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         </div>
       </div>
       {matchCard}
+    </div>
     </div>
   );
 }
