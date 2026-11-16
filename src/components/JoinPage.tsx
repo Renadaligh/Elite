@@ -30,7 +30,14 @@ export default function JoinPage({ id }: { id: string }) {
   useEffect(() => {
     let live = true;
     fetch(`/api/join/${encodeURIComponent(id)}`).then(async (r) => (r.ok ? ((await r.json()) as Info) : 'gone' as const)).then((d) => { if (live) setInfo(d); }).catch(() => { if (live) setInfo('gone'); });
-    return () => { live = false; };
+    // keep the "registered" count (and open/closed) fresh while the page stays open
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch(`/api/join/${encodeURIComponent(id)}`).then(async (r) => { if (live && r.ok) setInfo((await r.json()) as Info); }).catch(() => undefined);
+    };
+    const t = window.setInterval(refresh, 20000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { live = false; window.clearInterval(t); document.removeEventListener('visibilitychange', refresh); };
   }, [id]);
 
   const team = info !== null && info !== 'gone' && info.mode === 'team';
@@ -44,6 +51,7 @@ export default function JoinPage({ id }: { id: string }) {
     try {
       const res = await fetch(`/api/join/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platoId: pid, teamName: teamName.trim(), members: members.trim(), hp }) });
       const d = (await res.json()) as { ok?: boolean; error?: string };
+      if (d.ok || d.error === 'full' || d.error === 'closed') fetch(`/api/join/${encodeURIComponent(id)}`).then(async (r) => { if (r.ok) setInfo((await r.json()) as Info); }).catch(() => undefined); // count / state right after sending
       setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'required' ? 'required' : 'error');
     } catch { setState('error'); }
   }
