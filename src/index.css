@@ -1396,3 +1396,21 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-fit .br-col-body{gap:6px}
 .br-fit .br-match{border-radius:6px}
 @media (pointer:coarse){.br-row{padding-block:5px;min-height:28px}.br-row .br-seed{margin-block:-5px}}
+
+/* bracket: match numbers beside the connector lines + search */
+.br-lines .br-no{fill:var(--muted);font-size:calc(10px * var(--z,1));opacity:.85}
+.br-sbox{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.br-search{width:min(230px,52vw);padding:6px 12px;border-radius:10px;border:1px solid var(--glass-b,rgba(255,255,255,.2));background:var(--glass,rgba(255,255,255,.06));color:var(--text);font-size:.8rem;outline:none}
+.br-search:focus{border-color:#3d7bff}
+.br-scount{font-style:normal;font-size:.75rem;color:var(--muted);white-space:nowrap}
+.br-row.is-hit{background:rgba(255,201,60,.22)!important;box-shadow:inset 0 0 0 2px #ffc93c;color:var(--text)}
+.br-match.is-hit{box-shadow:0 0 0 2px #ffc93c}
+
+/* tighter tool toolbar (one compact row) and a slimmer edit button */
+.br-bar{gap:6px;margin-bottom:4px}
+.br-bar .br-toggle{padding:5px 11px;font-size:.78rem}
+.br-bar .br-search{padding:5px 10px;width:min(210px,46vw)}
+.br-zbar button{min-width:2rem;height:1.9rem;padding:0 .45rem;font-size:.82rem}
+.br-medit{flex:0 0 26px}
+.br-medit .br-pen{width:14px;height:14px}
+.br-zm .br-round{margin-bottom:4px;padding:2px 0}

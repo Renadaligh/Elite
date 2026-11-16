@@ -219,6 +219,14 @@ export function champion(br: Bracket): number | null {
 }
 
 /** Matches grouped as sections → rounds (for drawing). */
+/** Match numbers shown next to the connector lines (1, 2, 3…): winners rounds, then losers, then the grand final; bye matches get none. Same order as the sheet. */
+export function matchNumbers(br: Bracket): Map<string, number> {
+  const L = layout(br), R = resolve(br), out = new Map<string, number>();
+  let n = 0;
+  for (const ms of [...L.winners, ...L.losers, ...(L.final ? [[L.final]] : [])]) for (const m of ms) if (!hasBye(R, m.id)) out.set(m.id, ++n);
+  return out;
+}
+
 export function layout(br: Bracket) {
   const rounds = (b: 'W' | 'L') => {
     const rs = [...new Set(br.matches.filter((m) => m.br === b).map((m) => m.round))].sort((x, y) => x - y);

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { PencilIcon, TrophyIcon } from './icons';
-import { champion, hasBye, isDraft, isLeague, layout, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
+import { champion, hasBye, isDraft, isLeague, layout, matchNumbers, nameKey, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
 import FfaView from './FfaView';
@@ -21,10 +21,10 @@ function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: numbe
   return ar ? `الجولة ${round}` : `Round ${round}`;
 }
 
-function Row({ seed, name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename }: { seed?: number; crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
+function Row({ hit, seed, name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename }: { hit?: boolean; seed?: number; crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
   const [editing, setEditing] = useState(false);
   return (
-    <div className={`br-row ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-drag={grip ? slot : undefined}>
+    <div className={`br-row ${hit ? 'is-hit' : ''} ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-drag={grip ? slot : undefined}>
       {seed !== undefined && <span className="br-seed" aria-hidden="true">{seed}</span>}
       {grip && <span className="br-grip" data-grip={slot} aria-hidden="true">⠿</span>}
       {editing && onRename ? (
@@ -121,7 +121,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     if (!narrow && showTree && bw) {
       const n = Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0);
       if (!n) return undefined;
-      const g = 14, av = bw - 24;
+      const g = 22, av = bw - 24;
       const maxLen = bracket.players.reduce((q, p) => Math.max(q, [...p].length), 6);
       const nat = Math.min(320, Math.max(150, Math.round(maxLen * 7.6 + 78))); // widest a column can get (name + grip + score box)
       const tc = n; // columns on screen
@@ -131,7 +131,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
       return { '--cw': `${cw}px`, '--gap': `${g}px`, '--fs': `${cw >= 210 ? 14 : cw >= 190 ? 13 : cw >= 160 ? 12 : 11.5}px` } as CSSProperties;
     }
     if (!narrow || !single || !bw || !nCols || !showTree) return undefined;
-    const gap = 12, avail = bw - 20;
+    const gap = 16, avail = bw - 20;
     let cw = Math.floor((avail - gap * (nCols - 1)) / nCols);
     if (cw < 58) cw = 84;
     const fs = cw >= 104 ? 12.5 : cw >= 78 ? 10.5 : 8.5;
@@ -151,6 +151,14 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   const wrap = useRef<HTMLDivElement>(null);
   const els = useRef(new Map<string, HTMLElement>());
   const [lines, setLines] = useState<{ d: string; on: boolean }[]>([]);
+  const [nums, setNums] = useState<{ x: number; y: number; n: number }[]>([]);
+  const NO = useMemo(() => matchNumbers(bracket), [bracket]);
+  // search: a player's name (highlights every row of that player) or a match number (highlights the match)
+  const [q, setQ] = useState('');
+  const qs = q.trim();
+  const hitP = useMemo(() => { const k = nameKey(qs); const out = new Set<number>(); if (k && !/^\d+$/.test(k)) bracket.players.forEach((p, i) => { if (nameKey(p).includes(k)) out.add(i); }); return out; }, [qs, bracket.players]);
+  const hitM = useMemo(() => { const out = new Set<string>(); if (/^\d+$/.test(qs)) NO.forEach((n, id) => { if (n === Number(qs)) out.add(id); }); return out; }, [qs, NO]);
+  const nHits = hitM.size || (hitP.size ? bracket.matches.filter((m) => { const r = R.get(m.id); return !!r && ((typeof r.a === 'number' && hitP.has(r.a)) || (typeof r.b === 'number' && hitP.has(r.b))); }).length : 0);
   const [size, setSize] = useState({ w: 0, h: 0 });
   // tell the editor page how wide the tree is (--tw), so the boxes under it can match it; they are siblings of .st-stage, so the variable goes on the parent too
   useEffect(() => {
@@ -169,10 +177,12 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
       const root = wrap.current; if (!root) return;
       const o = root.getBoundingClientRect();
       const out: { d: string; on: boolean }[] = [];
+      const nn: { x: number; y: number; n: number }[] = [];
       for (const m of bracket.matches) {
         if (hasBye(R, m.id)) continue;
         const to = els.current.get(m.id); if (!to) continue;
         const tb = to.getBoundingClientRect();
+        const no = NO.get(m.id); if (no !== undefined) nn.push({ x: (rtl ? tb.left - 4 : tb.right + 4) - o.left, y: tb.top + tb.height / 2 - o.top - 3, n: no });
         for (const s of [m.a, m.b]) {
           if (!('w' in s) || hasBye(R, s.w)) continue;
           const from = els.current.get(s.w); if (!from) continue;
@@ -182,13 +192,19 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         }
       }
       const mainEl = root.querySelector<HTMLElement>('.br-main');
-      setLines(out); setSize({ w: mainEl?.offsetWidth ?? root.offsetWidth, h: mainEl?.offsetHeight ?? root.offsetHeight });
+      setLines(out); setNums(nn); setSize({ w: mainEl?.offsetWidth ?? root.offsetWidth, h: mainEl?.offsetHeight ?? root.offsetHeight });
     };
     calc();
     const ro = new ResizeObserver(calc); if (wrap.current) ro.observe(wrap.current);
     document.fonts?.ready.then(calc).catch(() => undefined);
     return () => ro.disconnect();
-  }, [bracket, R, lang, rtl, showTree]);
+  }, [bracket, R, NO, lang, rtl, showTree]);
+  // jump to the first result
+  useEffect(() => {
+    if (!qs) return;
+    const t = window.setTimeout(() => box.current?.querySelector('.br-row.is-hit, .br-match.is-hit')?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' }), 120);
+    return () => window.clearTimeout(t);
+  }, [qs, bracket]);
 
   const swapRef = useRef(onSwap); swapRef.current = onSwap; const hasSwap = !!onSwap;
   // Drag a first-round player onto another seat to swap the two: hold the player's row (mouse: just drag; touch: press and hold) or use the grip. Works with mouse and touch.
@@ -286,22 +302,21 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     const sa = seat('a'), sb = seat('b');
     const crowned = (side: 'a' | 'b') => champ !== null && m.id === finalId && !isBye && m.win === side; // the trophy sits next to the champion's name in the last match
     return (
-      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); else els.current.delete(m.id); }} data-m={m.id} className={`br-match ${isBye ? 'is-bye is-ghost' : ''} ${selected === m.id || open === m.id ? 'is-sel' : ''}`}>
+      <div key={m.id} ref={(el) => { if (el) els.current.set(m.id, el); else els.current.delete(m.id); }} data-m={m.id} className={`br-match ${hitM.has(m.id) ? 'is-hit' : ''} ${isBye ? 'is-bye is-ghost' : ''} ${selected === m.id || open === m.id ? 'is-sel' : ''}`}>
         {onApply && !isBye && typeof r.a === 'number' && typeof r.b === 'number' ? (
           <div className="br-mwrap">
             <div className="br-mrows">
-          <Row seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
             </div>
             <button type="button" className="br-medit" aria-label={lang === 'ar' ? 'تعديل نتيجة المباراة' : 'Edit match result'} title={lang === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setOpen(m.id)}><PencilIcon className="br-pen" /></button>
           </div>
         ) : (
           <>
-          <Row seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
           </>
         )}
-        {onPick && !onApply && <span className="br-id">{m.id}</span>}
       </div>
     );
   };
@@ -360,16 +375,18 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
 
   return (
     <div ref={box} data-bv={uid} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''} ${zoomable ? 'br-zm' : ''}`} style={zoomable ? ({ ...fitStyle, '--z': z } as CSSProperties) : fitStyle} dir={dir}>
-      {(toggle || topSel || zoomable) && <div className="br-bar">{toggle}{topSel}
+      <div className="br-bar">{toggle}{topSel}
+        <span className="br-sbox"><input type="search" className="br-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={lang === 'ar' ? 'ابحث باسم لاعب أو رقم مباراة' : 'Search a player or match no.'} aria-label={lang === 'ar' ? 'بحث' : 'Search'} />{qs && <i className="br-scount">{nHits ? nHits : (lang === 'ar' ? 'لا نتيجة' : 'None')}</i>}</span>
         {zoomable && <span className="br-zbar" role="group" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom'}>
           <button type="button" aria-label={lang === 'ar' ? 'تصغير' : 'Zoom out'} onClick={() => setZc(z - 0.15)}>−</button>
           <button type="button" aria-label={lang === 'ar' ? 'ملاءمة' : 'Reset zoom'} onClick={() => setZ(Z0)}>{Math.round(z * 100)}%</button>
           <button type="button" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom in'} onClick={() => setZc(z + 0.15)}>+</button>
         </span>}
-      </div>}
+      </div>
       <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
+          {nums.map((t) => <text key={t.n} className="br-no" x={t.x} y={t.y} textAnchor={rtl ? 'end' : 'start'}>{t.n}</text>)}
         </svg>
         <div className="br-main">
           <div className="br-stack">

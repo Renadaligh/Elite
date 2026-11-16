@@ -266,12 +266,12 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           </div>
         )
       ) : (
-        <div className={`grid min-w-0 gap-5 ${!editable && readOnly ? 'pv-body' : ''}`}>
-          <div className={`flex flex-wrap items-center justify-between gap-3 ${!editable && readOnly ? 'pv-pad' : ''}`}>
+        <div className={`grid min-w-0 gap-3 md:gap-4 ${!editable && readOnly ? 'pv-body' : ''}`}>
+          <div className={`flex flex-wrap items-center justify-between gap-2 ${!editable && readOnly ? 'pv-pad' : ''}`}>
             {!sheetView && <div>
-              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-2 text-[1.5rem] md:text-[1.6rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
+              {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1 text-[1.2rem] md:text-[1.5rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
                 : <h2 className="text-[1.7rem] md:text-[2rem] font-extrabold">{title}</h2>}
-              {editable && <input className="mt-2 w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1.5 text-[.9rem] outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={br.org ?? ''} placeholder={`${tx.org} · ${tx.orgPh}`} aria-label={tx.org} onChange={(e) => { const v = e.target.value.slice(0, 60); const { org: _o, ...rest } = br; void _o; ver.current += 1; setBr(v ? { ...rest, org: v } : rest); setDirty(true); }} />}
+              {editable && <input className="mt-1.5 w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1 text-[.85rem] outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={br.org ?? ''} placeholder={`${tx.org} · ${tx.orgPh}`} aria-label={tx.org} onChange={(e) => { const v = e.target.value.slice(0, 60); const { org: _o, ...rest } = br; void _o; ver.current += 1; setBr(v ? { ...rest, org: v } : rest); setDirty(true); }} />}
               {!editable && br.org && <p className="mt-1 text-[.95rem] font-semibold" style={{ color: 'var(--muted)' }}>{tx.orgBy}: <span dir="auto" style={{ color: 'var(--text)' }}>{br.org}</span></p>}
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>}

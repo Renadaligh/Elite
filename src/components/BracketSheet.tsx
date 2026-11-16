@@ -3,7 +3,7 @@ import { champion, hasBye, layout, resolve, type BMatch, type Bracket, type Who 
 
 /** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
  *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
-const BW = 180, SEED = 24, RH = 22, GAP = 48, NUMW = 22, P = 52, HEAD = 30, SEC_GAP = 56, PAD = 10;
+const BW = 180, SEED = 24, RH = 22, GAP = 36, NUMW = 22, P = 52, HEAD = 30, SEC_GAP = 56, PAD = 10;
 
 function rName(ar: boolean, br: 'W' | 'L', round: number, total: number) {
   if (br === 'L') return ar ? `الخاسرين ${round}` : `Losers R${round}`;

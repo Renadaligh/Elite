@@ -179,7 +179,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   const family = getComputedStyle(document.body).fontFamily || 'sans-serif';
   const R = resolve(br);
   const L = layout(br);
-  const BW = 180, SEED = 24, RHs = 25, GAP = 48, NUMW = 22, PS = 72, HD = 30, SEC = 56, IP = 28, TT = 76;
+  const BW = 180, SEED = 24, RHs = 22, GAP = 36, NUMW = 22, PS = 52, HD = 30, SEC = 56, IP = 28, TT = 76;
   const pos = new Map<string, { x: number; y: number }>();
   const nums = new Map<string, number>();
   const heads: { x: number; y: number; label: string }[] = [];
@@ -267,7 +267,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     const p = pos.get(m.id); if (!p || hasBye(R, m.id)) continue;
     const r = R.get(m.id)!;
     const bx = mx(p.x, BW);
-    c.save(); rr(bx, p.y - RHs, BW, RHs * 2, 9); c.clip();
+    c.save(); rr(bx, p.y - RHs, BW, RHs * 2, 6); c.clip();
     c.fillStyle = P.bg; c.fillRect(bx, p.y - RHs, BW, RHs * 2);
     ([['a', r.a, m.sa], ['b', r.b, m.sb]] as const).forEach(([side, w, sc], i) => {
       const y = p.y - RHs + i * RHs, win = m.win === side, lose = !!m.win && !win;
@@ -275,7 +275,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
       c.fillStyle = P.head; c.fillRect(seedX, y + 1, SEED, RHs - 2);
       c.fillStyle = win ? P.winBg : P.card; c.fillRect(bodyX, y + 1, BW - SEED, RHs - 2);
       c.fillStyle = P.soft; c.font = `500 11px ${family}`; txt(sd(w), seedX + SEED / 2, y + RHs / 2 + 1, 'center', SEED - 4);
-      c.fillStyle = win ? P.win : lose ? P.lose : P.fg; c.font = `${win ? 800 : 500} 13px ${family}`;
+      c.fillStyle = win ? P.win : lose ? P.lose : P.fg; c.font = `${win ? 800 : 500} 12.5px ${family}`;
       const crown = win && champion(br) !== null && m.id === (L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id);
       txt(nm(w), ar ? bx + BW - SEED - 8 : bx + SEED + 8, y + RHs / 2 + 1, ar ? 'right' : 'left', BW - SEED - (crown ? 66 : 40));
       if (crown) trophy(c, ar ? bx + (sc ? 54 : 42) : bx + BW - (sc ? 54 : 42), y + RHs / 2 + 1, 15);
