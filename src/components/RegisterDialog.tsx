@@ -6,7 +6,7 @@ import { CloseIcon } from './icons';
 
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId';
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
-const okId = (s: string) => /^[\p{L}\p{N}_]+$/u.test(s);
+const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
 const MAX = { id: 80, name: 80, members: 600 };
 

@@ -5,7 +5,7 @@ import { S, ThemeBtn, type Theme } from './BracketStudio';
 
 interface Info { description?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full';
-const okId = (s: string) => /^[\p{L}\p{N}_]+$/u.test(s);
+const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
 /** Most prominent hue of the cover (30° bins, only vivid pixels). null = grey/white picture or unreadable: keep the site colours. */
 function useCoverHue(src?: string): number | null {
