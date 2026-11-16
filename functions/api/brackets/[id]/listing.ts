@@ -50,8 +50,8 @@ export const onRequestPut = async (ctx: Ctx) => {
   try {
     const old = await ctx.env.DB.prepare('SELECT filled, game_id, name_en, prize_en, starts_at, review, image FROM tournaments WHERE id = ? AND owner_id = ?').bind(id, u.id).first<{ filled: number; game_id: string; name_en: string; prize_en: string; starts_at: string; review: string; image: string }>();
     if (old) {
-      // Changing what the public sees (name, game, prize, dates) sends it back to review; seats / hide switch do not. An edit of a rejected one is a resubmission.
-      const changed = old.name_en !== name || old.game_id !== game || old.prize_en !== prize || old.starts_at !== startsAt || old.image !== image;
+      // Only a new name or picture sends an approved one back to review. An edit of a rejected one is a resubmission.
+      const changed = old.name_en !== name || old.image !== image; // only a new name or picture goes back to review; game, prize, date, seats, etc. change freely
       const review = old.review === 'rejected' || (changed && old.review === 'approved') ? 'pending' : old.review === 'pending' ? 'pending' : 'approved';
       await ctx.env.DB.prepare('UPDATE tournaments SET image=?,game_id=?,name_en=?,name_ar=?,format_en=?,format_ar=?,prize_en=?,prize_ar=?,starts_at=?,total=?,filled=?,mode=?,published=?,review=?,review_note=? WHERE id=? AND owner_id=?')
         .bind(image, game, name, name, fe, fa, prize, prize, startsAt, total, total > 0 ? Math.min(old.filled, total) : old.filled, mode, pub, review, '', id, u.id).run();

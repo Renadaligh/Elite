@@ -9,7 +9,7 @@ const T = {
 };
 export const addTxt = (lang: 'ar' | 'en') => T[lang];
 
-export interface RegRow { id: number; mode: string; plato_id: string; team_name: string; members: string }
+export interface RegRow { id: number; mode: string; plato_id: string; team_name: string; members: string; src?: 'join' | 'site'; created_at?: string }
 export const regName = (r: RegRow) => (r.mode === 'team' ? r.team_name : r.plato_id).trim();
 
 /**
@@ -101,7 +101,7 @@ export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh, onDele
           {regs.map((r, i) => {
             const n = regName(r), done = have.has(nameKey(n));
             return (
-              <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)', opacity: done && !onUnadd ? 0.6 : 1 }}>
+              <li key={`${r.src ?? ''}-${r.id}`} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)', opacity: done && !onUnadd ? 0.6 : 1 }}>
                 <div className="min-w-0"><b dir="auto">{done && onUnadd && <span style={{ color: '#2ecc8c' }}>✓ </span>}{i + 1}. {n}</b>{r.mode === 'team' && <div dir="auto" className="truncate" style={{ color: 'var(--muted)', fontSize: '.78rem' }}>{t.captain}: {r.plato_id}{r.members ? ` · ${r.members.replace(/\n/g, '، ')}` : ''}</div>}</div>
                 <div className="flex shrink-0 items-center gap-2">
                   {done ? (onUnadd

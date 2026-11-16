@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { RegistrantsPanel, autoAddNew, type RegRow } from './AddPlayers';
+import type { RegRow } from './AddPlayers';
 
 interface Cfg { cover?: string; startsAt?: string; enabled: boolean; mode: 'solo' | 'team'; cap: number; closesAt: number; closed: boolean; reason: '' | 'closed' | 'full'; count: number; signups: RegRow[] }
 const T = {
@@ -14,7 +14,7 @@ const isoDate = (iso?: string) => { const d = new Date(iso ?? ''); return !iso |
 const fromLocal = (v: string) => { const t = new Date(`${v}T23:59:59`).getTime(); return Number.isNaN(t) ? 0 : t; };
 
 /** Organiser panel for the registration link (#/join/<id>): on/off, solo/team, cap, auto/manual close, and the people who signed up. */
-export default function JoinPanel({ id, lang, link, players, onAdd, onUnadd, auto }: { id: string; lang: 'ar' | 'en'; link: string; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string) => void; auto?: boolean }) {
+export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' | 'en'; link: string }) {
   const t = T[lang];
   const [c, setC] = useState<Cfg | null>(null);
   const [msg, setMsg] = useState('');
@@ -26,8 +26,6 @@ export default function JoinPanel({ id, lang, link, players, onAdd, onUnadd, aut
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }, [id, t.fail, t.migrate]);
   useEffect(() => { void load(); }, [load]);
-  // sign-ups go straight into the bracket
-  useEffect(() => { if (auto && c?.enabled) autoAddNew(id, 'join', c.signups, players, onAdd); }, [c, auto]); // eslint-disable-line react-hooks/exhaustive-deps
   async function pickCover(file?: File | null) {
     if (!file) return;
     const fd = new FormData(); fd.append('file', file);
@@ -84,7 +82,6 @@ export default function JoinPanel({ id, lang, link, players, onAdd, onUnadd, aut
                 <span className="text-[.9rem] font-bold">{status} · {t.count}: {c.count}{c.cap > 0 ? ` / ${c.cap}` : ''}</span>
                 <button type="button" className="rounded-full border px-3.5 py-1.5 text-[.82rem] font-bold" style={bd} onClick={() => put({ closed: !c.closed })}>{c.closed ? t.reopen : t.now}</button>
               </div>
-              <RegistrantsPanel lang={lang} regs={c.signups} players={players} onAdd={onAdd} onUnadd={onUnadd} onRefresh={load} onDelete={(r) => { void api(`/brackets/${id}/join?rid=${r.id}`, { method: 'DELETE' }).then(load).catch(() => setMsg(t.fail)); }} />
             </>
           )}
           {msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>}

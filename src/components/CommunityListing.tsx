@@ -1,22 +1,20 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useGames } from '../hooks/useGames';
-import { autoAddNew, type RegRow } from './AddPlayers';
 
 /** Owner panel in the bracket tool: list this bracket as a public tournament people can register for, and see who registered. */
 interface Listing { image?: string; gameId: string; name: string; prize: string; startsAt: string; total: number; filled: number; mode: 'solo' | 'team'; published: boolean; review?: 'pending' | 'approved' | 'rejected'; reviewNote?: string }
-interface Reg { id: number; mode: string; plato_id: string; team_name: string; members: string; created_at: string }
 
 const T = {
   ar: {
     title: 'نشر البطولة في الموقع', d: 'تظهر بطولتك في قسم البطولات بالموقع ويسجّل فيها الناس مباشرة. بعد مراجعتها من الإدارة والموافقة عليها تظهر في الموقع.', needShare: 'فعّل «رابط العرض» أولاً حتى تقدر تنشر البطولة.',
-    name: 'اسم البطولة', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ بداية البطولة', slots: 'عدد المقاعد', imgNote: 'صورة البطولة هي نفس الصورة اللي ترفعها في «رابط التسجيل المستقل» (1280 × 720)، ما تحتاج ترفعها مرتين.', cover: 'صورة البطولة (اختياري)', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (صورة حتى 3MB: PNG أو JPG أو WebP).', coverHint: 'من غير صورة يظهر لون افتراضي.', limitSeats: 'تحديد عدد المقاعد', unlimited: 'غير محدود', stPending: 'قيد المراجعة: ننتظر موافقة الفريق قبل ظهورها في الموقع.', stApproved: 'مقبولة ومنشورة في الموقع.', stRejected: 'مرفوضة', stRejectedHint: 'عدّل البطولة واضغط «نشر / حفظ» لإعادة إرسالها للمراجعة.', sent: 'أُرسلت للمراجعة', editNote: 'تغيير الاسم أو اللعبة أو الجائزة أو التاريخ أو الصورة يعيدها للمراجعة. وتنتهي البطولة تلقائيًا لما يتحدد الفائز.', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة (اختياري)',
+    name: 'اسم البطولة', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ بداية البطولة', slots: 'عدد المقاعد', imgNote: 'صورة البطولة هي نفس الصورة اللي ترفعها في «رابط التسجيل المستقل» (1280 × 720)، ما تحتاج ترفعها مرتين.', cover: 'صورة البطولة (اختياري)', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (صورة حتى 3MB: PNG أو JPG أو WebP).', coverHint: 'من غير صورة يظهر لون افتراضي.', limitSeats: 'تحديد عدد المقاعد', unlimited: 'غير محدود', stPending: 'قيد المراجعة: ننتظر موافقة الفريق قبل ظهورها في الموقع.', stApproved: 'مقبولة ومنشورة في الموقع.', stRejected: 'مرفوضة', stRejectedHint: 'عدّل البطولة واضغط «نشر / حفظ» لإعادة إرسالها للمراجعة.', sent: 'أُرسلت للمراجعة', editNote: 'تغيير الاسم أو الصورة فقط يعيدها للمراجعة، وباقي التعديلات تنحفظ مباشرة. وتنتهي البطولة تلقائيًا لما يتحدد الفائز.', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة (اختياري)',
     show: 'ظاهرة في الموقع', save: 'نشر / حفظ', saved: 'تم الحفظ', remove: 'إلغاء النشر', removeAsk: 'تلغي نشر البطولة وتحذف قائمة المسجلين؟', fail: 'تعذّر الحفظ', migrate: 'لازم تشغّل أوامر قاعدة البيانات الجديدة (schema.sql) أولاً.', limit: 'وصلت الحد الأعلى للبطولات المنشورة (10).', bad: 'اكتب الاسم وحدد تاريخ بداية البطولة.',
     regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', refresh: 'تحديث', del: 'حذف', delAsk: 'حذف هذا التسجيل وإزالة اللاعب من البراكت؟', use: 'إضافة الكل', added: 'مضاف', unadd: 'إزالة من البراكت (التسجيل يبقى)', add: 'إضافة', captain: 'القائد', registered: 'مسجّل', closes: 'التسجيل يقفل عند بداية البطولة.',
   },
   en: {
     title: 'Publish the tournament on the site', d: 'Your tournament shows in the site\'s Tournaments section and people register directly. It appears on the site after the team reviews and approves it.', needShare: 'Turn on "view link" first to publish the tournament.',
-    name: 'Tournament name', game: 'Game', pick: 'Choose a game', start: 'Tournament start date', slots: 'Slots', imgNote: 'The tournament picture is the same one you upload under the registration link (1280 × 720), no need to upload it twice.', cover: 'Tournament picture (optional)', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).', coverHint: 'Without a picture a default colour is shown.', limitSeats: 'Limit the seats', unlimited: 'Unlimited', stPending: 'Under review: waiting for the team\'s approval before it shows on the site.', stApproved: 'Approved and live on the site.', stRejected: 'Rejected', stRejectedHint: 'Edit the tournament and press "Publish / save" to send it for review again.', sent: 'Sent for review', editNote: 'Changing the name, game, prize, date or picture sends it back to review. The tournament ends by itself once a winner is decided.', mode: 'Registration', solo: 'Solo', team: 'Team', prize: 'Prize (optional)',
+    name: 'Tournament name', game: 'Game', pick: 'Choose a game', start: 'Tournament start date', slots: 'Slots', imgNote: 'The tournament picture is the same one you upload under the registration link (1280 × 720), no need to upload it twice.', cover: 'Tournament picture (optional)', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).', coverHint: 'Without a picture a default colour is shown.', limitSeats: 'Limit the seats', unlimited: 'Unlimited', stPending: 'Under review: waiting for the team\'s approval before it shows on the site.', stApproved: 'Approved and live on the site.', stRejected: 'Rejected', stRejectedHint: 'Edit the tournament and press "Publish / save" to send it for review again.', sent: 'Sent for review', editNote: 'Only changing the name or the picture sends it back to review; every other change is saved straight away. The tournament ends by itself once a winner is decided.', mode: 'Registration', solo: 'Solo', team: 'Team', prize: 'Prize (optional)',
     show: 'Visible on the site', save: 'Publish / save', saved: 'Saved', remove: 'Unpublish', removeAsk: 'Unpublish the tournament and delete its registrations?', fail: 'Could not save', migrate: 'Run the new database statements (schema.sql) first.', limit: 'You reached the limit of published tournaments (10).', bad: 'Enter a name and the tournament start date.',
     regs: 'Registered', none: 'Nobody registered yet.', refresh: 'Refresh', del: 'Delete', delAsk: 'Delete this registration and remove the player from the bracket?', use: 'Add all', added: 'Added', unadd: 'Remove from the bracket (the registration stays)', add: 'Add', captain: 'Captain', registered: 'registered', closes: 'Registration closes when the tournament starts.',
   },
@@ -29,23 +27,19 @@ const fromInput = (v: string, end = false) => { const d = new Date(`${v}T${end ?
 const empty = (): Listing => ({ gameId: '', name: '', prize: '', startsAt: '', total: 0, filled: 0, mode: 'solo', published: true });
 const fld = 'w-full rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
 
-export default function CommunityListing({ id, share, lang, title, players, onAdd, onUnadd, auto }: { id: string; share: boolean; lang: 'ar' | 'en'; title: string; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string) => void; auto?: boolean }) {
+export default function CommunityListing({ id, share, lang, title }: { id: string; share: boolean; lang: 'ar' | 'en'; title: string }) {
   const t = T[lang];
   const games = useGames();
   const [f, setF] = useState<Listing>(empty());
   const [listed, setListed] = useState(false);
-  const [regs, setRegs] = useState<Reg[]>([]);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 
-  // new registrants go straight into the bracket
-  useEffect(() => { if (auto && listed) autoAddNew(id, 'reg', regs as RegRow[], players, onAdd); }, [regs, listed, auto]); // eslint-disable-line react-hooks/exhaustive-deps
-  const loadRegs = useCallback(() => { api<Reg[]>(`/brackets/${id}/regs`).then(setRegs).catch(() => undefined); }, [id]);
   useEffect(() => {
     api<{ listing: Listing | null; migrate?: boolean }>(`/brackets/${id}/listing`)
-      .then((r) => { if (r.migrate) setMsg(t.migrate); if (r.listing) { setF(r.listing); setListed(true); loadRegs(); } else setF((o) => ({ ...o, name: o.name || title })); })
+      .then((r) => { if (r.migrate) setMsg(t.migrate); if (r.listing) { setF(r.listing); setListed(true); } else setF((o) => ({ ...o, name: o.name || title })); })
       .catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -54,21 +48,14 @@ export default function CommunityListing({ id, share, lang, title, players, onAd
   async function save() {
     if (!f.name.trim() || !f.startsAt) { setMsg(t.bad); return; }
     setBusy(true); setMsg('');
-    try { const r = await api<{ review?: 'pending' | 'approved' | 'rejected' }>(`/brackets/${id}/listing`, { method: 'PUT', body: JSON.stringify(f) }); setListed(true); setF((o) => ({ ...o, review: r.review ?? o.review, reviewNote: '' })); setMsg(r.review === 'pending' ? t.sent : t.saved); loadRegs(); }
+    try { const r = await api<{ review?: 'pending' | 'approved' | 'rejected' }>(`/brackets/${id}/listing`, { method: 'PUT', body: JSON.stringify(f) }); setListed(true); setF((o) => ({ ...o, review: r.review ?? o.review, reviewNote: '' })); setMsg(r.review === 'pending' ? t.sent : t.saved); }
     catch (e) { const d = (e as Error & { detail?: string }).detail; setMsg(d === 'migrate' ? t.migrate : d === 'limit' ? t.limit : d === 'invalid' ? t.bad : t.fail); }
     setBusy(false);
   }
   async function remove() {
     if (!window.confirm(t.removeAsk)) return;
-    try { await api(`/brackets/${id}/listing`, { method: 'DELETE' }); setListed(false); setRegs([]); setF({ ...empty(), name: title }); setMsg(''); } catch { setMsg(t.fail); }
+    try { await api(`/brackets/${id}/listing`, { method: 'DELETE' }); setListed(false); setF({ ...empty(), name: title }); setMsg(''); } catch { setMsg(t.fail); }
   }
-  async function delReg(r: Reg): Promise<boolean> {
-    if (!window.confirm(t.delAsk)) return false;
-    try { await api(`/brackets/${id}/regs?rid=${r.id}`, { method: 'DELETE' }); setRegs((l) => l.filter((x) => x.id !== r.id)); setF((o) => ({ ...o, filled: Math.max(0, o.filled - 1) })); return true; } catch { setMsg(t.fail); return false; }
-  }
-  const have = new Set(players.map((p) => p.trim().toLowerCase()));
-  const nameOf = (r: Reg) => (r.mode === 'team' ? r.team_name : r.plato_id).trim();
-  const todo = regs.map(nameOf).filter((n) => n && !have.has(n.toLowerCase()));
 
   return (
     <div className="st-share" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
@@ -104,27 +91,6 @@ export default function CommunityListing({ id, share, lang, title, players, onAd
             {listed && <button type="button" className="rounded-full border px-4 py-2 text-[.85rem] font-semibold" style={{ borderColor: 'var(--glass-b)', color: '#ff7a8a' }} onClick={remove}>{t.remove}</button>}
             {msg && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{msg}</span>}
           </div>
-          {listed && (
-            <div className="st-shr">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span style={{ fontWeight: 700, fontSize: '.92rem' }}>{t.regs} · <bdi dir="ltr">{f.total > 0 ? `${f.filled}/${f.total}` : `${f.filled} / ∞`}</bdi></span>
-                <span className="flex gap-2">
-                  <button type="button" className="cl-btn" onClick={loadRegs}>{t.refresh}</button>
-                  {todo.length > 0 && <button type="button" className="cl-btn on" onClick={() => onAdd(todo)}>{t.use} ({todo.length})</button>}
-                </span>
-              </div>
-              {regs.length === 0 ? <p className="st-shn">{t.none}</p> : (
-                <ul className="grid gap-1.5">
-                  {regs.map((r, i) => (
-                    <li key={r.id} className="flex items-start justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)' }}>
-                      <div className="min-w-0"><b dir="auto">{i + 1}. {r.mode === 'team' ? r.team_name : r.plato_id}</b>{r.mode === 'team' && <div dir="auto" style={{ color: 'var(--muted)', fontSize: '.8rem', whiteSpace: 'pre-wrap' }}>{t.captain}: {r.plato_id}{r.members ? `\n${r.members}` : ''}</div>}</div>
-                      <div className="flex shrink-0 items-center gap-3">{have.has(nameOf(r).toLowerCase()) ? (onUnadd ? <button type="button" aria-label={t.unadd} title={t.unadd} className="inline-flex h-8 w-8 items-center justify-center rounded-full border text-lg font-bold leading-none" style={{ borderColor: 'rgba(255,176,46,.55)', background: 'rgba(255,176,46,.14)' }} onClick={() => onUnadd(nameOf(r))}>−</button> : <span className="text-[.78rem] font-bold" style={{ color: '#2ecc8c' }}>✓ {t.added}</span>) : <button type="button" aria-label={t.add} title={t.add} className="inline-flex h-8 w-8 items-center justify-center rounded-full border text-lg font-bold leading-none" style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)' }} onClick={() => onAdd([nameOf(r)])}>+</button>}<button type="button" className="text-[.78rem]" style={{ color: '#ff7a8a' }} onClick={() => { void delReg(r).then((ok) => { if (ok && have.has(nameOf(r).toLowerCase())) onUnadd?.(nameOf(r)); }); }}>{t.del}</button></div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>

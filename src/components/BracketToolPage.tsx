@@ -6,6 +6,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
 import CommunityListing from './CommunityListing';
+import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
 import { AddPlayerBar, commitAutoAdds } from './AddPlayers';
 import BracketSheetAny from './BracketSheetAny';
@@ -319,8 +320,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
-          {editable && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
-          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
+          {editable && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} />}
+          {editable && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
+          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>
       )}
