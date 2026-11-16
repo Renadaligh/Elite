@@ -4,7 +4,43 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
 
 interface Info { description?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
-type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'closed' | 'full';
+type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full';
+const okId = (s: string) => /^[\p{L}\p{N}_]+$/u.test(s);
+const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
+/** Most prominent hue of the cover (30° bins, only vivid pixels). null = grey/white picture or unreadable: keep the site colours. */
+function useCoverHue(src?: string): number | null {
+  const [h, setH] = useState<number | null>(null);
+  useEffect(() => {
+    setH(null);
+    if (!src) return;
+    let live = true;
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const w = 48, hgt = Math.max(1, Math.round((48 * img.naturalHeight) / Math.max(1, img.naturalWidth)));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = hgt;
+        const cx = cv.getContext('2d'); if (!cx) return;
+        cx.drawImage(img, 0, 0, w, hgt);
+        const d = cx.getImageData(0, 0, w, hgt).data;
+        const bins = new Array<number>(12).fill(0), sum = new Array<number>(12).fill(0);
+        let vivid = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), v = mx, s = mx === 0 ? 0 : (mx - mn) / mx;
+          if (s < 0.35 || v < 0.25 || v > 0.97) continue;
+          const dl = mx - mn; let hu = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4; hu = (hu * 60 + 360) % 360;
+          const bi = Math.floor(((hu + 15) % 360) / 30); bins[bi]++; vivid++;
+          sum[bi] += hu > 180 && bi === 0 ? hu - 360 : hu;
+        }
+        if (vivid < d.length / 4 * 0.08) return;
+        let best = 0; for (let i = 1; i < 12; i++) if (bins[i] > bins[best]) best = i;
+        if (live) setH(Math.round((sum[best] / bins[best] + 360) % 360));
+      } catch { /* unreadable picture: default colours */ }
+    };
+    img.src = src;
+    return () => { live = false; };
+  }, [src]);
+  return h;
+}
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none transition-colors focus:border-[var(--link-on)]';
 const fieldStyle = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
@@ -40,28 +76,33 @@ export default function JoinPage({ id }: { id: string }) {
     return () => { live = false; window.clearInterval(t); document.removeEventListener('visibilitychange', refresh); };
   }, [id]);
 
+  const hue = useCoverHue(info && info !== 'gone' ? info.cover : undefined);
+  const tint = hue === null ? undefined : (theme === 'dark'
+    ? { '--bg': `hsl(${hue} 55% 8%)`, '--bg2': `hsl(${hue} 60% 14%)`, '--glass': `hsl(${hue} 35% 13%)`, '--glass-b': `hsla(${hue} 40% 60% / .26)`, '--muted': `hsl(${hue} 22% 72%)`, '--jn-ac': `hsl(${hue} 90% 55%)` }
+    : { '--bg': `hsl(${hue} 80% 93%)`, '--bg2': `hsl(${hue} 90% 86%)`, '--glass': '#fff', '--glass-b': `hsla(${hue} 45% 30% / .2)`, '--muted': `hsl(${hue} 22% 36%)`, '--jn-ac': `hsl(${hue} 88% 46%)` }) as React.CSSProperties;
   const team = info !== null && info !== 'gone' && info.mode === 'team';
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (state === 'sending') return;
     const pid = platoId.trim();
     if (!pid || (team && (!teamName.trim() || !members.trim()))) { setState('required'); return; }
+    if (!okId(pid) || (team && !okIds(members))) { setState('badId'); return; }
     if (team) { const all = [pid, ...members.split(/[\n,،;]+/)].map(key).filter(Boolean); if (new Set(all).size !== all.length) { setState('dupMembers'); return; } }
     setState('sending');
     try {
       const res = await fetch(`/api/join/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platoId: pid, teamName: teamName.trim(), members: members.trim(), hp }) });
       const d = (await res.json()) as { ok?: boolean; error?: string };
       if (d.ok || d.error === 'full' || d.error === 'closed') fetch(`/api/join/${encodeURIComponent(id)}`).then(async (r) => { if (r.ok) setInfo((await r.json()) as Info); }).catch(() => undefined); // count / state right after sending
-      setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'required' ? 'required' : 'error');
+      setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'bad_id' ? 'badId' : d.error === 'required' ? 'required' : 'error');
     } catch { setState('error'); }
   }
-  const msg = state === 'required' ? t.regRequired : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
+  const msg = state === 'required' ? t.regRequired : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
   const closedNow = info && info !== 'gone' ? (info.reason || (state === 'closed' ? 'closed' : state === 'full' ? 'full' : '')) : '';
-  const when = info && info !== 'gone' && info.closesAt > Date.now() ? new Date(info.closesAt).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  const when = info && info !== 'gone' && info.closesAt > Date.now() ? new Date(info.closesAt).toLocaleString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
   return (
-    <div className="pv-root" data-st={theme}>
-      <div className="pv-top">
+    <div className="pv-root" data-st={theme} data-jn={hue === null ? undefined : ''} style={tint}>
+      <div className="pv-top" style={hue === null ? undefined : { background: 'var(--bg)' }}>
         <a href="#/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
         <div className="pv-tools"><ThemeBtn theme={theme} set={setTheme} s={st} /><LanguageSwitcher /></div>
       </div>

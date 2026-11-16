@@ -1375,3 +1375,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .wn-psel{height:38px;min-width:0;flex:0 1 auto;max-width:12rem;text-overflow:ellipsis;border:1px solid var(--glass-b);border-radius:999px;background:var(--glass);color:var(--text);padding:0 .8rem;font:inherit;font-size:.85rem;font-weight:600}
 
 .jn-cover{display:block;width:calc(100% + 2.8rem);max-width:none;margin:-1.4rem -1.4rem 1.2rem;aspect-ratio:16/9;object-fit:cover;border-radius:22px 22px 0 0;background:var(--chip-bg)}
+
+/* join page tinted from the cover picture (set inline by JoinPage) */
+.pv-root[data-jn]{background:radial-gradient(900px 600px at 50% 0,var(--bg2),var(--bg))}
+.pv-root[data-jn] .btn-primary{background:var(--jn-ac);border-color:transparent;color:#fff}

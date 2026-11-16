@@ -25,4 +25,7 @@ export async function body(req: Request): Promise<Record<string, unknown>> {
 export const str = (v: unknown, max = 500) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 export const num = (v: unknown, d = 0) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n >= 0 ? n : d; };
 export const safeUrl = (v: unknown) => { const s = str(v, 600); return /^(https?:\/\/|\/)/i.test(s) ? s : ''; };
+/** Plato IDs / usernames: letters, digits and _ only (no @, decorations or spaces). `list` = several ids separated by newline , ، ; */
+export const validId = (s: string) => /^[\p{L}\p{N}_]+$/u.test(s);
+export const validIds = (list: string) => list.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(validId);
 export const newId = () => crypto.randomUUID().slice(0, 8);

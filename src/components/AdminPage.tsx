@@ -1445,7 +1445,7 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
       .catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل السجل')); });
   }, [k, qs, rows]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load(false); }, [f, k]); // eslint-disable-line react-hooks/exhaustive-deps
-  const when = (t: number) => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { dateStyle: 'medium', timeStyle: 'medium' });
+  const when = (t: number) => new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA-u-ca-gregory', { dateStyle: 'medium', timeStyle: 'medium' });
   const sel = 'h-10 rounded-xl border border-white/15 bg-white/[.06] px-3 text-[.9rem] text-inherit';
   const fmt = (d: string) => {
     if (!d) return null;
@@ -1503,7 +1503,7 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const load = useCallback(() => { api<AdminRow[]>('/admin/admins', { key: k }).then(setRows).catch((e: Error) => { if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل الحسابات')); }); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
   const fail = (e: unknown, m: string) => { const c = (e as Error).message; if (c === '401') onAuthFail(); else toast.err(c === '409' ? x('اسم المستخدم مستخدم من قبل') : m); };
-  const when2 = (t: number) => (t ? new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
+  const when2 = (t: number) => (t ? new Date(t).toLocaleString(lang === 'en' ? 'en-GB' : 'ar-SA-u-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
   async function create() {
     if (!add || busy) return;

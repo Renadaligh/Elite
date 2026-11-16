@@ -1,4 +1,4 @@
-import { body, json, str, type Ctx } from '../../_lib';
+import { validId, validIds, body, json, str, type Ctx } from '../../_lib';
 import { joinCount, joinDesc, joinExtra, joinReason, joinRow } from '../../_join';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -26,6 +26,7 @@ export const onRequestPost = async ({ request, env, params }: Ctx) => {
   const team = r.mode === 'team';
   const plato = str(b.platoId, 80), teamName = str(b.teamName, 80), members = str(b.members, 600);
   if (!plato || (team && (!teamName || !members))) return json({ ok: false, error: 'required' }, 400);
+  if (!validId(plato) || (team && !validIds(members))) return json({ ok: false, error: 'bad_id' }, 400);
   const why = joinReason(r, await joinCount(env, params.id));
   if (why) return json({ ok: false, error: why }, 409);
   const mine = [key(plato), ...(team ? idsOf(members) : [])];

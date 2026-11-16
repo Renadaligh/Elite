@@ -1,4 +1,4 @@
-import { body, json, str, type Ctx } from '../../_lib';
+import { validId, validIds, body, json, str, type Ctx } from '../../_lib';
 import { guard } from '../../_admin';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -11,6 +11,7 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const tid = str(b.tournamentId, 80), plato = str(b.platoId, 80), team = b.mode === 'team';
   const teamName = str(b.teamName, 80), members = str(b.members, 600);
   if (!tid || !plato || (team && (!teamName || !members))) return json({ ok: false, error: 'required' }, 400);
+  if (!validId(plato) || (team && !validIds(members))) return json({ ok: false, error: 'bad_id' }, 400);
   const t = await env.DB.prepare('SELECT name_en, filled, total, starts_at FROM tournaments WHERE id=? AND published=1').bind(tid).first<{ name_en: string; filled: number; total: number; starts_at: string }>();
   if (!t) return json({ ok: false, error: 'unknown' }, 404);
   if (tid.startsWith('u-') && Date.now() >= Date.parse(t.starts_at)) return json({ ok: false, error: 'closed' }, 409); // community tournaments close when they start
