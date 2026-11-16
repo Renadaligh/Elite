@@ -34,7 +34,7 @@ export const TXT = {
     loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البطولات المحفوظة (100). احذف واحد قديم.', private: 'هذه البطولة غير منشورة. اطلب من صاحبها تفعيل رابط العرض.', shTitle: 'المشاركة والبث', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البطولة (عرض فقط).', shLive: 'البث المباشر (اختياري)', shLiveD: 'يظهر مشغّل بثك أعلى البطولة في صفحة العرض، فقط وأنت شغّال "بث الآن".', shStreamUrl: 'رابط قناتك أو بثك (Twitch / YouTube / Kick)', shStreamNow: 'بث الآن', shStreamBad: 'الرابط غير مدعوم. استخدم رابط Twitch أو YouTube أو Kick.', shStreamLive: 'بث مباشر', shSave2: 'حفظ', shCopy: 'نسخ', shCopied: 'تم النسخ', shFail: 'تعذّر التغيير. تأكد أنك شغّلت أوامر قاعدة البيانات الجديدة.', shSave: 'احفظ البطولة أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
     myTitle: 'بطولاتي', newOne: '+ بطولة جديدة', empty: 'ما عندك بطولات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: 'صورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟',
     needLogin: 'سجّل دخولك لتشوف بطولاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
-    org: 'اسم القروب (اختياري)', orgPh: 'مثلاً: قروب النخبة', orgBy: 'تنظيم',
+    org: 'اسم المنظم (اختياري)', orgPh: 'مثلاً: النخبة', orgBy: 'تنظيم',
   },
   en: {
     title: 'Bracket tool', sub: 'Make a bracket for any server or community: single or double elimination, round robin or swiss. Update results, save it as an image or share it.',
@@ -48,7 +48,7 @@ export const TXT = {
     loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing & stream', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shLive: 'Live stream (optional)', shLiveD: 'Your stream player shows above the bracket on the view page, only while "Live now" is on.', shStreamUrl: 'Your channel or stream link (Twitch / YouTube / Kick)', shStreamNow: 'Live now', shStreamBad: 'Unsupported link. Use a Twitch, YouTube or Kick link.', shStreamLive: 'Live', shSave2: 'Save', shCopy: 'Copy', shCopied: 'Copied', shFail: 'Could not change it. Make sure you ran the new database statements.', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
     myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: 'Image', del: 'Delete', delAsk: 'Delete this bracket?',
     needLogin: 'Sign in to see your saved brackets.', players_n: 'players', hello: 'Hi',
-    org: 'Group name (optional)', orgPh: 'e.g. Elite Group', orgBy: 'Organised by',
+    org: 'Organizer name (optional)', orgPh: 'e.g. Elite', orgBy: 'Organised by',
   },
 } as const;
 type Tx = (typeof TXT)['ar'] | (typeof TXT)['en'];

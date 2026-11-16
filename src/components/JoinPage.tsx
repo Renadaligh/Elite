@@ -9,8 +9,8 @@ const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLow
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none transition-colors focus:border-[var(--link-on)]';
 const fieldStyle = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const X = {
-  ar: { closed: 'التسجيل مغلق.', full: 'اكتمل العدد، التسجيل مغلق.', gone: 'رابط التسجيل غير متاح.', by: 'تنظيم', starts: 'تاريخ بداية البطولة', count: 'المسجّلون', closes: 'يُغلق التسجيل', open: 'التسجيل مفتوح' },
-  en: { closed: 'Registration is closed.', full: 'It is full, registration is closed.', gone: 'This registration link is not available.', by: 'By', starts: 'Tournament start date', count: 'Registered', closes: 'Registration closes', open: 'Registration is open' },
+  ar: { closed: 'التسجيل مغلق.', full: 'اكتمل العدد، التسجيل مغلق.', gone: 'رابط التسجيل غير متاح.', by: 'تنظيم', starts: 'تاريخ بداية البطولة', another: 'تسجيل لاعب آخر', anotherTeam: 'تسجيل فريق آخر', count: 'المسجّلون', closes: 'يُغلق التسجيل', open: 'التسجيل مفتوح' },
+  en: { closed: 'Registration is closed.', full: 'It is full, registration is closed.', gone: 'This registration link is not available.', by: 'By', starts: 'Tournament start date', another: 'Register another user', anotherTeam: 'Register another team', count: 'Registered', closes: 'Registration closes', open: 'Registration is open' },
 };
 
 /** Standalone registration page of a bracket (#/join/<id>): same form as the site's, shows only the count and the status. */
@@ -74,6 +74,7 @@ export default function JoinPage({ id }: { id: string }) {
               <div className="py-8 text-center" role="status">
                 <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
                 <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
+                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId(''); setTeamName(''); setMembers(''); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
               </div>
             ) : closedNow ? null : (
               <form onSubmit={submit} className="mt-4 flex flex-col gap-4" noValidate>
