@@ -138,3 +138,7 @@ CREATE TABLE IF NOT EXISTS bracket_signups (
   plato_id TEXT NOT NULL, team_name TEXT NOT NULL DEFAULT '', members TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS bracket_signups_b ON bracket_signups (bracket_id, id);
+
+-- Registration page picture + tournament start date (run once, each as ONE statement; the page keeps working without them, the picture / date just cannot be saved)
+-- ALTER TABLE bracket_join ADD COLUMN cover TEXT NOT NULL DEFAULT '';
+-- ALTER TABLE bracket_join ADD COLUMN starts_at TEXT NOT NULL DEFAULT '';

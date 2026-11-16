@@ -32,6 +32,14 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
   const data = cleanBracket(b.bracket);
   if (!data) return json({ error: 'invalid' }, 400);
   await env.DB.prepare('UPDATE user_brackets SET title = ?, data = ?, updated_at = ? WHERE id = ? AND user_id = ?').bind(str(b.title, 60) || r.title, JSON.stringify(data), new Date().toISOString(), r.id, u.id).run();
+  // The organiser's bracket has a champion → the published tournament is over: winner + end date are written by themselves. No champion (e.g. a final was undone) → it is open again.
+  if (typeof b.champion === 'string') {
+    const w = b.champion.trim().slice(0, 80);
+    try {
+      const row = await env.DB.prepare('SELECT winner_en FROM tournaments WHERE id = ? AND owner_id = ?').bind(`u-${r.id}`, u.id).first<{ winner_en: string }>();
+      if (row && (row.winner_en || '') !== w) await env.DB.prepare('UPDATE tournaments SET winner_en = ?, winner_ar = ?, winner_members = ?, ends_at = ? WHERE id = ? AND owner_id = ?').bind(w, w, '', w ? new Date().toISOString() : '', `u-${r.id}`, u.id).run();
+    } catch { /* tournaments not published / columns missing: nothing to update */ }
+  }
   return json({ ok: true });
 };
 

@@ -31,6 +31,7 @@ export default function TournamentPage({ id }: { id: string }) {
     );
   }
   const s = statusOf(x, Date.now());
+  const dmy = (d: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
   const g = getGame(x.gameId);
   const embed = x.streamLive ? streamEmbed(x.streamUrl) : null;
   return (
@@ -43,6 +44,7 @@ export default function TournamentPage({ id }: { id: string }) {
         </div>
         <h1 className="text-[clamp(1.8rem,4.5vw,3rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">{x.name[lang]}</h1>
         <p className="mt-1.5" style={{ color: 'var(--muted)' }}>{x.format[lang]}</p>
+        <p className="mt-1.5 text-[.9rem]" style={{ color: 'var(--muted)' }}>{t.tStarts}: <time dateTime={x.startsAt}>{dmy(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> · {t.tEnded}: <time dateTime={x.endsAt}>{dmy(x.endsAt)}</time></> : null}</p>
       </header>
 
       {x.streamLive && x.streamUrl && (

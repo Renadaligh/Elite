@@ -11,7 +11,8 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
   if (!v) return json({ error: 'invalid' }, 400);
   if ((v.winner.en || v.winner.ar) && v.mode === 'team' && !v.members) return json({ error: 'members_required' }, 400);
   const before = await snap(env, 'tournaments', params.id);
-  const was = await env.DB.prepare('SELECT published FROM tournaments WHERE id=?').bind(params.id).first<{ published: number }>();
+  const was = await env.DB.prepare('SELECT published, winner_en, winner_ar FROM tournaments WHERE id=?').bind(params.id).first<{ published: number; winner_en: string; winner_ar: string }>();
+  if ((v.winner.en || v.winner.ar) && !(was?.winner_en || was?.winner_ar)) v.endsAt = new Date().toISOString(); // the winner is entered now = the tournament ends now
   const base = [v.game_id, v.name.en, v.name.ar, v.format.en, v.format.ar, v.prize.en, v.prize.ar, v.startsAt, v.endsAt, v.filled, v.total, v.mode, v.register_url, v.image, v.winner.en, v.winner.ar, v.published];
   const head = 'UPDATE tournaments SET game_id=?,name_en=?,name_ar=?,format_en=?,format_ar=?,prize_en=?,prize_ar=?,starts_at=?,ends_at=?,filled=?,total=?,mode=?,register_url=?,image=?,winner_en=?,winner_ar=?,published=?';
   const tries: [string, unknown[]][] = [

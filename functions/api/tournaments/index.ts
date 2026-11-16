@@ -9,11 +9,11 @@ const bracketOf = (s?: string) => { try { return s ? JSON.parse(s) : undefined; 
 type UB = { data: string; share: number; live: number; stream_url: string; organizer: string };
 const out = (r: Row, admin = false, ub?: UB) => ({
   id: r.id, gameId: r.game_id, name: { en: r.name_en, ar: r.name_ar }, format: { en: r.format_en, ar: r.format_ar }, prize: { en: r.prize_en, ar: r.prize_ar },
-  startsAt: r.starts_at, endsAt: r.ends_at, slots: { filled: r.filled, total: r.total }, mode: r.mode === 'team' ? 'team' : 'solo', tier: r.tier === 'major' ? 'major' : 'regular',
+  startsAt: r.starts_at, endsAt: r.winner_en || r.winner_ar ? r.ends_at : '', slots: { filled: r.filled, total: r.total }, mode: r.mode === 'team' ? 'team' : 'solo', tier: r.tier === 'major' ? 'major' : 'regular',
   registerUrl: r.register_url || undefined, image: r.image || undefined, imagePos: r.image_pos || undefined,
   winner: r.winner_en || r.winner_ar ? { en: r.winner_en || r.winner_ar, ar: r.winner_ar || r.winner_en } : undefined, winnerMembers: r.winner_members ? r.winner_members.split('\n') : undefined, published: !!r.published,
   // Finished tournaments keep their bracket in the database for the dashboard only; visitors never get it.
-  bracket: admin || Date.now() <= Date.parse(r.ends_at) ? bracketOf(ub ? ub.data : r.bracket) : undefined,
+  bracket: admin || !(r.winner_en || r.winner_ar) ? bracketOf(ub ? ub.data : r.bracket) : undefined,
   // The stream link is only public while the dashboard toggle is on.
   streamLive: ub ? !!ub.live && !!ub.stream_url : !!r.stream_live && !!r.stream_url, streamUrl: ub ? ((ub.live && ub.stream_url) || admin ? ub.stream_url || undefined : undefined) : admin || (r.stream_live && r.stream_url) ? r.stream_url || undefined : undefined,
   // Community tournament: made by a visitor with the bracket tool; the bracket and stream come from their saved bracket.
@@ -27,8 +27,10 @@ const isoOk = (s: string) => !Number.isNaN(Date.parse(s));
 
 export function parse(b: Record<string, unknown>) {
   const name = pair(b.name), format = pair(b.format), prize = pair(b.prize), winner = pair(b.winner);
-  const startsAt = str(b.startsAt, 40), endsAt = str(b.endsAt, 40) || startsAt;
-  if ((!name.en && !name.ar) || !isoOk(startsAt) || !isoOk(endsAt)) return null;
+  const startsAt = str(b.startsAt, 40);
+  if ((!name.en && !name.ar) || !isoOk(startsAt)) return null;
+  // No planned end: a tournament ends when it has a winner, and that moment is its end date.
+  const endsAt = winner.en || winner.ar ? (isoOk(str(b.endsAt, 40)) ? str(b.endsAt, 40) : new Date().toISOString()) : '';
   const s = (b.slots ?? {}) as Record<string, unknown>;
   const total = num(s.total, 0); // 0 = unlimited seats
   const raw = Array.isArray(b.winnerMembers) ? b.winnerMembers.join('\n') : typeof b.winnerMembers === 'string' ? b.winnerMembers : '';
@@ -40,8 +42,8 @@ export function parse(b: Record<string, unknown>) {
   };
 }
 
-/** Registration is "open" for a published tournament that has not ended yet and has no winner. */
-export const opens = (v: { published: number; endsAt: string; winner: { en: string; ar: string } }) => !!v.published && Date.now() <= Date.parse(v.endsAt) && !v.winner.en && !v.winner.ar;
+/** Registration is "open" for a published tournament that has no winner yet. */
+export const opens = (v: { published: number; endsAt: string; winner: { en: string; ar: string } }) => !!v.published && !v.winner.en && !v.winner.ar;
 
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const all = await seesAll(request, env, 'tournaments');

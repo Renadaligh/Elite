@@ -3,14 +3,14 @@ import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
 
-interface Info { title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+interface Info { cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'closed' | 'full';
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none transition-colors focus:border-[var(--link-on)]';
 const fieldStyle = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const X = {
-  ar: { closed: 'التسجيل مغلق.', full: 'اكتمل العدد، التسجيل مغلق.', gone: 'رابط التسجيل غير متاح.', by: 'تنظيم', count: 'المسجّلون', closes: 'يُغلق التسجيل', open: 'التسجيل مفتوح' },
-  en: { closed: 'Registration is closed.', full: 'It is full, registration is closed.', gone: 'This registration link is not available.', by: 'By', count: 'Registered', closes: 'Registration closes', open: 'Registration is open' },
+  ar: { closed: 'التسجيل مغلق.', full: 'اكتمل العدد، التسجيل مغلق.', gone: 'رابط التسجيل غير متاح.', by: 'تنظيم', starts: 'تاريخ بداية البطولة', count: 'المسجّلون', closes: 'يُغلق التسجيل', open: 'التسجيل مفتوح' },
+  en: { closed: 'Registration is closed.', full: 'It is full, registration is closed.', gone: 'This registration link is not available.', by: 'By', starts: 'Tournament start date', count: 'Registered', closes: 'Registration closes', open: 'Registration is open' },
 };
 
 /** Standalone registration page of a bracket (#/join/<id>): same form as the site's, shows only the count and the status. */
@@ -49,7 +49,7 @@ export default function JoinPage({ id }: { id: string }) {
   }
   const msg = state === 'required' ? t.regRequired : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
   const closedNow = info && info !== 'gone' ? (info.reason || (state === 'closed' ? 'closed' : state === 'full' ? 'full' : '')) : '';
-  const when = info && info !== 'gone' && info.closesAt > Date.now() ? new Date(info.closesAt).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  const when = info && info !== 'gone' && info.closesAt > Date.now() ? new Date(info.closesAt).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-GB', { dateStyle: 'medium' }) : '';
 
   return (
     <div className="pv-root" data-st={theme}>
@@ -60,6 +60,7 @@ export default function JoinPage({ id }: { id: string }) {
       <div className="jn-wrap">
         {info === null ? <p style={{ color: 'var(--muted)' }}>…</p> : info === 'gone' ? <p className="text-lg">{x.gone}</p> : (
           <div className="jn-card">
+            {info.cover && <img className="jn-cover" src={info.cover} alt="" draggable={false} />}
             <h1 className="text-[1.6rem] font-extrabold" dir="auto">{info.title}</h1>
             {info.org && <p className="mt-1 font-semibold" style={{ color: 'var(--muted)' }}>{x.by}: <span dir="auto" style={{ color: 'var(--text)' }}>{info.org}</span></p>}
             <p className="jn-stat">
@@ -67,6 +68,7 @@ export default function JoinPage({ id }: { id: string }) {
               <b>{closedNow === 'full' ? x.full : closedNow ? x.closed : x.open}</b>
               <span>· {x.count}: {info.count}{info.cap > 0 ? ` / ${info.cap}` : ''}</span>
             </p>
+            {info.startsAt && !Number.isNaN(Date.parse(info.startsAt)) && <p className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--muted)' }}>{x.starts}: <span style={{ color: 'var(--text)' }}>{new Date(info.startsAt).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span></p>}
             {!closedNow && when && <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{x.closes}: {when}</p>}
             {state === 'done' ? (
               <div className="py-8 text-center" role="status">

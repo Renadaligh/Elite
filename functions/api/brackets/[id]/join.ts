@@ -1,5 +1,5 @@
 import { currentUser, sameOrigin } from '../../../_auth';
-import { joinCount, joinReason, joinRow } from '../../../_join';
+import { joinCount, joinExtra, joinReason, joinRow } from '../../../_join';
 import { body, denied, json, type Ctx } from '../../../_lib';
 
 async function mine(ctx: Ctx, uid: string) {
@@ -15,7 +15,8 @@ export const onRequestGet = async (ctx: Ctx) => {
   let signups: unknown[] = [];
   try { signups = (await ctx.env.DB.prepare('SELECT id, mode, plato_id, team_name, members, created_at FROM bracket_signups WHERE bracket_id = ? ORDER BY id ASC LIMIT 5000').bind(ctx.params.id).all()).results ?? []; } catch { return json({ error: 'migrate' }, 500); }
   const count = signups.length;
-  return json({ enabled: !!r?.enabled, mode: r?.mode === 'team' ? 'team' : 'solo', cap: r?.cap ?? 0, closesAt: r?.closes_at ?? 0, closed: !!r?.closed, reason: r ? joinReason(r, count) : '', count, signups });
+  const ex = await joinExtra(ctx.env, ctx.params.id);
+  return json({ cover: ex.cover, startsAt: ex.startsAt, enabled: !!r?.enabled, mode: r?.mode === 'team' ? 'team' : 'solo', cap: r?.cap ?? 0, closesAt: r?.closes_at ?? 0, closed: !!r?.closed, reason: r ? joinReason(r, count) : '', count, signups });
 };
 
 /** Owner: turn the link on/off, solo/team, cap, auto-close time (epoch ms, 0 = none), close now / reopen. */
@@ -37,6 +38,16 @@ export const onRequestPut = async (ctx: Ctx) => {
     await ctx.env.DB.prepare('INSERT INTO bracket_join (bracket_id, user_id, enabled, mode, cap, closes_at, closed) VALUES (?,?,?,?,?,?,?) ON CONFLICT(bracket_id) DO UPDATE SET enabled=excluded.enabled, mode=excluded.mode, cap=excluded.cap, closes_at=excluded.closes_at, closed=excluded.closed')
       .bind(ctx.params.id, u.id, enabled ? 1 : 0, mode, cap, closesFinal, closed).run();
   } catch { return json({ error: 'migrate' }, 500); }
+  // cover picture (our own R2 url only) and start date of the registration page; two extra columns, see schema.sql
+  const hasCover = typeof b.cover === 'string', hasStart = typeof b.startsAt === 'string';
+  if (hasCover || hasStart) {
+    const cover = hasCover && /^\/api\/img\/[0-9a-f-]{36}\.[a-z0-9]{3,4}$/.test(String(b.cover)) ? String(b.cover) : '';
+    const sa = hasStart && !Number.isNaN(Date.parse(String(b.startsAt))) ? String(b.startsAt).slice(0, 40) : '';
+    try {
+      if (hasCover) await ctx.env.DB.prepare('UPDATE bracket_join SET cover = ? WHERE bracket_id = ?').bind(cover, ctx.params.id).run();
+      if (hasStart) await ctx.env.DB.prepare('UPDATE bracket_join SET starts_at = ? WHERE bracket_id = ?').bind(sa, ctx.params.id).run();
+    } catch { return json({ error: 'migrate' }, 500); }
+  }
   return json({ ok: true, count: await joinCount(ctx.env, ctx.params.id) });
 };
 

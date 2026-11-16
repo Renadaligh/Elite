@@ -17,3 +17,8 @@ export function joinReason(r: JoinRow, count: number, now = Date.now()): '' | 'c
 export async function joinCount(env: Ctx['env'], id: string): Promise<number> {
   try { return (await env.DB.prepare('SELECT COUNT(*) AS n FROM bracket_signups WHERE bracket_id = ?').bind(id).first<{ n: number }>())?.n ?? 0; } catch { return 0; }
 }
+
+/** Cover picture + start date of the registration page. Separate query so the page keeps working before the two columns are added (see schema.sql). */
+export async function joinExtra(env: Ctx['env'], id: string): Promise<{ cover: string; startsAt: string }> {
+  try { const r = await env.DB.prepare('SELECT cover, starts_at FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ cover: string; starts_at: string }>(); return { cover: r?.cover ?? '', startsAt: r?.starts_at ?? '' }; } catch { return { cover: '', startsAt: '' }; }
+}

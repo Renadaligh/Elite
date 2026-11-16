@@ -1,13 +1,13 @@
 import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
 import CommunityListing from './CommunityListing';
 import JoinPanel from './JoinPanel';
-import { AddPlayerBar } from './AddPlayers';
+import { AddPlayerBar, commitAutoAdds } from './AddPlayers';
 import BracketSheetAny from './BracketSheetAny';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import BracketView from './BracketView';
@@ -188,6 +188,11 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     if (hasResults(br) && !window.confirm(lang === 'ar' ? 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟' : 'Adding players after matches started clears the current results (Undo brings them back). Sure?')) return;
     edit(addPlayers(br, add)); setMsg('');
   }
+  function removeFromBracket(name: string) {
+    if (!br) return;
+    if (hasResults(br) && !window.confirm(lang === 'ar' ? 'إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟' : 'Removing a player after matches started clears the current results (Undo brings them back). Sure?')) return;
+    edit(removePlayer(br, name)); setMsg('');
+  }
   function rebuild() { if (!br || !window.confirm(tx.rebuildAsk)) return; setNames(br.players.join('\n')); setFmt(br.format); edit(null); setEditP(false); }
 
   async function save() {
@@ -196,8 +201,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     setBusy(true); setMsg('');
     const sent = ver.current;
     try {
-      const body = JSON.stringify({ title: shownTitle, bracket: br });
-      if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); if (ver.current === sent) setDirty(false); setMsg(tx.saved); }
+      const cw = champion(br); // the winner closes the published tournament (winner + end date are written by themselves)
+      const body = JSON.stringify({ title: shownTitle, bracket: br, champion: cw !== null ? br.players[cw] ?? '' : '' });
+      if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); commitAutoAdds(id); if (ver.current === sent) setDirty(false); setMsg(tx.saved); }
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
         try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
@@ -313,8 +319,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
-          {editable && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} players={br?.players ?? []} onAdd={addToBracket} />}
-          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} players={br?.players ?? []} onAdd={addToBracket} />}
+          {editable && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
+          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>
       )}

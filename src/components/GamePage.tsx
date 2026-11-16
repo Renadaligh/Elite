@@ -154,7 +154,7 @@ export default function GamePage({ id }: { id: string }) {
                     <li key={x.id} className="flex w-[17rem] shrink-0 snap-start flex-col gap-1.5 rounded-2xl border p-4" style={card}>
                       <span className="w-max rounded-full border px-2.5 py-0.5 text-[.72rem] font-bold" style={{ color: TONE[s], borderColor: 'transparent', background: 'var(--chip-bg)' }}>{t[ST[s]]}</span>
                       <div className="mt-1 font-semibold">{x.name[lang]}</div>
-                      <div className="text-[.85rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{date(x.startsAt)}</time></div>
+                      <div className="text-[.85rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{date(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{date(x.endsAt)}</time></> : null}</div>
                       {s === 'completed' && x.winner && <div className="text-[.88rem]">{t.tWinner}: <b>{x.winner[lang]}</b></div>}
                       <Register x={x} s={s} />
                     </li>

@@ -106,7 +106,17 @@ export function addPlayers(br: Bracket, add: string[]): Bracket {
   const have = new Set(br.players.map(nameKey));
   const fresh: string[] = [];
   for (const n of add.map((a) => a.trim()).filter(Boolean)) { const k = nameKey(n); if (!have.has(k)) { have.add(k); fresh.push(n); } }
-  const players = [...br.players, ...fresh];
+  return redraw(br, [...br.players, ...fresh]);
+}
+
+/** Takes one player out and redraws the bracket around the rest (results are cleared, like when adding). */
+export function removePlayer(br: Bracket, name: string): Bracket {
+  const k = nameKey(name);
+  const players = br.players.filter((p) => nameKey(p) !== k);
+  return players.length === br.players.length ? br : redraw(br, players);
+}
+
+function redraw(br: Bracket, players: string[]): Bracket {
   const keep = br.opts ? { win: br.opts.win, draw: br.opts.draw, loss: br.opts.loss, double: br.opts.double, koFormat: br.opts.koFormat, low: br.opts.low, ...(br.format === 'ffa' ? { rounds: br.opts.rounds } : {}) } : undefined;
   const out = players.length < 2 ? draftBracket(br.format, players, keep) : generate(br.format, players, keep);
   return br.org ? { ...out, org: br.org } : out;

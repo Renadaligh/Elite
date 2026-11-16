@@ -62,8 +62,10 @@ export const TOURNAMENTS_SEED: Tournament[] = [
 
 export function statusOf(t: Tournament, now: number): TournamentStatus {
   if (now < Date.parse(t.startsAt)) return 'upcoming';
-  if (now <= Date.parse(t.endsAt)) return 'live';
-  return 'completed';
+  // No planned end: a tournament is over when it has a winner (its endsAt is then the day that happened).
+  if (t.winner) return 'completed';
+  const e = Date.parse(t.endsAt);
+  return !Number.isNaN(e) && now > e ? 'completed' : 'live';
 }
 
 /** Live first, then upcoming (soonest first), then completed (most recent first). */
@@ -72,7 +74,7 @@ export function sortTournaments(list: Tournament[], now: number): Tournament[] {
   return [...list].sort((a, b) => {
     const sa = statusOf(a, now), sb = statusOf(b, now);
     if (sa !== sb) return rank[sa] - rank[sb];
-    return sa === 'completed' ? Date.parse(b.endsAt) - Date.parse(a.endsAt) : Date.parse(a.startsAt) - Date.parse(b.startsAt);
+    return sa === 'completed' ? (Date.parse(b.endsAt) || Date.parse(b.startsAt)) - (Date.parse(a.endsAt) || Date.parse(a.startsAt)) : Date.parse(a.startsAt) - Date.parse(b.startsAt);
   });
 }
 

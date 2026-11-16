@@ -1,5 +1,5 @@
 import { body, json, str, type Ctx } from '../../_lib';
-import { joinCount, joinReason, joinRow } from '../../_join';
+import { joinCount, joinExtra, joinReason, joinRow } from '../../_join';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const idsOf = (s: string) => s.split(/[\n,،;]+/).map(key).filter(Boolean);
@@ -12,7 +12,10 @@ export const onRequestGet = async ({ env, params }: Ctx) => {
   if (!row) return json({ error: 'not_found' }, 404);
   let org = ''; try { const d = JSON.parse(row.data) as { org?: unknown }; if (typeof d.org === 'string') org = d.org.slice(0, 60); } catch { /* corrupt row */ }
   const count = await joinCount(env, params.id);
-  return json({ title: row.title, org, mode: r.mode === 'team' ? 'team' : 'solo', count, cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
+  const ex = await joinExtra(env, params.id);
+  let startsAt = ex.startsAt;
+  if (!startsAt) startsAt = (await env.DB.prepare('SELECT starts_at FROM tournaments WHERE id = ?').bind(`u-${params.id}`).first<{ starts_at: string }>().catch(() => null))?.starts_at ?? '';
+  return json({ title: row.title, org, cover: ex.cover, startsAt, mode: r.mode === 'team' ? 'team' : 'solo', count, cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
 };
 
 export const onRequestPost = async ({ request, env, params }: Ctx) => {

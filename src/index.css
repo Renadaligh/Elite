@@ -1372,3 +1372,5 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .wn-pill.none b{color:var(--text);font-size:.85rem}
 [data-st=light] .wn-pill:not(.none) b{color:#241800}[data-st=light] .wn-pill:not(.none) small{color:rgba(43,29,0,.72)}
 .wn-psel{height:38px;min-width:0;flex:0 1 auto;max-width:12rem;text-overflow:ellipsis;border:1px solid var(--glass-b);border-radius:999px;background:var(--glass);color:var(--text);padding:0 .8rem;font:inherit;font-size:.85rem;font-weight:600}
+
+.jn-cover{display:block;width:calc(100% + 2.8rem);max-width:none;margin:-1.4rem -1.4rem 1.2rem;aspect-ratio:4/1;object-fit:cover;border-radius:22px 22px 0 0;background:var(--chip-bg)}

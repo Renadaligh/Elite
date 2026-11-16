@@ -4,13 +4,35 @@ import { nameKey } from '../data/bracket';
 
 /** Add players to a bracket without rebuilding it: type a name, or press + next to someone who registered. */
 const T = {
-  ar: { ph: 'أضف لاعب (اكتب الاسم واضغط +)', add: 'إضافة', regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', all: 'إضافة الكل', added: 'مضاف', refresh: 'تحديث', captain: 'القائد', m1: 'اسم ثم +', m2: 'لصق قائمة', m3: 'من ملف Excel', pastePh: 'اكتب أو الصق الأسماء، اسم في كل سطر', addList: 'إضافة القائمة', pickFile: 'اختر ملف Excel أو CSV', fileHint: 'يقرأ أول عمود فيه أسماء (xlsx أو csv أو txt). صف العنوان يُتجاهل.', fileBad: 'تعذّرت قراءة الملف، جرّب xlsx أو csv.', fileNone: 'ما لقيت أسماء في الملف.', n: 'اسم', draftTitle: 'ما بدأ البراكت بعد', draftBody: 'أضف لاعبَين على الأقل ويُبنى البراكت تلقائياً.', remove: 'حذف', dup1: 'هذا الاسم مضاف مسبقاً.', skip: (n: number) => `تم تجاهل ${n} اسم مكرر.` },
-  en: { ph: 'Add a player (type a name, press +)', add: 'Add', regs: 'Registered', none: 'Nobody registered yet.', all: 'Add all', added: 'Added', refresh: 'Refresh', captain: 'Captain', m1: 'Name + +', m2: 'Paste a list', m3: 'From Excel file', pastePh: 'Type or paste names, one per line', addList: 'Add the list', pickFile: 'Choose an Excel or CSV file', fileHint: 'Reads the first column that has names (xlsx, csv or txt). A header row is ignored.', fileBad: 'Could not read the file, try xlsx or csv.', fileNone: 'No names found in the file.', n: 'names', draftTitle: 'The bracket has not started', draftBody: 'Add at least two players and it is drawn automatically.', remove: 'Remove', dup1: 'This name is already in the list.', skip: (n: number) => `${n} duplicate name${n > 1 ? 's' : ''} skipped.` },
+  ar: { ph: 'أضف لاعب (اكتب الاسم واضغط +)', add: 'إضافة', autoNote: 'المسجّلون ينضافون للبراكت مباشرة. زر − يشيل اللاعب من البراكت والتسجيل يبقى، وزر × يحذف تسجيله.', regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', all: 'إضافة الكل', added: 'مضاف', unadd: 'إزالة من البراكت (التسجيل يبقى)', del: 'حذف', delAsk: 'حذف هذا التسجيل؟ (مثلاً إذا انسحب)', refresh: 'تحديث', captain: 'القائد', m1: 'اسم ثم +', m2: 'لصق قائمة', m3: 'من ملف Excel', pastePh: 'اكتب أو الصق الأسماء، اسم في كل سطر', addList: 'إضافة القائمة', pickFile: 'اختر ملف Excel أو CSV', fileHint: 'يقرأ أول عمود فيه أسماء (xlsx أو csv أو txt). صف العنوان يُتجاهل.', fileBad: 'تعذّرت قراءة الملف، جرّب xlsx أو csv.', fileNone: 'ما لقيت أسماء في الملف.', n: 'اسم', draftTitle: 'ما بدأ البراكت بعد', draftBody: 'أضف لاعبَين على الأقل ويُبنى البراكت تلقائياً.', remove: 'حذف', dup1: 'هذا الاسم مضاف مسبقاً.', skip: (n: number) => `تم تجاهل ${n} اسم مكرر.` },
+  en: { ph: 'Add a player (type a name, press +)', add: 'Add', autoNote: 'Registrants are added to the bracket automatically. − takes a player out of the bracket and keeps the registration; × deletes the registration.', regs: 'Registered', none: 'Nobody registered yet.', all: 'Add all', added: 'Added', unadd: 'Remove from the bracket (the registration stays)', del: 'Delete', delAsk: 'Delete this registration? (e.g. the player withdrew)', refresh: 'Refresh', captain: 'Captain', m1: 'Name + +', m2: 'Paste a list', m3: 'From Excel file', pastePh: 'Type or paste names, one per line', addList: 'Add the list', pickFile: 'Choose an Excel or CSV file', fileHint: 'Reads the first column that has names (xlsx, csv or txt). A header row is ignored.', fileBad: 'Could not read the file, try xlsx or csv.', fileNone: 'No names found in the file.', n: 'names', draftTitle: 'The bracket has not started', draftBody: 'Add at least two players and it is drawn automatically.', remove: 'Remove', dup1: 'This name is already in the list.', skip: (n: number) => `${n} duplicate name${n > 1 ? 's' : ''} skipped.` },
 };
 export const addTxt = (lang: 'ar' | 'en') => T[lang];
 
 export interface RegRow { id: number; mode: string; plato_id: string; team_name: string; members: string }
 export const regName = (r: RegRow) => (r.mode === 'team' ? r.team_name : r.plato_id).trim();
+
+/**
+ * Registrants go straight into the bracket (the organiser does not approve them: deleting one, or taking a player out of the bracket, is their decision).
+ * Only registrations newer than the last SAVED bracket are added, so a player the organiser removed does not come back. The mark is committed when the bracket is saved.
+ */
+const pendingMarks = new Map<string, number>();
+const markKey = (bracketId: string, src: string) => `elite-auto:${bracketId}:${src}`;
+export function autoAddNew(bracketId: string, src: string, rows: RegRow[], players: string[], onAdd: (names: string[]) => void) {
+  const key = markKey(bracketId, src);
+  let mark = -1; try { const v = localStorage.getItem(key); if (v !== null && Number.isFinite(Number(v))) mark = Number(v); } catch { /* private mode */ }
+  mark = Math.max(mark, pendingMarks.get(key) ?? -1);
+  const fresh = rows.filter((r) => r.id > mark);
+  if (!fresh.length) return;
+  pendingMarks.set(key, Math.max(...rows.map((r) => r.id)));
+  const have = new Set(players.map(nameKey));
+  const names = fresh.map(regName).filter((n, i, a) => n && !have.has(nameKey(n)) && a.findIndex((x) => nameKey(x) === nameKey(n)) === i);
+  if (names.length) onAdd(names);
+}
+/** Called after the bracket was saved: the auto-added registrants are now part of it for good. */
+export function commitAutoAdds(bracketId: string) {
+  for (const [k, v] of [...pendingMarks]) if (k.startsWith(`elite-auto:${bracketId}:`)) { try { localStorage.setItem(k, String(v)); } catch { /* private mode */ } pendingMarks.delete(k); }
+}
 
 const line = 'rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
 const btn = 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-lg font-bold leading-none';
@@ -60,7 +82,7 @@ export function AddPlayerBar({ lang, onAdd, existing = [] }: { lang: 'ar' | 'en'
   );
 }
 
-export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh }: { lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void }) {
+export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh, onDelete, onUnadd }: { lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void; onDelete?: (r: RegRow) => void; onUnadd?: (name: string) => void }) {
   const t = T[lang];
   const have = new Set(players.map(nameKey));
   const todo = regs.map(regName).filter((n, i, a) => n && !have.has(nameKey(n)) && a.findIndex((x) => nameKey(x) === nameKey(n)) === i);
@@ -73,15 +95,21 @@ export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh }: { la
           {todo.length > 0 && <button type="button" className="rounded-full border px-3 py-1 text-[.8rem] font-bold" style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)' }} onClick={() => onAdd(todo)}>{t.all} ({todo.length})</button>}
         </span>
       </div>
+      {onDelete && regs.length > 0 && <p className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{t.autoNote}</p>}
       {regs.length === 0 ? <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.none}</p> : (
         <ul className="grid gap-1.5">
           {regs.map((r, i) => {
             const n = regName(r), done = have.has(nameKey(n));
             return (
-              <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)', opacity: done ? 0.6 : 1 }}>
-                <div className="min-w-0"><b dir="auto">{i + 1}. {n}</b>{r.mode === 'team' && <div dir="auto" className="truncate" style={{ color: 'var(--muted)', fontSize: '.78rem' }}>{t.captain}: {r.plato_id}{r.members ? ` · ${r.members.replace(/\n/g, '، ')}` : ''}</div>}</div>
-                {done ? <span className="shrink-0 text-[.78rem] font-bold" style={{ color: '#2ecc8c' }}>✓ {t.added}</span>
-                  : <button type="button" className={btn} style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)', color: 'var(--text)' }} aria-label={t.add} title={t.add} onClick={() => onAdd([n])}>+</button>}
+              <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)', opacity: done && !onUnadd ? 0.6 : 1 }}>
+                <div className="min-w-0"><b dir="auto">{done && onUnadd && <span style={{ color: '#2ecc8c' }}>✓ </span>}{i + 1}. {n}</b>{r.mode === 'team' && <div dir="auto" className="truncate" style={{ color: 'var(--muted)', fontSize: '.78rem' }}>{t.captain}: {r.plato_id}{r.members ? ` · ${r.members.replace(/\n/g, '، ')}` : ''}</div>}</div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {done ? (onUnadd
+                    ? <button type="button" className={btn} style={{ borderColor: 'rgba(255,176,46,.55)', background: 'rgba(255,176,46,.14)', color: 'var(--text)' }} aria-label={t.unadd} title={t.unadd} onClick={() => onUnadd(n)}>−</button>
+                    : <span className="text-[.78rem] font-bold" style={{ color: '#2ecc8c' }}>✓ {t.added}</span>)
+                    : <button type="button" className={btn} style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)', color: 'var(--text)' }} aria-label={t.add} title={t.add} onClick={() => onAdd([n])}>+</button>}
+                  {onDelete && <button type="button" className={btn} style={{ borderColor: 'rgba(255,120,120,.5)', background: 'rgba(255,90,90,.14)', color: 'var(--text)' }} aria-label={t.del} title={t.del} onClick={() => { if (window.confirm(t.delAsk)) onDelete(r); }}>×</button>}
+                </div>
               </li>
             );
           })}

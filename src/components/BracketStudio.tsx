@@ -200,7 +200,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const [flash, setFlash] = useState('');
   const load = () => api<Row[]>('/brackets').then(setRows).catch(() => setRows([]));
   useEffect(() => { load(); }, []);
-  const when = (iso: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  const when = (iso: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'short' }).format(new Date(iso));
   const say = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(''), 2200); };
   async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: r.title, lang }), `${r.title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
   async function dup(r: Row) {

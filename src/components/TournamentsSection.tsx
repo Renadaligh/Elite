@@ -47,7 +47,7 @@ function Countdown({ to, label }: { to: string; label: string }) {
 function useFmt() {
   const { lang } = useI18n();
   const loc = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB';
-  return (iso: string) => new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  return (iso: string) => new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'long' }).format(new Date(iso));
 }
 
 function Facts({ x }: { x: Tournament }) {
@@ -149,16 +149,16 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
   const fmt = useFmt();
   useGames();
   const g = getGame(x.gameId);
-  const showCd = s === 'upcoming' || s === 'live';
+  const showCd = s === 'upcoming';
   return (
     <article className={`tc ${x.image ? 'tc-pic' : ''} ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
         <h3 className="mt-0.5 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
-        <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time></p>
+        <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{fmt(x.endsAt)}</time></> : null}</p>
         <Facts x={x} />
-        {showCd && <div><Countdown to={s === 'live' ? x.endsAt : x.startsAt} label={s === 'live' ? t.tEndsIn : t.tStartsIn} /></div>}
+        {showCd && <div><Countdown to={x.startsAt} label={t.tStartsIn} /></div>}
         {s === 'completed' && x.winner && <p className="tc-win"><span style={{ color: 'var(--muted)' }}>{t.tWinner}</span><b>{x.winner[lang]}</b></p>}
         {s === 'completed' && x.winner && <WinnerMembers x={x} />}
         <Register x={x} s={s} />

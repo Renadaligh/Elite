@@ -58,7 +58,7 @@ const EN: Record<string, string> = {
   'حذف هذه البطولة؟': 'Delete this tournament?', 'بطولة جديدة': 'New tournament', 'تعديل البطولة': 'Edit tournament',
   'اسم البطولة': 'Tournament name', 'اللعبة': 'Game', 'النوع': 'Type', 'فردي (Plato ID)': 'Solo (Plato ID)',
   'فرق (اسم الفريق + القائد + الأعضاء)': 'Teams (team name + captain + members)', 'النظام': 'Format', 'فردي · أسرع لفة': 'Solo · Fastest lap',
-  'الجائزة': 'Prize', '5,000 ريال': '5,000 SAR', 'البداية': 'Start', 'النهاية': 'End',
+  'الجائزة': 'Prize', '5,000 ريال': '5,000 SAR', 'تاريخ بداية البطولة': 'Tournament start date', 
   'العدد الأقصى': 'Max slots', 'تحديد عدد المقاعد': 'Limit the seats', 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟': 'Adding players after matches started clears the current results (Undo brings them back). Sure?', 'تحديث الصفحة': 'Refresh', 'الكل': 'All', 'بطولات Plato AR': 'Plato AR tournaments', 'بطولات المستخدمين': 'Community tournaments', 'غير محدود': 'Unlimited', 'قيد المراجعة': 'Under review', 'مرفوضة': 'Rejected', 'مقبولة': 'Approved', 'قبول': 'Approve', 'رفض': 'Reject', 'سبب الرفض (يظهر لصاحب البطولة)': 'Reason for rejection (the owner sees it)', 'تأكيد الرفض': 'Confirm rejection', 'طلبات بطولات المستخدمين بانتظار مراجعتك': 'Community tournaments waiting for your review', 'فتح البراكت': 'Open bracket', 'اكتب سبب الرفض': 'Write the reason', 'تمت المراجعة': 'Review saved', 'المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)': 'Registered now (auto-increments on each sign-up)',
   'رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)': 'External registration link (optional, replaces the site form)',
   'الفائز (بعد الانتهاء)': 'Winner (after it ends)', 'صورة الفائز (طولية 9:16، اختياري)': 'Winner portrait (tall 9:16, optional)', 'أو الصق رابط': 'or paste a link', 'اختر صورة من جهازك': 'Choose from your device', 'جارٍ الرفع…': 'Uploading…', 'فشل رفع الصورة': 'Image upload failed', 'التخزين غير مفعّل بعد (R2)': 'Storage is not enabled yet (R2)', 'إزالة': 'Remove', 'منشورة (تظهر في الموقع)': 'Published (visible on the site)',
@@ -342,10 +342,10 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 /** The form works in the viewer's own time zone; the stored value is an absolute moment (ISO), shown to everyone in their own zone. */
 const toInput = (iso: string) => {
   const d = new Date(iso);
-  return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 };
-const fromInput = (v: string) => { const d = new Date(v); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
-const when = (iso: string) => toInput(iso).replace('T', ' ');
+const fromInput = (v: string, end = false) => { const d = new Date(`${v}T${end ? '23:59:59' : '00:00:00'}`); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
+const when = (iso: string) => toInput(iso);
 
 
 /** Review of a community tournament: approve, or reject with a reason the owner sees. */
@@ -610,7 +610,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           </div>
         </div>
 
-        <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={regs} players={br?.players ?? []} onAdd={addToBracket} onRefresh={loadRegs} />
+        <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={regs} players={br?.players ?? []} onAdd={addToBracket} onRefresh={loadRegs} onDelete={(r) => { void api(`/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
 
         {!br ? (
           <div className="grid gap-4 rounded-xl border p-4" style={bd}>
@@ -728,8 +728,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
             {pair('prize', x('الجائزة'), 'Prize', x('5,000 ريال'))}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={x('البداية')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
-              <Field label={x('النهاية')}><input type="datetime-local" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.endsAt)} onChange={(e) => setF({ ...f, endsAt: fromInput(e.target.value) })} /></Field>
+              <Field label={x('تاريخ بداية البطولة')}><input type="date" dir="ltr" className={`${inp} dt-in`} style={bd} value={toInput(f.startsAt)} onChange={(e) => setF({ ...f, startsAt: fromInput(e.target.value) })} required /></Field>
               <Field label={x('تحديد عدد المقاعد')}>
                 <div className="flex items-center gap-3">
                   <button type="button" role="switch" aria-checked={f.slots.total > 0} aria-label={x('تحديد عدد المقاعد')} className={`st-sw ${f.slots.total > 0 ? 'on' : ''}`} onClick={() => setF({ ...f, slots: { ...f.slots, total: f.slots.total > 0 ? 0 : 16 } })}><i /></button>
