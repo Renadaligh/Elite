@@ -69,7 +69,7 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
                 {(['solo', 'team'] as const).map((m) => <button key={m} type="button" role="radio" aria-checked={c.mode === m} className={`br-chip ${c.mode === m ? 'on' : ''}`} onClick={() => put({ mode: m })}>{m === 'solo' ? t.solo : t.team}</button>)}
               </div>
               <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.descL}
-                <textarea className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (desc.trim() !== (c.description ?? '')) void put({ description: desc.trim() }); }} />
+                <textarea dir="auto" className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (desc.trim() !== (c.description ?? '')) void put({ description: desc.trim() }); }} />
               </label>
               <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.start}
                 <input type="datetime-local" className={line} style={bd} dir="ltr" value={isoDate(c.startsAt)} onChange={(e) => { const v = e.target.value; const d = v ? new Date(v) : null; void put({ startsAt: d && !Number.isNaN(d.getTime()) ? d.toISOString() : '' }); }} />

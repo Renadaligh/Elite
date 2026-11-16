@@ -118,7 +118,7 @@ export default function JoinPage({ id }: { id: string }) {
               <span>· {x.count}: {info.count}{info.cap > 0 ? ` / ${info.cap}` : ''}</span>
             </p>
             {info.startsAt && !Number.isNaN(Date.parse(info.startsAt)) && <p className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--muted)' }}>{x.starts}: <span style={{ color: 'var(--text)' }}>{new Date(info.startsAt).toLocaleString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></p>}
-            {info.description && <p className="mt-3 whitespace-pre-line text-[.92rem] leading-relaxed" style={{ color: 'var(--text)' }}>{info.description}</p>}
+            {info.description && <div className="mt-3 text-[.92rem] leading-relaxed" style={{ color: 'var(--text)' }}>{info.description.split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}>{ln}</p> : <div key={i} className="h-2" />))}</div>}
             {!closedNow && when && <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{x.closes}: {when}</p>}
             {state === 'done' ? (
               <div className="py-8 text-center" role="status">
