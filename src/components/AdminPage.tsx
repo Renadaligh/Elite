@@ -1577,39 +1577,45 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 
 /* ---------- Shell ---------- */
 /** In-dashboard notifications: community tournaments waiting for review (works with no email at all). */
-function BellBtn({ k, go }: { k: string; go: () => void }) {
-  const { x, lang } = useX();
+function usePending(k: string, on: boolean) {
   const [list, setList] = useState<Adm<Tournament>[]>([]);
-  const [open, setOpen] = useState(false);
   useEffect(() => {
-    let on = true;
-    const load = () => { if (document.visibilityState === 'hidden') return; api<Adm<Tournament>[]>('/tournaments', { key: k }).then((r) => { if (on) setList(r.filter((t) => t.community?.review === 'pending')); }).catch(() => undefined); };
+    if (!on) return;
+    let live = true;
+    const load = () => { if (document.visibilityState === 'hidden') return; api<Adm<Tournament>[]>('/tournaments', { key: k }).then((r) => { if (live) setList(r.filter((t) => t.community?.review === 'pending')); }).catch(() => undefined); };
     load();
     const id = window.setInterval(load, 60000);
     document.addEventListener('visibilitychange', load);
-    return () => { on = false; window.clearInterval(id); document.removeEventListener('visibilitychange', load); };
-  }, [k]);
+    return () => { live = false; window.clearInterval(id); document.removeEventListener('visibilitychange', load); };
+  }, [k, on]);
+  return list;
+}
+
+function BellBtn({ n, onClick }: { n: number; onClick: () => void }) {
+  const { x } = useX();
   return (
-    <>
-      <button type="button" onClick={() => setOpen(true)} className="pill relative" style={{ gap: '.4rem' }} aria-label={x('الإشعارات')}>
-        <svg {...ic} strokeWidth={2} className="h-4 w-4" aria-hidden="true"><path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 004 0" /></svg>
-        {list.length > 0 && <span className="absolute -end-1 -top-1 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded-full px-1 text-[.68rem] font-extrabold text-white" style={{ background: '#e5484d' }}>{list.length}</span>}
-      </button>
-      {open && (
-        <Drawer title={x('الإشعارات')} onClose={() => setOpen(false)}>
-          {!list.length && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{x('لا توجد إشعارات جديدة')}</p>}
-          <div className="grid gap-2">
-            {list.map((t) => (
-              <button key={t.id} type="button" onClick={() => { setOpen(false); go(); }} className="rounded-xl border p-3 text-start" style={{ borderColor: 'var(--glass-b)' }}>
-                <div className="text-[.78rem] font-bold" style={{ color: '#d49b1f' }}>{x('بطولة جديدة بانتظار المراجعة')}</div>
-                <div className="mt-0.5 truncate font-extrabold">{t.name[lang] || t.name.ar || t.name.en}</div>
-                {t.community?.organizer && <div className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{t.community.organizer}</div>}
-              </button>
-            ))}
-          </div>
-        </Drawer>
-      )}
-    </>
+    <button type="button" onClick={onClick} className="pill relative" style={{ gap: '.4rem' }} aria-label={x('الإشعارات')}>
+      <svg {...ic} strokeWidth={2} className="h-4 w-4" aria-hidden="true"><path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 004 0" /></svg>
+      {n > 0 && <span className="absolute -end-1 -top-1 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded-full px-1 text-[.68rem] font-extrabold text-white" style={{ background: '#e5484d' }}>{n}</span>}
+    </button>
+  );
+}
+
+function BellDrawer({ list, onClose, go }: { list: Adm<Tournament>[]; onClose: () => void; go: () => void }) {
+  const { x, lang } = useX();
+  return (
+    <Drawer title={x('الإشعارات')} onClose={onClose}>
+      {!list.length && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{x('لا توجد إشعارات جديدة')}</p>}
+      <div className="grid gap-2">
+        {list.map((t) => (
+          <button key={t.id} type="button" onClick={() => { onClose(); go(); }} className="rounded-xl border p-3 text-start" style={{ borderColor: 'var(--glass-b)' }}>
+            <div className="text-[.78rem] font-bold" style={{ color: '#d49b1f' }}>{x('بطولة جديدة بانتظار المراجعة')}</div>
+            <div className="mt-0.5 truncate font-extrabold">{t.name[lang] || t.name.ar || t.name.en}</div>
+            {t.community?.organizer && <div className="text-[.8rem]" style={{ color: 'var(--muted)' }}>{t.community.organizer}</div>}
+          </button>
+        ))}
+      </div>
+    </Drawer>
   );
 }
 
@@ -1621,6 +1627,7 @@ function AdminInner() {
   const [menu, setMenu] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
   const [mailOpen, setMailOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const pick = (id: Tab) => { setTab(id); setMenu(false); window.scrollTo({ top: 0 }); };
   const clear = useCallback(() => { try { sessionStorage.removeItem(KEY); sessionStorage.removeItem(ME); } catch { /* ignore */ } setKey(''); setMe(null); }, []);
   const logout = useCallback(() => { if (key) void fetch('/api/admin/logout', { method: 'POST', headers: { authorization: `Bearer ${key}` } }).catch(() => undefined); clear(); }, [key, clear]);
@@ -1631,6 +1638,8 @@ function AdminInner() {
     api<Me>('/admin/me', { key }).then((m) => { setMe((o) => { const n = { ...m, recovery: m.recovery ?? o?.recovery }; saveMe(n); return n; }); }).catch((e: Error) => { if (e.message === '401') clear(); });
   }, [key, clear]);
   const can = useCallback((sec: string, act: string) => !!me && (me.role === 'owner' || !!(me.perms as Record<string, string[] | undefined>)[sec]?.includes(act)), [me]);
+
+  const pending = usePending(key, !!key && !!me && (me.role === 'owner' || !!(me.perms as Record<string, string[] | undefined>).tournaments?.length));
 
   if (!key || !me) return <Login onDone={onLogin} />;
   if (me.mustChange) return <ForceChange k={key} me={me} onLogout={logout} onDone={() => { const n = { ...me, mustChange: false, recovery: false }; saveMe(n); setMe(n); }} />;
@@ -1679,7 +1688,7 @@ function AdminInner() {
           <div className="hidden text-[.9rem] font-semibold lg:block" style={{ color: 'var(--muted)' }}>{x(TAB_LABEL[tab])}</div>
           <div className="flex shrink-0 items-center gap-2">
             <button type="button" onClick={logout} className="pill lg:hidden" style={{ gap: '.4rem' }} aria-label={x('تسجيل خروج')}><OutI className="h-4 w-4" /></button>
-            {tabs.includes('tournaments') && <BellBtn k={key} go={() => pick('tournaments')} />}
+            {tabs.includes('tournaments') && <BellBtn n={pending.length} onClick={() => setBellOpen(true)} />}
             <AdThemeBtn />
             <LanguageSwitcher />
           </div>
@@ -1717,6 +1726,7 @@ function AdminInner() {
         </main>
       </div>
       {pwOpen && <PwDrawer k={key} me={me} onClose={() => setPwOpen(false)} />}
+      {bellOpen && <BellDrawer list={pending} onClose={() => setBellOpen(false)} go={() => pick('tournaments')} />}
       {mailOpen && <EmailDrawer k={key} onClose={() => setMailOpen(false)} />}
     </div></PermCtx.Provider></ToastHost>
   );
