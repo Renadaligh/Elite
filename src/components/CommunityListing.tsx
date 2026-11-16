@@ -10,13 +10,13 @@ interface Reg { id: number; mode: string; plato_id: string; team_name: string; m
 const T = {
   ar: {
     title: 'نشر البطولة في الموقع', d: 'تظهر بطولتك في قسم البطولات بالموقع ويسجّل فيها الناس مباشرة. بعد مراجعتها من الإدارة والموافقة عليها تظهر في الموقع.', needShare: 'فعّل «رابط العرض» أولاً حتى تقدر تنشر البطولة.',
-    name: 'اسم البطولة', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ بداية البطولة', slots: 'عدد المقاعد', cover: 'صورة البطولة (اختياري)', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (صورة حتى 3MB: PNG أو JPG أو WebP).', coverHint: 'من غير صورة يظهر لون افتراضي.', limitSeats: 'تحديد عدد المقاعد', unlimited: 'غير محدود', stPending: 'قيد المراجعة: ننتظر موافقة الفريق قبل ظهورها في الموقع.', stApproved: 'مقبولة ومنشورة في الموقع.', stRejected: 'مرفوضة', stRejectedHint: 'عدّل البطولة واضغط «نشر / حفظ» لإعادة إرسالها للمراجعة.', sent: 'أُرسلت للمراجعة', editNote: 'تغيير الاسم أو اللعبة أو الجائزة أو التاريخ أو الصورة يعيدها للمراجعة. وتنتهي البطولة تلقائيًا لما يتحدد الفائز.', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة (اختياري)',
+    name: 'اسم البطولة', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ بداية البطولة', slots: 'عدد المقاعد', imgNote: 'صورة البطولة هي نفس الصورة اللي ترفعها في «رابط التسجيل المستقل» (1280 × 720)، ما تحتاج ترفعها مرتين.', cover: 'صورة البطولة (اختياري)', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (صورة حتى 3MB: PNG أو JPG أو WebP).', coverHint: 'من غير صورة يظهر لون افتراضي.', limitSeats: 'تحديد عدد المقاعد', unlimited: 'غير محدود', stPending: 'قيد المراجعة: ننتظر موافقة الفريق قبل ظهورها في الموقع.', stApproved: 'مقبولة ومنشورة في الموقع.', stRejected: 'مرفوضة', stRejectedHint: 'عدّل البطولة واضغط «نشر / حفظ» لإعادة إرسالها للمراجعة.', sent: 'أُرسلت للمراجعة', editNote: 'تغيير الاسم أو اللعبة أو الجائزة أو التاريخ أو الصورة يعيدها للمراجعة. وتنتهي البطولة تلقائيًا لما يتحدد الفائز.', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة (اختياري)',
     show: 'ظاهرة في الموقع', save: 'نشر / حفظ', saved: 'تم الحفظ', remove: 'إلغاء النشر', removeAsk: 'تلغي نشر البطولة وتحذف قائمة المسجلين؟', fail: 'تعذّر الحفظ', migrate: 'لازم تشغّل أوامر قاعدة البيانات الجديدة (schema.sql) أولاً.', limit: 'وصلت الحد الأعلى للبطولات المنشورة (10).', bad: 'اكتب الاسم وحدد تاريخ بداية البطولة.',
     regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', refresh: 'تحديث', del: 'حذف', delAsk: 'حذف هذا التسجيل وإزالة اللاعب من البراكت؟', use: 'إضافة الكل', added: 'مضاف', unadd: 'إزالة من البراكت (التسجيل يبقى)', add: 'إضافة', captain: 'القائد', registered: 'مسجّل', closes: 'التسجيل يقفل عند بداية البطولة.',
   },
   en: {
     title: 'Publish the tournament on the site', d: 'Your tournament shows in the site\'s Tournaments section and people register directly. It appears on the site after the team reviews and approves it.', needShare: 'Turn on "view link" first to publish the tournament.',
-    name: 'Tournament name', game: 'Game', pick: 'Choose a game', start: 'Tournament start date', slots: 'Slots', cover: 'Tournament picture (optional)', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).', coverHint: 'Without a picture a default colour is shown.', limitSeats: 'Limit the seats', unlimited: 'Unlimited', stPending: 'Under review: waiting for the team\'s approval before it shows on the site.', stApproved: 'Approved and live on the site.', stRejected: 'Rejected', stRejectedHint: 'Edit the tournament and press "Publish / save" to send it for review again.', sent: 'Sent for review', editNote: 'Changing the name, game, prize, date or picture sends it back to review. The tournament ends by itself once a winner is decided.', mode: 'Registration', solo: 'Solo', team: 'Team', prize: 'Prize (optional)',
+    name: 'Tournament name', game: 'Game', pick: 'Choose a game', start: 'Tournament start date', slots: 'Slots', imgNote: 'The tournament picture is the same one you upload under the registration link (1280 × 720), no need to upload it twice.', cover: 'Tournament picture (optional)', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).', coverHint: 'Without a picture a default colour is shown.', limitSeats: 'Limit the seats', unlimited: 'Unlimited', stPending: 'Under review: waiting for the team\'s approval before it shows on the site.', stApproved: 'Approved and live on the site.', stRejected: 'Rejected', stRejectedHint: 'Edit the tournament and press "Publish / save" to send it for review again.', sent: 'Sent for review', editNote: 'Changing the name, game, prize, date or picture sends it back to review. The tournament ends by itself once a winner is decided.', mode: 'Registration', solo: 'Solo', team: 'Team', prize: 'Prize (optional)',
     show: 'Visible on the site', save: 'Publish / save', saved: 'Saved', remove: 'Unpublish', removeAsk: 'Unpublish the tournament and delete its registrations?', fail: 'Could not save', migrate: 'Run the new database statements (schema.sql) first.', limit: 'You reached the limit of published tournaments (10).', bad: 'Enter a name and the tournament start date.',
     regs: 'Registered', none: 'Nobody registered yet.', refresh: 'Refresh', del: 'Delete', delAsk: 'Delete this registration and remove the player from the bracket?', use: 'Add all', added: 'Added', unadd: 'Remove from the bracket (the registration stays)', add: 'Add', captain: 'Captain', registered: 'registered', closes: 'Registration closes when the tournament starts.',
   },
@@ -51,16 +51,6 @@ export default function CommunityListing({ id, share, lang, title, players, onAd
   }, [id]);
   useEffect(() => { if (!f.name && title) setF((o) => (o.name ? o : { ...o, name: title })); }, [title]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function pickImage(file?: File | null) {
-    if (!file) return;
-    const fd = new FormData(); fd.append('file', file);
-    try {
-      const res = await fetch(`/api/brackets/${id}/image`, { method: 'POST', body: fd });
-      if (!res.ok) throw new Error(String(res.status));
-      const j = (await res.json()) as { url: string };
-      setF((o) => ({ ...o, image: j.url })); setMsg('');
-    } catch { setMsg(t.imgFail); }
-  }
   async function save() {
     if (!f.name.trim() || !f.startsAt) { setMsg(t.bad); return; }
     setBusy(true); setMsg('');
@@ -105,14 +95,7 @@ export default function CommunityListing({ id, share, lang, title, players, onAd
               </div>
             </div>
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.mode}<select className={fld} style={bd} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{t.solo}</option><option value="team">{t.team}</option></select></label>
-            <div className="grid gap-1.5 text-[.82rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.cover}
-              <div className="flex flex-wrap items-center gap-3">
-                {f.image ? <img src={f.image} alt="" className="h-16 w-28 rounded-lg object-cover" /> : <span className="flex h-16 w-28 items-center justify-center rounded-lg text-[.7rem]" style={{ background: 'linear-gradient(135deg,#0f9d77,#2a6fd6)', color: '#fff' }}>{lang === 'ar' ? 'افتراضي' : 'Default'}</span>}
-                <label className="cl-btn on cursor-pointer">{f.image ? t.change : t.upload}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" onChange={(e) => { void pickImage(e.target.files?.[0]); e.target.value = ''; }} /></label>
-                {f.image && <button type="button" className="cl-btn" style={{ color: '#ff7a8a' }} onClick={() => setF({ ...f, image: '' })}>{t.rmImg}</button>}
-              </div>
-              <small>{t.coverHint}</small>
-            </div>
+            <p className="text-[.8rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.imgNote}</p>
             <label className="grid gap-1 text-[.82rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.prize}<input className={fld} style={bd} maxLength={80} value={f.prize} onChange={(e) => setF({ ...f, prize: e.target.value })} /></label>
           </div>
           <div className="st-shh"><div><span>{t.show}</span><small>{t.closes} {t.editNote}</small></div><button type="button" role="switch" aria-checked={f.published} aria-label={t.show} className={`st-sw ${f.published ? 'on' : ''}`} onClick={() => setF({ ...f, published: !f.published })}><i /></button></div>

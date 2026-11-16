@@ -1,5 +1,6 @@
 import { currentUser, sameOrigin } from '../../../_auth';
 import { body, denied, json, num, str, type Ctx } from '../../../_lib';
+import { joinExtra } from '../../../_join';
 
 /** A community tournament = a row in `tournaments` with id "u-<bracket id>", owned by the bracket's owner. The owner lists / edits / removes it here. */
 const FORMAT: Record<string, [string, string]> = {
@@ -41,7 +42,7 @@ export const onRequestPut = async (ctx: Ctx) => {
   const name = str(x.name, 80), startsAt = str(x.startsAt, 40);
   if (!name || !isoOk(startsAt)) return json({ error: 'invalid' }, 400);
   const total = num(x.total, 0) === 0 ? 0 : Math.min(4096, Math.max(2, num(x.total, 16))); // 0 = unlimited seats
-  const image = /^\/api\/img\/[0-9a-f-]{36}\.[a-z0-9]{3,4}$/.test(String(x.image ?? '')) ? String(x.image) : '';
+  const image = (await joinExtra(ctx.env, ctx.params.id)).cover; // one picture per bracket: the one uploaded for the registration page
   const mode = x.mode === 'team' ? 'team' : 'solo', game = str(x.gameId, 60).toLowerCase(), prize = str(x.prize, 80), pub = x.published === false ? 0 : 1;
   let fmt = 'single'; try { fmt = JSON.parse(b.data).format; } catch { /* default */ }
   const [fe, fa] = FORMAT[fmt] ?? FORMAT.single;
