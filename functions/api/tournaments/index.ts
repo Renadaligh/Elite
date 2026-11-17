@@ -12,8 +12,7 @@ const out = (r: Row, admin = false, ub?: UB) => ({
   startsAt: r.starts_at, endsAt: r.winner_en || r.winner_ar ? r.ends_at : '', slots: { filled: r.filled, total: r.total }, mode: r.mode === 'team' ? 'team' : 'solo', tier: r.tier === 'major' ? 'major' : 'regular',
   registerUrl: r.register_url || undefined, image: r.image || undefined, imagePos: r.image_pos || undefined,
   winner: r.winner_en || r.winner_ar ? { en: r.winner_en || r.winner_ar, ar: r.winner_ar || r.winner_en } : undefined, winnerMembers: r.winner_members ? r.winner_members.split('\n') : undefined, published: !!r.published,
-  // Finished tournaments keep their bracket in the database for the dashboard only; visitors never get it.
-  bracket: admin || !(r.winner_en || r.winner_ar) ? bracketOf(ub ? ub.data : r.bracket) : undefined,
+  bracket: bracketOf(ub ? ub.data : r.bracket),
   // The stream link is only public while the dashboard toggle is on.
   streamLive: ub ? !!ub.live && !!ub.stream_url : !!r.stream_live && !!r.stream_url, streamUrl: ub ? ((ub.live && ub.stream_url) || admin ? ub.stream_url || undefined : undefined) : admin || (r.stream_live && r.stream_url) ? r.stream_url || undefined : undefined,
   // Community tournament: made by a visitor with the bracket tool; the bracket and stream come from their saved bracket.
