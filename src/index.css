@@ -1428,3 +1428,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-col-body.br-abs{display:block;position:relative;flex:none;justify-content:flex-start}
 .br-col-body.br-abs>.br-match{position:absolute;inset-inline:0;margin:0}
 .br-col-body.br-abs>.br-match.is-ghost{display:none}
+
+/* every tournament card keeps the same size: long values are cut to two lines */
+.tc-facts dd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.tc-body h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}

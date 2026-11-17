@@ -11,15 +11,23 @@ async function load(env: Ctx['env'], id: string): Promise<Row | null> {
   const r = await q(''); return r ? { ...r, share: 0, live: 0, stream_url: '' } : null;
 }
 
+/** 'owner' | 'editor' (added by the owner) | null. */
+async function roleOf(env: Ctx['env'], r: Row, uid?: string): Promise<'owner' | 'editor' | null> {
+  if (!uid) return null;
+  if (uid === r.user_id) return 'owner';
+  try { return (await env.DB.prepare('SELECT 1 AS x FROM bracket_editors WHERE bracket_id = ? AND user_id = ?').bind(r.id, uid).first()) ? 'editor' : null; } catch { return null; } // table not created yet
+}
+
 /** The owner always sees it. Everyone else only after the owner published the link (`share`). The stream link is public only while "live" is on. */
 export const onRequestGet = async ({ request, env, params }: Ctx) => {
   const r = await load(env, params.id);
   if (!r) return json({ error: 'not_found' }, 404);
   const u = await currentUser(request, env);
-  const mine = !!u && u.id === r.user_id;
+  const role = await roleOf(env, r, u?.id);
+  const mine = !!role; // may edit (owner or co-editor)
   let bracket = null; try { bracket = JSON.parse(r.data); } catch { /* corrupt row */ }
   const streamLive = !!r.live && !!r.stream_url;
-  return json({ id: r.id, title: r.title, bracket, owner: mine ? r.owner ?? '' : '', mine, share: true, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
+  return json({ id: r.id, title: r.title, bracket, owner: mine ? r.owner ?? '' : '', mine, isOwner: role === 'owner', share: true, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
 };
 
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
@@ -27,17 +35,17 @@ export const onRequestPut = async ({ request, env, params }: Ctx) => {
   const u = await currentUser(request, env);
   if (!u) return denied();
   const r = await load(env, params.id);
-  if (!r || r.user_id !== u.id) return json({ error: 'not_found' }, 404);
+  if (!r || !(await roleOf(env, r, u.id))) return json({ error: 'not_found' }, 404);
   const b = await body(request);
   const data = cleanBracket(b.bracket);
   if (!data) return json({ error: 'invalid' }, 400);
-  await env.DB.prepare('UPDATE user_brackets SET title = ?, data = ?, updated_at = ? WHERE id = ? AND user_id = ?').bind(str(b.title, 60) || r.title, JSON.stringify(data), new Date().toISOString(), r.id, u.id).run();
+  await env.DB.prepare('UPDATE user_brackets SET title = ?, data = ?, updated_at = ? WHERE id = ?').bind(str(b.title, 60) || r.title, JSON.stringify(data), new Date().toISOString(), r.id).run();
   // The organiser's bracket has a champion → the published tournament is over: winner + end date are written by themselves. No champion (e.g. a final was undone) → it is open again.
   if (typeof b.champion === 'string') {
     const w = b.champion.trim().slice(0, 80);
     try {
-      const row = await env.DB.prepare('SELECT winner_en FROM tournaments WHERE id = ? AND owner_id = ?').bind(`u-${r.id}`, u.id).first<{ winner_en: string }>();
-      if (row && (row.winner_en || '') !== w) await env.DB.prepare('UPDATE tournaments SET winner_en = ?, winner_ar = ?, winner_members = ?, ends_at = ? WHERE id = ? AND owner_id = ?').bind(w, w, '', w ? new Date().toISOString() : '', `u-${r.id}`, u.id).run();
+      const row = await env.DB.prepare('SELECT winner_en FROM tournaments WHERE id = ? AND owner_id = ?').bind(`u-${r.id}`, r.user_id).first<{ winner_en: string }>();
+      if (row && (row.winner_en || '') !== w) await env.DB.prepare('UPDATE tournaments SET winner_en = ?, winner_ar = ?, winner_members = ?, ends_at = ? WHERE id = ? AND owner_id = ?').bind(w, w, '', w ? new Date().toISOString() : '', `u-${r.id}`, r.user_id).run();
     } catch { /* tournaments not published / columns missing: nothing to update */ }
   }
   return json({ ok: true });

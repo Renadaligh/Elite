@@ -57,8 +57,8 @@ function Facts({ x }: { x: Tournament }) {
   const seats = unlimited ? `${x.slots.filled} · ${t.tUnlimited}` : full ? t.tFull : `${x.slots.filled}/${x.slots.total}`;
   return (
     <dl className="tc-facts">
-      <div><dt>{t.tPrize}</dt><dd>{x.prize[lang] || '—'}</dd></div>
-      <div><dt>{t.tFormat}</dt><dd>{x.format[lang]}</dd></div>
+      <div><dt>{t.tPrize}</dt><dd title={x.prize[lang]}>{x.prize[lang] || "—"}</dd></div>
+      <div><dt>{t.tFormat}</dt><dd title={x.format[lang]}>{x.format[lang]}</dd></div>
       <div><dt>{t.tTeams}</dt><dd>{seats}</dd></div>
     </dl>
   );

@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS games (
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY, provider TEXT NOT NULL, provider_id TEXT NOT NULL,
   name TEXT NOT NULL DEFAULT '', email TEXT NOT NULL DEFAULT '', avatar TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL, handle TEXT NOT NULL DEFAULT ''
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_provider ON users (provider, provider_id);
 CREATE TABLE IF NOT EXISTS sessions (
@@ -82,6 +82,13 @@ CREATE TABLE IF NOT EXISTS user_brackets (
 --   ALTER TABLE user_brackets ADD COLUMN share INTEGER NOT NULL DEFAULT 0;
 --   ALTER TABLE user_brackets ADD COLUMN live INTEGER NOT NULL DEFAULT 0;   -- (= "stream is on now")
 --   ALTER TABLE user_brackets ADD COLUMN stream_url TEXT NOT NULL DEFAULT '';
+-- Co-editors of a bracket (the owner adds people by their username):
+CREATE TABLE IF NOT EXISTS bracket_editors (
+  bracket_id TEXT NOT NULL, user_id TEXT NOT NULL, added_at TEXT NOT NULL,
+  PRIMARY KEY (bracket_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS bracket_editors_user ON bracket_editors (user_id);
+-- Usernames (existing databases: run once):  ALTER TABLE users ADD COLUMN handle TEXT NOT NULL DEFAULT '';
 -- Email sign-in links (one-time, 15 minutes):
 CREATE TABLE IF NOT EXISTS login_links (
   token_hash TEXT PRIMARY KEY, email TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL

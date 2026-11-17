@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
 
-export interface AuthUser { id: string; name: string; avatar: string; provider: string; email?: string; createdAt?: string }
+export interface AuthUser { id: string; name: string; avatar: string; provider: string; email?: string; createdAt?: string; handle?: string }
 export interface Providers { discord: boolean; google: boolean; twitch: boolean; steam: boolean; email: boolean }
 const OFF: Providers = { discord: false, google: false, twitch: false, steam: false, email: false };
 interface Me { user: AuthUser | null; providers: Providers; count?: number; max?: number }

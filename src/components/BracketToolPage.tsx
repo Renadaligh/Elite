@@ -8,6 +8,7 @@ import BracketActions from './BracketActions';
 import CommunityListing from './CommunityListing';
 import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
+import EditorsPanel from './EditorsPanel';
 import { AddPlayerBar, commitAutoAdds } from './AddPlayers';
 import BracketSheetAny from './BracketSheetAny';
 import { useBracketHistory } from '../hooks/useBracketHistory';
@@ -109,6 +110,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   const [br, setBr] = useState<Bracket | null>(init.br);
   const [owner, setOwner] = useState('');
   const [mine, setMine] = useState(!id);
+  const [isOwner, setIsOwner] = useState(true); // false = co-editor added by the owner
   const [state, setState] = useState<'load' | 'ok' | 'missing' | 'private'>(id ? 'load' : 'ok');
   const share = true; // the view link is always on
   const [live, setLive] = useState(false);
@@ -124,8 +126,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
 
   useEffect(() => {
     if (!id) return;
-    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; share: boolean; live: boolean; streamLive?: boolean; streamUrl?: string }>(`/brackets/${id}`)
-      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setLive(r.live); setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive); setState('ok'); })
+    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; isOwner?: boolean; share: boolean; live: boolean; streamLive?: boolean; streamUrl?: string }>(`/brackets/${id}`)
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setLive(r.live); setStreamUrl(r.streamUrl ?? ''); setStreamOn(!!r.streamLive); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
@@ -293,7 +295,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           {sheetView ? <BracketSheetAny bracket={br} title={shownTitle} lang={lang === 'en' ? 'en' : 'ar'} /> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
           </div>
           {editable && <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />}
-          {editable && (
+          {editable && id && auth.user && <EditorsPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} userId={auth.user.id} style={card} />}
+          {editable && isOwner && (
             <div className="st-share" style={card}>
               <b>{tx.shTitle}</b>
               {!id ? <p className="st-shn">{tx.shSave}</p> : (
@@ -320,9 +323,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
-          {editable && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} />}
-          {editable && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
-          {editable && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
+          {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} />}
+          {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
+          {editable && isOwner && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>
       )}

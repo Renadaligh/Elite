@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { PencilIcon, TrophyIcon } from './icons';
-import { champion, hasBye, isDraft, isLeague, layout, matchNumbers, packSlots, nameKey, resolve, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
+import { champion, hasBye, isDraft, isLeague, layout, matchNumbers, packSlots, nameKey, resolve, setWinner, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
 import LeagueView from './LeagueView';
 import FfaView from './FfaView';
@@ -315,7 +315,9 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   const card = (m: BMatch) => {
     const r = R.get(m.id) as Resolved;
     const isBye = r.a === 'bye' || r.b === 'bye';
-    const can = (w: Who) => !onApply && !!onPick && typeof w === 'number' && !isBye;
+    const can = (w: Who) => (!!onApply || !!onPick) && typeof w === 'number' && !isBye;
+    // dashboard: one tap on a name = winner (tap the winner again to undo); the pencil still opens the full card
+    const pickW = (side: 'a' | 'b') => (onApply ? onApply(setWinner(bracket, m.id, m.win === side ? undefined : side)) : onPick!(m, side));
     const seat = (side: 'a' | 'b') => { const v = m[side]; return !!onSwap && !m.win && ('p' in v || 'bye' in v) ? { slot: `${m.id}|${side}`, grip: 'p' in v } : { slot: undefined, grip: false }; };
     const sc = !onApply && !!onScore && !isBye && typeof r.a === 'number' && typeof r.b === 'number';
     const sa = seat('a'), sb = seat('b');
@@ -325,15 +327,15 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         {onApply && !isBye && typeof r.a === 'number' && typeof r.b === 'number' ? (
           <div className="br-mwrap">
             <div className="br-mrows">
-          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
             </div>
             <button type="button" className="br-medit" aria-label={lang === 'ar' ? 'تعديل نتيجة المباراة' : 'Edit match result'} title={lang === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setOpen(m.id)}><PencilIcon className="br-pen" /></button>
           </div>
         ) : (
           <>
-          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => onPick!(m, 'a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => onPick!(m, 'b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
           </>
         )}
       </div>

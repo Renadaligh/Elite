@@ -226,7 +226,7 @@ function Notices({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
-type Row = { id: string; title: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string };
+type Row = { id: string; title: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string; shared?: boolean; owner?: string };
 
 function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -260,7 +260,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
       <div className="st-cards">
         {rows?.map((r, i) => (
           <div key={r.id} className="st-bc" style={{ '--d': `${Math.min(i, 8) * 60}ms` } as React.CSSProperties}>
-            <div className="flex items-start justify-between gap-3"><a href={`#/bracket/${r.id}`} className="st-bt">{r.title}</a><span className={`st-chip ${r.status === 'live' ? 'live' : r.status === 'done' ? 'done' : ''}`}>{r.status === 'live' ? s.live : r.status === 'done' ? s.done : s.stNew}</span></div>
+            <div className="flex items-start justify-between gap-3"><a href={`#/bracket/${r.id}`} className="st-bt">{r.title}{r.shared && <small className="st-meta" style={{ display: 'block' }}>{lang === 'ar' ? `مشترك معك · ${r.owner || ''}` : `Shared with you · ${r.owner || ''}`}</small>}</a><span className={`st-chip ${r.status === 'live' ? 'live' : r.status === 'done' ? 'done' : ''}`}>{r.status === 'live' ? s.live : r.status === 'done' ? s.done : s.stNew}</span></div>
             <div className="st-mini"><i className="w" /><i className="w" /><i /><i /></div>
             <div className="flex items-center justify-between gap-2">
               <span className="st-meta">{(s.fmt as Record<string, string>)[r.format] ?? r.format} · {r.players} {s.players}</span>
@@ -269,7 +269,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
                 <button type="button" title={s.dup} aria-label={s.dup} onClick={() => dup(r)}><Ic d="dup" /></button>
                 <button type="button" title={s.link} aria-label={s.link} onClick={() => copy(r)}><Ic d="link" /></button>
                 <button type="button" title={s.img} aria-label={s.img} onClick={() => image(r)}><Ic d="img" /></button>
-                <button type="button" title={s.del} aria-label={s.del} className="dng" onClick={() => del(r)}><Ic d="trash" /></button>
+                {!r.shared && <button type="button" title={s.del} aria-label={s.del} className="dng" onClick={() => del(r)}><Ic d="trash" /></button>}
               </div>
             </div>
           </div>
@@ -282,6 +282,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
 function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; lang: 'ar' | 'en' }) {
   const user = auth.user!;
   const [name, setName] = useState(user.name);
+  const [handle, setHandle] = useState(user.handle ?? '');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const pct = Math.min(100, Math.round((auth.count / auth.max) * 100));
@@ -291,6 +292,13 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
     setBusy(true);
     try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ name: name.trim() }) }); auth.reload(); setMsg(s.accSaved); } catch { setMsg(s.fail); }
     setBusy(false); window.setTimeout(() => setMsg(''), 2200);
+  }
+  async function saveHandle() {
+    const h = handle.trim().toLowerCase().replace(/^@/, '');
+    setBusy(true);
+    try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ handle: h }) }); auth.reload(); setMsg(s.accSaved); }
+    catch (e) { const c = (e as Error & { detail?: string }).detail; setMsg(c === 'taken' ? (lang === 'ar' ? 'اليوزر مستخدم، جرّب غيره.' : 'That username is taken.') : c === 'bad_handle' ? (lang === 'ar' ? 'حروف إنجليزية وأرقام و _ فقط (3–20).' : 'English letters, digits and _ only (3–20).') : s.fail); }
+    setBusy(false); window.setTimeout(() => setMsg(''), 2600);
   }
   async function pickPhoto(f: File | undefined) {
     if (!f) return;
@@ -335,6 +343,9 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
         </div>
         <label className="st-fld">{s.accName}
           <span className="st-inl"><input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} /><button type="button" disabled={busy || name.trim() === user.name || name.trim().length < 2} onClick={save}>{s.accSave}</button></span>
+        </label>
+        <label className="st-fld">{lang === 'ar' ? 'اليوزر (لإضافتك محرراً في براكت)' : 'Username (so others can add you as a co-editor)'}
+          <span className="st-inl"><input dir="ltr" value={handle} maxLength={20} onChange={(e) => setHandle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveHandle()} /><button type="button" disabled={busy || handle.trim().toLowerCase() === (user.handle ?? '') || handle.trim().length < 3} onClick={saveHandle}>{s.accSave}</button></span>
         </label>
         <p role="status" className="st-flash" style={{ opacity: msg ? 1 : 0 }}>{msg || '·'}</p>
         <dl className="st-dl">

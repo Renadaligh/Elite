@@ -3,7 +3,7 @@ import type { Ctx, Env } from './_lib';
 
 export const COOKIE = 'elite_session';
 export const DAYS = 30;
-export type User = { id: string; name: string; avatar: string; provider: string; email: string; createdAt: string };
+export type User = { id: string; name: string; avatar: string; provider: string; email: string; createdAt: string; handle?: string };
 
 export const hex = (n: number) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, '0')).join('');
 export async function sha256(s: string) {
@@ -25,9 +25,26 @@ export async function currentUser(req: Request, env: Env): Promise<User | null> 
   const t = cookies(req)[COOKIE];
   if (!t || !/^[0-9a-f]{48}$/.test(t)) return null;
   try {
-    return await env.DB.prepare('SELECT u.id, u.name, u.avatar, u.provider, u.email, u.created_at AS createdAt FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?')
-      .bind(await sha256(t), Date.now()).first<User>();
+    const th = await sha256(t);
+    try { return await env.DB.prepare('SELECT u.id, u.name, u.avatar, u.provider, u.email, u.created_at AS createdAt, u.handle AS handle FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?').bind(th, Date.now()).first<User>(); }
+    catch { /* handle column not added yet */ }
+    return await env.DB.prepare('SELECT u.id, u.name, u.avatar, u.provider, u.email, u.created_at AS createdAt FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?').bind(th, Date.now()).first<User>();
   } catch { return null; } // tables not created yet
+}
+
+export const validHandle = (h: string) => /^[a-z0-9_]{3,20}$/.test(h);
+/** Every member gets a unique username (a–z, 0–9, _) the first time we need it; they can change it in their account. */
+export async function ensureHandle(env: Env, u: User): Promise<string> {
+  if (u.handle) return u.handle;
+  try {
+    const base = (u.name.normalize('NFKD').replace(/[^\x00-\x7f]/g, '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 14)) || 'user';
+    for (let i = 0; i < 8; i++) {
+      const h = (base.length >= 3 ? base : base + '_' + hex(2)) + (i ? hex(2) : '');
+      const hit = await env.DB.prepare('SELECT 1 AS x FROM users WHERE handle = ?').bind(h).first();
+      if (!hit) { await env.DB.prepare("UPDATE users SET handle = ? WHERE id = ? AND handle = ''").bind(h, u.id).run(); return h; }
+    }
+  } catch { /* column not added yet */ }
+  return '';
 }
 
 /** Writes (POST/PUT/DELETE) must come from our own site: blocks cross-site form posts using the cookie. */
