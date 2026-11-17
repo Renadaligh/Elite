@@ -150,18 +150,22 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
   useGames();
   const g = getGame(x.gameId);
   const showCd = s === 'upcoming';
+  const showBr = (s === 'live' || s === 'completed') && !!x.bracket;
   return (
     <article className={`tc ${x.image ? 'tc-pic' : ''} ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
-        <h3 className="mt-0.5 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
+        <div className="mt-0.5 flex items-start justify-between gap-3">
+          <h3 className="min-w-0 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
+          {showBr && <a href={`#/tournaments/${x.id}`} className="btn-primary shrink-0 !px-3.5 !py-1.5 !text-[.82rem]">{t.tBracket} <ArrowIcon className="h-3.5 w-3.5 rtl:rotate-180" /></a>}
+        </div>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{fmt(x.endsAt)}</time></> : null}</p>
         <Facts x={x} />
         {showCd && <div><Countdown to={x.startsAt} label={t.tStartsIn} /></div>}
         {s === 'completed' && x.winner && <p className="tc-win"><span style={{ color: 'var(--muted)' }}>{t.tWinner}</span><b>{x.winner[lang]}</b></p>}
         {s === 'completed' && x.winner && <WinnerMembers x={x} />}
-        <Register x={x} s={s} />
+        {!showBr && <Register x={x} s={s} />}
       </div>
     </article>
   );
