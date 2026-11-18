@@ -201,7 +201,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         if (hasBye(R, m.id)) continue;
         const to = els.current.get(m.id); if (!to) continue;
         const tb = to.getBoundingClientRect();
-        const no = NO.get(m.id); if (no !== undefined) nn.push({ x: (rtl ? tb.left - 4 : tb.right + 4) - o.left, y: tb.top + tb.height / 2 - o.top - 3, n: no });
+        const no = NO.get(m.id); if (no !== undefined) nn.push({ x: (rtl ? tb.left - 6 : tb.right + 6) - o.left, y: tb.top + tb.height / 2 - o.top - 3, n: no });
         for (const s of [m.a, m.b]) {
           if (!('w' in s) || hasBye(R, s.w)) continue;
           const from = els.current.get(s.w); if (!from) continue;

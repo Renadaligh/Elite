@@ -1432,3 +1432,15 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 /* every tournament card keeps the same size: long values are cut to two lines */
 .tc-facts dd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .tc-body h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+
+/* prize + seats = two boxes; the system gets a full-width row (like the winner) so its text fits */
+.tc-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tc-facts .tc-fmt{grid-column:1/-1;flex-direction:row;align-items:baseline;justify-content:space-between;gap:.75rem}
+.tc-facts .tc-fmt dt{flex:none}
+.tc-facts .tc-fmt dd{min-height:2.5em;-webkit-line-clamp:2;text-align:end;flex:1}
+
+/* match numbers: drawn above the cards with a halo so they stay readable in light mode; search hit = outline that no theme can override */
+.br-lines{z-index:4}
+.br-lines .br-no{fill:currentColor;font-weight:700;opacity:1;paint-order:stroke;stroke:var(--s-panel,var(--bg,#0b1030));stroke-width:3.5px;stroke-linejoin:round}
+.br-match.is-hit{outline:2.5px solid #f5a300;outline-offset:2px;box-shadow:0 0 0 5px rgba(245,163,0,.28)!important}
+.br-row.is-hit{box-shadow:inset 0 0 0 2px #f5a300!important;background:rgba(245,163,0,.25)!important}

@@ -58,8 +58,8 @@ function Facts({ x }: { x: Tournament }) {
   return (
     <dl className="tc-facts">
       <div><dt>{t.tPrize}</dt><dd title={x.prize[lang]}>{x.prize[lang] || "—"}</dd></div>
-      <div><dt>{t.tFormat}</dt><dd title={x.format[lang]}>{x.format[lang]}</dd></div>
       <div><dt>{t.tTeams}</dt><dd>{seats}</dd></div>
+      <div className="tc-fmt"><dt>{t.tFormat}</dt><dd title={x.format[lang]}>{x.format[lang]}</dd></div>
     </dl>
   );
 }
