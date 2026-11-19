@@ -5,7 +5,7 @@ import { publicBracketSvg } from './_publicBracketSvg';
 
 type Row = { title: string; data: string };
 const escape = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v3';
 
 async function snapshot(request: Request, row: Row, lang: 'ar' | 'en', bracketTitle: string, waitUntil?: Ctx['waitUntil']) {
   const revision = await sha256(JSON.stringify([row.title, row.data]));
@@ -29,7 +29,7 @@ async function snapshot(request: Request, row: Row, lang: 'ar' | 'en', bracketTi
 
 const styles = `
 :root{color-scheme:dark;--bg:#0a1020;--panel:#111a2d;--fg:#edf2ff;--mut:#a8b4cf;--head:#283659;--row:#1d2a45;--win:#2655b8;--line:#677692;--toolbar:#0f1930;--champ-bg:#f3c93d;--champ-border:#e7b114;--champ-text:#3c2a00;--champ-sub:#6e5300}
-:root[data-theme=light]{color-scheme:light;--bg:#f4f6fc;--panel:#fff;--fg:#192645;--mut:#495976;--head:#dce6fa;--row:#eaf0fa;--win:#bbd2ff;--line:#7183a5;--toolbar:#ffffff;--champ-bg:#ffd95a;--champ-border:#e4b51d;--champ-text:#4a3400;--champ-sub:#7b5a00}
+:root[data-theme=light]{color-scheme:light;--bg:#eef3fb;--panel:#fff;--fg:#132750;--mut:#405a84;--head:#adc5ed;--row:#d7e4f5;--win:#8cb4f0;--line:#506b9e;--toolbar:#ffffff;--champ-bg:#ffd95a;--champ-border:#e4b51d;--champ-text:#4a3400;--champ-sub:#7b5a00}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px system-ui,sans-serif}
 header,main{max-width:1380px;margin:auto;padding:16px clamp(12px,4vw,36px)}
 header,nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px}header{justify-content:space-between}.brand img{display:block;height:34px;width:auto;max-width:128px;object-fit:contain}:root[data-theme=light] .brand img{filter:brightness(0) saturate(100%) invert(15%) sepia(39%) saturate(1049%) hue-rotate(184deg)}
@@ -37,7 +37,7 @@ a,button{color:inherit;font:inherit}
 nav a,button,.retry{border:1px solid var(--line);border-radius:10px;background:var(--toolbar);padding:7px 10px;text-decoration:none;cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
 h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-size:18px}
-.sheet{margin-top:14px;background:transparent;border:0;border-radius:0;overflow:auto;padding:0 0 8px;direction:ltr}.sheet section{margin-block:14px}.sheet h2{direction:var(--dir,ltr)}
+.sheet{margin-top:14px;background:transparent;border:0;border-radius:0;overflow:auto;padding:0 0 8px;direction:ltr;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;overscroll-behavior-x:contain;touch-action:pan-x pan-y}.sheet::-webkit-scrollbar{display:none}.sheet.is-dragging{cursor:grabbing;user-select:none}.sheet.is-dragging *{user-select:none}.sheet section{margin-block:14px}.sheet h2{direction:var(--dir,ltr)}
 .bracket-meta{direction:var(--dir,ltr);display:flex;flex-direction:column;gap:10px;margin:5px 0 18px}.bracket-meta p{margin:0;color:var(--mut)}.bracket-meta .bracket-organizer{font-size:12px}.bracket-champion{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;border-radius:16px;background:linear-gradient(180deg,#ffe48a 0%,var(--champ-bg) 100%);border:1px solid var(--champ-border);color:var(--champ-text);box-shadow:0 12px 24px rgba(0,0,0,.18);width:min(100%,420px);margin-inline:auto;text-align:center}.bracket-champion-icon{font-size:26px;line-height:1}.bracket-champion-copy{display:flex;flex-direction:column;gap:3px}.bracket-champion-label{font-size:13px;font-weight:700;color:var(--champ-sub)}.bracket-champion-name{font-size:19px;font-weight:900;line-height:1.2}
 .sheet svg[data-width]{display:block;max-width:none;height:auto;margin:0 auto 8px;width:var(--render-width, auto)}
 .bs-hd,.bs-seed{fill:var(--head);stroke:color-mix(in srgb,var(--line) 75%, transparent);stroke-width:1.3}.bs-row{fill:var(--row);stroke:color-mix(in srgb,var(--line) 70%, transparent);stroke-width:1.15}.bs-row.win{fill:var(--win);stroke:color-mix(in srgb,var(--line) 78%, transparent);stroke-width:1.3}
@@ -45,8 +45,9 @@ h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;min-width:38px;min-height:38px;padding:7px 10px}.icon-btn svg{width:17px;height:17px;flex:none;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}.icon-btn .icon-text{font-size:13px;font-weight:700}
 #zoom{display:inline-flex;align-items:center;gap:6px}#zoom button{min-width:39px;min-height:39px;padding:7px 12px}#zoom-level{min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
 .title-block h1{margin-bottom:4px}
+#page-toast{position:fixed;inset-inline-start:50%;bottom:clamp(24px,6vh,64px);transform:translateX(-50%) translateY(10px);z-index:1000;min-width:140px;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:#213b70;color:#fff;box-shadow:0 12px 36px rgba(0,0,0,.24);font-size:14px;font-weight:750;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}#page-toast[data-visible="true"]{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (max-width: 720px){header,main{padding-inline:14px}.bracket-champion{width:100%}.sheet{padding-bottom:12px}}
-``;
+`;
 
 const controls = `
 const root = document.documentElement;
@@ -68,6 +69,16 @@ theme?.addEventListener('click', () => {
   try { localStorage.setItem('elite-pv-theme', next); } catch {}
   applyThemeIcon();
 });
+const pageToast = document.getElementById('page-toast');
+let toastTimer;
+const showToast = (message, isError = false) => {
+  if (!pageToast) return;
+  pageToast.textContent = message;
+  pageToast.style.background = isError ? '#9c2f3a' : '#213b70';
+  pageToast.dataset.visible = 'true';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { pageToast.dataset.visible = 'false'; }, 2300);
+};
 const copy = document.getElementById('copy-link');
 copy?.addEventListener('click', async (event) => {
   event.preventDefault();
@@ -92,6 +103,7 @@ copy?.addEventListener('click', async (event) => {
     input.remove();
   }
   copy.title = copied ? copy.dataset.copied : copy.dataset.failed;
+  showToast(copied ? copy.dataset.copied : copy.dataset.failed, !copied);
 });
 const saveImage = document.getElementById('save-image');
 saveImage?.addEventListener('click', async (event) => {
@@ -245,9 +257,11 @@ saveImage?.addEventListener('click', async (event) => {
     a.click();
     a.remove();
     saveImage.title = saveImage.dataset.saved;
+    showToast(saveImage.dataset.saved);
   } catch (error) {
     console.error('Could not save bracket image', error);
     saveImage.title = saveImage.dataset.failed;
+    showToast(saveImage.dataset.failed, true);
   } finally {
     saveImage.disabled = false;
     setTimeout(() => { urls.forEach(url => URL.revokeObjectURL(url)); }, 5000);
@@ -277,8 +291,32 @@ if (sheet) {
   window.addEventListener('resize', draw);
   document.getElementById('zoom').hidden = false;
   draw();
+  // Pan oversized brackets by holding and dragging the mouse; touch devices keep native scrolling.
+  let drag = null;
+  sheet.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (event.target.closest('a,button,input,textarea,select')) return;
+    drag = { id: event.pointerId, x: event.clientX, y: event.clientY, left: sheet.scrollLeft, top: sheet.scrollTop };
+    sheet.classList.add('is-dragging');
+    sheet.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  sheet.addEventListener('pointermove', (event) => {
+    if (!drag || event.pointerId !== drag.id) return;
+    sheet.scrollLeft = drag.left - (event.clientX - drag.x);
+    sheet.scrollTop = drag.top - (event.clientY - drag.y);
+  });
+  const stopDrag = (event) => {
+    if (!drag || event.pointerId !== drag.id) return;
+    drag = null;
+    sheet.classList.remove('is-dragging');
+    if (sheet.hasPointerCapture(event.pointerId)) sheet.releasePointerCapture(event.pointerId);
+  };
+  sheet.addEventListener('pointerup', stopDrag);
+  sheet.addEventListener('pointercancel', stopDrag);
+  sheet.addEventListener('lostpointercapture', () => { drag = null; sheet.classList.remove('is-dragging'); });
 }
-``;
+`;
 
 export async function publicBracketPage({ request, env, params, waitUntil }: Ctx) {
   const url = new URL(request.url);
@@ -313,9 +351,22 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
   }
 
   // The organizer and winner stay directly under the title, outside the horizontally scrolling SVG area.
-  const metaMatch = svg.match(/<div class="bracket-meta">([\s\S]*?)<\/div>/);
-  const meta = metaMatch ? `<div class="bracket-meta">${metaMatch[1]}</div>` : '';
-  if (metaMatch) svg = svg.replace(metaMatch[0], '');
+  const metaStart = svg.indexOf('<div class="bracket-meta">');
+  let meta = '';
+  if (metaStart !== -1) {
+    const tags = /<\/?div\b[^>]*>/g;
+    tags.lastIndex = metaStart;
+    let depth = 0;
+    for (const match of svg.slice(metaStart).matchAll(/<\/?div\b[^>]*>/g)) {
+      depth += match[0].startsWith('</') ? -1 : 1;
+      if (depth === 0) {
+        const end = metaStart + match.index! + match[0].length;
+        meta = svg.slice(metaStart, end);
+        svg = svg.slice(0, metaStart) + svg.slice(end);
+        break;
+      }
+    }
+  }
   const target = '?lang=' + (ar ? 'en' : 'ar');
   const message = status === 404
     ? (ar ? 'البطولة غير موجودة. تأكدي من الرابط.' : 'Bracket not found. Check the link.')
@@ -354,7 +405,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       <button type="button" id="zoom-out" aria-label="${ar ? 'تصغير' : 'Zoom out'}">−</button></nav>
       <div class="sheet" tabindex="0" aria-label="${ar ? 'نتائج البطولة' : 'Bracket results'}">${svg}</div>`
       : `<p>${message}</p>${status === 503 ? `<a class="retry" href="?lang=${lang}">${ar ? 'إعادة المحاولة' : 'Try again'}</a>` : ''}`}
-    </main><script nonce="${nonce}">document.getElementById('theme').setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'light'));${controls}</script></body></html>`;
+    </main><div id="page-toast" role="status" aria-live="polite" aria-atomic="true"></div><script nonce="${nonce}">document.getElementById('theme').setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'light'));${controls}</script></body></html>`;
 
   const headers = new Headers({
     'content-type': 'text/html; charset=utf-8',
