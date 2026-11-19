@@ -186,29 +186,20 @@ saveImage?.addEventListener('click', async (event) => {
     context.scale(scale, scale);
     context.fillStyle = color('--bg');
     context.fillRect(0, 0, totalWidth, totalHeight);
-    const brandBg = exportTheme === 'light' ? '#1a2c5e' : '#0f1930';
     const brandImg = document.querySelector('.brand img');
-    if (brandImg?.complete) {
-      // Always place the brand opposite the title: Arabic title on the right,
-      // brand on the left; English title on the left, brand on the right.
+    if (brandImg?.complete && brandImg.naturalWidth > 0) {
+      // No colored plaque behind the logo: the logo sits directly on the page
+      // background, using a dark tint in light mode to remain legible.
       const isArabic = exportRtl;
       const boxX = isArabic ? padding : totalWidth - padding - brandBoxW;
       const boxY = padding - 6;
-      context.fillStyle = brandBg;
-      context.beginPath();
-      const r = 16;
-      context.moveTo(boxX + r, boxY);
-      context.arcTo(boxX + brandBoxW, boxY, boxX + brandBoxW, boxY + brandBoxH, r);
-      context.arcTo(boxX + brandBoxW, boxY + brandBoxH, boxX, boxY + brandBoxH, r);
-      context.arcTo(boxX, boxY + brandBoxH, boxX, boxY, r);
-      context.arcTo(boxX, boxY, boxX + brandBoxW, boxY, r);
-      context.closePath();
-      context.fill();
-      // Respect the original logo proportions and leave a clear gap to the URL.
       const logoWidth = 125;
       const logoHeight = logoWidth * brandImg.naturalHeight / brandImg.naturalWidth;
+      context.save();
+      if (exportTheme === 'light') context.filter = 'brightness(0) saturate(100%) invert(15%) sepia(39%) saturate(1049%) hue-rotate(184deg)';
       context.drawImage(brandImg, boxX + (brandBoxW - logoWidth) / 2, boxY + 5, logoWidth, logoHeight);
-      context.fillStyle = '#e9f0ff';
+      context.restore();
+      context.fillStyle = color('--fg');
       context.font = '600 15px Arial,Tahoma,sans-serif';
       context.textAlign = 'center';
       context.fillText('plato-ar.com', boxX + brandBoxW / 2, boxY + 72, brandBoxW - 16);
@@ -466,6 +457,8 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
   };
   const html = `<!doctype html><html lang="${lang}" dir="${dir}"><head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="icon" type="image/png" href="/brand/favicon-v2.png">
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon-v2.png">
     <title>${escape(title)} · Plato AR</title><style>${styles}</style>
     <script nonce="${nonce}">try {
       document.documentElement.dataset.theme = localStorage.getItem('elite-pv-theme') === 'light' ? 'light' : 'dark';
