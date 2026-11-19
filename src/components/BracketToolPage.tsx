@@ -282,7 +282,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           </div>
         )
       ) : (
-        <div className={`grid min-w-0 gap-3 md:gap-4 ${!editable && readOnly ? 'pv-body' : ''}`}>
+        <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4 ${!editable && readOnly ? 'pv-body' : ''}`}>
           <div className={`flex flex-wrap items-center justify-between gap-2 ${!editable && readOnly ? 'pv-pad' : ''}`}>
             {!sheetView && <div>
               {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1 text-[1.2rem] md:text-[1.5rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />

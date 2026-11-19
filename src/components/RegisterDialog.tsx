@@ -82,9 +82,7 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
             )}
             {team && (
               <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamIds}
-                <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regTeamIdsNote}</span>
                 <ChipInput inputRef={first} dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
-                {ids.length > 1 && <span dir="ltr" className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regAutoName}: {ids.join(' | ')}</span>}
               </div>
             )}
             <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} style={{ position: 'absolute', insetInlineStart: '-9999px', width: 1, height: 1, opacity: 0 }} />

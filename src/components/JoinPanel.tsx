@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
 import type { RegRow } from './AddPlayers';
 
+/** First time the registration link is switched on it closes by itself two hours later (the organiser can change the time or the date, or turn it off). */
+const TWO_HOURS = 2 * 3600_000;
 interface Cfg { titleEn?: string; description?: string; cover?: string; startsAt?: string; enabled: boolean; mode: 'solo' | 'team'; cap: number; closesAt: number; closed: boolean; reason: '' | 'closed' | 'full'; count: number; signups: RegRow[] }
 const T = {
   ar: { titleEnL: 'عنوان البطولة بالإنجليزي (اختياري)، يظهر لمن يتصفح بالإنجليزي. العنوان العربي هو اسم البطولة.', titleEnPh: 'Tournament title', descL: 'وصف صفحة التسجيل (اختياري)', descPh: 'مثال: القوانين، الجائزة، طريقة اللعب…', title: 'رابط التسجيل المستقل', desc: 'صفحة تسجيل فقط، تنسخ رابطها وتنشره بنفسك. اللي يسجّل يوصلك هنا، ولا أحد يشوف الأسماء أو البراكت.', on: 'تفعيل رابط التسجيل', link: 'الرابط', copy: 'نسخ', copied: 'تم النسخ', solo: 'فردي', team: 'فرق', mode: 'نوع التسجيل', cap: 'الحد الأقصى للمسجلين (اختياري)', capPh: 'بدون حد', auto: 'إغلاق تلقائي في وقت محدد', now: 'إغلاق التسجيل الآن', reopen: 'إعادة فتح التسجيل', open: 'مفتوح', closed: 'مغلق', full: 'مكتمل', count: 'المسجّلون', fail: 'تعذّر الحفظ.', migrate: 'نفّذ أوامر SQL الخاصة برابط التسجيل في D1 أولاً.', saveT: 'حفظ', start: 'تاريخ بداية البطولة', cover: 'صورة البطولة (اختياري)', coverSize: 'ارفع صورة بقياس 1280 × 720 بكسل (نسبة 16:9)، بصيغة PNG أو JPG أو WebP وحجم أقصى 3MB. نفس الصورة تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع إذا نشرتها، وأي قياس ثاني يُقص من الأطراف.', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (حتى 3MB: PNG أو JPG أو WebP).' },
@@ -54,7 +56,7 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
       {!c ? (msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>) : (
         <div className="grid gap-3">
           <div className="st-shh"><div><span>{t.on}</span></div>
-            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put({ enabled: !c.enabled })}><i /></button></div>
+            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && c.closesAt === 0 && c.count === 0 ? { enabled: true, closesAt: Date.now() + TWO_HOURS } : { enabled: !c.enabled })}><i /></button></div>
             <div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
               <div className="flex flex-wrap items-center gap-3">
                 {c.cover ? <img src={c.cover} alt="" className="aspect-video w-44 max-w-full rounded-lg object-cover" /> : <span className="flex aspect-video w-44 max-w-full items-center justify-center rounded-lg text-[.72rem]" style={{ background: 'var(--chip-bg)' }}>1280 × 720</span>}
@@ -84,7 +86,7 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
               </label>
               <div className="grid gap-1.5">
                 <div className="st-shh"><div><span>{t.auto}</span></div>
-                  <button type="button" role="switch" aria-checked={c.closesAt > 0} aria-label={t.auto} className={`st-sw ${c.closesAt > 0 ? 'on' : ''}`} onClick={() => put({ closesAt: c.closesAt > 0 ? 0 : Date.now() + 24 * 3600_000 })}><i /></button></div>
+                  <button type="button" role="switch" aria-checked={c.closesAt > 0} aria-label={t.auto} className={`st-sw ${c.closesAt > 0 ? 'on' : ''}`} onClick={() => put({ closesAt: c.closesAt > 0 ? 0 : Date.now() + TWO_HOURS })}><i /></button></div>
                 {c.closesAt > 0 && <input type="datetime-local" className={line} style={bd} dir="ltr" value={when} onChange={(e) => setWhen(e.target.value)} onBlur={() => { const v = fromLocal(when); if (v > 0) void put({ closesAt: v }); }} />}
               </div>
               <div className="flex flex-wrap items-center gap-2.5">

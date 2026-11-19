@@ -28,7 +28,14 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   if (!data) return json({ error: 'invalid' }, 400);
   const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM user_brackets WHERE user_id = ?').bind(u.id).first<{ n: number }>();
   if ((n?.n ?? 0) >= MAX_PER_USER) return json({ error: 'limit' }, 400);
-  const id = hex(8), now = new Date().toISOString();
-  await env.DB.prepare('INSERT INTO user_brackets (id, user_id, title, data, created_at, updated_at) VALUES (?,?,?,?,?,?)').bind(id, u.id, str(b.title, 60) || 'Bracket', JSON.stringify(data), now, now).run();
-  return json({ ok: true, id });
+  // 8 characters keeps the shared links short (plato-ar.com/v/d438e602). id is the primary key, so a (very unlikely) repeat just fails the insert and we draw again.
+  const now = new Date().toISOString();
+  for (let i = 0; i < 8; i++) {
+    const id = hex(4);
+    try {
+      await env.DB.prepare('INSERT INTO user_brackets (id, user_id, title, data, created_at, updated_at) VALUES (?,?,?,?,?,?)').bind(id, u.id, str(b.title, 60) || 'Bracket', JSON.stringify(data), now, now).run();
+      return json({ ok: true, id });
+    } catch { /* taken: try another */ }
+  }
+  return json({ error: 'busy' }, 500);
 };

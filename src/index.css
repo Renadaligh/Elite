@@ -1444,3 +1444,8 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-lines .br-no{fill:currentColor;font-weight:700;opacity:1;paint-order:stroke;stroke:var(--s-panel,var(--bg,#0b1030));stroke-width:3.5px;stroke-linejoin:round}
 .br-match.is-hit{outline:2.5px solid #f5a300;outline-offset:2px;box-shadow:0 0 0 5px rgba(245,163,0,.28)!important}
 .br-row.is-hit{box-shadow:inset 0 0 0 2px #f5a300!important;background:rgba(245,163,0,.25)!important}
+
+/* The tool page must never be wider than the screen: a long line in one panel used to stretch the whole column (everything then got cut on the left on phones) */
+.st-share, .st-shr { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.st-shh > div { min-width: 0; }
+.st-shl { min-width: 0; }
