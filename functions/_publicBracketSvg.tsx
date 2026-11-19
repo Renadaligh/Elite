@@ -87,7 +87,7 @@ export function publicBracketSvg(bracket: Bracket, title: string, lang: Lang) {
   return renderToStaticMarkup(<>
     <div className="bracket-meta">
       {bracket.org && <p className="bracket-organizer">{ar ? 'تنظيم' : 'Organised by'} · <bdi>{bracket.org}</bdi></p>}
-      {winnerName && <div className="bracket-champion"><span className="bracket-champion-icon" aria-hidden="true">🏆</span><div className="bracket-champion-copy"><span className="bracket-champion-label">{ar ? 'بطل البطولة' : 'Tournament champion'}</span><bdi className="bracket-champion-name">{winnerName}</bdi></div></div>}
+      {winnerName && <div className="bracket-champion"><svg className="bracket-champion-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4" /></svg><div className="bracket-champion-copy"><span className="bracket-champion-label">{ar ? 'بطل البطولة' : 'Tournament champion'}</span><bdi className="bracket-champion-name">{winnerName}</bdi></div></div>}
     </div>
     {content}
   </>);

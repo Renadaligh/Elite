@@ -5,7 +5,7 @@ import { publicBracketSvg } from './_publicBracketSvg';
 
 type Row = { title: string; data: string };
 const escape = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 
 async function snapshot(request: Request, row: Row, lang: 'ar' | 'en', bracketTitle: string, waitUntil?: Ctx['waitUntil']) {
   const revision = await sha256(JSON.stringify([row.title, row.data]));
@@ -38,7 +38,13 @@ nav a,button,.retry{border:1px solid var(--line);border-radius:10px;background:v
 button:disabled{opacity:.5;cursor:default}
 h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-size:18px}
 .sheet{margin-top:14px;background:transparent;border:0;border-radius:0;overflow:auto;padding:0 0 8px;direction:ltr;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;overscroll-behavior-x:contain;touch-action:pan-x pan-y}.sheet::-webkit-scrollbar{display:none}.sheet.is-dragging{cursor:grabbing;user-select:none}.sheet.is-dragging *{user-select:none}.sheet section{margin-block:14px}.sheet h2{direction:var(--dir,ltr)}
-.bracket-meta{direction:var(--dir,ltr);display:flex;flex-direction:column;gap:10px;margin:5px 0 18px}.bracket-meta p{margin:0;color:var(--mut)}.bracket-meta .bracket-organizer{font-size:12px}.bracket-champion{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;border-radius:16px;background:linear-gradient(180deg,#ffe48a 0%,var(--champ-bg) 100%);border:1px solid var(--champ-border);color:var(--champ-text);box-shadow:0 12px 24px rgba(0,0,0,.18);width:min(100%,420px);margin-inline:auto;text-align:center}.bracket-champion-icon{font-size:26px;line-height:1}.bracket-champion-copy{display:flex;flex-direction:column;gap:3px}.bracket-champion-label{font-size:13px;font-weight:700;color:var(--champ-sub)}.bracket-champion-name{font-size:19px;font-weight:900;line-height:1.2}
+.bracket-meta{direction:var(--dir,ltr);display:flex;flex-direction:column;gap:10px;margin:5px 0 18px}.bracket-meta p{margin:0;color:var(--mut)}.bracket-meta .bracket-organizer{font-size:12px}
+/* Same winner card palette and vector trophy as the original dashboard. */
+.bracket-champion{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;border-radius:14px;background:linear-gradient(135deg,rgba(214,165,40,.24),rgba(214,165,40,.09));border:1px solid rgba(232,184,64,.5);color:#fff;width:min(100%,420px);margin-inline:auto;text-align:center}
+.bracket-champion-icon{width:26px;height:26px;flex:none;color:#f2c14e;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.bracket-champion-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.bracket-champion-label{font-size:12px;font-weight:700;color:rgba(255,224,150,.78)}.bracket-champion-name{font-size:19px;font-weight:800;color:#ffd56a;overflow-wrap:anywhere;line-height:1.2}
+:root[data-theme=light] .bracket-champion{background:linear-gradient(135deg,#f7d064,#e3a92b);border-color:transparent;color:#2b1d00;box-shadow:0 8px 18px -12px rgba(200,140,10,.9)}
+:root[data-theme=light] .bracket-champion-icon{color:#4d3200}:root[data-theme=light] .bracket-champion-label{color:rgba(43,29,0,.72)}:root[data-theme=light] .bracket-champion-name{color:#241800}
 .sheet svg[data-width]{display:block;max-width:none;height:auto;margin:0 auto 8px;width:var(--render-width, auto)}
 .bs-hd,.bs-seed{fill:var(--head);stroke:color-mix(in srgb,var(--line) 75%, transparent);stroke-width:1.3}.bs-row{fill:var(--row);stroke:color-mix(in srgb,var(--line) 70%, transparent);stroke-width:1.15}.bs-row.win{fill:var(--win);stroke:color-mix(in srgb,var(--line) 78%, transparent);stroke-width:1.3}
 .bs-nm,.bs-ht,.bs-sc,.bs-ck{fill:var(--fg)}.bs-nm.win{font-weight:800}.bs-sn,.bs-no,.bs-nm.lose,.bs-nm.bye{fill:var(--mut)}.bs-ln{stroke:var(--line);stroke-width:1.9}.bs-cup{stroke:#dca500}[hidden]{display:none!important}
@@ -191,8 +197,18 @@ saveImage?.addEventListener('click', async (event) => {
       const cardH = 64;
       const cardX = (totalWidth - cardW) / 2;
       const cardY = y;
-      context.fillStyle = '#ffd95a';
-      context.strokeStyle = '#e4b51d';
+      const isLightWinner = root.dataset.theme === 'light';
+      const cardGradient = context.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      if (isLightWinner) {
+        cardGradient.addColorStop(0, '#f7d064');
+        cardGradient.addColorStop(1, '#e3a92b');
+      } else {
+        // Keep the original translucent gold overlay, with the page background beneath it.
+        cardGradient.addColorStop(0, 'rgba(214,165,40,.24)');
+        cardGradient.addColorStop(1, 'rgba(214,165,40,.09)');
+      }
+      context.fillStyle = cardGradient;
+      context.strokeStyle = isLightWinner ? 'rgba(0,0,0,0)' : 'rgba(232,184,64,.5)';
       context.lineWidth = 1.2;
       const rr = 16;
       context.beginPath();
@@ -204,16 +220,23 @@ saveImage?.addEventListener('click', async (event) => {
       context.closePath();
       context.fill();
       context.stroke();
-      context.font = '24px Arial,Tahoma,sans-serif';
+      // Original TrophyIcon path, drawn as a vector rather than an emoji.
+      context.save();
+      context.translate(cardX + 18, cardY + 18);
+      context.scale(1.25, 1.25);
+      context.strokeStyle = isLightWinner ? '#4d3200' : '#f2c14e';
+      context.lineWidth = 1.9;
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.stroke(new Path2D('M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4'));
+      context.restore();
       context.textAlign = 'center';
-      context.fillStyle = '#4a3400';
-      context.fillText('🏆', cardX + 30, cardY + 40);
       context.font = '700 13px Arial,Tahoma,sans-serif';
-      context.fillStyle = '#7b5a00';
-      context.fillText(championLabel, cardX + cardW / 2 + 8, cardY + 22, cardW - 70);
-      context.font = '900 20px Arial,Tahoma,sans-serif';
-      context.fillStyle = '#4a3400';
-      context.fillText(championName, cardX + cardW / 2 + 8, cardY + 45, cardW - 70);
+      context.fillStyle = isLightWinner ? 'rgba(43,29,0,.72)' : 'rgba(255,224,150,.78)';
+      context.fillText(championLabel, cardX + cardW / 2 + 12, cardY + 22, cardW - 82);
+      context.font = '800 20px Arial,Tahoma,sans-serif';
+      context.fillStyle = isLightWinner ? '#241800' : '#ffd56a';
+      context.fillText(championName, cardX + cardW / 2 + 12, cardY + 45, cardW - 82);
       y += championHeight;
     }
     for (const block of blocks) {
