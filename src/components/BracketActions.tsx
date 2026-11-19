@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { isDraft, type Bracket } from '../data/bracket';
 import { bracketBlob, downloadBlob } from '../data/bracketImage';
+import { publicBracketExport } from '../data/publicBracketExport';
 import { noProto } from '../hooks/nav';
 import { useI18n } from '../i18n/I18nProvider';
 import { DownloadIcon } from './icons';
@@ -8,7 +9,7 @@ import { DownloadIcon } from './icons';
 /** "Save as image" + "Share" for a bracket. Works on the public page and in the dashboard. */
 export interface UndoApi { onUndo: () => void; onRedo: () => void; canUndo: boolean; canRedo: boolean }
 
-export default function BracketActions({ bracket, title, url, undo, linkOk }: { bracket: Bracket; title: string; url: string; undo?: UndoApi; linkOk?: boolean }) {
+export default function BracketActions({ bracket, title, url, undo, linkOk, exportId, exportTheme, beforeExport }: { bracket: Bracket; title: string; url: string; undo?: UndoApi; linkOk?: boolean; exportId?: string; exportTheme?: 'dark' | 'light'; beforeExport?: () => Promise<void> }) {
   const { lang } = useI18n();
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -17,7 +18,10 @@ export default function BracketActions({ bracket, title, url, undo, linkOk }: { 
   async function run(kind: 'save') {
     setBusy(true);
     try {
-      const blob = await bracketBlob(bracket, { title, lang });
+      if (exportId && beforeExport) await beforeExport();
+      const blob = exportId
+        ? await publicBracketExport(exportId, lang, exportTheme ?? 'dark')
+        : await bracketBlob(bracket, { title, lang }); // Local draft: no public link yet.
       if (kind === 'save') { downloadBlob(blob, `${title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); flash(ar ? 'تم حفظ الصورة' : 'Image saved'); }
     } catch { flash(ar ? 'تعذّر إنشاء الصورة' : 'Could not create the image'); }
     setBusy(false);

@@ -259,7 +259,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
             </div>}
             <div className="flex flex-wrap items-center gap-2.5">
               {!isDraft(br) && (champ !== null || editable) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable={editable} onChange={editable ? (b) => edit(b) : undefined} />}
-              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} />
+              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} exportId={id} exportTheme={typeof document !== 'undefined' && (document.querySelector('[data-st]')?.getAttribute('data-st') === 'light' || (!document.querySelector('[data-st]') && document.documentElement.dataset.hero === 'day')) ? 'light' : 'dark'} beforeExport={dirty && editable ? save : undefined} />
               {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>

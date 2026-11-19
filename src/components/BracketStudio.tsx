@@ -1,7 +1,8 @@
 import { siteUrl, noProto } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useRef, useState } from 'react';
-import { bracketBlob, downloadBlob } from '../data/bracketImage';
+import { downloadBlob } from '../data/bracketImage';
+import { publicBracketExport } from '../data/publicBracketExport';
 import type { Bracket } from '../data/bracket';
 import { useAuth, type Providers } from '../hooks/useAuth';
 import EmailLogin from './EmailLogin';
@@ -230,14 +231,14 @@ function Notices({ lang }: { lang: 'ar' | 'en' }) {
 
 type Row = { id: string; title: string; titleEn?: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string; shared?: boolean; owner?: string };
 
-function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
+function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [flash, setFlash] = useState('');
   const load = () => api<Row[]>('/brackets').then(setRows).catch(() => setRows([]));
   useEffect(() => { load(); }, []);
   const when = (iso: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'short' }).format(new Date(iso));
   const say = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(''), 2200); };
-  async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: lang === 'en' && r.titleEn ? r.titleEn : r.title, lang }), `${(lang === 'en' && r.titleEn ? r.titleEn : r.title).replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
+  async function image(r: Row) { try { downloadBlob(await publicBracketExport(r.id, lang, theme), `${(lang === 'en' && r.titleEn ? r.titleEn : r.title).replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
   async function dup(r: Row) {
     try {
       const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`);
@@ -413,7 +414,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           ) : (
             <>
               <div className="st-top"><h1>{title}</h1>{sec === 'mine' && <a href="/bracket/new" className="st-new">{s.newBtn}</a>}</div>
-              {sec === 'mine' && <Mine s={s} lang={lang} />}
+              {sec === 'mine' && <Mine s={s} lang={lang} theme={theme} />}
               {sec === 'new' && <Editor key="new" tx={tx} auth={auth} />}
               {sec === 'account' && <Account s={s} auth={auth} lang={lang} />}
             </>

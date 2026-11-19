@@ -134,6 +134,17 @@ copy?.addEventListener('click', async (event) => {
   }, 2100);
 });
 const saveImage = document.getElementById('save-image');
+// The organizer dashboard uses this same PNG renderer through a hidden, same-origin frame.
+// No dashboard layout or bracket editing UI is modified.
+let dashboardExport = null;
+window.addEventListener('message', (event) => {
+  if (event.origin !== location.origin || event.source !== window.parent || window.parent === window) return;
+  const data = event.data;
+  if (!data || data.kind !== 'plato:export-bracket' || typeof data.requestId !== 'string') return;
+  dashboardExport = data.requestId;
+  document.documentElement.dataset.theme = data.theme === 'light' ? 'light' : 'dark';
+  if (saveImage && !saveImage.disabled) saveImage.click();
+});
 saveImage?.addEventListener('click', async (event) => {
   event.preventDefault();
   const sheetEl = document.querySelector('.sheet');
@@ -310,19 +321,31 @@ saveImage?.addEventListener('click', async (event) => {
       y += block.height + gap;
     }
     const blob = await new Promise((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('PNG encoding failed')), 'image/png'));
-    const downloadUrl = URL.createObjectURL(blob);
-    urls.push(downloadUrl);
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = 'plato-ar-bracket-' + (location.pathname.split('/').filter(Boolean).pop() || 'view') + '.png';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    if (dashboardExport && window.parent !== window) {
+      const requestId = dashboardExport;
+      dashboardExport = null;
+      const bytes = await blob.arrayBuffer();
+      window.parent.postMessage({ kind: 'plato:export-bracket-result', requestId, bytes }, location.origin, [bytes]);
+    } else {
+      const downloadUrl = URL.createObjectURL(blob);
+      urls.push(downloadUrl);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = 'plato-ar-bracket-' + (location.pathname.split('/').filter(Boolean).pop() || 'view') + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
     // Successful downloads do not show a toast; errors remain visible.
   } catch (error) {
     console.error('Could not save bracket image', error);
-    saveImage.title = saveImage.dataset.failed;
-    showToast(saveImage.dataset.failed, true);
+    if (dashboardExport && window.parent !== window) {
+      window.parent.postMessage({ kind: 'plato:export-bracket-error', requestId: dashboardExport }, location.origin);
+      dashboardExport = null;
+    } else {
+      saveImage.title = saveImage.dataset.failed;
+      showToast(saveImage.dataset.failed, true);
+    }
   } finally {
     saveImage.disabled = false;
     setTimeout(() => { urls.forEach(url => URL.revokeObjectURL(url)); }, 5000);
@@ -396,7 +419,8 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
   }
   const cookie = request.headers.get('cookie') ?? '';
   const stored = /(?:^|;\s*)plato-lang=(ar|en)(?:;|$)/.exec(cookie)?.[1];
-  const lang = stored === 'ar' ? 'ar' : 'en';
+  const exportLang = url.searchParams.get('exportLang');
+  const lang = exportLang === 'ar' || exportLang === 'en' ? exportLang : stored === 'ar' ? 'ar' : 'en';
   const ar = lang === 'ar';
   const dir = ar ? 'rtl' : 'ltr';
   const nonce = crypto.randomUUID();
