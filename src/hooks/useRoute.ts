@@ -28,6 +28,8 @@ function onClick(e: MouseEvent) {
   const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
   if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
   const raw = a.getAttribute('href') ?? '';
+  // /api/* links (OAuth login, email verify, downloads…) must hit the server: a real navigation, not the in-app router.
+  if (/^\/api(\/|\?|#|$)/.test(raw)) return;
   if (raw.startsWith('/') && !raw.startsWith('//')) { e.preventDefault(); go(raw); }
   else if (raw.startsWith('#') && raw.length > 1) { e.preventDefault(); goSection(raw.slice(1)); }
 }

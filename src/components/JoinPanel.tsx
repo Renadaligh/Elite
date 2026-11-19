@@ -56,7 +56,7 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
       {!c ? (msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>) : (
         <div className="grid gap-3">
           <div className="st-shh"><div><span>{t.on}</span></div>
-            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && c.closesAt === 0 && c.count === 0 ? { enabled: true, closesAt: Date.now() + TWO_HOURS } : { enabled: !c.enabled })}><i /></button></div>
+            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && c.closesAt === 0 && c.count === 0 ? { enabled: true, closesAt: Date.now() + TWO_HOURS, ...(c.startsAt ? {} : { startsAt: new Date(Date.now() + TWO_HOURS).toISOString() }) } : { enabled: !c.enabled })}><i /></button></div>
             <div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
               <div className="flex flex-wrap items-center gap-3">
                 {c.cover ? <img src={c.cover} alt="" className="aspect-video w-44 max-w-full rounded-lg object-cover" /> : <span className="flex aspect-video w-44 max-w-full items-center justify-center rounded-lg text-[.72rem]" style={{ background: 'var(--chip-bg)' }}>1280 × 720</span>}
