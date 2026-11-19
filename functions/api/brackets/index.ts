@@ -1,4 +1,4 @@
-import { currentUser, hex, sameOrigin } from '../../_auth';
+import { currentUser, sameOrigin } from '../../_auth';
 import { bracketStatus, cleanBracket, MAX_PER_USER } from '../../_bracket';
 import { body, denied, json, str, type Ctx } from '../../_lib';
 
@@ -28,10 +28,14 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   if (!data) return json({ error: 'invalid' }, 400);
   const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM user_brackets WHERE user_id = ?').bind(u.id).first<{ n: number }>();
   if ((n?.n ?? 0) >= MAX_PER_USER) return json({ error: 'limit' }, 400);
-  // 8 characters keeps the shared links short (plato-ar.com/v/d438e602). id is the primary key, so a (very unlikely) repeat just fails the insert and we draw again.
+  // New brackets use five-character public IDs (e.g. /v/A7K2P).
+  // Existing eight-character IDs stay untouched and their links continue to work.
   const now = new Date().toISOString();
   for (let i = 0; i < 8; i++) {
-    const id = hex(4);
+    // 32^5 possible IDs; retries handle primary-key collisions without schema changes.
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bytes = crypto.getRandomValues(new Uint8Array(5));
+    const id = Array.from(bytes, (b) => alphabet[b & 31]).join('');
     try {
       await env.DB.prepare('INSERT INTO user_brackets (id, user_id, title, data, created_at, updated_at) VALUES (?,?,?,?,?,?)').bind(id, u.id, str(b.title, 60) || 'Bracket', JSON.stringify(data), now, now).run();
       return json({ ok: true, id });
