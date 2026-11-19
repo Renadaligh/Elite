@@ -85,7 +85,7 @@ export function publicBracketSvg(bracket: Bracket, title: string, lang: Lang) {
   const winner = champion(bracket);
   return renderToStaticMarkup(<>
     <div className="bracket-meta">
-      {bracket.org && <p>{ar ? 'تنظيم' : 'Organised by'} · <bdi>{bracket.org}</bdi></p>}
+      {bracket.org && <p className="bracket-organizer">{ar ? 'تنظيم' : 'Organised by'} · <bdi>{bracket.org}</bdi></p>}
       {winner !== null && bracket.players[winner] && <p>{ar ? 'الفائز' : 'Winner'} · <bdi>{bracket.players[winner]}</bdi></p>}
     </div>
     {content}
