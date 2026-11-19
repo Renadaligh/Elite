@@ -12,22 +12,21 @@ import '@fontsource/tajawal/800.css';
 import './index.css';
 import App from './App';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+class StartupBoundary extends React.Component<React.PropsWithChildren, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
 
-// Remove the loading overlay after React has mounted and the browser has had a chance to paint.
-const loader = document.getElementById('app-loader');
-if (loader) {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      loader.classList.add('is-hidden');
-      const removeLoader = () => loader.remove();
-      loader.addEventListener('transitionend', (event) => {
-        if (event.target === loader && event.propertyName === 'opacity') removeLoader();
-      }, { once: true });
-      window.setTimeout(removeLoader, 1100);
-    });
-  });
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return <main className="startup-fallback startup-error" role="alert">
+      <p lang="ar" dir="rtl">تعذّر تشغيل الموقع.</p>
+      <p lang="en">The site could not start.</p>
+      <button type="button" onClick={() => window.location.reload()}>إعادة التحميل · Reload</button>
+    </main>;
+  }
 }
+
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><StartupBoundary><App /></StartupBoundary></React.StrictMode>);
 
 // Installable app (PWA): the worker only provides the install prompt and an offline notice.
 if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', () => { navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => undefined); });

@@ -6,5 +6,6 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', (e) => {
   const r = e.request;
   if (r.method !== 'GET' || r.mode !== 'navigate') return; // only page loads: everything else goes straight to the network
+  if (new URL(r.url).pathname.startsWith('/api/')) return;
   e.respondWith(fetch(r).catch(() => OFFLINE.clone()));
 });

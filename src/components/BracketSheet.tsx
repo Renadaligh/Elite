@@ -1,20 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { champion, hasBye, layout, packSlots, resolve, type BMatch, type Bracket, type Who } from '../data/bracket';
-
-/** The whole bracket on one white "sheet", drawn as an SVG (like a printable bracket image): crisp at any zoom.
- *  Phone: fits the screen width, pinch to zoom. Desktop: as large as readable; if wider than the page, hold the mouse and drag sideways. */
-const BW = 180, SEED = 24, RH = 22, GAP = 36, NUMW = 22, P = 57, HEAD = 30, SEC_GAP = 56, PAD = 10;
-
-function rName(ar: boolean, br: 'W' | 'L', round: number, total: number) {
-  if (br === 'L') return ar ? `الخاسرين ${round}` : `Losers R${round}`;
-  const left = total - round;
-  if (left === 0) return ar ? 'النهائي' : 'Final';
-  if (left === 1) return ar ? 'نصف النهائي' : 'Semifinals';
-  if (left === 2) return ar ? 'ربع النهائي' : 'Quarterfinals';
-  return ar ? `الجولة ${round}` : `Round ${round}`;
-}
-
-interface Pos { x: number; y: number }
+import type { Bracket } from '../data/bracket';
+import BracketTreeSvg, { treeGeometry } from './BracketTreeSvg';
 
 export default function BracketSheet({ bracket, title, lang }: { bracket: Bracket; title: string; lang: 'ar' | 'en' }) {
   const ar = lang === 'ar';
@@ -24,48 +10,8 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
   const [avail, setAvail] = useState(0);
   const [phone, setPhone] = useState(false);
 
-  const g = useMemo(() => {
-    const L = layout(bracket);
-    const R = resolve(bracket);
-    const pos = new Map<string, Pos>();
-    const nums = new Map<string, number>();
-    let n = 0;
-    const heads: { x: number; y: number; label: string }[] = [];
-    const place = (rounds: BMatch[][], y0: number, tag: 'W' | 'L') => {
-      let bottom = y0;
-      const slots = packSlots(rounds, R);
-      rounds.forEach((ms, r) => {
-        const x = PAD + r * (BW + NUMW + GAP);
-        if (ms.some((m) => !hasBye(R, m.id))) heads.push({ x, y: y0 - HEAD, label: rName(ar, tag, ms[0].round, rounds.length) });
-        ms.forEach((m) => {
-          if (hasBye(R, m.id)) { pos.delete(m.id); return; }
-          if (!hasBye(R, m.id)) nums.set(m.id, ++n);
-          const y = y0 + ((slots.get(m.id) ?? 0) + 0.5) * P;
-          pos.set(m.id, { x, y });
-          bottom = Math.max(bottom, y + RH + 8);
-        });
-      });
-      return bottom;
-    };
-    const top = PAD + HEAD;
-    let bottom = place(L.winners, top, 'W');
-    let cols = L.winners.length;
-    if (L.losers.length) {
-      const y0 = bottom + SEC_GAP + HEAD;
-      bottom = place(L.losers, y0, 'L');
-      cols = Math.max(cols, L.losers.length);
-    }
-    if (L.final) {
-      const feeders = [L.final.a, L.final.b].map((s) => ('w' in s ? pos.get(s.w) : undefined)).filter((p): p is Pos => !!p);
-      const x = PAD + cols * (BW + NUMW + GAP);
-      const y = feeders.length ? feeders.reduce((a, p) => a + p.y, 0) / feeders.length : top + P / 2;
-      pos.set(L.final.id, { x, y }); nums.set(L.final.id, ++n);
-      heads.push({ x, y: top - HEAD, label: ar ? 'النهائي الكبير' : 'Grand final' });
-      cols += 1;
-    }
-    const W = PAD * 2 + cols * (BW + NUMW + GAP) - GAP;
-    return { L, R, pos, nums, heads, W, H: bottom + PAD };
-  }, [bracket, ar]);
+  const g = useMemo(() => treeGeometry(bracket, ar), [bracket, ar]);
+
 
   useLayoutEffect(() => {
     const el = wrap.current; if (!el) return;
@@ -91,65 +37,13 @@ export default function BracketSheet({ bracket, title, lang }: { bracket: Bracke
   const inner = Math.max(0, avail - 28);
   const fitS = inner > 0 ? inner / g.W : 1;
   const scale = phone ? Math.min(1, Math.max(0.42, fitS)) : Math.min(1, Math.max(0.66, fitS)); // phone: never smaller than 0.42 (same size as Challonge), bigger brackets scroll sideways
-  const champ = champion(bracket);
-  const finalId = g.L.final ? g.L.final.id : g.L.winners[g.L.winners.length - 1]?.[0]?.id;
-  const name = (w: Who) => (typeof w === 'number' ? bracket.players[w] ?? '' : w === 'bye' ? 'BYE' : '');
-  const seed = (w: Who) => (typeof w === 'number' ? String(w + 1) : '');
-
-  // Arabic mirrors the sheet: first round on the right, the final on the left, names right-aligned, scores on the left.
-  const mx = (x: number, w: number) => (ar ? g.W - x - w : x);
-  const matchEl = (m: BMatch) => {
-    const q = g.pos.get(m.id)!; const p = { x: mx(q.x, BW), y: q.y }; const r = g.R.get(m.id);
-    if (!r) return null;
-    const rows = [{ w: r.a, win: m.win === 'a' || (r.win === r.a && r.a !== null && r.b === 'bye'), sc: m.sa }, { w: r.b, win: m.win === 'b' || (r.win === r.b && r.b !== null && r.a === 'bye'), sc: m.sb }];
-    const hasWin = !!m.win;
-    return (
-      <g key={m.id}>
-        <clipPath id={`${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')}`}><rect x={p.x} y={p.y - RH} width={BW} height={RH * 2} rx={6} /></clipPath>
-        <g clipPath={`url(#${uid}${m.id.replace(/[^a-zA-Z0-9]/g, '')})`}>{rows.map((row, k) => {
-          const y = p.y - RH + k * RH;
-          const bye = row.w === 'bye';
-          const crown = champ !== null && m.id === finalId && row.win;
-          return (
-            <g key={k}>
-              <rect className="bs-seed" x={ar ? p.x + BW - SEED : p.x} y={y + 1} width={SEED} height={RH - 2} />
-              <text className="bs-sn" x={(ar ? p.x + BW - SEED : p.x) + SEED / 2} y={y + RH / 2 + 4} fontSize="11" textAnchor="middle">{seed(row.w)}</text>
-              <rect className={row.win ? 'bs-row win' : 'bs-row'} x={ar ? p.x : p.x + SEED} y={y + 1} width={BW - SEED} height={RH - 2} />
-              <svg x={ar ? p.x + BW - SEED - 8 - (BW - SEED - (crown ? 60 : 34)) : p.x + SEED + 8} y={y + 1} width={BW - SEED - (crown ? 60 : 34)} height={RH - 2} overflow="hidden">
-                <text className={`bs-nm${row.win ? ' win' : ''}${bye ? ' bye' : hasWin && !row.win ? ' lose' : ''}`} x={ar ? BW - SEED - (crown ? 60 : 34) : 0} textAnchor={ar ? 'end' : 'start'} y={RH / 2 + 3} fontSize={Math.max(9, Math.min(12.5, 12.5 * 19 / Math.max(1, name(row.w).length)))}>{name(row.w)}</text>
-              </svg>
-              {crown && <g transform={`translate(${ar ? p.x + (row.sc ? 29 : 27) : p.x + BW - (row.sc ? 46 : 44)},${y + 4}) scale(.7)`}><path className="bs-cup" d="M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></g>}
-              {row.sc ? <text className="bs-sc" x={ar ? p.x + 8 : p.x + BW - 8} y={y + RH / 2 + 4} fontSize="12" fontWeight="700" textAnchor={ar ? 'start' : 'end'}>{row.sc}</text> : row.win && m.win ? <text className="bs-ck" x={ar ? p.x + 9 : p.x + BW - 9} y={y + RH / 2 + 4} fontSize="12" fontWeight="800" textAnchor={ar ? 'start' : 'end'}>✓</text> : null}
-            </g>
-          );
-        })}</g>
-        <text className="bs-no" x={ar ? p.x - 5 : p.x + BW + 5} y={p.y + 4} fontSize="10" textAnchor={ar ? 'end' : 'start'}>{g.nums.get(m.id)}</text>
-      </g>
-    );
-  };
-  const lines: JSX.Element[] = [];
-  for (const m of bracket.matches) {
-    const c = g.pos.get(m.id); if (!c || hasBye(g.R, m.id)) continue;
-    const xs = [m.a, m.b].map((s) => ('w' in s && !hasBye(g.R, s.w) ? g.pos.get(s.w) : undefined)).filter((q): q is Pos => !!q);
-    for (const f of xs) {
-      const x1 = ar ? mx(f.x, BW) - NUMW : f.x + BW + NUMW, x2 = ar ? mx(c.x, BW) + BW : c.x, xm = x1 + (x2 - x1) / 2;
-      lines.push(<path key={`${m.id}-${f.x}-${f.y}`} d={`M${x1},${f.y} H${xm} V${c.y} H${x2}`} className="bs-ln" fill="none" strokeWidth="1" />);
-    }
-  }
-  const all = [...g.L.winners.flat(), ...g.L.losers.flat(), ...(g.L.final ? [g.L.final] : [])].filter((m) => !hasBye(g.R, m.id));
 
   return (
     <div ref={wrap} className="bs-sheet" dir={ar ? 'rtl' : 'ltr'}>
       <div className="bs-top"><b dir="auto">{title}</b><span>plato-ar.com</span></div>
       {bracket.org && <div className="bs-org" dir="auto">{lang === 'ar' ? 'تنظيم' : 'By'}: {bracket.org}</div>}
       <div ref={scr} className="bs-scroll">
-        <svg width={g.W * scale} height={g.H * scale} viewBox={`0 0 ${g.W} ${g.H}`} role="img" aria-label={title} fontFamily="Outfit, Tajawal, system-ui, sans-serif" style={{ direction: 'ltr' }}>
-          {g.heads.map((h, i) => (
-            <g key={i}><rect className="bs-hd" x={mx(h.x, BW)} y={h.y} width={BW} height={HEAD - 6} rx="6" /><text className="bs-ht" x={mx(h.x, BW) + BW / 2} y={h.y + (HEAD - 6) / 2 + 4} fontSize="12" fontWeight="600" textAnchor="middle">{h.label}</text></g>
-          ))}
-          {lines}
-          {all.map(matchEl)}
-        </svg>
+        <BracketTreeSvg bracket={bracket} title={title} lang={lang} uid={uid} geometry={g} scale={scale} />
       </div>
     </div>
   );

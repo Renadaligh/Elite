@@ -23,52 +23,25 @@
   <style>
     html, body { margin: 0; min-height: 100%; background: #070a26; }
     html[data-hero='day'], html[data-hero='day'] body { background: #f4eefc; }
-    #app-loader {
-      --bg: #070a26; --fg: #fff; --glow: #5b5ff0; --ga: .25; --sh: rgba(0,0,0,.5); --b2: #8fb2ff; --f1: #fff; --f2: #d9ddff; --pip: #1a2060; --pl: #6a73c9;
-      position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: var(--bg); color: var(--fg); isolation: isolate;
-      opacity: 1; visibility: visible; transition: opacity 850ms cubic-bezier(.22, 1, .36, 1), visibility 850ms;
-    }
-    html[data-hero='day'] #app-loader { --bg: #f4eefc; --fg: #2b2160; --glow: #b49cf4; --ga: .55; --sh: rgba(74,93,240,.28); --b2: #4a5df0; --f1: #5b6cf5; --f2: #4152d8; --pip: #e6e9ff; --pl: #fff; }
-    #app-loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .al-glow { position: absolute; width: 60vw; height: 60vw; min-width: 320px; min-height: 320px; border-radius: 50%; background: var(--glow); filter: blur(90px); opacity: var(--ga); top: 50%; left: 50%; translate: -50% -50%; pointer-events: none; }
-    .al-c { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-    .al-dw { position: relative; height: 130px; width: 120px; perspective: 500px; }
-    .al-jump { position: absolute; left: 50%; bottom: 22px; width: 0; height: 0; animation: al-jump 1.6s cubic-bezier(.33,0,.3,1) infinite; }
-    .al-cube { position: absolute; left: -30px; bottom: 0; width: 60px; height: 60px; transform-style: preserve-3d; will-change: transform; animation: al-spin 1.6s cubic-bezier(.33,0,.3,1) infinite; }
-    @keyframes al-jump { 0% { transform: translateY(0); } 45% { transform: translateY(-52px); } 80%, 100% { transform: translateY(0); } }
-    @keyframes al-spin { 0% { transform: rotateX(-25deg) rotateY(-30deg) rotateZ(0); } 80%, 100% { transform: rotateX(335deg) rotateY(330deg) rotateZ(360deg); } }
-    .al-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 11px; background: linear-gradient(135deg, var(--f1), var(--f2)); display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 9px; box-sizing: border-box; backface-visibility: hidden; }
-    .al-f:after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--shade, transparent); }
-    .al-f i { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--pl), var(--pip) 70%); box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 -1px 2px rgba(0,0,0,.25); place-self: center; }
-    .al-f1 { transform: translateZ(30px); } .al-f2 { transform: rotateY(90deg) translateZ(30px); --shade: rgba(20,20,80,.22); } .al-f3 { transform: rotateY(180deg) translateZ(30px); --shade: rgba(20,20,80,.12); }
-    .al-f4 { transform: rotateY(-90deg) translateZ(30px); --shade: rgba(20,20,80,.3); } .al-f5 { transform: rotateX(90deg) translateZ(30px); --shade: rgba(255,255,255,.12); } .al-f6 { transform: rotateX(-90deg) translateZ(30px); --shade: rgba(20,20,80,.38); }
-    .al-sh { position: absolute; bottom: 10px; left: 50%; width: 54px; height: 9px; margin-left: -27px; border-radius: 50%; background: var(--sh); filter: blur(3px); animation: al-sh 1.6s cubic-bezier(.33,0,.3,1) infinite; }
-    @keyframes al-sh { 0%, 100% { transform: scale(1.1); opacity: 1; } 45% { transform: scale(.5); opacity: .4; } 80% { transform: scale(1.1); opacity: 1; } }
-    .al-wm { width: 170px; height: 62px; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
-    .al-dots { display: flex; gap: 7px; }
-    .al-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--b2); animation: al-dt 1.2s infinite; }
-    .al-dots i:nth-child(2) { animation-delay: .15s; } .al-dots i:nth-child(3) { animation-delay: .3s; }
-    @keyframes al-dt { 0%, 80%, 100% { opacity: .25; transform: scale(.8); } 40% { opacity: 1; transform: scale(1.15); } }
-    @media (prefers-reduced-motion: reduce) {
-      .al-jump, .al-cube, .al-sh, .al-dots i { animation: none; }
-      .al-cube { transform: rotateX(-25deg) rotateY(-30deg); }
-      #app-loader { transition-duration: .15s; }
-    }
+    .startup-fallback { max-width: 34rem; margin: 18vh auto 0; padding: 1.5rem; color: #fff; font: 16px system-ui,sans-serif; text-align: center; }
+    html[data-hero='day'] .startup-fallback { color: #231a63; }
+    .startup-fallback a { color: inherit; text-decoration: underline; }
+    #root > .startup-fallback:not(.startup-error) { visibility: hidden; animation: show-startup-fallback 0s 7s forwards; }
+    @keyframes show-startup-fallback { to { visibility: visible; } }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Ubuntu:wght@500&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 </head>
 <body>
-  <div id="app-loader" role="status" aria-label="Loading Plato AR" aria-live="polite">
-    <span class="al-glow" aria-hidden="true"></span>
-    <div class="al-c" aria-hidden="true">
-      <div class="al-dw"><span class="al-sh"></span><div class="al-jump"><div class="al-cube"><div class="al-f al-f1"><i style="grid-area:2/2"></i></div><div class="al-f al-f2"><i style="grid-area:1/1"></i><i style="grid-area:3/3"></i></div><div class="al-f al-f3"><i style="grid-area:1/1"></i><i style="grid-area:2/2"></i><i style="grid-area:3/3"></i></div><div class="al-f al-f4"><i style="grid-area:1/1"></i><i style="grid-area:1/3"></i><i style="grid-area:3/1"></i><i style="grid-area:3/3"></i></div><div class="al-f al-f5"><i style="grid-area:1/1"></i><i style="grid-area:1/3"></i><i style="grid-area:2/2"></i><i style="grid-area:3/1"></i><i style="grid-area:3/3"></i></div><div class="al-f al-f6"><i style="grid-area:1/1"></i><i style="grid-area:1/3"></i><i style="grid-area:2/1"></i><i style="grid-area:2/3"></i><i style="grid-area:3/1"></i><i style="grid-area:3/3"></i></div></div></div></div>
-      <div class="al-wm" style="--m:url(%BASE_URL%brand/plato-ar-white.png)"></div>
-      <div class="al-dots"><i></i><i></i><i></i></div>
-    </div>
+  <div id="root">
+    <main class="startup-fallback">
+      <p lang="ar" dir="rtl">تعذّر تشغيل الموقع. أعيدي تحميل الصفحة.</p>
+      <p lang="en">The site did not start. Reload the page.</p>
+      <a href="">إعادة التحميل · Reload</a>
+    </main>
   </div>
-  <div id="root"></div>
+  <noscript><p class="startup-fallback">يتطلب الموقع JavaScript · This site requires JavaScript.</p></noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

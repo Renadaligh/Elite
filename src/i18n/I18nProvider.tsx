@@ -7,7 +7,11 @@ const I18nContext = createContext<Ctx | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => (document.documentElement.lang === 'ar' ? 'ar' : 'en'));
-  useEffect(() => { document.title = BRAND[lang]; }, [lang]);
+  useEffect(() => {
+    document.title = BRAND[lang];
+    const secure = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `plato-lang=${lang}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
+  }, [lang]);
   const setLang = useCallback((l: Lang) => {
     document.documentElement.lang = l;
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';

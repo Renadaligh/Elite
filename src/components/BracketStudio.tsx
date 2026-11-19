@@ -8,7 +8,7 @@ import EmailLogin from './EmailLogin';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BrandLockup from './BrandLockup';
-import BracketToolPage, { Editor, TXT } from './BracketToolPage';
+import { Editor, TXT } from './BracketToolPage';
 import Footer from './Footer';
 import Header from './Header';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -402,7 +402,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           {editing ? (
             <>
               <a href="/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
-              <Editor id={id} tx={tx} auth={auth} onForeign={() => { navTo(`/view/${id}`); }} />
+              <Editor id={id} tx={tx} auth={auth} onForeign={() => { window.location.assign(siteUrl(`/v/${encodeURIComponent(id)}`)); }} />
             </>
           ) : (
             <>
@@ -418,23 +418,17 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
   );
 }
 
-/** Read-only public page of a published bracket (#/view/<id>): normal site layout, never the dashboard. */
+/** Handoff for old hash links and clients still running an earlier bundle. */
 export function PublicView({ id }: { id: string }) {
-  const auth = useAuth();
   const { lang } = useI18n();
-  const st = S[lang === 'ar' ? 'ar' : 'en'];
-  const [theme, setTheme] = useState<Theme>(() => { try { return localStorage.getItem('elite-pv-theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; } });
-  useEffect(() => { try { localStorage.setItem('elite-pv-theme', theme); } catch { /* private mode */ } }, [theme]);
-  // Standalone page (no site header/footer): logo, back-to-site button, then the bracket.
-  return (
-    <div className="pv-root" data-st={theme}>
-      <div className="pv-top">
-        <a href="/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
-        <div className="pv-tools"><ThemeBtn theme={theme} set={setTheme} s={st} /><LanguageSwitcher /></div>
-      </div>
-      <BracketToolPage id={id} auth={auth} readOnly />
-    </div>
-  );
+  const url = siteUrl(`/v/${encodeURIComponent(id)}?lang=${lang}`);
+  useEffect(() => {
+    if (window.location.href !== url) window.location.replace(url);
+  }, [url]);
+  return <main style={{ padding: '2rem' }}>
+    <p>{lang === 'ar' ? 'تعذّر فتح عرض البطولة.' : 'Could not open the bracket view.'}</p>
+    <a href={url}>{lang === 'ar' ? 'إعادة المحاولة' : 'Try again'}</a>
+  </main>;
 }
 
 export default function BracketRoute({ id }: { id?: string }) {
