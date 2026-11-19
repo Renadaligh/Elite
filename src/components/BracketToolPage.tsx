@@ -151,7 +151,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
   });
-  const url = id ? `${base()}/v/${id}` : `${base()}/bracket`;
+  const url = id ? `${base()}/v/${id.slice(0, 6)}` : `${base()}/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
 
   function create() {
@@ -226,7 +226,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
   if (state === 'private') return <p className="text-lg">{tx.private}</p>;
-  const viewUrl = `${base()}/v/${id}`;
+  const viewUrl = `${base()}/v/${id.slice(0, 6)}`;
 
   return (
     <>

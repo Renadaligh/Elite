@@ -3,7 +3,7 @@ import { sha256 } from './_auth';
 import type { Ctx } from './_lib';
 import { publicBracketSvg } from './_publicBracketSvg';
 
-type Row = { title: string; data: string };
+type Row = { id: string; title: string; data: string };
 const escape = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const CACHE_VERSION = 'v4';
 
@@ -56,6 +56,14 @@ h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-
 `;
 
 const controls = `
+document.getElementById('change-language')?.addEventListener('click', (event) => {
+  event.preventDefault();
+  const next = event.currentTarget.dataset.nextLang;
+  if (next !== 'ar' && next !== 'en') return;
+  document.cookie = 'plato-lang=' + next + '; Path=/; Max-Age=31536000; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+  try { localStorage.setItem('elite-lang', next); } catch {}
+  location.replace(location.pathname);
+});
 const root = document.documentElement;
 const theme = document.getElementById('theme');
 const themeIcon = theme?.querySelector('[data-theme-icon]');
@@ -89,7 +97,7 @@ const copy = document.getElementById('copy-link');
 copy?.addEventListener('click', async (event) => {
   event.preventDefault();
   event.stopPropagation();
-  const link = location.origin + location.pathname;
+  const link = location.origin + '/v/' + document.body.dataset.shortId;
   let copied = false;
   try {
     if (navigator.clipboard?.writeText) {
@@ -344,27 +352,45 @@ if (sheet) {
 export async function publicBracketPage({ request, env, params, waitUntil }: Ctx) {
   const url = new URL(request.url);
   const choice = url.searchParams.get('lang');
+  // Backward compatibility: clean old ?lang= links while retaining the language choice in a cookie.
+  if (choice === 'ar' || choice === 'en') {
+    return new Response(null, { status: 302, headers: {
+      location: url.pathname,
+      'cache-control': 'no-store',
+      'set-cookie': `plato-lang=${choice}; Path=/; Max-Age=31536000; SameSite=Lax${url.protocol === 'https:' ? '; Secure' : ''}`,
+    } });
+  }
   const cookie = request.headers.get('cookie') ?? '';
   const stored = /(?:^|;\s*)plato-lang=(ar|en)(?:;|$)/.exec(cookie)?.[1];
-  const lang = choice === 'ar' || choice === 'en' ? choice : stored === 'ar' ? 'ar' : 'en';
+  const lang = stored === 'ar' ? 'ar' : 'en';
   const ar = lang === 'ar';
   const dir = ar ? 'rtl' : 'ltr';
   const nonce = crypto.randomUUID();
   let title = ar ? 'عرض البطولة' : 'Bracket view';
+  let shortId = params.id;
   let svg = '';
   let status = 200;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   try {
     // Public links are always enabled in the existing bracket API.
+    // An exact ID always wins. Six-digit aliases resolve only if the prefix is unique.
     const row = await Promise.race([
-      env.DB.prepare('SELECT title, data FROM user_brackets WHERE id = ?').bind(params.id).first<Row>(),
+      (async () => {
+        const exact = await env.DB.prepare('SELECT id, title, data FROM user_brackets WHERE id = ?').bind(params.id).first<Row>();
+        if (exact) return { row: exact, ambiguous: false };
+        if (!/^[a-f0-9]{6}$/i.test(params.id)) return { row: null, ambiguous: false };
+        const hits = (await env.DB.prepare('SELECT id, title, data FROM user_brackets WHERE id LIKE ? LIMIT 2').bind(params.id.toLowerCase() + '%').all<Row>()).results;
+        return { row: hits.length === 1 ? hits[0] : null, ambiguous: hits.length > 1 };
+      })(),
       new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Database timeout')), 7000); }),
     ]);
-    if (!row) status = 404;
+    if (row.ambiguous) status = 409;
+    else if (!row.row) status = 404;
     else {
-      title = row.title || title;
-      svg = await snapshot(request, row, lang, title, waitUntil);
+      title = row.row.title || title;
+      shortId = row.row.id.slice(0, 6);
+      svg = await snapshot(request, row.row, lang, title, waitUntil);
     }
   } catch (error) {
     console.error('Could not render public bracket', error);
@@ -390,8 +416,8 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       }
     }
   }
-  const target = '?lang=' + (ar ? 'en' : 'ar');
-  const message = status === 404
+  const target = ar ? 'en' : 'ar';
+  const message = status === 409 ? (ar ? 'هذا الرابط المختصر مشترك بين بطولتين. استخدمي الرابط الأصلي الكامل.' : 'This short link is ambiguous. Please use the original full link.') : status === 404
     ? (ar ? 'البطولة غير موجودة. تأكدي من الرابط.' : 'Bracket not found. Check the link.')
     : (ar ? 'تعذّر عرض البطولة الآن. حاولي مرة ثانية.' : 'Could not load the bracket. Please try again.');
   // Small inline icons preserve the familiar compact toolbar rather than replacing actions with text-only buttons.
@@ -409,15 +435,10 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>${escape(title)} · Plato AR</title><style>${styles}</style>
     <script nonce="${nonce}">try {
-      const lang = ${JSON.stringify(lang)};
-      const explicit = ${choice === 'ar' || choice === 'en'};
-      const stored = localStorage.getItem('elite-lang');
       document.documentElement.dataset.theme = localStorage.getItem('elite-pv-theme') === 'light' ? 'light' : 'dark';
-      if (explicit) localStorage.setItem('elite-lang', lang);
-      else if ((stored === 'ar' || stored === 'en') && stored !== lang) location.replace('?lang=' + stored);
-    } catch {}</script></head><body>
+    } catch {}</script></head><body data-short-id="${escape(shortId)}">
     <header><a class="brand" href="/" aria-label="Plato AR"><img src="/brand/plato-ar-white.png" alt="PLATO AR"></a><nav>
-      <a class="icon-btn" href="${target}" lang="${ar ? 'en' : 'ar'}" title="${ar ? 'Change language' : 'تغيير اللغة'}">${icon('language')}<span class="icon-text">${ar ? 'EN' : 'عربي'}</span></a>
+      <button id="change-language" type="button" class="icon-btn" data-next-lang="${target}" lang="${ar ? 'en' : 'ar'}" title="${ar ? 'Change language' : 'تغيير اللغة'}">${icon('language')}<span class="icon-text">${ar ? 'EN' : 'عربي'}</span></button>
       ${status === 200 ? `<button id="copy-link" type="button" data-copied="${ar ? 'تم النسخ ✓' : 'Copied ✓'}" data-failed="${ar ? 'تعذّر النسخ' : 'Copy failed'}" class="icon-btn" title="${ar ? 'نسخ الرابط' : 'Copy link'}" aria-label="${ar ? 'نسخ الرابط' : 'Copy link'}">${icon('copy')}</button>` : ''}
       ${status === 200 ? `<button id="save-image" type="button" data-saved="${ar ? 'تم الحفظ ✓' : 'Saved ✓'}" data-failed="${ar ? 'تعذّر حفظ الصورة' : 'Could not save image'}" class="icon-btn" title="${ar ? 'حفظ كصورة' : 'Save as image'}" aria-label="${ar ? 'حفظ كصورة' : 'Save as image'}">${icon('download')}</button>` : ''}
       <button id="theme" type="button" class="icon-btn" aria-pressed="false" aria-label="${ar ? 'تغيير وضع الألوان' : 'Change color mode'}" title="${ar ? 'تغيير وضع الألوان' : 'Change color mode'}"><svg data-theme-icon aria-hidden="true" viewBox="0 0 24 24"></svg></button>
@@ -427,7 +448,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       <span id="zoom-level">100%</span>
       <button type="button" id="zoom-out" aria-label="${ar ? 'تصغير' : 'Zoom out'}">−</button></nav>
       <div class="sheet" tabindex="0" aria-label="${ar ? 'نتائج البطولة' : 'Bracket results'}">${svg}</div>`
-      : `<p>${message}</p>${status === 503 ? `<a class="retry" href="?lang=${lang}">${ar ? 'إعادة المحاولة' : 'Try again'}</a>` : ''}`}
+      : `<p>${message}</p>${status === 503 ? `<a class="retry" href="${url.pathname}">${ar ? 'إعادة المحاولة' : 'Try again'}</a>` : ''}`}
     </main><div id="page-toast" role="status" aria-live="polite" aria-atomic="true"></div><script nonce="${nonce}">document.getElementById('theme').setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'light'));${controls}</script></body></html>`;
 
   const headers = new Headers({
@@ -436,6 +457,5 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
     'x-content-type-options': 'nosniff',
     'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; img-src 'self' blob: data:; base-uri 'none'; frame-ancestors 'self'`,
   });
-  if (choice === 'ar' || choice === 'en') headers.set('set-cookie', `plato-lang=${choice}; Path=/; Max-Age=31536000; SameSite=Lax${url.protocol === 'https:' ? '; Secure' : ''}`);
   return new Response(html, { status, headers });
 }
