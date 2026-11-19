@@ -142,7 +142,17 @@ saveImage?.addEventListener('click', async (event) => {
   saveImage.disabled = true;
   const urls = [];
   try {
-    const color = (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
+    // Capture the ACTIVE page settings once. The exported PNG should match the
+    // currently displayed language, bracket orientation and light/dark palette.
+    await document.fonts?.ready;
+    const exportRoot = document.documentElement;
+    const exportLanguage = exportRoot.lang === 'ar' ? 'ar' : 'en';
+    const exportRtl = exportLanguage === 'ar';
+    const exportTheme = exportRoot.dataset.theme === 'light' ? 'light' : 'dark';
+    const pageStyles = getComputedStyle(exportRoot);
+    const color = (property) => pageStyles.getPropertyValue(property).trim();
+    const bodyFont = getComputedStyle(document.body).fontFamily;
+    const headingFont = getComputedStyle(document.querySelector('h1') || document.body).fontFamily;
     const rules = [
       ['.bs-hd,.bs-seed', 'fill', '--head'],
       ['.bs-row', 'fill', '--row'],
@@ -150,8 +160,8 @@ saveImage?.addEventListener('click', async (event) => {
       ['.bs-nm,.bs-ht,.bs-sc,.bs-ck', 'fill', '--fg'],
       ['.bs-sn,.bs-no,.bs-nm.lose,.bs-nm.bye', 'fill', '--mut'],
       ['.bs-ln', 'stroke', '--line'],
-    ].map(([selector, property, variable]) => selector + '{' + property + ':' + color(variable) + '}').join('') + '.bs-hd,.bs-seed,.bs-row,.bs-row.win{stroke:none}.bs-nm.win{font-weight:800}.bs-cup{stroke:#dca500}text{font-family:Arial,Tahoma,sans-serif}';
-    const padding = 36, gap = 20, titleHeight = 72, textHeight = 30, brandBoxW = 180, brandBoxH = 56;
+    ].map(([selector, property, variable]) => selector + '{' + property + ':' + color(variable) + '}').join('') + '.bs-hd,.bs-seed,.bs-row,.bs-row.win{stroke:none}.bs-nm.win{font-weight:800}.bs-cup{stroke:#dca500}';
+    const padding = 36, gap = 20, titleHeight = 108, textHeight = 30, brandBoxW = 180, brandBoxH = 82;
     const blocks = graphics.map((svg, index) => {
       const width = Number(svg.getAttribute('width')) || Number(svg.dataset.width) || 800;
       const height = Number(svg.getAttribute('height')) || 400;
@@ -176,10 +186,13 @@ saveImage?.addEventListener('click', async (event) => {
     context.scale(scale, scale);
     context.fillStyle = color('--bg');
     context.fillRect(0, 0, totalWidth, totalHeight);
-    const brandBg = root.dataset.theme === 'light' ? '#1a2c5e' : '#0f1930';
+    const brandBg = exportTheme === 'light' ? '#1a2c5e' : '#0f1930';
     const brandImg = document.querySelector('.brand img');
     if (brandImg?.complete) {
-      const boxX = totalWidth - padding - brandBoxW;
+      // Always place the brand opposite the title: Arabic title on the right,
+      // brand on the left; English title on the left, brand on the right.
+      const isArabic = exportRtl;
+      const boxX = isArabic ? padding : totalWidth - padding - brandBoxW;
       const boxY = padding - 6;
       context.fillStyle = brandBg;
       context.beginPath();
@@ -191,21 +204,27 @@ saveImage?.addEventListener('click', async (event) => {
       context.arcTo(boxX, boxY, boxX + brandBoxW, boxY, r);
       context.closePath();
       context.fill();
-      context.drawImage(brandImg, boxX + 22, boxY + 12, 112, 28);
+      // Respect the original logo proportions and leave a clear gap to the URL.
+      const logoWidth = 125;
+      const logoHeight = logoWidth * brandImg.naturalHeight / brandImg.naturalWidth;
+      context.drawImage(brandImg, boxX + (brandBoxW - logoWidth) / 2, boxY + 5, logoWidth, logoHeight);
       context.fillStyle = '#e9f0ff';
-      context.font = '600 16px Arial,Tahoma,sans-serif';
+      context.font = '600 15px Arial,Tahoma,sans-serif';
       context.textAlign = 'center';
-      context.fillText('plato-ar.com', boxX + brandBoxW / 2, boxY + 48, brandBoxW - 16);
+      context.fillText('plato-ar.com', boxX + brandBoxW / 2, boxY + 72, brandBoxW - 16);
     }
     context.fillStyle = color('--fg');
-    context.font = 'bold 28px Arial,Tahoma,sans-serif';
-    context.textAlign = document.documentElement.dir === 'rtl' ? 'right' : 'left';
-    const titleX = document.documentElement.dir === 'rtl' ? totalWidth - padding : padding;
-    context.fillText(document.querySelector('h1')?.textContent || 'PLATO AR', titleX, padding + 30, totalWidth - padding * 2 - brandBoxW - 12);
+    context.font = 'bold 28px ' + headingFont;
+    const rtlExport = exportRtl;
+    context.textAlign = rtlExport ? 'right' : 'left';
+    context.direction = rtlExport ? 'rtl' : 'ltr';
+    const titleX = rtlExport ? totalWidth - padding : padding;
+    context.fillText(document.querySelector('h1')?.textContent || 'PLATO AR', titleX, padding + 36, totalWidth - padding * 2 - brandBoxW - 30);
     let y = padding + titleHeight;
     if (organizerLine) {
       context.fillStyle = color('--mut');
-      context.font = '600 14px Arial,Tahoma,sans-serif';
+      context.font = '600 14px ' + bodyFont;
+      context.direction = exportRtl ? 'rtl' : 'ltr';
       context.fillText(organizerLine.textContent || '', titleX, y + 2, totalWidth - padding * 2);
       y += organizerHeight;
     }
@@ -216,7 +235,7 @@ saveImage?.addEventListener('click', async (event) => {
       const cardH = 64;
       const cardX = (totalWidth - cardW) / 2;
       const cardY = y;
-      const isLightWinner = root.dataset.theme === 'light';
+      const isLightWinner = exportTheme === 'light';
       const cardGradient = context.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
       if (isLightWinner) {
         cardGradient.addColorStop(0, '#f7d064');
@@ -250,10 +269,11 @@ saveImage?.addEventListener('click', async (event) => {
       context.stroke(new Path2D('M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8M10 18h4'));
       context.restore();
       context.textAlign = 'center';
-      context.font = '700 13px Arial,Tahoma,sans-serif';
+      context.font = '700 13px ' + bodyFont;
       context.fillStyle = isLightWinner ? 'rgba(43,29,0,.72)' : 'rgba(255,224,150,.78)';
+      context.direction = exportRtl ? 'rtl' : 'ltr';
       context.fillText(championLabel, cardX + cardW / 2 + 12, cardY + 22, cardW - 82);
-      context.font = '800 20px Arial,Tahoma,sans-serif';
+      context.font = '800 20px ' + bodyFont;
       context.fillStyle = isLightWinner ? '#241800' : '#ffd56a';
       context.fillText(championName, cardX + cardW / 2 + 12, cardY + 45, cardW - 82);
       y += championHeight;
@@ -261,16 +281,15 @@ saveImage?.addEventListener('click', async (event) => {
     for (const block of blocks) {
       if (block.heading) {
         context.fillStyle = color('--fg');
-        context.font = 'bold 18px Arial,Tahoma,sans-serif';
-        context.textAlign = document.documentElement.dir === 'rtl' ? 'right' : 'left';
+        context.font = 'bold 18px ' + bodyFont;
+        context.textAlign = exportRtl ? 'right' : 'left';
         context.fillText(block.heading, titleX, y + 17, totalWidth - padding * 2);
         y += textHeight;
       }
       const clone = block.svg.cloneNode(true);
       clone.removeAttribute('style');
       clone.removeAttribute('class');
-      clone.removeAttribute('font-family');
-      clone.setAttribute('font-family', 'Arial, Tahoma, sans-serif');
+      // Keep the SVG's own typography: it already matches the displayed bracket.
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       clone.setAttribute('width', String(block.width));
       clone.setAttribute('height', String(block.height));
@@ -298,8 +317,7 @@ saveImage?.addEventListener('click', async (event) => {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    saveImage.title = saveImage.dataset.saved;
-    showToast(saveImage.dataset.saved);
+    // Successful downloads do not show a toast; errors remain visible.
   } catch (error) {
     console.error('Could not save bracket image', error);
     saveImage.title = saveImage.dataset.failed;
