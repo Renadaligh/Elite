@@ -17,6 +17,12 @@ const ST_COLOR: Record<TournamentStatus, string> = { live: '#27c27a', upcoming: 
 
 const ST_BG: Record<TournamentStatus, string> = { live: '#ef4565', upcoming: '#18a77a', completed: 'var(--tc-chip)' };
 
+/** Published community brackets open the fast public SVG view; admin-created brackets keep their tournament page. */
+function bracketViewHref(x: Tournament): string {
+  const id = x.community?.bracketId;
+  return id ? `/v/${encodeURIComponent(id.slice(0, 6))}` : `/tournaments/${encodeURIComponent(x.id)}`;
+}
+
 function StatusPill({ s }: { s: TournamentStatus }) {
   const { t } = useI18n();
   const solid = s !== 'completed';
@@ -67,7 +73,7 @@ function Facts({ x }: { x: Tournament }) {
 export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  if ((s === 'live' || s === 'completed') && x.bracket) return <a href={`/tournaments/${x.id}`} className="btn-primary">{t.tBracket} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
+  if ((s === 'live' || s === 'completed') && x.bracket) return <a href={bracketViewHref(x)} className="btn-primary">{t.tBracket} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   if (s !== 'upcoming' || (x.slots.total > 0 && x.slots.filled >= x.slots.total)) return null;
   if (x.registerUrl) return <a href={x.registerUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">{t.tRegister} <ArrowIcon className="h-4 w-4 rtl:rotate-180" /></a>;
   return (
@@ -158,7 +164,7 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
         <div className="mt-0.5 flex items-start justify-between gap-3">
           <h3 className="min-w-0 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
-          {showBr && <a href={`/tournaments/${x.id}`} className="btn-primary shrink-0 !px-3.5 !py-1.5 !text-[.82rem]">{t.tBracket} <ArrowIcon className="h-3.5 w-3.5 rtl:rotate-180" /></a>}
+          {showBr && <a href={bracketViewHref(x)} className="btn-primary shrink-0 !px-3.5 !py-1.5 !text-[.82rem]">{t.tBracket} <ArrowIcon className="h-3.5 w-3.5 rtl:rotate-180" /></a>}
         </div>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{fmt(x.endsAt)}</time></> : null}</p>
         <Facts x={x} />
