@@ -60,7 +60,6 @@ export default function JoinPage({ id }: { id: string }) {
   const [info, setInfo] = useState<Info | null | 'gone'>(null);
   const [state, setState] = useState<State>('idle');
   const [platoId, setPlatoId] = useState('');
-  const [teamName, setTeamName] = useState('');
   const [ids, setIds] = useState<string[]>([]);
   const [hp, setHp] = useState('');
 
@@ -92,7 +91,7 @@ export default function JoinPage({ id }: { id: string }) {
     if (team) { const all = [pid, ...members.split(/[\n,،;]+/)].map(key).filter(Boolean); if (new Set(all).size !== all.length) { setState('dupMembers'); return; } }
     setState('sending');
     try {
-      const res = await fetch(`/api/join/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platoId: pid, teamName: teamName.trim(), members: members.trim(), hp }) });
+      const res = await fetch(`/api/join/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platoId: pid, teamName: '', members: members.trim(), hp }) });
       const d = (await res.json()) as { ok?: boolean; error?: string };
       if (d.ok || d.error === 'full' || d.error === 'closed') fetch(`/api/join/${encodeURIComponent(id)}`).then(async (r) => { if (r.ok) setInfo((await r.json()) as Info); }).catch(() => undefined); // count / state right after sending
       setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'bad_id' ? 'badId' : d.error === 'required' ? 'required' : 'error');
@@ -126,15 +125,10 @@ export default function JoinPage({ id }: { id: string }) {
               <div className="py-8 text-center" role="status">
                 <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
                 <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
-                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId(''); setTeamName(''); setIds([]); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
+                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId('');  setIds([]); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
               </div>
             ) : closedNow ? null : (
               <form onSubmit={submit} className="mt-4 flex flex-col gap-4" noValidate>
-                {team && (
-                  <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamName} <small style={{ fontWeight: 400, color: 'var(--muted)' }}>({t.regOptional})</small>
-                    <input className={field} style={fieldStyle} value={teamName} placeholder={t.regTeamPh} maxLength={80} onChange={(e) => setTeamName(e.target.value)} autoComplete="off" />
-                  </label>
-                )}
               {!team && (
                 <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regPlatoId}
                   <input dir="ltr" className={field} style={fieldStyle} value={platoId} maxLength={80} onChange={(e) => setPlatoId(e.target.value)} autoComplete="off" />
@@ -144,7 +138,7 @@ export default function JoinPage({ id }: { id: string }) {
                 <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamIds}
                   <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regTeamIdsNote}</span>
                   <ChipInput dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
-                  {!teamName.trim() && ids.length > 1 && <span dir="ltr" className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regAutoName}: {ids.join(' | ')}</span>}
+                  {ids.length > 1 && <span dir="ltr" className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regAutoName}: {ids.join(' | ')}</span>}
                 </div>
               )}
                 <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} style={{ position: 'absolute', insetInlineStart: '-9999px', width: 1, height: 1, opacity: 0 }} />

@@ -26,3 +26,6 @@ export const STORE = { url: 'https://unlimited-blue.com', name: 'Unlimited Blue'
 
 /** Top-3 leaderboard section on the home page. Built but hidden for now: set to true to show it. */
 export const SHOW_LEADERBOARD = false;
+
+/** Switch "add registrants to the bracket automatically" in the registrants list. Off for now: registrants always go straight into the bracket, exactly as before. */
+export const SHOW_AUTO_TOGGLE = false;

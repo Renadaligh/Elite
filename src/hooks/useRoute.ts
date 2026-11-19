@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { appPath, go, upgradeLegacyHash } from './nav';
+import { appPath, BASE, go, goSection, takeAnchor, upgradeLegacyHash } from './nav';
 
 export type Route = { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'view' | 'join' | 'admin'; id?: string; key: string };
 
@@ -29,7 +29,7 @@ function onClick(e: MouseEvent) {
   if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
   const raw = a.getAttribute('href') ?? '';
   if (raw.startsWith('/') && !raw.startsWith('//')) { e.preventDefault(); go(raw); }
-  else if (raw.startsWith('#') && raw.length > 1 && appPath() !== '/') { e.preventDefault(); go('/' + raw); }
+  else if (raw.startsWith('#') && raw.length > 1) { e.preventDefault(); goSection(raw.slice(1)); }
 }
 
 export function useRoute(): Route {
@@ -49,10 +49,12 @@ export function useRoute(): Route {
 
   // After a page switch: new page starts at the top, or jumps to the in-page target (#games, …) once it has rendered.
   useEffect(() => {
-    const id = window.location.hash.slice(1);
-    const target = id ? document.getElementById(id) : null;
+    const id = takeAnchor() || window.location.hash.slice(1);
+    const target = id && id !== 'top' ? document.getElementById(id) : null;
     if (target) target.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
     else window.scrollTo({ left: 0, top: 0, behavior: 'instant' as ScrollBehavior });
+    // an old "/#games" link: scroll there, then drop the hash from the address bar
+    if (window.location.hash) window.history.replaceState(null, '', BASE + appPath() + window.location.search);
   }, [route.key]);
 
   return route;

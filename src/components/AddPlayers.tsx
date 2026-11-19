@@ -5,8 +5,8 @@ import { ChipInput } from './ChipInput';
 
 /** Add players to a bracket without rebuilding it: type a name, or press + next to someone who registered. */
 const T = {
-  ar: { manual: 'يدوي', delManualAsk: 'حذف هذا اللاعب من البراكت؟', search: 'ابحث عن اسم…', az: 'ترتيب أبجدي', noMatch: 'ما فيه اسم مطابق.', ph: 'اكتب الاسم واضغط مسافة', add: 'إضافة', autoNote: 'المسجّلون ينضافون للبراكت مباشرة. زر − يشيل اللاعب من البراكت والتسجيل يبقى، وزر × يحذف التسجيل ويشيله من البراكت.', regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', all: 'إضافة الكل', added: 'مضاف', unadd: 'إزالة من البراكت (التسجيل يبقى)', del: 'حذف', delAsk: 'حذف هذا التسجيل وإزالة اللاعب من البراكت؟ (مثلاً إذا انسحب)', refresh: 'تحديث', captain: 'القائد', m1: 'اسم ثم مسافة', m2: 'لصق قائمة', m3: 'من ملف Excel', pastePh: 'اكتب أو الصق الأسماء، اسم في كل سطر', addList: 'إضافة القائمة', pickFile: 'اختر ملف Excel أو CSV', fileHint: 'يقرأ أول عمود فيه أسماء (xlsx أو csv أو txt). صف العنوان يُتجاهل.', fileBad: 'تعذّرت قراءة الملف، جرّب xlsx أو csv.', fileNone: 'ما لقيت أسماء في الملف.', n: 'اسم', draftTitle: 'ما بدأ البراكت بعد', draftBody: 'أضف لاعبَين على الأقل ويُبنى البراكت تلقائياً.', remove: 'حذف', dup1: 'هذا الاسم مضاف مسبقاً.', skip: (n: number) => `تم تجاهل ${n} اسم مكرر.` },
-  en: { manual: 'Manual', delManualAsk: 'Remove this player from the bracket?', search: 'Search a name…', az: 'A–Z order', noMatch: 'No matching name.', ph: 'Type a name, press space', add: 'Add', autoNote: 'Registrants are added to the bracket automatically. − takes a player out of the bracket and keeps the registration; × deletes the registration and removes the player from the bracket.', regs: 'Registered', none: 'Nobody registered yet.', all: 'Add all', added: 'Added', unadd: 'Remove from the bracket (the registration stays)', del: 'Delete', delAsk: 'Delete this registration and remove the player from the bracket? (e.g. the player withdrew)', refresh: 'Refresh', captain: 'Captain', m1: 'Name, then space', m2: 'Paste a list', m3: 'From Excel file', pastePh: 'Type or paste names, one per line', addList: 'Add the list', pickFile: 'Choose an Excel or CSV file', fileHint: 'Reads the first column that has names (xlsx, csv or txt). A header row is ignored.', fileBad: 'Could not read the file, try xlsx or csv.', fileNone: 'No names found in the file.', n: 'names', draftTitle: 'The bracket has not started', draftBody: 'Add at least two players and it is drawn automatically.', remove: 'Remove', dup1: 'This name is already in the list.', skip: (n: number) => `${n} duplicate name${n > 1 ? 's' : ''} skipped.` },
+  ar: { autoLbl: 'إضافة المسجّلين للشجرة تلقائيًا', autoOffNote: 'الإضافة يدوية: اضغط + بجنب الاسم عشان يدخل الشجرة (أو «إضافة الكل»).', outAll: 'إخراج الكل من الشجرة', outAllAsk: 'إخراج كل اللاعبين من الشجرة؟ يبقون في القائمة وترجّعهم بـ «إضافة الكل».', manual: 'يدوي', delManualAsk: 'حذف هذا اللاعب من البراكت؟', search: 'ابحث عن اسم…', az: 'ترتيب أبجدي', noMatch: 'ما فيه اسم مطابق.', ph: 'اكتب الاسم واضغط مسافة', add: 'إضافة', autoNote: 'المسجّلون ينضافون للبراكت مباشرة. زر − يشيل اللاعب من البراكت والتسجيل يبقى، وزر × يحذف التسجيل ويشيله من البراكت.', regs: 'المسجّلون', none: 'ما سجّل أحد للحين.', all: 'إضافة الكل', added: 'مضاف', unadd: 'إزالة من البراكت (التسجيل يبقى)', del: 'حذف', delAsk: 'حذف هذا التسجيل وإزالة اللاعب من البراكت؟ (مثلاً إذا انسحب)', refresh: 'تحديث', captain: 'القائد', m1: 'اسم ثم مسافة', m2: 'لصق قائمة', m3: 'من ملف Excel', pastePh: 'اكتب أو الصق الأسماء، اسم في كل سطر', addList: 'إضافة القائمة', pickFile: 'اختر ملف Excel أو CSV', fileHint: 'يقرأ أول عمود فيه أسماء (xlsx أو csv أو txt). صف العنوان يُتجاهل.', fileBad: 'تعذّرت قراءة الملف، جرّب xlsx أو csv.', fileNone: 'ما لقيت أسماء في الملف.', n: 'اسم', draftTitle: 'ما بدأ البراكت بعد', draftBody: 'أضف لاعبَين على الأقل ويُبنى البراكت تلقائياً.', remove: 'حذف', dup1: 'هذا الاسم مضاف مسبقاً.', skip: (n: number) => `تم تجاهل ${n} اسم مكرر.` },
+  en: { autoLbl: 'Add registrants to the bracket automatically', autoOffNote: 'Manual mode: press + next to a name to put it in the bracket (or “Add all”).', outAll: 'Take everyone out of the bracket', outAllAsk: 'Take all players out of the bracket? They stay in the list and “Add all” brings them back.', manual: 'Manual', delManualAsk: 'Remove this player from the bracket?', search: 'Search a name…', az: 'A–Z order', noMatch: 'No matching name.', ph: 'Type a name, press space', add: 'Add', autoNote: 'Registrants are added to the bracket automatically. − takes a player out of the bracket and keeps the registration; × deletes the registration and removes the player from the bracket.', regs: 'Registered', none: 'Nobody registered yet.', all: 'Add all', added: 'Added', unadd: 'Remove from the bracket (the registration stays)', del: 'Delete', delAsk: 'Delete this registration and remove the player from the bracket? (e.g. the player withdrew)', refresh: 'Refresh', captain: 'Captain', m1: 'Name, then space', m2: 'Paste a list', m3: 'From Excel file', pastePh: 'Type or paste names, one per line', addList: 'Add the list', pickFile: 'Choose an Excel or CSV file', fileHint: 'Reads the first column that has names (xlsx, csv or txt). A header row is ignored.', fileBad: 'Could not read the file, try xlsx or csv.', fileNone: 'No names found in the file.', n: 'names', draftTitle: 'The bracket has not started', draftBody: 'Add at least two players and it is drawn automatically.', remove: 'Remove', dup1: 'This name is already in the list.', skip: (n: number) => `${n} duplicate name${n > 1 ? 's' : ''} skipped.` },
 };
 export const addTxt = (lang: 'ar' | 'en') => T[lang];
 
@@ -83,14 +83,18 @@ export function AddPlayerBar({ lang, onAdd, existing = [] }: { lang: 'ar' | 'en'
   );
 }
 
-export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh, onDelete, onUnadd }: { lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void; onDelete?: (r: RegRow) => void; onUnadd?: (name: string) => void }) {
+export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh, onDelete, onUnadd, onUnaddAll, bench = [], autoOn = true, onAuto }: { lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void; onDelete?: (r: RegRow) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; bench?: string[]; autoOn?: boolean; onAuto?: (on: boolean) => void }) {
   const t = T[lang];
   const [q, setQ] = useState('');
   const [az, setAz] = useState(false);
   const have = new Set(players.map(nameKey));
   const todo = regs.map(regName).filter((n, i, a) => n && !have.has(nameKey(n)) && a.findIndex((x) => nameKey(x) === nameKey(n)) === i);
   // players typed in by hand (not from a registration) sit in the same list, so everybody is in one place
-  const manual: RegRow[] = onUnadd ? players.filter((p) => !regs.some((r) => nameKey(regName(r)) === nameKey(p))).map((p, i) => ({ id: -(i + 1), mode: 'solo', plato_id: p, team_name: '', members: '', src: 'manual' as const })) : [];
+  const isReg = (n: string) => regs.some((r) => nameKey(regName(r)) === nameKey(n));
+  const manualIn = players.filter((p) => !isReg(p));
+  const manualOut = bench.filter((b) => !have.has(nameKey(b)) && !isReg(b));
+  const manual: RegRow[] = onUnadd ? [...manualIn, ...manualOut].map((p, i) => ({ id: -(i + 1), mode: 'solo', plato_id: p, team_name: '', members: '', src: 'manual' as const })) : [];
+  const todoAll = [...todo, ...manualOut];
   const all = [...regs, ...manual];
   const needle = nameKey(q);
   const shown = all.filter((r) => !needle || nameKey(regName(r)).includes(needle) || nameKey(r.team_name ?? '').includes(needle)).sort((a, b) => (az ? regName(a).localeCompare(regName(b), lang, { sensitivity: 'base', numeric: true }) : 0));
@@ -100,10 +104,17 @@ export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh, onDele
         <b className="text-[.92rem]">{t.regs} · {all.length}</b>
         <span className="flex gap-2">
           {onRefresh && <button type="button" className="rounded-full border px-3 py-1 text-[.8rem] font-bold" style={{ borderColor: 'var(--glass-b)' }} onClick={onRefresh}>{t.refresh}</button>}
-          {todo.length > 0 && <button type="button" className="rounded-full border px-3 py-1 text-[.8rem] font-bold" style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)' }} onClick={() => onAdd(todo)}>{t.all} ({todo.length})</button>}
+          {todoAll.length > 0 && <button type="button" className="rounded-full border px-3 py-1 text-[.8rem] font-bold" style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)' }} onClick={() => onAdd(todoAll)}>{t.all} ({todoAll.length})</button>}
+          {onUnaddAll && players.length > 0 && <button type="button" className="rounded-full border px-3 py-1 text-[.8rem] font-bold" style={{ borderColor: 'rgba(255,176,46,.55)', background: 'rgba(255,176,46,.14)' }} onClick={() => { if (window.confirm(t.outAllAsk)) onUnaddAll(manualIn); }}>{t.outAll}</button>}
         </span>
       </div>
-      {onDelete && regs.length > 0 && <p className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{t.autoNote}</p>}
+      {onAuto && (
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[.85rem] font-semibold">{t.autoLbl}</span>
+          <button type="button" role="switch" aria-checked={autoOn} aria-label={t.autoLbl} className={`st-sw ${autoOn ? 'on' : ''}`} onClick={() => onAuto(!autoOn)}><i /></button>
+        </div>
+      )}
+      {onAuto ? <p className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{autoOn ? t.autoNote : t.autoOffNote}</p> : onDelete && regs.length > 0 && <p className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{t.autoNote}</p>}
       {all.length > 1 && (
         <div className="flex flex-wrap items-center gap-2">
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.search} aria-label={t.search} className="min-w-0 flex-1 rounded-xl border bg-transparent px-3 py-1.5 text-[.85rem] outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} />
@@ -118,11 +129,11 @@ export function RegistrantsPanel({ lang, regs, players, onAdd, onRefresh, onDele
               <li key={`${r.src ?? ''}-${r.id}`} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: 'var(--glass-b)', opacity: done && !onUnadd ? 0.6 : 1 }}>
                 <div className="min-w-0"><b dir="auto">{done && onUnadd && <span style={{ color: '#2ecc8c' }}>✓ </span>}{i + 1}. {n}</b>{r.src === 'manual' && <span className="ms-2 rounded-full px-2 py-0.5 text-[.7rem] font-bold" style={{ background: 'var(--tc-pill, rgba(255,255,255,.1))', color: 'var(--muted)' }}>{t.manual}</span>}{r.mode === 'team' && <div dir="auto" className="truncate" style={{ color: 'var(--muted)', fontSize: '.78rem' }}>{t.captain}: {r.plato_id}{r.members ? ` · ${r.members.replace(/\n/g, '، ')}` : ''}</div>}</div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {r.src === 'manual' ? null : done ? (onUnadd
-                    ? <button type="button" className={btn} style={{ borderColor: 'rgba(255,176,46,.55)', background: 'rgba(255,176,46,.14)', color: 'var(--text)' }} aria-label={t.unadd} title={t.unadd} onClick={() => onUnadd(n)}>−</button>
+                  {done ? (onUnadd
+                    ? <button type="button" className={btn} style={{ borderColor: 'rgba(255,176,46,.55)', background: 'rgba(255,176,46,.14)', color: 'var(--text)' }} aria-label={t.unadd} title={t.unadd} onClick={() => onUnadd(n, r.src === 'manual')}>−</button>
                     : <span className="text-[.78rem] font-bold" style={{ color: '#2ecc8c' }}>✓ {t.added}</span>)
                     : <button type="button" className={btn} style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)', color: 'var(--text)' }} aria-label={t.add} title={t.add} onClick={() => onAdd([n])}>+</button>}
-                  {(onDelete || r.src === 'manual') && <button type="button" className={btn} style={{ borderColor: 'rgba(255,120,120,.5)', background: 'rgba(255,90,90,.14)', color: 'var(--text)' }} aria-label={t.del} title={t.del} onClick={() => { if (r.src === 'manual') { if (window.confirm(t.delManualAsk)) onUnadd?.(n); } else if (window.confirm(t.delAsk)) { onDelete?.(r); if (done) onUnadd?.(n); } }}>×</button>}
+                  {(onDelete || r.src === 'manual') && <button type="button" className={btn} style={{ borderColor: 'rgba(255,120,120,.5)', background: 'rgba(255,90,90,.14)', color: 'var(--text)' }} aria-label={t.del} title={t.del} onClick={() => { if (r.src === 'manual') { if (window.confirm(t.delManualAsk)) onUnadd?.(n, false); } else if (window.confirm(t.delAsk)) { onDelete?.(r); if (done) onUnadd?.(n); } }}>×</button>}
                 </div>
               </li>
             );

@@ -26,6 +26,12 @@ function cleanMatches(raw: unknown, max: number): Record<string, unknown>[] | nu
 
 const orgOf = (o: Record<string, unknown>) => { const v = txt(o.org, 60).trim(); return v ? { org: v } : {}; };
 /** Keeps only the bracket fields we know, with limits, so nothing odd can be stored. */
+/** Optional organiser settings kept with the bracket: manual players currently out of it, and the automatic-adding switch. */
+const extraOf = (o: Record<string, unknown>) => ({
+  ...(Array.isArray(o.bench) && o.bench.length ? { bench: o.bench.slice(0, 2000).map((p) => txt(p, 40).trim()).filter(Boolean) } : {}),
+  ...(o.auto === false ? { auto: false } : {}),
+});
+
 export function cleanBracket(v: unknown) {
   const o = v as Record<string, unknown>;
   if (!o || !FORMATS.includes(o.format as string) || !Array.isArray(o.players)) return null;
@@ -35,7 +41,7 @@ export function cleanBracket(v: unknown) {
   const players = o.players.map((p) => txt(p, 40).trim());
   if (players.length < 2) { // a draft: players are listed, nothing is drawn yet
     const x = (o.opts ?? {}) as Record<string, unknown>;
-    return { format: f, players, matches: [], ...orgOf(o), ...(elim ? {} : { opts: { win: num(x.win, 1), draw: num(x.draw, 0.5), loss: num(x.loss, 0), ...(x.double === true ? { double: true } : {}), ...(x.low === true ? { low: true } : {}), ...(x.koFormat === 'double' ? { koFormat: 'double' } : x.koFormat === 'single' ? { koFormat: 'single' } : {}), ...(typeof x.rounds === 'number' ? { rounds: Math.min(30, Math.max(1, x.rounds | 0)) } : {}), ...(typeof x.groups === 'number' ? { groups: Math.min(8, Math.max(2, x.groups | 0)) } : {}), ...(typeof x.adv === 'number' ? { adv: Math.min(8, Math.max(1, x.adv | 0)) } : {}) } }) };
+    return { format: f, players, matches: [], ...orgOf(o), ...extraOf(o), ...(elim ? {} : { opts: { win: num(x.win, 1), draw: num(x.draw, 0.5), loss: num(x.loss, 0), ...(x.double === true ? { double: true } : {}), ...(x.low === true ? { low: true } : {}), ...(x.koFormat === 'double' ? { koFormat: 'double' } : x.koFormat === 'single' ? { koFormat: 'single' } : {}), ...(typeof x.rounds === 'number' ? { rounds: Math.min(30, Math.max(1, x.rounds | 0)) } : {}), ...(typeof x.groups === 'number' ? { groups: Math.min(8, Math.max(2, x.groups | 0)) } : {}), ...(typeof x.adv === 'number' ? { adv: Math.min(8, Math.max(1, x.adv | 0)) } : {}) } }) };
   }
   const matches = f === 'ffa' ? [] : cleanMatches(o.matches, Math.max(elim ? 80 : 300, players.length * (elim ? 2 : 40)));
   if (!matches) return null;
@@ -52,7 +58,7 @@ export function cleanBracket(v: unknown) {
     km.forEach((m) => koIds.add(m.id as string));
     ko = { format: k.format, seed, matches: km };
   }
-  const out: Record<string, unknown> = { format: f, players, matches, ...orgOf(o) };
+  const out: Record<string, unknown> = { format: f, players, matches, ...orgOf(o), ...extraOf(o) };
   if (Number.isInteger(o.champ) && (o.champ as number) >= 0 && (o.champ as number) < players.length) out.champ = o.champ;
   if (f !== 'single' && f !== 'double') {
     const x = (o.opts ?? {}) as Record<string, unknown>;

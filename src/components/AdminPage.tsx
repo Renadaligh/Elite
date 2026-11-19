@@ -662,7 +662,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
-            <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}${window.location.pathname}#/tournaments/${t0.id}`} />
+            <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}/t/${t0.id}`} />
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div>
             <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>

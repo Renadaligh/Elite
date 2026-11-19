@@ -6,7 +6,7 @@ import { RegistrantsPanel, autoAddNew, type RegRow } from './AddPlayers';
  * ONE list of everybody who registered for this bracket, whichever way they came (the standalone registration link or the tournament published on the site).
  * Registrants go straight into the bracket; × deletes the registration (and takes the player out of the bracket), − only takes the player out of the bracket.
  */
-export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, auto }: { id: string; lang: 'ar' | 'en'; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string) => void; auto?: boolean }) {
+export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, onUnaddAll, auto, autoOn, onAuto, bench }: { id: string; lang: 'ar' | 'en'; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; auto?: boolean; autoOn?: boolean; onAuto?: (on: boolean) => void; bench?: string[] }) {
   const [join, setJoin] = useState<RegRow[]>([]);
   const [site, setSite] = useState<RegRow[]>([]);
   const load = useCallback(() => {
@@ -26,12 +26,12 @@ export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, aut
   useEffect(() => { if (auto) autoAddNew(id, 'reg', site, players, onAdd); }, [site, auto]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const all = [...join, ...site].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''));
-  if (all.length === 0 && players.length === 0) return null;
+  if (all.length === 0 && players.length === 0 && !(bench?.length)) return null;
   const del = (r: RegRow) => {
     const url = r.src === 'site' ? `/brackets/${id}/regs?rid=${r.id}` : `/brackets/${id}/join?rid=${r.id}`;
     void api(url, { method: 'DELETE' }).then(load).catch(() => undefined);
   };
   return (
-    <RegistrantsPanel lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onRefresh={load} onDelete={del} />
+    <RegistrantsPanel lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
   );
 }

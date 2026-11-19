@@ -1,8 +1,9 @@
+import { SHOW_AUTO_TOGGLE } from '../config/site';
 import { siteUrl, noProto } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -191,12 +192,23 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     if (br.format === 'rr' && br.players.length + add.length > MAX_RR) { setMsg(tx.maxRr); return; }
     // players join without a rebuild: the bracket is redrawn around them. Only if results exist does it ask first (they are cleared; Undo brings them back).
     if (hasResults(br) && !window.confirm(lang === 'ar' ? 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟' : 'Adding players after matches started clears the current results (Undo brings them back). Sure?')) return;
-    edit(addPlayers(br, add)); setMsg('');
+    edit(setBench(addPlayers(br, add), (br.bench ?? []).filter((b) => !add.some((a) => nameKey(a) === nameKey(b))))); setMsg('');
   }
-  function removeFromBracket(name: string) {
+  /** keep = a player added by hand: he stays in the registrants list (with +) after leaving the bracket. */
+  function removeFromBracket(name: string, keep = false) {
     if (!br) return;
-    if (hasResults(br) && !window.confirm(lang === 'ar' ? 'إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟' : 'Removing a player after matches started clears the current results (Undo brings them back). Sure?')) return;
-    edit(removePlayer(br, name)); setMsg('');
+    const inBr = br.players.some((p) => nameKey(p) === nameKey(name));
+    if (inBr && hasResults(br) && !window.confirm(lang === 'ar' ? 'إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟' : 'Removing a player after matches started clears the current results (Undo brings them back). Sure?')) return;
+    const bench = (br.bench ?? []).filter((b) => nameKey(b) !== nameKey(name));
+    if (keep) bench.push(name);
+    edit(setBench(removePlayer(br, name), bench)); setMsg('');
+  }
+  /** Everybody out of the bracket; the players added by hand stay in the list. */
+  function removeAllFromBracket(keep: string[]) {
+    if (!br || !br.players.length) return;
+    let b = br; for (const p of [...br.players]) b = removePlayer(b, p);
+    const bench = [...(br.bench ?? [])]; for (const k of keep) if (!bench.some((x) => nameKey(x) === nameKey(k))) bench.push(k);
+    edit(setBench(b, bench)); setMsg('');
   }
   function rebuild() { if (!br || !window.confirm(tx.rebuildAsk)) return; setNames(br.players.join('\n')); setFmt(br.format); edit(null); setEditP(false); }
 
@@ -326,7 +338,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
             </div>
           )}
           {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}/j/${id}`} />}
-          {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
+          {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={SHOW_AUTO_TOGGLE ? (on) => br && edit(setAuto(br, on)) : undefined} auto={!!br && (!SHOW_AUTO_TOGGLE || br.auto !== false) && !hasResults(br)} />}
           {editable && isOwner && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>

@@ -31,3 +31,19 @@ export function upgradeLegacyHash(): void {
 
 /** Query value of the current page (e.g. ?login=…). */
 export const query = (k: string) => new URLSearchParams(window.location.search).get(k);
+
+let pendingAnchor = '';
+/** The section a page switch should end on (set by goSection, read once by the router). */
+export const takeAnchor = () => { const p = pendingAnchor; pendingAnchor = ''; return p; };
+
+/** Scrolls to a section of the home page ("#games" style links) without putting "#..." in the address bar. From another page it goes home first. */
+export function goSection(id: string): void {
+  if (appPath() === '/') {
+    const el = id === 'top' ? null : document.getElementById(id);
+    if (el) el.scrollIntoView(); else window.scrollTo({ left: 0, top: 0 });
+    if (window.location.hash || window.location.search) window.history.replaceState(null, '', BASE + '/');
+    return;
+  }
+  pendingAnchor = id;
+  go('/');
+}
