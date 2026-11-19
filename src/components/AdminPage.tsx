@@ -36,7 +36,7 @@ const EN: Record<string, string> = {
   'كلمة السر': 'Password', 'دخول': 'Sign in', 'جارٍ الدخول…': 'Signing in…', 'كلمة السر غير صحيحة': 'Wrong password',
   'تعذّر الاتصال بالخادم': 'Could not reach the server', 'العودة للموقع': 'Back to the site', 'إظهار': 'Show', 'إخفاء': 'Hide',
   'نظرة عامة': 'Overview', 'الأخبار': 'News', 'البطولات': 'Tournaments', 'التسجيلات': 'Registrations', 'تسجيل خروج': 'Sign out',
-  'ملخص سريع لكل شيء في الموقع': 'A quick look at everything on the site', 'أخبار منشورة': 'Published news', 'من أصل': 'of',
+  'ملخص سريع لكل شيء في الموقع': 'A quick look at everything on the site', 'إجمالي حسابات الموقع': 'Total site accounts', 'الحسابات المسجلة في الموقع': 'Accounts registered on the site', 'أخبار منشورة': 'Published news', 'من أصل': 'of',
   'الزيارات': 'Visits', 'مشاهدات الصفحات': 'Page views', 'آخر 14 يوم': 'Last 14 days', 'اليوم': 'Today', 'آخر 7 أيام': 'Last 7 days', 'إجمالي البطولات': 'Total tournaments', 'المسجلون في كل البطولات': 'Registered in all tournaments', 'تسجيلات يومية': 'Registrations per day', 'زيارات يومية': 'Visits per day', 'العدّاد يحتاج جدول page_views في قاعدة البيانات (انظر schema.sql).': 'The counter needs the page_views table in the database (see schema.sql).', 'زيارة = جلسة تصفح، ومشاهدة = صفحة مفتوحة': 'A visit is one browsing session; a view is one page opened', 'بطولات قادمة': 'Upcoming tournaments', 'مباشرة الآن': 'live now', 'إجمالي التسجيلات': 'Total registrations', 'آخر 24 ساعة': 'last 24 hours',
   'أحدث التسجيلات': 'Latest registrations', 'إجراءات سريعة': 'Quick actions', 'ما فيه تسجيلات بعد.': 'No registrations yet.',
   '+ خبر جديد': '+ New news item', '+ بطولة جديدة': '+ New tournament', 'عرض كل التسجيلات': 'View all registrations',
@@ -381,7 +381,7 @@ function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: 
 }
 
 /* ---------- Overview ---------- */
-type SiteStats = { visits: { day: string; views: number; visits: number }[]; regs: { total: number; perDay: { day: string; n: number }[] } | null; tours?: { live: number; upcoming: number; completed: number; fromBrackets: number }; migrate?: boolean };
+type SiteStats = { visits: { day: string; views: number; visits: number }[]; regs: { total: number; perDay: { day: string; n: number }[] } | null; tours?: { live: number; upcoming: number; completed: number; fromBrackets: number }; usersTotal?: number | null; migrate?: boolean };
 /** Small bar chart (one bar per day, value above, day below); no library. */
 function Bars({ data, color = '#3d7bff' }: { data: { day: string; n: number }[]; color?: string }) {
   const max = Math.max(1, ...data.map((d) => d.n));
@@ -422,6 +422,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const tc = st?.tours ?? { live, upcoming, completed: done, fromBrackets: 0 };
   const stats = [
     { icon: EyeI, label: x('الزيارات'), value: vis.length ? vis[vis.length - 1].visits : 0, note: `${x('آخر 7 أيام')}: ${sum(vis.slice(-7), 'visits')} · ${x('مشاهدات الصفحات')}: ${sum(vis.slice(-7), 'views')}`, tab: 'overview' as Tab },
+    { icon: UsersI, label: x('إجمالي حسابات الموقع'), value: st?.usersTotal ?? '—', note: x('الحسابات المسجلة في الموقع'), tab: 'overview' as Tab },
     { icon: CupI, label: x('إجمالي البطولات'), value: tc.live + tc.upcoming + tc.completed, note: `${tc.live} ${x('مباشرة')} · ${tc.upcoming} ${x('قادمة')} · ${tc.completed} ${x('منتهية')}`, tab: 'tournaments' as Tab },
     ...(can('regs', 'view') ? [{ icon: UsersI, label: x('المسجلون في كل البطولات'), value: st?.regs?.total ?? regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab }] : []),
     { icon: NewsI, label: x('أخبار منشورة'), value: news.filter((n) => n.published !== false).length, note: `${x('من أصل')} ${news.length}`, tab: 'news' as Tab },
@@ -429,7 +430,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   return (
     <div>
       <PageHead title={x('نظرة عامة')} sub={x('ملخص سريع لكل شيء في الموقع')} refresh={load} />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
           <button key={s.label} type="button" onClick={() => go(s.tab)} className="text-start">
             <Card className="relative h-full overflow-hidden p-5 transition hover:-translate-y-0.5">

@@ -48,5 +48,12 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
     }
     regs = { total, perDay: days.map((d) => ({ day: d, n: per[d] ?? 0 })) };
   }
-  return json({ visits, regs, tours, migrate });
+  // Count unique site accounts (Discord/Google/etc. user profiles), not tournament signups.
+  // Null means the count could not be read; don't misrepresent an unavailable count as zero.
+  let usersTotal: number | null = null;
+  try {
+    const result = await env.DB.prepare('SELECT COUNT(*) AS n FROM users').first<{ n: number }>();
+    usersTotal = result?.n ?? null;
+  } catch (error) { console.error('Could not count site users', error); }
+  return json({ visits, regs, tours, migrate, usersTotal });
 };
