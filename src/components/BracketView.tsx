@@ -34,7 +34,7 @@ function Row({ hit, seed, name, state, score, win, lose, onClick, onScore, slot,
           onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); else if (e.key === 'Escape') { e.currentTarget.value = name; e.currentTarget.blur(); } }} />
       ) : (
         <>
-          <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name">{name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
+          <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name" style={name.length > 20 ? { fontSize: `${Math.max(0.68, 20 / name.length)}em` } : undefined}>{name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
           {onRename && <button type="button" className="br-edit" aria-label="Rename" title="Rename" onClick={(e) => { e.stopPropagation(); setEditing(true); }}><PencilIcon className="br-pen" /></button>}
         </>
       )}
@@ -185,7 +185,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         const fe = first ? els.current.get(first.id) : undefined;
         const h = fe?.offsetHeight || 0;
         if (h) {
-          const gap = Math.max(4, Math.round(h * 0.16));
+          const gap = Math.max(6, Math.round(h * 0.25));
           const Pp = h + gap, ys = new Map<string, number>();
           let H = 0;
           const sl = packSlots(wr, R);

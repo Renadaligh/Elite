@@ -1,3 +1,5 @@
+import { siteUrl, noProto } from '../hooks/nav';
+import { go as navTo } from '../hooks/nav';
 import { streamEmbed } from '../data/stream';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
@@ -55,8 +57,8 @@ export const TXT = {
 } as const;
 type Tx = (typeof TXT)['ar'] | (typeof TXT)['en'];
 
-const base = () => `${window.location.origin}${window.location.pathname}`;
-const loginNote = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('login');
+const base = () => siteUrl("");
+const loginNote = () => new URLSearchParams(window.location.search).get('login');
 
 function LoginModal({ tx, providers, r, onClose }: { tx: Tx; providers: Providers; r: 'tool' | 'mine'; onClose: () => void }) {
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [onClose]);
@@ -88,7 +90,7 @@ function Shell({ tx, user, children, bare }: { tx: Tx; user: AuthUser | null; ch
           <p className="mt-2" style={{ color: 'var(--muted)' }}>{tx.sub}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          {user && <a href="#/bracket" className={pill} style={card}>{tx.mine}</a>}
+          {user && <a href="/bracket" className={pill} style={card}>{tx.mine}</a>}
         </div>
       </div>}
       {children}
@@ -170,7 +172,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
   });
-  const url = id ? `${base()}#/view/${id}` : `${base()}#/bracket`;
+  const url = id ? `${base()}/v/${id}` : `${base()}/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
 
   function create() {
@@ -210,7 +212,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
         try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
-        window.location.hash = `#/bracket/${r.id}`;
+        navTo(`/bracket/${r.id}`);
       }
     } catch (e) { failed.current = sent; setMsg((e as Error & { detail?: string }).detail === 'limit' ? tx.limit : tx.saveFail); }
     setBusy(false);
@@ -237,7 +239,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     catch { setMsg(tx.shFail); }
   }
   async function copyLink(key: string, link: string) {
-    try { await navigator.clipboard.writeText(link); setCopied(key); window.setTimeout(() => setCopied(''), 1800); } catch { window.prompt('', link); }
+    try { await navigator.clipboard.writeText(noProto(link)); setCopied(key); window.setTimeout(() => setCopied(''), 1800); } catch { window.prompt('', noProto(link)); }
   }
 
   const R = br ? resolve(br) : null;
@@ -248,7 +250,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
   if (state === 'private') return <p className="text-lg">{tx.private}</p>;
-  const viewUrl = `${base()}#/view/${id}`;
+  const viewUrl = `${base()}/v/${id}`;
   const embed = streamOn ? streamEmbed(streamUrl) : null;
 
   return (
@@ -305,7 +307,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
                     <div className="st-shh">
                       <div><span>{tx.shView}</span><small>{tx.shViewD}</small></div>
                     </div>
-                    {share && <div className="st-shl"><input readOnly dir="ltr" value={viewUrl} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink('share', viewUrl)}>{copied === 'share' ? tx.shCopied : tx.shCopy}</button></div>}
+                    {share && <div className="st-shl"><input readOnly dir="ltr" value={noProto(viewUrl)} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink('share', viewUrl)}>{copied === 'share' ? tx.shCopied : tx.shCopy}</button></div>}
                   </div>
                   {share && (
                     <div className="st-shr">
@@ -323,7 +325,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
-          {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}#/join/${id}`} />}
+          {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}/j/${id}`} />}
           {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} auto={!!br && !hasResults(br)} />}
           {editable && isOwner && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}

@@ -155,3 +155,7 @@ CREATE INDEX IF NOT EXISTS bracket_signups_b ON bracket_signups (bracket_id, id)
 -- ALTER TABLE users ADD COLUMN notify_email TEXT NOT NULL DEFAULT '';
 -- Admins add their own email in the dashboard ("إيميل الإشعارات") to hear about tournaments waiting for review (needs RESEND_API_KEY + MAIL_FROM):
 -- ALTER TABLE admins ADD COLUMN email TEXT NOT NULL DEFAULT '';
+
+-- Site visit counters for the dashboard (run once). One row per day (Riyadh time); no personal data is stored.
+-- views = pages opened, visits = browser sessions (a visitor who opens ten pages is 10 views and 1 visit).
+CREATE TABLE IF NOT EXISTS page_views (day TEXT PRIMARY KEY, views INTEGER NOT NULL DEFAULT 0, visits INTEGER NOT NULL DEFAULT 0);

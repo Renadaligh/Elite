@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { I18nProvider } from './i18n/I18nProvider';
 import { useRoute } from './hooks/useRoute';
 import Header from './components/Header';
@@ -21,6 +21,12 @@ import SupportSection from './components/SupportSection';
 function Pages() {
   const route = useRoute();
   const firstKey = useRef(route.key); // the page the visitor landed on does not fade (the loader already covers it)
+  // visit counter for the dashboard: one tiny call per page shown (n=1 on the first page of a browser session); never from the dashboard itself
+  useEffect(() => {
+    if (route.page === 'admin') return;
+    let first = 1; try { first = sessionStorage.getItem('plato-visit') ? 0 : 1; sessionStorage.setItem('plato-visit', '1'); } catch { /* private mode */ }
+    void fetch('/api/hit', { method: 'POST', keepalive: true, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ n: first }) }).catch(() => undefined);
+  }, [route.key]); // eslint-disable-line react-hooks/exhaustive-deps
   if (route.page === 'admin') return <AdminPage />;
   if (route.page === 'view') return <PublicView key={route.key} id={route.id!} />;
   if (route.page === 'join') return <JoinPage key={route.key} id={route.id!} />;

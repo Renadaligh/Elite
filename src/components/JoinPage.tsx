@@ -1,3 +1,4 @@
+import { ChipInput } from './ChipInput';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -60,7 +61,7 @@ export default function JoinPage({ id }: { id: string }) {
   const [state, setState] = useState<State>('idle');
   const [platoId, setPlatoId] = useState('');
   const [teamName, setTeamName] = useState('');
-  const [members, setMembers] = useState('');
+  const [ids, setIds] = useState<string[]>([]);
   const [hp, setHp] = useState('');
 
   useEffect(() => {
@@ -84,8 +85,9 @@ export default function JoinPage({ id }: { id: string }) {
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (state === 'sending') return;
-    const pid = platoId.trim();
-    if (!pid || (team && (!teamName.trim() || !members.trim()))) { setState('required'); return; }
+    const pid = team ? (ids[0] ?? '') : platoId.trim();
+    const members = team ? ids.slice(1).join(', ') : '';
+    if (!pid || (team && !members.trim())) { setState('required'); return; }
     if (!okId(pid) || (team && !okIds(members))) { setState('badId'); return; }
     if (team) { const all = [pid, ...members.split(/[\n,،;]+/)].map(key).filter(Boolean); if (new Set(all).size !== all.length) { setState('dupMembers'); return; } }
     setState('sending');
@@ -103,7 +105,7 @@ export default function JoinPage({ id }: { id: string }) {
   return (
     <div className="pv-root" data-st={theme} data-jn={hue === null ? undefined : ''} style={tint}>
       <div className="pv-top" style={hue === null ? undefined : { background: 'var(--bg)' }}>
-        <a href="#/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
+        <a href="/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
         <div className="pv-tools"><ThemeBtn theme={theme} set={setTheme} s={st} /><LanguageSwitcher /></div>
       </div>
       <div className="jn-wrap">
@@ -124,25 +126,27 @@ export default function JoinPage({ id }: { id: string }) {
               <div className="py-8 text-center" role="status">
                 <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
                 <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
-                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId(''); setTeamName(''); setMembers(''); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
+                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId(''); setTeamName(''); setIds([]); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
               </div>
             ) : closedNow ? null : (
               <form onSubmit={submit} className="mt-4 flex flex-col gap-4" noValidate>
                 {team && (
-                  <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamName}
-                    <input className={field} style={fieldStyle} value={teamName} maxLength={80} onChange={(e) => setTeamName(e.target.value)} autoComplete="off" />
+                  <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamName} <small style={{ fontWeight: 400, color: 'var(--muted)' }}>({t.regOptional})</small>
+                    <input className={field} style={fieldStyle} value={teamName} placeholder={t.regTeamPh} maxLength={80} onChange={(e) => setTeamName(e.target.value)} autoComplete="off" />
                   </label>
                 )}
-                <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{team ? t.regCaptain : t.regPlatoId}
-                  {team && <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regCaptainNote}</span>}
+              {!team && (
+                <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regPlatoId}
                   <input dir="ltr" className={field} style={fieldStyle} value={platoId} maxLength={80} onChange={(e) => setPlatoId(e.target.value)} autoComplete="off" />
                 </label>
-                {team && (
-                  <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regMembers}
-                    <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regMembersNote}</span>
-                    <textarea dir="ltr" rows={4} className={field} style={fieldStyle} value={members} maxLength={600} onChange={(e) => setMembers(e.target.value)} />
-                  </label>
-                )}
+              )}
+              {team && (
+                <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamIds}
+                  <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regTeamIdsNote}</span>
+                  <ChipInput dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
+                  {!teamName.trim() && ids.length > 1 && <span dir="ltr" className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regAutoName}: {ids.join(' | ')}</span>}
+                </div>
+              )}
                 <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} style={{ position: 'absolute', insetInlineStart: '-9999px', width: 1, height: 1, opacity: 0 }} />
                 {msg && <p role="alert" className="text-[.9rem]" style={{ color: '#ff6b7a' }}>{msg}</p>}
                 <button type="submit" className="btn-primary self-start" disabled={state === 'sending'}>{state === 'sending' ? t.regSending : t.regSubmit}</button>

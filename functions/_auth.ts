@@ -88,7 +88,7 @@ export async function signIn(request: Request, env: Env, provider: string, prof:
   const token = hex(24);
   await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?,?,?)').bind(await sha256(token), uid, Date.now() + DAYS * 86400000).run();
   await env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(Date.now()).run();
-  const h = new Headers({ location: `${origin}/#/bracket${r === 'mine' ? '/mine' : ''}`, 'cache-control': 'no-store' });
+  const h = new Headers({ location: `${origin}/bracket${r === 'mine' ? '/mine' : ''}`, 'cache-control': 'no-store' });
   h.append('set-cookie', cookie(request, COOKIE, token, DAYS * 86400));
   h.append('set-cookie', cookie(request, 'oauth_state', '', 0, '/api/auth'));
   return new Response(null, { status: 302, headers: h });

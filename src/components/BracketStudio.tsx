@@ -1,3 +1,5 @@
+import { siteUrl, noProto } from '../hooks/nav';
+import { go as navTo } from '../hooks/nav';
 import { useEffect, useRef, useState } from 'react';
 import { bracketBlob, downloadBlob } from '../data/bracketImage';
 import type { Bracket } from '../data/bracket';
@@ -40,8 +42,8 @@ export const S = {
 } as const;
 type St = (typeof S)['ar'] | (typeof S)['en'];
 const RESERVED = ['new', 'mine', 'account'];
-const base = () => `${window.location.origin}${window.location.pathname}`;
-const note = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('login');
+const base = () => siteUrl("");
+const note = () => new URLSearchParams(window.location.search).get('login');
 
 const I = {
   list: <path d="M4 6h16M4 12h16M4 18h10" />,
@@ -217,7 +219,7 @@ function Notices({ lang }: { lang: 'ar' | 'en' }) {
           </div>
           {n.review === 'rejected' && n.note && <p className="st-meta">{ar ? 'السبب: ' : 'Reason: '}{n.note}</p>}
           <div className="flex items-center justify-between gap-2">
-            {n.review === 'rejected' ? <a href={`#/bracket/${n.bracketId}`} className="st-meta" style={{ textDecoration: 'underline' }}>{ar ? 'عدّل وأعد الإرسال' : 'Edit and resubmit'}</a> : n.review === 'approved' ? <a href={`#/tournaments/${n.id}`} className="st-meta" style={{ textDecoration: 'underline' }}>{ar ? 'عرض في الموقع' : 'View on the site'}</a> : <span />}
+            {n.review === 'rejected' ? <a href={`/bracket/${n.bracketId}`} className="st-meta" style={{ textDecoration: 'underline' }}>{ar ? 'عدّل وأعد الإرسال' : 'Edit and resubmit'}</a> : n.review === 'approved' ? <a href={`/tournaments/${n.id}`} className="st-meta" style={{ textDecoration: 'underline' }}>{ar ? 'عرض في الموقع' : 'View on the site'}</a> : <span />}
             {n.review !== 'pending' && <button type="button" className="st-meta" onClick={() => dismiss(n)}>{ar ? 'تم' : 'Dismiss'}</button>}
           </div>
         </div>
@@ -244,7 +246,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
     } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
   }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(`${base()}#/view/${r.id}`); say(s.copied); } catch { say(`${base()}#/view/${r.id}`); } }
+  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}/v/${r.id}`)); say(s.copied); } catch { say(noProto(`${base()}/v/${r.id}`)); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -256,16 +258,16 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
       <Notices lang={lang} />
       <h2 className="st-h2">{s.recent}</h2>
       <p role="status" className="st-flash" style={{ opacity: flash ? 1 : 0 }}>{flash || '·'}</p>
-      {rows && !rows.length && <div className="st-empty"><p>{s.empty}</p><a href="#/bracket/new" className="btn-primary">{s.emptyBtn}</a></div>}
+      {rows && !rows.length && <div className="st-empty"><p>{s.empty}</p><a href="/bracket/new" className="btn-primary">{s.emptyBtn}</a></div>}
       <div className="st-cards">
         {rows?.map((r, i) => (
           <div key={r.id} className="st-bc" style={{ '--d': `${Math.min(i, 8) * 60}ms` } as React.CSSProperties}>
-            <div className="flex items-start justify-between gap-3"><a href={`#/bracket/${r.id}`} className="st-bt">{r.title}{r.shared && <small className="st-meta" style={{ display: 'block' }}>{lang === 'ar' ? `مشترك معك · ${r.owner || ''}` : `Shared with you · ${r.owner || ''}`}</small>}</a><span className={`st-chip ${r.status === 'live' ? 'live' : r.status === 'done' ? 'done' : ''}`}>{r.status === 'live' ? s.live : r.status === 'done' ? s.done : s.stNew}</span></div>
+            <div className="flex items-start justify-between gap-3"><a href={`/bracket/${r.id}`} className="st-bt">{r.title}{r.shared && <small className="st-meta" style={{ display: 'block' }}>{lang === 'ar' ? `مشترك معك · ${r.owner || ''}` : `Shared with you · ${r.owner || ''}`}</small>}</a><span className={`st-chip ${r.status === 'live' ? 'live' : r.status === 'done' ? 'done' : ''}`}>{r.status === 'live' ? s.live : r.status === 'done' ? s.done : s.stNew}</span></div>
             <div className="st-mini"><i className="w" /><i className="w" /><i /><i /></div>
             <div className="flex items-center justify-between gap-2">
               <span className="st-meta">{(s.fmt as Record<string, string>)[r.format] ?? r.format} · {r.players} {s.players}</span>
               <div className="st-act">
-                <a href={`#/bracket/${r.id}`} title={s.edit} aria-label={s.edit}><Ic d="pen" /></a>
+                <a href={`/bracket/${r.id}`} title={s.edit} aria-label={s.edit}><Ic d="pen" /></a>
                 <button type="button" title={s.dup} aria-label={s.dup} onClick={() => dup(r)}><Ic d="dup" /></button>
                 <button type="button" title={s.link} aria-label={s.link} onClick={() => copy(r)}><Ic d="link" /></button>
                 <button type="button" title={s.img} aria-label={s.img} onClick={() => image(r)}><Ic d="img" /></button>
@@ -327,7 +329,7 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
   async function wipe() {
     if (!window.confirm(s.accAsk)) return;
     try { await api('/auth/me', { method: 'DELETE' }); } catch { setMsg(s.fail); return; }
-    window.location.hash = '#/bracket'; auth.reload();
+    navTo('/bracket'); auth.reload();
   }
   return (
     <div className="st-acc">
@@ -374,7 +376,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
   const user = auth.user!;
   const sec: 'mine' | 'new' | 'account' = id === 'new' ? 'new' : id === 'account' ? 'account' : 'mine';
   const editing = !!id && !RESERVED.includes(id);
-  const nav = [{ k: 'mine', href: '#/bracket', label: s.mine, i: 'list' }, { k: 'new', href: '#/bracket/new', label: s.fresh, i: 'plus' }, { k: 'account', href: '#/bracket/account', label: s.account, i: 'user' }] as const;
+  const nav = [{ k: 'mine', href: '/bracket', label: s.mine, i: 'list' }, { k: 'new', href: '/bracket/new', label: s.fresh, i: 'plus' }, { k: 'account', href: '/bracket/account', label: s.account, i: 'user' }] as const;
   const title = editing ? '' : sec === 'new' ? s.fresh : sec === 'account' ? s.account : s.mine;
   return (
     <div className="st-app" dir={dir} data-st={theme}>
@@ -399,12 +401,12 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
         <div key={`${sec}:${id ?? ''}`} className={`st-page ${editing ? 'st-wide' : ''}`}>
           {editing ? (
             <>
-              <a href="#/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
-              <Editor id={id} tx={tx} auth={auth} onForeign={() => { window.location.hash = `#/view/${id}`; }} />
+              <a href="/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
+              <Editor id={id} tx={tx} auth={auth} onForeign={() => { navTo(`/view/${id}`); }} />
             </>
           ) : (
             <>
-              <div className="st-top"><h1>{title}</h1>{sec === 'mine' && <a href="#/bracket/new" className="st-new">{s.newBtn}</a>}</div>
+              <div className="st-top"><h1>{title}</h1>{sec === 'mine' && <a href="/bracket/new" className="st-new">{s.newBtn}</a>}</div>
               {sec === 'mine' && <Mine s={s} lang={lang} />}
               {sec === 'new' && <Editor key="new" tx={tx} auth={auth} />}
               {sec === 'account' && <Account s={s} auth={auth} lang={lang} />}
@@ -427,7 +429,7 @@ export function PublicView({ id }: { id: string }) {
   return (
     <div className="pv-root" data-st={theme}>
       <div className="pv-top">
-        <a href="#/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
+        <a href="/" className="pv-logo" aria-label="Plato AR"><img src={`${import.meta.env.BASE_URL}brand/plato-ar-white.png`} alt="" draggable={false} /></a>
         <div className="pv-tools"><ThemeBtn theme={theme} set={setTheme} s={st} /><LanguageSwitcher /></div>
       </div>
       <BracketToolPage id={id} auth={auth} readOnly />

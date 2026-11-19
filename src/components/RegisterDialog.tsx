@@ -1,3 +1,4 @@
+import { ChipInput } from './ChipInput';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { Tournament } from '../data/tournaments';
@@ -20,7 +21,7 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
   const [state, setState] = useState<State>('idle');
   const [platoId, setPlatoId] = useState('');
   const [teamName, setTeamName] = useState('');
-  const [members, setMembers] = useState('');
+  const [ids, setIds] = useState<string[]>([]);
   const [hp, setHp] = useState(''); // honeypot: real users never fill it
   const first = useRef<HTMLInputElement>(null);
 
@@ -36,8 +37,9 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (state === 'sending') return;
-    const id = platoId.trim();
-    if (!id || (team && (!teamName.trim() || !members.trim()))) { setState('required'); return; }
+    const id = team ? (ids[0] ?? '') : platoId.trim();
+    const members = team ? ids.slice(1).join(', ') : '';
+    if (!id || (team && !members.trim())) { setState('required'); return; }
     if (!okId(id) || (team && !okIds(members))) { setState('badId'); return; }
     if (team) { const all = [id, ...members.split(/[\n,،;]+/)].map(key).filter(Boolean); if (new Set(all).size !== all.length) { setState('dupMembers'); return; } }
     setState('sending');
@@ -75,19 +77,21 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
             {team && (
-              <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamName}
-                <input ref={first} className={field} style={fieldStyle} value={teamName} maxLength={MAX.name} onChange={(e) => setTeamName(e.target.value)} autoComplete="off" />
+              <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamName} <small style={{ fontWeight: 400, color: 'var(--muted)' }}>({t.regOptional})</small>
+                <input ref={first} className={field} style={fieldStyle} value={teamName} placeholder={t.regTeamPh} maxLength={MAX.name} onChange={(e) => setTeamName(e.target.value)} autoComplete="off" />
               </label>
             )}
-            <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{team ? t.regCaptain : t.regPlatoId}
-              {team && <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regCaptainNote}</span>}
-              <input ref={team ? undefined : first} dir="ltr" className={field} style={fieldStyle} value={platoId} maxLength={MAX.id} onChange={(e) => setPlatoId(e.target.value)} autoComplete="off" />
-            </label>
-            {team && (
-              <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regMembers}
-                <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regMembersNote}</span>
-                <textarea dir="ltr" rows={4} className={field} style={fieldStyle} value={members} maxLength={MAX.members} onChange={(e) => setMembers(e.target.value)} />
+            {!team && (
+              <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regPlatoId}
+                <input ref={first} dir="ltr" className={field} style={fieldStyle} value={platoId} maxLength={MAX.id} onChange={(e) => setPlatoId(e.target.value)} autoComplete="off" />
               </label>
+            )}
+            {team && (
+              <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamIds}
+                <span className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regTeamIdsNote}</span>
+                <ChipInput dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
+                {!teamName.trim() && ids.length > 1 && <span dir="ltr" className="text-[.8rem] font-normal" style={{ color: 'var(--muted)' }}>{t.regAutoName}: {ids.join(' | ')}</span>}
+              </div>
             )}
             <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} style={{ position: 'absolute', insetInlineStart: '-9999px', width: 1, height: 1, opacity: 0 }} />
             {msg && <p role="alert" className="text-[.9rem]" style={{ color: '#ff6b7a' }}>{msg}</p>}

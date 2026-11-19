@@ -1,3 +1,4 @@
+import { siteUrl } from '../hooks/nav';
 import { getGame } from '../data/games';
 import { streamEmbed } from '../data/stream';
 import { statusOf } from '../data/tournaments';
@@ -58,7 +59,7 @@ export default function TournamentPage({ id }: { id: string }) {
       <section aria-label={t.tBracketTitle}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[1.2rem] font-extrabold">{t.tBracketTitle}</h2>
-          {x.bracket && <BracketActions bracket={x.bracket} title={x.name[lang]} url={`${window.location.origin}${window.location.pathname}#/tournaments/${x.id}`} />}
+          {x.bracket && <BracketActions bracket={x.bracket} title={x.name[lang]} url={`${siteUrl(`/t/${x.id}`)}`} />}
         </div>
         {x.bracket ? <BracketView bracket={x.bracket} />
           : <p className="rounded-2xl border px-5 py-6" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{t.tNoBracket}</p>}

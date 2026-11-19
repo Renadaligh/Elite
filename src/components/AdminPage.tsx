@@ -37,7 +37,7 @@ const EN: Record<string, string> = {
   'تعذّر الاتصال بالخادم': 'Could not reach the server', 'العودة للموقع': 'Back to the site', 'إظهار': 'Show', 'إخفاء': 'Hide',
   'نظرة عامة': 'Overview', 'الأخبار': 'News', 'البطولات': 'Tournaments', 'التسجيلات': 'Registrations', 'تسجيل خروج': 'Sign out',
   'ملخص سريع لكل شيء في الموقع': 'A quick look at everything on the site', 'أخبار منشورة': 'Published news', 'من أصل': 'of',
-  'بطولات قادمة': 'Upcoming tournaments', 'مباشرة الآن': 'live now', 'إجمالي التسجيلات': 'Total registrations', 'آخر 24 ساعة': 'last 24 hours',
+  'الزيارات': 'Visits', 'مشاهدات الصفحات': 'Page views', 'آخر 14 يوم': 'Last 14 days', 'اليوم': 'Today', 'آخر 7 أيام': 'Last 7 days', 'إجمالي البطولات': 'Total tournaments', 'المسجلون في كل البطولات': 'Registered in all tournaments', 'تسجيلات يومية': 'Registrations per day', 'زيارات يومية': 'Visits per day', 'العدّاد يحتاج جدول page_views في قاعدة البيانات (انظر schema.sql).': 'The counter needs the page_views table in the database (see schema.sql).', 'زيارة = جلسة تصفح، ومشاهدة = صفحة مفتوحة': 'A visit is one browsing session; a view is one page opened', 'بطولات قادمة': 'Upcoming tournaments', 'مباشرة الآن': 'live now', 'إجمالي التسجيلات': 'Total registrations', 'آخر 24 ساعة': 'last 24 hours',
   'أحدث التسجيلات': 'Latest registrations', 'إجراءات سريعة': 'Quick actions', 'ما فيه تسجيلات بعد.': 'No registrations yet.',
   '+ خبر جديد': '+ New news item', '+ بطولة جديدة': '+ New tournament', 'عرض كل التسجيلات': 'View all registrations',
   'أضف وعدّل أخبار الموقع': 'Add and edit site news', 'أضف وعدّل البطولات وعدد المقاعد': 'Add and edit tournaments and slots',
@@ -362,7 +362,7 @@ function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: 
   return (
     <div className="w-full border-t pt-3" style={{ borderColor: 'var(--glass-b)' }}>
       <div className="flex flex-wrap items-center gap-2">
-        <a className={btnG} style={{ borderColor: 'var(--glass-b)' }} href={`#/bracket/${c.bracketId}`} target="_blank" rel="noopener noreferrer">{x('فتح البراكت')}</a>
+        <a className={btnG} style={{ borderColor: 'var(--glass-b)' }} href={`/bracket/${c.bracketId}`} target="_blank" rel="noopener noreferrer">{x('فتح البراكت')}</a>
         {can && c.review !== 'approved' && <button className={btnP} style={gradBtn} onClick={() => send('approved')}>{x('قبول')}</button>}
         {can && c.review === 'pending' && !rej && <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} onClick={() => setRej(true)}>{x('رفض')}</button>}
         {c.review === 'rejected' && c.reviewNote && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{c.reviewNote}</span>}
@@ -381,13 +381,31 @@ function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: 
 }
 
 /* ---------- Overview ---------- */
+type SiteStats = { visits: { day: string; views: number; visits: number }[]; regs: { total: number; perDay: { day: string; n: number }[] } | null; tours?: { live: number; upcoming: number; completed: number; fromBrackets: number }; migrate?: boolean };
+/** Small bar chart (one bar per day, value above, day below); no library. */
+function Bars({ data, color = '#3d7bff' }: { data: { day: string; n: number }[]; color?: string }) {
+  const max = Math.max(1, ...data.map((d) => d.n));
+  return (
+    <div dir="ltr" className="mt-3 flex h-40 items-end gap-1" role="img" aria-label={data.map((d) => `${d.day}: ${d.n}`).join(', ')}>
+      {data.map((d) => (
+        <div key={d.day} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${d.day}: ${d.n}`}>
+          <span className="text-[.62rem] font-bold leading-none" style={{ color: 'var(--muted)' }}>{d.n || ''}</span>
+          <div className="w-full rounded-t" style={{ height: `${Math.max(d.n ? 4 : 2, (d.n / max) * 100)}%`, maxHeight: 'calc(100% - 30px)', background: color, opacity: d.n ? 1 : 0.25 }} />
+          <span className="text-[.6rem] leading-none" style={{ color: 'var(--muted)' }}>{d.day.slice(8)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const can = useCan();
   const { x } = useX();
   const [news, setNews] = useState<Adm<NewsItem>[]>([]);
   const [tours, setTours] = useState<Adm<Tournament>[]>([]);
   const [regs, setRegs] = useState<Reg[]>([]);
+  const [st, setSt] = useState<SiteStats | null>(null);
   const load = () => Promise.all([
+    api<SiteStats>('/admin/stats', { key: k }).then(setSt).catch(() => undefined),
     api<Adm<NewsItem>[]>('/news', { key: k }).then(setNews).catch(() => undefined),
     api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setTours).catch(() => undefined),
     can('regs', 'view') ? api<Reg[]>('/registrations', { key: k }).then(setRegs).catch(() => undefined) : Promise.resolve(),
@@ -396,16 +414,22 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const now = Date.now();
   const upcoming = tours.filter((t) => t.published !== false && statusOf(t, now) === 'upcoming').length;
   const live = tours.filter((t) => t.published !== false && statusOf(t, now) === 'live').length;
+  const done = tours.filter((t) => t.published !== false && statusOf(t, now) === 'completed').length;
   const day = regs.filter((r) => now - Date.parse(`${r.created_at.replace(' ', 'T')}Z`) < 864e5).length;
+  const sum = (a: { visits?: number; views?: number }[], f: 'visits' | 'views') => a.reduce((t, r) => t + (r[f] ?? 0), 0);
+  const vis = st?.visits ?? [];
+  // all tournaments held (site ones + organisers' brackets with registration on); falls back to the site list until the numbers arrive
+  const tc = st?.tours ?? { live, upcoming, completed: done, fromBrackets: 0 };
   const stats = [
+    { icon: EyeI, label: x('الزيارات'), value: vis.length ? vis[vis.length - 1].visits : 0, note: `${x('آخر 7 أيام')}: ${sum(vis.slice(-7), 'visits')} · ${x('مشاهدات الصفحات')}: ${sum(vis.slice(-7), 'views')}`, tab: 'overview' as Tab },
+    { icon: CupI, label: x('إجمالي البطولات'), value: tc.live + tc.upcoming + tc.completed, note: `${tc.live} ${x('مباشرة')} · ${tc.upcoming} ${x('قادمة')} · ${tc.completed} ${x('منتهية')}`, tab: 'tournaments' as Tab },
+    ...(can('regs', 'view') ? [{ icon: UsersI, label: x('المسجلون في كل البطولات'), value: st?.regs?.total ?? regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab }] : []),
     { icon: NewsI, label: x('أخبار منشورة'), value: news.filter((n) => n.published !== false).length, note: `${x('من أصل')} ${news.length}`, tab: 'news' as Tab },
-    { icon: CupI, label: x('بطولات قادمة'), value: upcoming, note: `${live} ${x('مباشرة الآن')}`, tab: 'tournaments' as Tab },
-    ...(can('regs', 'view') ? [{ icon: UsersI, label: x('إجمالي التسجيلات'), value: regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab }] : []),
   ];
   return (
     <div>
       <PageHead title={x('نظرة عامة')} sub={x('ملخص سريع لكل شيء في الموقع')} refresh={load} />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
           <button key={s.label} type="button" onClick={() => go(s.tab)} className="text-start">
             <Card className="relative h-full overflow-hidden p-5 transition hover:-translate-y-0.5">
@@ -417,6 +441,20 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
             </Card>
           </button>
         ))}
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <Card className="p-5">
+          <div className="mb-1 flex items-baseline justify-between gap-2"><h2 className="font-extrabold">{x('زيارات يومية')}</h2><span className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('آخر 14 يوم')}</span></div>
+          <Bars data={vis.slice(-14).map((r) => ({ day: r.day, n: r.visits }))} />
+          <p className="mt-2 text-[.78rem]" style={{ color: 'var(--muted)' }}>{st?.migrate ? x('العدّاد يحتاج جدول page_views في قاعدة البيانات (انظر schema.sql).') : x('زيارة = جلسة تصفح، ومشاهدة = صفحة مفتوحة')}</p>
+        </Card>
+        {st?.regs && (
+          <Card className="p-5">
+            <div className="mb-1 flex items-baseline justify-between gap-2"><h2 className="font-extrabold">{x('تسجيلات يومية')}</h2><span className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('آخر 14 يوم')}</span></div>
+            <Bars data={st.regs.perDay.slice(-14).map((r) => ({ day: r.day, n: r.n }))} color="#27c27a" />
+          </Card>
+        )}
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
@@ -1205,7 +1243,7 @@ function AuthShell({ children, onSubmit, title, sub }: { children: ReactNode; on
         <h1 className="mt-5 text-center text-[1.55rem] font-extrabold">{title}</h1>
         <p className="mt-1 text-center text-[.92rem]" style={{ color: 'var(--muted)' }}>{sub}</p>
         {children}
-        <a href="#/" className="mt-5 flex items-center justify-center gap-2 text-[.85rem]" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+        <a href="/" className="mt-5 flex items-center justify-center gap-2 text-[.85rem]" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
       </form>
     </section>
   );
@@ -1665,7 +1703,7 @@ function AdminInner() {
         </nav>
         <div className="mt-auto pt-6">
           <div className="mb-3 grid gap-2">
-            <a href="#/" className="pill !h-10 w-full justify-center" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+            <a href="/" className="pill !h-10 w-full justify-center" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
             <button type="button" onClick={logout} className="pill !h-10 w-full justify-center" style={{ gap: '.4rem', color: '#ff6b7a', borderColor: 'rgba(255,107,122,.4)' }}><OutI className="h-4 w-4" />{x('تسجيل خروج')}</button>
           </div>
           <div className="rounded-xl border p-3" style={{ borderColor: 'var(--glass-b)' }}>
@@ -1709,7 +1747,7 @@ function AdminInner() {
               <div className="my-1 border-t" style={{ borderColor: 'var(--glass-b)' }} />
               <button type="button" onClick={() => { setMenu(false); setPwOpen(true); }} className="flex items-center gap-3 rounded-xl px-4 py-3 text-start text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><LockI className="h-5 w-5" /><span dir="ltr">{me.username}</span> · {x('تغيير كلمة المرور')}</button>
               <button type="button" onClick={() => { setMenu(false); setMailOpen(true); }} className="flex items-center gap-3 rounded-xl px-4 py-3 text-start text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><LockI className="h-5 w-5" />{x('إيميل الإشعارات')}</button>
-              <a href="#/" className="flex items-center gap-3 rounded-xl px-4 py-3 text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-5 w-5 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
+              <a href="/" className="flex items-center gap-3 rounded-xl px-4 py-3 text-[1rem] font-semibold" style={{ color: 'var(--muted)' }}><ArrowIcon className="h-5 w-5 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
             </nav>
           </div>
         )}

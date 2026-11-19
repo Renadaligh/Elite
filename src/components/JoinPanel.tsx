@@ -1,3 +1,4 @@
+import { noProto } from '../hooks/nav';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
 import type { RegRow } from './AddPlayers';
@@ -42,7 +43,7 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
     try { await api(`/brackets/${id}/join`, { method: 'PUT', body: JSON.stringify(patch) }); await load(); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }
-  async function copy() { try { await navigator.clipboard.writeText(link); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { window.prompt('', link); } }
+  async function copy() { try { await navigator.clipboard.writeText(noProto(link)); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { window.prompt('', noProto(link)); } }
   const line = 'rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
   const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
   const status = !c ? '' : c.reason === 'full' ? t.full : c.reason === 'closed' ? t.closed : t.open;
@@ -64,7 +65,7 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
             </div>
           {c.enabled && (
             <>
-              <div className="st-shl"><input readOnly dir="ltr" aria-label={t.link} value={link} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={copy}>{copied ? t.copied : t.copy}</button></div>
+              <div className="st-shl"><input readOnly dir="ltr" aria-label={t.link} value={noProto(link)} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={copy}>{copied ? t.copied : t.copy}</button></div>
               <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label={t.mode}>
                 <span className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.mode}</span>
                 {(['solo', 'team'] as const).map((m) => <button key={m} type="button" role="radio" aria-checked={c.mode === m} className={`br-chip ${c.mode === m ? 'on' : ''}`} onClick={() => put({ mode: m })}>{m === 'solo' ? t.solo : t.team}</button>)}

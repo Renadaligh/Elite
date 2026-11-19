@@ -26,7 +26,7 @@ export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, aut
   useEffect(() => { if (auto) autoAddNew(id, 'reg', site, players, onAdd); }, [site, auto]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const all = [...join, ...site].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''));
-  if (all.length === 0) return null;
+  if (all.length === 0 && players.length === 0) return null;
   const del = (r: RegRow) => {
     const url = r.src === 'site' ? `/brackets/${id}/regs?rid=${r.id}` : `/brackets/${id}/join?rid=${r.id}`;
     void api(url, { method: 'DELETE' }).then(load).catch(() => undefined);

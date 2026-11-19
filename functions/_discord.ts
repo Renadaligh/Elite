@@ -23,11 +23,11 @@ export async function discord(env: Env, request: Request, embed: { title: string
 const fmtDate = (iso: string) => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return ''; } };
 
 export const announceNews = (env: Env, request: Request, id: string, v: { title_ar: string; summary_ar: string; image: string }) =>
-  discord(env, request, { title: `📰 ${v.title_ar}`, description: v.summary_ar, path: '/#/news', image: v.image });
+  discord(env, request, { title: `📰 ${v.title_ar}`, description: v.summary_ar, path: '/news', image: v.image });
 
 export const announceTournament = (env: Env, request: Request, id: string, v: { name: { ar: string }; prize: { ar: string }; startsAt: string; total: number; mode: string; image: string }) =>
   discord(env, request, {
-    title: `🏆 فتح باب التسجيل: ${v.name.ar}`, path: `/#/tournaments/${id}`, image: v.image,
+    title: `🏆 فتح باب التسجيل: ${v.name.ar}`, path: `/t/${id}`, image: v.image,
     description: 'سجّل الحين من صفحة البطولة في الموقع.',
     fields: [
       { name: 'الموعد', value: fmtDate(v.startsAt) || '—', inline: true },

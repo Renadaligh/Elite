@@ -24,7 +24,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
   }, []);
 
   useEffect(() => {
-    if (page !== 'home') { setActive(page === 'news' ? '#news' : page === 'bracket' ? '#/bracket' : page === 'tournament' ? '#tournaments' : '#games'); return; }
+    if (page !== 'home') { setActive(page === 'news' ? '#news' : page === 'bracket' ? '/bracket' : page === 'tournament' ? '#tournaments' : '#games'); return; }
     setActive('#top');
     const els = NAV.map((n) => document.getElementById(n.href.slice(1))).filter(Boolean) as HTMLElement[];
     const io = new IntersectionObserver((es) => { if (Date.now() < lockUntil.current) return; es.forEach((e) => e.isIntersecting && setActive(`#${e.target.id}`)); }, { rootMargin: '-45% 0px -50% 0px' });

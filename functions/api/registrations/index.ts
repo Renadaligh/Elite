@@ -9,8 +9,9 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const b = await body(request);
   if (str(b.hp, 50)) return json({ ok: true }); // honeypot: pretend success to bots
   const tid = str(b.tournamentId, 80), plato = str(b.platoId, 80), team = b.mode === 'team';
-  const teamName = str(b.teamName, 80), members = str(b.members, 600);
-  if (!tid || !plato || (team && (!teamName || !members))) return json({ ok: false, error: 'required' }, 400);
+  let teamName = str(b.teamName, 80); const members = str(b.members, 600);
+  if (!tid || !plato || (team && !members)) return json({ ok: false, error: 'required' }, 400);
+  if (team && !teamName) teamName = [plato, ...members.split(/[\n,]+/).map((m) => m.trim()).filter(Boolean)].join(' | ').slice(0, 80);
   if (!validId(plato) || (team && !validIds(members))) return json({ ok: false, error: 'bad_id' }, 400);
   const t = await env.DB.prepare('SELECT name_en, filled, total, starts_at FROM tournaments WHERE id=? AND published=1').bind(tid).first<{ name_en: string; filled: number; total: number; starts_at: string }>();
   if (!t) return json({ ok: false, error: 'unknown' }, 404);

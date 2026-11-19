@@ -4,7 +4,7 @@ import type { Ctx } from '../../_lib';
 /** The link from the sign-in email: valid once, 15 minutes. */
 export const onRequestGet = async ({ request, env }: Ctx) => {
   const origin = new URL(request.url).origin;
-  const bad = (why: string) => Response.redirect(`${origin}/#/bracket?login=${why}`, 302);
+  const bad = (why: string) => Response.redirect(`${origin}/bracket?login=${why}`, 302);
   const t = new URL(request.url).searchParams.get('t') ?? '';
   if (!/^[0-9a-f]{48}$/.test(t)) return bad('expired');
   try {

@@ -1387,13 +1387,13 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-col{flex:0 0 212px;min-width:212px}
 .br-final{flex:0 0 212px}
 .br-row{padding:3px 8px;font-size:.84rem;gap:6px;line-height:1.25;min-height:24px}
-.br-col-body{gap:8px}
+.br-col-body{gap:12px}
 .br-match{border-radius:7px}
 .br-lines path{stroke-width:1}
 .br-row .br-seed{align-self:stretch;min-width:26px;height:auto;margin-block:-3px;margin-inline:-8px 2px;padding:0 4px;border-radius:0;font-size:.7rem}
 .br-fit .br-row{padding:3px 5px;gap:3px}
 .br-fit .br-row .br-seed{margin-inline:-5px 1px}
-.br-fit .br-col-body{gap:6px}
+.br-fit .br-col-body{gap:9px}
 .br-fit .br-match{border-radius:6px}
 @media (pointer:coarse){.br-row{padding-block:5px;min-height:28px}.br-row .br-seed{margin-block:-5px}}
 
@@ -1420,7 +1420,7 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .br-out-pv .br-bar{margin:0 14px 8px}
 /* zoom mode: same Challonge density as the fit mode (rows / gaps scale with zoom) */
 .br-zm .br-row{padding:calc(3px*var(--z)) calc(6px*var(--z));gap:calc(4px*var(--z));font-size:calc(.9rem*var(--z));min-height:calc(26px*var(--z))}
-.br-zm .br-col-body{gap:calc(7px*var(--z))}
+.br-zm .br-col-body{gap:calc(10.5px*var(--z))}
 .br-zm .br-main,.br-zm .br-cols{gap:calc(26px*var(--z))}
 .br-zm .br-col,.br-zm .br-final{flex:0 0 calc(212px*var(--z));min-width:calc(212px*var(--z))}
 

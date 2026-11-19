@@ -1,3 +1,4 @@
+import { noProto } from '../hooks/nav';
 import { champion, ffaChampion, ffaRows, groupLabel, groupSub, hasBye, isLeague, packSlots, koSub, layout, leagueRounds, outcome, resolve, roundMatches, standings, type BMatch, type Bracket, type Who } from './bracket';
 
 /** Draws a bracket straight onto a canvas (no libraries), so "save as image" works the same everywhere. */
@@ -179,7 +180,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
   const family = getComputedStyle(document.body).fontFamily || 'sans-serif';
   const R = resolve(br);
   const L = layout(br);
-  const BW = 180, SEED = 24, RHs = 22, GAP = 36, NUMW = 22, PS = 52, HD = 30, SEC = 56, IP = 28, TT = 76;
+  const BW = 180, SEED = 24, RHs = 22, GAP = 36, NUMW = 22, PS = 57, HD = 30, SEC = 56, IP = 28, TT = 76;
   const pos = new Map<string, { x: number; y: number }>();
   const nums = new Map<string, number>();
   const heads: { x: number; y: number; label: string }[] = [];
@@ -276,8 +277,13 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
       c.fillStyle = P.head; c.fillRect(seedX, y + 1, SEED, RHs - 2);
       c.fillStyle = win ? P.winBg : P.card; c.fillRect(bodyX, y + 1, BW - SEED, RHs - 2);
       c.fillStyle = P.soft; c.font = `500 11px ${family}`; txt(sd(w), seedX + SEED / 2, y + RHs / 2 + 1, 'center', SEED - 4);
-      c.fillStyle = win ? P.win : lose ? P.lose : P.fg; c.font = `${win ? 800 : 500} 12.5px ${family}`;
+      c.fillStyle = win ? P.win : lose ? P.lose : P.fg;
       const crown = win && champion(br) !== null && m.id === (L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id);
+      { // long names (a team's IDs) get a smaller font before they are cut
+        const maxW = BW - SEED - (crown ? 66 : 40); let f = 12.5;
+        for (; f > 9; f -= 0.5) { c.font = `${win ? 800 : 500} ${f}px ${family}`; if (c.measureText(nm(w)).width <= maxW) break; }
+        c.font = `${win ? 800 : 500} ${f}px ${family}`;
+      }
       txt(nm(w), ar ? bx + BW - SEED - 8 : bx + SEED + 8, y + RHs / 2 + 1, ar ? 'right' : 'left', BW - SEED - (crown ? 66 : 40));
       if (crown) trophy(c, ar ? bx + (sc ? 54 : 42) : bx + BW - (sc ? 54 : 42), y + RHs / 2 + 1, 15);
       if (sc || win) { c.fillStyle = win ? P.win : P.fg; c.font = `800 12px ${family}`; txt(sc || '✓', ar ? bx + 8 : bx + BW - 8, y + RHs / 2 + 1, ar ? 'left' : 'right', 28); }
@@ -376,8 +382,8 @@ export function downloadBlob(blob: Blob, name: string) {
 export async function shareBracket(blob: Blob, title: string, url: string): Promise<'shared' | 'copied' | 'failed'> {
   const file = new File([blob], 'bracket.png', { type: 'image/png' });
   try {
-    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title, text: `${title}\n${url}` }); return 'shared'; }
+    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title, text: `${title}\n${noProto(url)}` }); return 'shared'; }
     if (navigator.share) { await navigator.share({ title, url }); return 'shared'; }
   } catch (e) { if ((e as Error).name === 'AbortError') return 'failed'; }
-  try { await navigator.clipboard.writeText(url); return 'copied'; } catch { return 'failed'; }
+  try { await navigator.clipboard.writeText(noProto(url)); return 'copied'; } catch { return 'failed'; }
 }

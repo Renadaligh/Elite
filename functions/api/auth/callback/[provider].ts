@@ -43,7 +43,7 @@ async function steamProfile(request: Request, env: Env): Promise<Profile | null>
 /** Step 2: the provider sends the visitor back → we create the account (first time) and a session cookie. */
 export const onRequestGet = async ({ request, env, params }: Ctx) => {
   const url = new URL(request.url), origin = url.origin;
-  const fail = (why: string) => new Response(null, { status: 302, headers: { location: `${origin}/#/bracket?login=${why}`, 'set-cookie': cookie(request, 'oauth_state', '', 0, '/api/auth') } });
+  const fail = (why: string) => new Response(null, { status: 302, headers: { location: `${origin}/bracket?login=${why}`, 'set-cookie': cookie(request, 'oauth_state', '', 0, '/api/auth') } });
   const p = params.provider;
   const [state, r] = (cookies(request).oauth_state ?? '').split('.');
   if (!state || state !== url.searchParams.get('state')) return fail('failed');

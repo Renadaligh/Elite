@@ -18,8 +18,8 @@ export const onRequestPut = async ({ request, env, params, waitUntil }: Ctx) => 
     if ((status === 'approved' || status === 'rejected') && row.owner_id) {
       const origin = new URL(request.url).origin;
       const job = organizerEmail(env, row.owner_id).then((to) => (to ? (status === 'approved'
-        ? sendMail(env, [to], `تم قبول بطولتك: ${row.name_en}`, 'تم قبول بطولتك 🎉', `بطولتك «${row.name_en}» انقبلت وصارت ظاهرة في الموقع، والناس يقدرون يسجّلون فيها.\n\nYour tournament "${row.name_en}" was approved and is now live on the site.`, { href: `${origin}/#/tournaments/${encodeURIComponent(params.id)}`, label: 'فتح البطولة' })
-        : sendMail(env, [to], `بطولتك تحتاج تعديل: ${row.name_en}`, 'ما انقبلت بطولتك للحين', `بطولتك «${row.name_en}» ما انقبلت.\nالسبب: ${note}\n\nعدّل الاسم أو الصورة واضغط «نشر / حفظ» لإعادتها للمراجعة.\n\nYour tournament "${row.name_en}" was not approved. Reason: ${note}. Edit it and save to send it for review again.`, { href: `${origin}/#/bracket`, label: 'تعديل البطولة' })) : undefined));
+        ? sendMail(env, [to], `تم قبول بطولتك: ${row.name_en}`, 'تم قبول بطولتك 🎉', `بطولتك «${row.name_en}» انقبلت وصارت ظاهرة في الموقع، والناس يقدرون يسجّلون فيها.\n\nYour tournament "${row.name_en}" was approved and is now live on the site.`, { href: `${origin}/t/${encodeURIComponent(params.id)}`, label: 'فتح البطولة' })
+        : sendMail(env, [to], `بطولتك تحتاج تعديل: ${row.name_en}`, 'ما انقبلت بطولتك للحين', `بطولتك «${row.name_en}» ما انقبلت.\nالسبب: ${note}\n\nعدّل الاسم أو الصورة واضغط «نشر / حفظ» لإعادتها للمراجعة.\n\nYour tournament "${row.name_en}" was not approved. Reason: ${note}. Edit it and save to send it for review again.`, { href: `${origin}/bracket`, label: 'تعديل البطولة' })) : undefined));
       if (waitUntil) waitUntil(job); else await job;
     }
   } catch { return json({ error: 'migrate' }, 500); }

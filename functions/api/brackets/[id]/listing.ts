@@ -53,7 +53,7 @@ export const onRequestPut = async (ctx: Ctx) => {
   const toReview = (review: string) => {
     if (review !== 'pending') return;
     const origin = new URL(ctx.request.url).origin;
-    const job = adminEmails(ctx.env).then((to) => sendMail(ctx.env, to, `بطولة جديدة للمراجعة: ${name}`, 'بطولة تنتظر المراجعة', `${u.name || 'منظم'} نشر بطولة «${name}» وتنتظر موافقتك.\n\nA tournament "${name}" is waiting for review.`, { href: `${origin}/#/admin`, label: 'فتح لوحة الإدارة' }));
+    const job = adminEmails(ctx.env).then((to) => sendMail(ctx.env, to, `بطولة جديدة للمراجعة: ${name}`, 'بطولة تنتظر المراجعة', `${u.name || 'منظم'} نشر بطولة «${name}» وتنتظر موافقتك.\n\nA tournament "${name}" is waiting for review.`, { href: `${origin}/admin`, label: 'فتح لوحة الإدارة' }));
     if (ctx.waitUntil) ctx.waitUntil(job);
   };
   const mode = x.mode === 'team' ? 'team' : 'solo', game = str(x.gameId, 60).toLowerCase(), prize = str(x.prize, 80), pub = x.published === false ? 0 : 1;

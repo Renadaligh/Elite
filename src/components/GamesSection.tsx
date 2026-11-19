@@ -1,3 +1,4 @@
+import { go as navTo } from '../hooks/nav';
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import { SHOW_EXAMPLE_GAMES, type Game } from '../data/games';
 import { useSiteGames } from '../hooks/useGames';
@@ -63,7 +64,7 @@ export default function GamesSection() {
   const go = (g: Game) => {
     if (leaving) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const open = () => { window.location.hash = `#/games/${g.id}`; };
+    const open = () => { navTo(`/games/${g.id}`); };
     if (reduce) { open(); return; }
     setLeaving(true);
     timer.current = window.setTimeout(open, 320);
@@ -132,7 +133,7 @@ export default function GamesSection() {
               background: `linear-gradient(160deg, ${g.colors[0]}, ${g.colors[1]})`,
             };
             return (
-              <a key={g.id} href={`#/games/${g.id}`} draggable={false} aria-hidden={!shown || undefined} tabIndex={o === 0 ? 0 : -1}
+              <a key={g.id} href={`/games/${g.id}`} draggable={false} aria-hidden={!shown || undefined} tabIndex={o === 0 ? 0 : -1}
                 aria-label={`${g.name[lang]} — ${o === 0 ? t.gamesDetails : g.genre[lang]}`} className="gcard" style={style}
                 onClick={(e: MouseEvent) => {
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;

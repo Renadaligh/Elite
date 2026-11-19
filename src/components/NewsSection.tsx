@@ -30,7 +30,7 @@ export default function NewsSection() {
           <h2 id="news-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.newsTitle}</h2>
           <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.newsSub}</p>
         </div>
-        <a href="#/news" className="btn-glass !px-5 !py-2.5 text-[.9rem]">{t.newsAll} <span aria-hidden="true" className="ms-2 inline-block rtl:-scale-x-100">→</span></a>
+        <a href="/news" className="btn-glass !px-5 !py-2.5 text-[.9rem]">{t.newsAll} <span aria-hidden="true" className="ms-2 inline-block rtl:-scale-x-100">→</span></a>
       </div>
 
       {status === 'loading' && (

@@ -29,7 +29,7 @@ export default function HeroContent() {
       <p className="hero-desc">{t.heroSub}</p>
       <div aria-hidden="true" className="hero-gap" />
       <div className="hero-cta">
-        <a href="#/bracket" className="hero-main">
+        <a href="/bracket" className="hero-main">
           <svg className="hm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 5h6v5H3zM3 14h6v5H3zM15 9.5h6v5h-6zM9 7.5h3v9M12 12h3" /></svg>
           <span>{lang === 'ar' ? <><span className="hm-try">جرّب </span>أداة تنظيم البطولات</> : <><span className="hm-try">Try the </span>Bracket Tool</>}</span>
         </a>

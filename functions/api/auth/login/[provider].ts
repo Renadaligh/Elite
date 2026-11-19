@@ -5,7 +5,7 @@ import type { Ctx } from '../../../_lib';
 export const onRequestGet = async ({ request, env, params }: Ctx) => {
   const origin = new URL(request.url).origin;
   const p = params.provider;
-  const off = Response.redirect(`${origin}/#/bracket?login=unavailable`, 302);
+  const off = Response.redirect(`${origin}/bracket?login=unavailable`, 302);
   const r = new URL(request.url).searchParams.get('r') === 'mine' ? 'mine' : 'tool';
   const state = hex(16);
   const go = (to: string) => new Response(null, { status: 302, headers: { location: to, 'set-cookie': cookie(request, 'oauth_state', `${state}.${r}`, 600, '/api/auth'), 'cache-control': 'no-store' } });

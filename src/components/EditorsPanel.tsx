@@ -1,3 +1,4 @@
+import { go as navTo } from '../hooks/nav';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { api } from '../services/api';
 
@@ -37,7 +38,7 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
   }
   async function del(uid: string) {
     setBusy(true); setMsg('');
-    try { await api(`/brackets/${id}/editors`, { method: 'DELETE', body: JSON.stringify({ userId: uid }) }); if (uid === userId) window.location.hash = '#/bracket'; else await load(); } catch (e) { fail(e); }
+    try { await api(`/brackets/${id}/editors`, { method: 'DELETE', body: JSON.stringify({ userId: uid }) }); if (uid === userId) navTo('/bracket'); else await load(); } catch (e) { fail(e); }
     setBusy(false);
   }
   if (!d) return msg ? <p className="st-shn" style={style}>{msg}</p> : null;

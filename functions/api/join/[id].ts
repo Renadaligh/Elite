@@ -24,8 +24,11 @@ export const onRequestPost = async ({ request, env, params }: Ctx) => {
   const r = await joinRow(env, params.id);
   if (!r || !r.enabled) return json({ ok: false, error: 'unknown' }, 404);
   const team = r.mode === 'team';
-  const plato = str(b.platoId, 80), teamName = str(b.teamName, 80), members = str(b.members, 600);
-  if (!plato || (team && (!teamName || !members))) return json({ ok: false, error: 'required' }, 400);
+  const plato = str(b.platoId, 80), members = str(b.members, 600);
+  let teamName = str(b.teamName, 80);
+  if (!plato || (team && !members)) return json({ ok: false, error: 'required' }, 400);
+  // no team name given: line the players up – captain | player | player
+  if (team && !teamName) teamName = [plato, ...members.split(/[\n,]+/).map((m) => m.trim()).filter(Boolean)].join(' | ').slice(0, 80);
   if (!validId(plato) || (team && !validIds(members))) return json({ ok: false, error: 'bad_id' }, 400);
   const why = joinReason(r, await joinCount(env, params.id));
   if (why) return json({ ok: false, error: why }, 409);

@@ -1,3 +1,4 @@
+import { go as navTo } from '../hooks/nav';
 import { useEffect, useRef, useState } from 'react';
 import type { Game } from '../data/games';
 import { useI18n } from '../i18n/I18nProvider';
@@ -38,7 +39,7 @@ export default function GameOfDay({ games }: { games: Game[] }) {
     setState('rolling');
     window.clearTimeout(timer.current);
     // The die rolls for a moment, then we go straight to the game's page (no preview card).
-    timer.current = window.setTimeout(() => { setPick(g); setState('idle'); window.location.hash = `#/games/${g.id}`; }, reduce ? 0 : 1100);
+    timer.current = window.setTimeout(() => { setPick(g); setState('idle'); navTo(`/games/${g.id}`); }, reduce ? 0 : 1100);
   };
 
   const onMain = () => { window.clearTimeout(timer.current); if (state === 'idle') roll(); };
