@@ -28,8 +28,8 @@ async function snapshot(request: Request, row: Row, lang: 'ar' | 'en', bracketTi
 }
 
 const styles = `
-:root{color-scheme:dark;--bg:#0a1020;--panel:#111a2d;--fg:#edf2ff;--mut:#a8b4cf;--head:#283659;--row:#1d2a45;--win:#2655b8;--line:#677692;--toolbar:#0f1930;--champ-bg:#f3c93d;--champ-border:#e7b114;--champ-text:#3c2a00;--champ-sub:#6e5300}
-:root[data-theme=light]{color-scheme:light;--bg:#eef3fb;--panel:#fff;--fg:#132750;--mut:#405a84;--head:#adc5ed;--row:#d7e4f5;--win:#8cb4f0;--line:#506b9e;--toolbar:#ffffff;--champ-bg:#ffd95a;--champ-border:#e4b51d;--champ-text:#4a3400;--champ-sub:#7b5a00}
+:root{color-scheme:dark;--bg:#0f1423;--panel:#1a2236;--fg:#e8edf8;--mut:#8a95b2;--head:#26314a;--row:#1a2236;--win:#2f5fd0;--line:#55627f;--toolbar:#0b101d;--champ-bg:#f3c93d;--champ-border:#e7b114;--champ-text:#3c2a00;--champ-sub:#6e5300}
+:root[data-theme=light]{color-scheme:light;--bg:#f3f5f9;--panel:#fff;--fg:#1c2433;--mut:#6b778c;--head:#d0d8e6;--row:#e4e9f2;--win:#bfd4ff;--line:#8795ad;--toolbar:#ffffff;--champ-bg:#ffd95a;--champ-border:#e4b51d;--champ-text:#4a3400;--champ-sub:#7b5a00}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px system-ui,sans-serif}
 header,main{max-width:1380px;margin:auto;padding:16px clamp(12px,4vw,36px)}
 header,nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px}header{justify-content:space-between}.brand img{display:block;height:34px;width:auto;max-width:128px;object-fit:contain}:root[data-theme=light] .brand img{filter:brightness(0) saturate(100%) invert(15%) sepia(39%) saturate(1049%) hue-rotate(184deg)}
@@ -46,9 +46,9 @@ h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-
 :root[data-theme=light] .bracket-champion{background:linear-gradient(135deg,#f7d064,#e3a92b);border-color:transparent;color:#2b1d00;box-shadow:0 8px 18px -12px rgba(200,140,10,.9)}
 :root[data-theme=light] .bracket-champion-icon{color:#4d3200}:root[data-theme=light] .bracket-champion-label{color:rgba(43,29,0,.72)}:root[data-theme=light] .bracket-champion-name{color:#241800}
 .sheet svg[data-width]{display:block;max-width:none;height:auto;margin:0 auto 8px;width:var(--render-width, auto)}
-.bs-hd,.bs-seed{fill:var(--head);stroke:color-mix(in srgb,var(--line) 75%, transparent);stroke-width:1.3}.bs-row{fill:var(--row);stroke:color-mix(in srgb,var(--line) 70%, transparent);stroke-width:1.15}.bs-row.win{fill:var(--win);stroke:color-mix(in srgb,var(--line) 78%, transparent);stroke-width:1.3}
+.bs-hd,.bs-seed{fill:var(--head);stroke:none}.bs-row{fill:var(--row);stroke:none}.bs-row.win{fill:var(--win);stroke:none}
 .bs-nm,.bs-ht,.bs-sc,.bs-ck{fill:var(--fg)}.bs-nm.win{font-weight:800}.bs-sn,.bs-no,.bs-nm.lose,.bs-nm.bye{fill:var(--mut)}.bs-ln{stroke:var(--line);stroke-width:1.9}.bs-cup{stroke:#dca500}[hidden]{display:none!important}
-.icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;min-width:38px;min-height:38px;padding:7px 10px}.icon-btn svg{width:17px;height:17px;flex:none;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}.icon-btn .icon-text{font-size:13px;font-weight:700}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;min-width:38px;min-height:38px;padding:7px 10px}.icon-btn svg{width:17px;height:17px;flex:none;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}.icon-btn .icon-text{font-size:13px;font-weight:700}#copy-link{position:relative}#copy-feedback{position:absolute;top:calc(100% + 5px);left:50%;transform:translate(-50%, -3px);font-size:11px;font-weight:650;white-space:nowrap;color:var(--fg);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}#copy-feedback[data-visible=true]{opacity:1;transform:translate(-50%, 0)}
 #zoom{display:inline-flex;align-items:center;gap:6px}#zoom button{min-width:39px;min-height:39px;padding:7px 12px}#zoom-level{min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
 .title-block h1{margin-bottom:4px}
 #page-toast{position:fixed;inset-inline-start:50%;bottom:clamp(24px,6vh,64px);transform:translateX(-50%) translateY(10px);z-index:1000;min-width:140px;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:#213b70;color:#fff;box-shadow:0 12px 36px rgba(0,0,0,.24);font-size:14px;font-weight:750;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}#page-toast[data-visible="true"]{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -84,6 +84,7 @@ theme?.addEventListener('click', () => {
   applyThemeIcon();
 });
 const pageToast = document.getElementById('page-toast');
+let copyFeedbackTimer;
 let toastTimer;
 const showToast = (message, isError = false) => {
   if (!pageToast) return;
@@ -117,7 +118,20 @@ copy?.addEventListener('click', async (event) => {
     input.remove();
   }
   copy.title = copied ? copy.dataset.copied : copy.dataset.failed;
-  showToast(copied ? copy.dataset.copied : copy.dataset.failed, !copied);
+  const copySvg = copy.querySelector('svg');
+  const feedback = document.getElementById('copy-feedback');
+  if (feedback) {
+    feedback.textContent = copied ? (root.lang === 'ar' ? 'تم النسخ' : 'Copied') : (root.lang === 'ar' ? 'تعذّر النسخ' : 'Copy failed');
+    feedback.dataset.visible = 'true';
+  }
+  if (copySvg && !copySvg.dataset.original) copySvg.dataset.original = copySvg.innerHTML;
+  if (copied && copySvg) copySvg.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
+  clearTimeout(copyFeedbackTimer);
+  copyFeedbackTimer = setTimeout(() => {
+    if (copySvg?.dataset.original) copySvg.innerHTML = copySvg.dataset.original;
+    if (feedback) feedback.dataset.visible = 'false';
+    copy.title = root.lang === 'ar' ? 'نسخ الرابط' : 'Copy link';
+  }, 2100);
 });
 const saveImage = document.getElementById('save-image');
 saveImage?.addEventListener('click', async (event) => {
@@ -131,15 +145,12 @@ saveImage?.addEventListener('click', async (event) => {
     const color = (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim();
     const rules = [
       ['.bs-hd,.bs-seed', 'fill', '--head'],
-      ['.bs-hd,.bs-seed', 'stroke', '--line'],
       ['.bs-row', 'fill', '--row'],
-      ['.bs-row', 'stroke', '--line'],
       ['.bs-row.win', 'fill', '--win'],
-      ['.bs-row.win', 'stroke', '--line'],
       ['.bs-nm,.bs-ht,.bs-sc,.bs-ck', 'fill', '--fg'],
       ['.bs-sn,.bs-no,.bs-nm.lose,.bs-nm.bye', 'fill', '--mut'],
       ['.bs-ln', 'stroke', '--line'],
-    ].map(([selector, property, variable]) => selector + '{' + property + ':' + color(variable) + '}').join('') + '.bs-hd,.bs-seed{stroke-width:1.3}.bs-row,.bs-row.win{stroke-width:1.15}.bs-row.win{stroke-width:1.3}.bs-nm.win{font-weight:800}.bs-cup{stroke:#dca500}text{font-family:Arial,Tahoma,sans-serif}';
+    ].map(([selector, property, variable]) => selector + '{' + property + ':' + color(variable) + '}').join('') + '.bs-hd,.bs-seed,.bs-row,.bs-row.win{stroke:none}.bs-nm.win{font-weight:800}.bs-cup{stroke:#dca500}text{font-family:Arial,Tahoma,sans-serif}';
     const padding = 36, gap = 20, titleHeight = 72, textHeight = 30, brandBoxW = 180, brandBoxH = 56;
     const blocks = graphics.map((svg, index) => {
       const width = Number(svg.getAttribute('width')) || Number(svg.dataset.width) || 800;
@@ -313,6 +324,10 @@ if (sheet) {
       const fit = Math.max(.58, Math.min(desktopBoost, (available / width) * desktopBoost));
       chart.style.setProperty('--render-width', (width * fit * zoom) + 'px');
     }
+    // The sheet is LTR internally so its scrolling coordinates remain consistent.
+    // The Arabic SVG is visually mirrored: begin at the rightmost rounds after
+    // refresh and after zooming, without reversing the bracket itself.
+    if (root.lang === 'ar') sheet.scrollLeft = Math.max(0, sheet.scrollWidth - sheet.clientWidth);
     if (level) level.textContent = Math.round(zoom * 100) + '%';
     zoomIn.disabled = zoom >= 3;
     zoomOut.disabled = zoom <= .6;
@@ -439,7 +454,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
     } catch {}</script></head><body data-short-id="${escape(shortId)}">
     <header><a class="brand" href="/" aria-label="Plato AR"><img src="/brand/plato-ar-white.png" alt="PLATO AR"></a><nav>
       <button id="change-language" type="button" class="icon-btn" data-next-lang="${target}" lang="${ar ? 'en' : 'ar'}" title="${ar ? 'Change language' : 'تغيير اللغة'}">${icon('language')}<span class="icon-text">${ar ? 'EN' : 'عربي'}</span></button>
-      ${status === 200 ? `<button id="copy-link" type="button" data-copied="${ar ? 'تم النسخ ✓' : 'Copied ✓'}" data-failed="${ar ? 'تعذّر النسخ' : 'Copy failed'}" class="icon-btn" title="${ar ? 'نسخ الرابط' : 'Copy link'}" aria-label="${ar ? 'نسخ الرابط' : 'Copy link'}">${icon('copy')}</button>` : ''}
+      ${status === 200 ? `<button id="copy-link" type="button" data-copied="${ar ? 'تم النسخ ✓' : 'Copied ✓'}" data-failed="${ar ? 'تعذّر النسخ' : 'Copy failed'}" class="icon-btn" title="${ar ? 'نسخ الرابط' : 'Copy link'}" aria-label="${ar ? 'نسخ الرابط' : 'Copy link'}">${icon('copy')}<span id="copy-feedback" aria-hidden="true"></span></button>` : ''}
       ${status === 200 ? `<button id="save-image" type="button" data-saved="${ar ? 'تم الحفظ ✓' : 'Saved ✓'}" data-failed="${ar ? 'تعذّر حفظ الصورة' : 'Could not save image'}" class="icon-btn" title="${ar ? 'حفظ كصورة' : 'Save as image'}" aria-label="${ar ? 'حفظ كصورة' : 'Save as image'}">${icon('download')}</button>` : ''}
       <button id="theme" type="button" class="icon-btn" aria-pressed="false" aria-label="${ar ? 'تغيير وضع الألوان' : 'Change color mode'}" title="${ar ? 'تغيير وضع الألوان' : 'Change color mode'}"><svg data-theme-icon aria-hidden="true" viewBox="0 0 24 24"></svg></button>
     </nav></header><main style="--dir:${dir}"><div class="title-block"><h1 dir="auto">${escape(title)}</h1>${status === 200 ? meta : ''}</div>
