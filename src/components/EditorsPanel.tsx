@@ -6,10 +6,10 @@ type Person = { id: string; name: string; handle: string; avatar: string };
 type Data = { isOwner: boolean; max: number; editors: Person[] };
 const T = {
   ar: {
-    title: 'التحرير المشترك', sub: 'أضف عضواً مسجّلاً بيوزره ليعدّل معك على هذا البراكت. يشوفه في «بطولاتي» ويحدّث النتائج معك.', ph: 'يوزر العضو (مثال: abdullah_9)', add: 'إضافة',
-    none: 'ما أضفت أحداً بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذا البراكت.', empty: 'اكتب اليوزر.',
+    title: 'التحرير المشترك', sub: 'أضف عضواً مسجّلاً بيوزره ليعدّل معك على هذه البطولة.', ph: 'يوزر العضو (مثال: abdullah_9)', add: 'إضافة',
+    none: 'لم يُضاف أحد بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذا البراكت.', empty: 'اكتب اليوزر.',
     err: { bad_handle: 'اليوزر غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'ما لقيت عضواً بهذا اليوزر.', self: 'هذا يوزرك أنت.', limit: 'وصلت الحد الأقصى للمحررين.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'ما تمت العملية، حاول مرة ثانية.' },
-    mine: 'يوزرك', warn: 'من تضيفه يقدر يغيّر النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
+    mine: 'يوزرك', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
   },
   en: {
     title: 'Co-editors', sub: 'Add a registered member by username so they can edit this bracket with you. It shows in their “My brackets” and they can update results.', ph: 'Username (e.g. abdullah_9)', add: 'Add',

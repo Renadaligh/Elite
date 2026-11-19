@@ -1,4 +1,3 @@
-import { SHOW_AUTO_TOGGLE } from '../config/site';
 import { siteUrl, noProto } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -28,7 +27,7 @@ const pill = 'rounded-full border px-4 py-2 text-[.85rem] font-semibold disabled
 export const TXT = {
   ar: {
     title: 'أداة تنظيم البطولات', sub: 'سوِّ بطولة لأي سيرفر أو مجتمع: خروج مغلوب أو مزدوج أو دوري أو سويسري. حدّث النتائج واحفظه كصورة أو شاركه.',
-    name: 'اسم البطولة', namePh: 'مثلاً: كأس سيرفر الأصدقاء', format: 'النظام', single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', rr: 'دوري (كل لاعب ضد الكل)', swiss: 'سويسري', groups: 'مجموعات ثم إقصائيات', ffa: 'لوحة صدارة (الكل ضد الكل)', dbl: 'دوري مزدوج (ذهاب وإياب)', maxRr: `الدوري: الحد الأقصى ${MAX_RR}`, dupName: 'هذا الاسم مستخدم عند لاعب آخر.', dupList: 'فيه أسماء مكررة، عدّلها أولاً: ', players: 'اللاعبون / الفرق (سطر لكل واحد، الأعلى = الأقوى)',
+    name: 'اسم البطولة بالعربي', namePh: 'مثلاً: كأس سيرفر الأصدقاء', nameEn: 'اسم البطولة بالإنجليزي', nameEnPh: 'e.g. Friends Server Cup', format: 'النظام', single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', rr: 'دوري (كل لاعب ضد الكل)', swiss: 'سويسري', groups: 'مجموعات ثم إقصائيات', ffa: 'لوحة صدارة (الكل ضد الكل)', dbl: 'دوري مزدوج (ذهاب وإياب)', maxRr: `الدوري: الحد الأقصى ${MAX_RR}`, dupName: 'هذا الاسم مستخدم عند لاعب آخر.', dupList: 'فيه أسماء مكررة، عدّلها أولاً: ', players: 'اللاعبون / الفرق (سطر لكل واحد، الأعلى = الأقوى)',
     shuffle: 'خلط عشوائي', create: 'إنشاء البطولة', need: 'أدخل لاعبَين على الأقل', max: `الحد الأقصى ${MAX_RR}`,
     hint: 'اضغط على اسم الفائز في كل مباراة لتحديثه.', hintL: 'اكتب النتيجة في كل مباراة (أو الأرقام في كل جولة) والترتيب يتحدث تلقائياً.', score: 'نتيجة المباراة', undo: 'تراجع', save: 'حفظ في بطولاتي', saved: 'تم الحفظ', saving: '…', mine: 'بطولاتي',
     login: 'تسجيل الدخول', logout: 'خروج', loginTitle: 'سجّل دخولك عشان تحفظ بطولاتك', loginSub: 'تجد كل بطولاتك في مكان واحد وترجع لها من أي جهاز. ما ننشر شيء باسمك.',
@@ -42,7 +41,7 @@ export const TXT = {
   },
   en: {
     title: 'Bracket tool', sub: 'Make a bracket for any server or community: single or double elimination, round robin or swiss. Update results, save it as an image or share it.',
-    name: 'Tournament name', namePh: 'e.g. Friends Server Cup', format: 'Format', single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups then knockout', ffa: 'Leaderboard (free-for-all)', dbl: 'Double round robin (home & away)', maxRr: `Round robin: max ${MAX_RR}`, dupName: 'This name is already used by another player.', dupList: 'Some names are repeated, fix them first: ', players: 'Players / teams (one per line, top = strongest seed)',
+    name: 'Tournament name in Arabic', namePh: 'مثلاً: كأس سيرفر الأصدقاء', nameEn: 'Tournament name in English', nameEnPh: 'e.g. Friends Server Cup', format: 'Format', single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups then knockout', ffa: 'Leaderboard (free-for-all)', dbl: 'Double round robin (home & away)', maxRr: `Round robin: max ${MAX_RR}`, dupName: 'This name is already used by another player.', dupList: 'Some names are repeated, fix them first: ', players: 'Players / teams (one per line, top = strongest seed)',
     shuffle: 'Shuffle randomly', create: 'Create bracket', need: 'Enter at least 2 players', max: `Max ${MAX_RR}`,
     hint: 'Click the winner of each match to update it.', hintL: 'Type the score of each match (or round); the standings update automatically.', score: 'Match score', undo: 'Undo', save: 'Save to my brackets', saved: 'Saved', saving: '…', mine: 'My brackets',
     login: 'Sign in', logout: 'Sign out', loginTitle: 'Sign in to save your brackets', loginSub: 'Find all your brackets in one place from any device. We never post anything for you.',
@@ -98,13 +97,14 @@ function Shell({ tx, user, children, bare }: { tx: Tx; user: AuthUser | null; ch
   );
 }
 
-interface Draft { title: string; names: string; fmt: BFormat; br: Bracket | null; org?: string }
+interface Draft { title: string; titleEn?: string; names: string; fmt: BFormat; br: Bracket | null; org?: string }
 const readDraft = (): Draft => { try { const d = JSON.parse(localStorage.getItem(DRAFT) ?? ''); if (d && typeof d.title === 'string') return d; } catch { /* none */ } return { title: '', names: '', fmt: 'single', br: null }; };
 
 export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth>; readOnly?: boolean; onForeign?: () => void }) {
   const { lang } = useI18n();
   const init = useMemo(() => (id ? { title: '', names: '', fmt: 'single' as BFormat, br: null } : readDraft()), [id]);
   const [title, setTitle] = useState(init.title);
+  const [titleEn, setTitleEn] = useState((init as Draft).titleEn ?? '');
   const [org, setOrgName] = useState((init as Draft).org ?? '');
   const [names, setNames] = useState(init.names);
   const [fmt, setFmt] = useState<BFormat>(init.fmt);
@@ -126,12 +126,12 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   useEffect(() => {
     if (!id) return;
     api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; isOwner?: boolean; share: boolean }>(`/brackets/${id}`)
-      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setState('ok'); })
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setTitleEn(r.bracket.titleEn ?? ''); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
   // Guests keep their work in the browser, so signing in (a page round-trip) never loses it.
-  useEffect(() => { if (id) return; try { localStorage.setItem(DRAFT, JSON.stringify({ title, names, fmt, br, org })); } catch { /* private mode */ } }, [id, title, names, fmt, br, org]);
+  useEffect(() => { if (id) return; try { localStorage.setItem(DRAFT, JSON.stringify({ title, titleEn, names, fmt, br, org })); } catch { /* private mode */ } }, [id, title, titleEn, names, fmt, br, org]);
 
   const ver = useRef(0); // bumps on every edit, so a save that finishes late never marks newer edits as saved
   const failed = useRef(-1); // edit number whose autosave failed (no retry loop)
@@ -153,6 +153,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   });
   const url = id ? `${base()}/v/${id.slice(0, 6)}` : `${base()}/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
+  const displayTitle = (lang === 'en' && titleEn.trim() ? titleEn.trim() : shownTitle);
 
   function create() {
     const list = names.split('\n').map((n) => n.trim()).filter(Boolean).slice(0, MAX_PLAYERS);
@@ -160,7 +161,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     if (fmt === 'rr' && list.length > MAX_RR) { setMsg(tx.maxRr); return; }
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
     // fewer than 2 names: an empty draft, players are added later (typed or from the registrants)
-    edit(setOrg(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts), org));
+    edit({ ...setOrg(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts), org), ...(titleEn.trim() ? { titleEn: titleEn.trim() } : {}) });
   }
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
   function addToBracket(add: string[]) {
@@ -197,7 +198,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     const sent = ver.current;
     try {
       const cw = champion(br); // the winner closes the published tournament (winner + end date are written by themselves)
-      const body = JSON.stringify({ title: shownTitle, bracket: br, champion: cw !== null ? br.players[cw] ?? '' : '' });
+      const body = JSON.stringify({ title: shownTitle, bracket: { ...br, titleEn: titleEn.trim() }, champion: cw !== null ? br.players[cw] ?? '' : '' });
       if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); commitAutoAdds(id); if (ver.current === sent) setDirty(false); setMsg(tx.saved); }
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
@@ -213,7 +214,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     const h = window.setTimeout(() => { void save(); }, 1500);
     return () => window.clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, mine, dirty, busy, br, title, auth.user]);
+  }, [id, mine, dirty, busy, br, title, titleEn, auth.user]);
   async function copyLink(key: string, link: string) {
     try { await navigator.clipboard.writeText(noProto(link)); setCopied(key); window.setTimeout(() => setCopied(''), 1800); } catch { window.prompt('', noProto(link)); }
   }
@@ -234,6 +235,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
         editable && (
           <div className="st-nf grid gap-4 rounded-2xl border p-5" style={card}>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.name}<input className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => setTitle(e.target.value)} /></label>
+            <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.nameEn}<input dir="ltr" className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={80} value={titleEn} placeholder={tx.nameEnPh} onChange={(e) => setTitleEn(e.target.value)} /></label>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.org}<input className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={org} placeholder={tx.orgPh} onChange={(e) => setOrgName(e.target.value)} /></label>
             <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.format}
               <select className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', backgroundColor: 'var(--bg)' }} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{tx.single}</option><option value="double">{tx.double}</option><option value="rr">{tx.rr}</option><option value="swiss">{tx.swiss}</option><option value="groups">{tx.groups}</option><option value="ffa">{tx.ffa}</option></select></label>
@@ -250,20 +252,21 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
             {!sheetView && <div>
               {editable ? <input className="w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1 text-[1.2rem] md:text-[1.5rem] font-extrabold outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} />
                 : <h2 className="text-[1.7rem] md:text-[2rem] font-extrabold">{title}</h2>}
+              {editable && <input dir="ltr" aria-label={tx.nameEn} className="mt-1.5 w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1 text-[.9rem] outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={80} value={titleEn} placeholder={tx.nameEnPh} onChange={(e) => { ver.current += 1; setTitleEn(e.target.value); setDirty(true); }} />}
               {editable && <input className="mt-1.5 w-full max-w-[26rem] rounded-xl border bg-transparent px-3 py-1 text-[.85rem] outline-none focus:border-[#3d7bff]" style={{ borderColor: 'var(--glass-b)' }} maxLength={60} value={br.org ?? ''} placeholder={`${tx.org} · ${tx.orgPh}`} aria-label={tx.org} onChange={(e) => { const v = e.target.value.slice(0, 60); const { org: _o, ...rest } = br; void _o; ver.current += 1; setBr(v ? { ...rest, org: v } : rest); setDirty(true); }} />}
               {!editable && br.org && <p className="mt-1 text-[.95rem] font-semibold" style={{ color: 'var(--muted)' }}>{tx.orgBy}: <span dir="auto" style={{ color: 'var(--text)' }}>{br.org}</span></p>}
               {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
             </div>}
             <div className="flex flex-wrap items-center gap-2.5">
               {!isDraft(br) && (champ !== null || editable) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable={editable} onChange={editable ? (b) => edit(b) : undefined} />}
-              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={shownTitle} url={editable && id ? viewUrl : url} />
+              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} />
               {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
             </div>
           </div>
           {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
           {editable && br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hintL}</p>}
           <div className="st-stage">
-          {sheetView ? <BracketSheetAny bracket={br} title={shownTitle} lang={lang === 'en' ? 'en' : 'ar'} /> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
+          {sheetView ? <BracketSheetAny bracket={br} title={displayTitle} lang={lang === 'en' ? 'en' : 'ar'} /> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
           </div>
           {editable && <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />}
           {editable && id && auth.user && <EditorsPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} userId={auth.user.id} style={card} />}
@@ -282,8 +285,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
               )}
             </div>
           )}
-          {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}/j/${id}`} />}
-          {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={SHOW_AUTO_TOGGLE ? (on) => br && edit(setAuto(br, on)) : undefined} auto={!!br && (!SHOW_AUTO_TOGGLE || br.auto !== false) && !hasResults(br)} />}
+          {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}/j/${id}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} />}
+          {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />}
           {editable && isOwner && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
           {editable && <div><button type="button" className={pill} style={{ ...card, color: '#ffb02e' }} onClick={rebuild}>{tx.rebuild}</button></div>}
         </div>

@@ -228,7 +228,7 @@ function Notices({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
-type Row = { id: string; title: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string; shared?: boolean; owner?: string };
+type Row = { id: string; title: string; titleEn?: string; format: string; players: number; status?: 'new' | 'live' | 'done'; share?: boolean; live?: boolean; updatedAt: string; shared?: boolean; owner?: string };
 
 function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -237,7 +237,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
   useEffect(() => { load(); }, []);
   const when = (iso: string) => new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'short' }).format(new Date(iso));
   const say = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(''), 2200); };
-  async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: r.title, lang }), `${r.title.replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
+  async function image(r: Row) { try { const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`); downloadBlob(await bracketBlob(d.bracket, { title: lang === 'en' && r.titleEn ? r.titleEn : r.title, lang }), `${(lang === 'en' && r.titleEn ? r.titleEn : r.title).replace(/[^\p{L}\p{N}]+/gu, '-') || 'bracket'}.png`); } catch { say(s.fail); } }
   async function dup(r: Row) {
     try {
       const d = await api<{ bracket: Bracket }>(`/brackets/${r.id}`);
@@ -262,7 +262,7 @@ function Mine({ s, lang }: { s: St; lang: 'ar' | 'en' }) {
       <div className="st-cards">
         {rows?.map((r, i) => (
           <div key={r.id} className="st-bc" style={{ '--d': `${Math.min(i, 8) * 60}ms` } as React.CSSProperties}>
-            <div className="flex items-start justify-between gap-3"><a href={`/bracket/${r.id}`} className="st-bt">{r.title}{r.shared && <small className="st-meta" style={{ display: 'block' }}>{lang === 'ar' ? `مشترك معك · ${r.owner || ''}` : `Shared with you · ${r.owner || ''}`}</small>}</a><span className={`st-chip ${r.status === 'live' ? 'live' : r.status === 'done' ? 'done' : ''}`}>{r.status === 'live' ? s.live : r.status === 'done' ? s.done : s.stNew}</span></div>
+            <div className="flex items-start justify-between gap-3"><a href={`/bracket/${r.id}`} className="st-bt">{lang === 'en' && r.titleEn ? r.titleEn : r.title}{r.shared && <small className="st-meta" style={{ display: 'block' }}>{lang === 'ar' ? `مشترك معك · ${r.owner || ''}` : `Shared with you · ${r.owner || ''}`}</small>}</a><span className={`st-chip ${r.status === 'live' ? 'live' : r.status === 'done' ? 'done' : ''}`}>{r.status === 'live' ? s.live : r.status === 'done' ? s.done : s.stNew}</span></div>
             <div className="st-mini"><i className="w" /><i className="w" /><i /><i /></div>
             <div className="flex items-center justify-between gap-2">
               <span className="st-meta">{(s.fmt as Record<string, string>)[r.format] ?? r.format} · {r.players} {s.players}</span>
@@ -374,6 +374,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
   const { lang, dir } = useI18n();
   const tx = TXT[lang];
   const user = auth.user!;
+  const [mobileMenu, setMobileMenu] = useState(false);
   const sec: 'mine' | 'new' | 'account' = id === 'new' ? 'new' : id === 'account' ? 'account' : 'mine';
   const editing = !!id && !RESERVED.includes(id);
   const nav = [{ k: 'mine', href: '/bracket', label: s.mine, i: 'list' }, { k: 'new', href: '/bracket/new', label: s.fresh, i: 'plus' }, { k: 'account', href: '/bracket/account', label: s.account, i: 'user' }] as const;
@@ -389,7 +390,12 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           </nav>
         </div>
         <div className="st-side-bot">
-          <div className="st-tools"><LanguageSwitcher /><ThemeBtn theme={theme} set={setTheme} s={s} /></div>
+          <div className="st-tools"><LanguageSwitcher /><ThemeBtn theme={theme} set={setTheme} s={s} />
+            <div className="st-mobile-menu">
+              <button type="button" className="st-theme st-menu-trigger" aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open menu'} aria-expanded={mobileMenu} aria-controls="st-mobile-nav" onClick={() => setMobileMenu(!mobileMenu)}><svg viewBox="0 0 24 24" className="h-[20px] w-[20px]" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+              {mobileMenu && <><button type="button" className="st-menu-backdrop" aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Close menu'} onClick={() => setMobileMenu(false)} /><nav id="st-mobile-nav" className="st-mobile-popup" aria-label={lang === 'ar' ? 'القائمة' : 'Navigation'}>{nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} onClick={() => setMobileMenu(false)}><Ic d={n.i} />{n.label}</a>)}</nav></>}
+            </div>
+          </div>
           <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{user.name.slice(0, 1)}</span>}<div><b>{user.name}</b><small>{user.provider}</small></div></div>
           <div className="st-acts">
             <a href="#top" className="st-logout st-site" aria-label={s.back} title={s.back}><Ic d="site" />{s.back}</a>

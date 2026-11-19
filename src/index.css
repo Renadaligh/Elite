@@ -1449,3 +1449,16 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 .st-share, .st-shr { min-width: 0; grid-template-columns: minmax(0, 1fr); }
 .st-shh > div { min-width: 0; }
 .st-shl { min-width: 0; }
+
+/* Compact bracket dashboard navigation on phones */
+.st-mobile-menu{display:none;position:relative}
+@media(max-width:1023px){
+  .st-side-top .st-nav{display:none!important}
+  .st-mobile-menu{display:block}
+  .st-tools{gap:6px}
+  .st-menu-trigger{display:grid;place-items:center}
+  .st-menu-backdrop{position:fixed;inset:0;z-index:79;background:transparent;border:0}
+  .st-mobile-popup{position:absolute;z-index:80;top:calc(100% + 12px);inset-inline-end:0;min-width:190px;max-width:calc(100vw - 24px);padding:8px;display:grid;gap:3px;border:1px solid var(--s-line2);border-radius:14px;background:var(--s-panel);box-shadow:0 14px 36px rgba(0,0,0,.28)}
+  .st-mobile-popup a{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;color:var(--s-fg);font-weight:700;font-size:.9rem;white-space:nowrap}
+  .st-mobile-popup a.on,.st-mobile-popup a:hover{background:var(--s-hov)}
+}

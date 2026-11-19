@@ -13,9 +13,9 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
   let shared: (R & { owner?: string })[] = [];
   try { shared = (await env.DB.prepare('SELECT b.id, b.title, b.data, b.updated_at, b.share, b.live, o.name AS owner FROM bracket_editors e JOIN user_brackets b ON b.id = e.bracket_id LEFT JOIN users o ON o.id = b.user_id WHERE e.user_id = ? ORDER BY b.updated_at DESC').bind(u.id).all<R & { owner?: string }>()).results; } catch { /* sharing not set up yet */ }
   return json([...results.map((r) => ({ ...r, owner: '', shared: false })), ...shared.map((r) => ({ ...r, shared: true }))].map((r) => {
-    let format = 'single', players = 0, status = 'new';
-    try { const b = JSON.parse(r.data); format = b.format; players = b.players.length; status = bracketStatus(b); } catch { /* keep defaults */ }
-    return { id: r.id, title: r.title, format, players, status, share: true, live: !!r.live, updatedAt: r.updated_at, shared: r.shared, owner: r.owner || '' };
+    let format = 'single', players = 0, status = 'new', titleEn = '';
+    try { const b = JSON.parse(r.data); format = b.format; players = b.players.length; status = bracketStatus(b); titleEn = typeof b.titleEn === 'string' ? b.titleEn : ''; } catch { /* keep defaults */ }
+    return { id: r.id, title: r.title, titleEn, format, players, status, share: true, live: !!r.live, updatedAt: r.updated_at, shared: r.shared, owner: r.owner || '' };
   }));
 };
 

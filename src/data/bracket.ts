@@ -26,7 +26,7 @@ export interface LeagueOpts { win: number; draw: number; loss: number; rounds?: 
 export const defaultOpts = (format: BFormat, n: number): LeagueOpts => ({ win: 1, draw: 0.5, loss: 0, ...(format === 'swiss' ? { rounds: Math.max(1, Math.ceil(Math.log2(Math.max(2, n)))) } : format === 'ffa' ? { rounds: 3 } : format === 'groups' ? { groups: n >= 12 ? 4 : 2, adv: 2, koFormat: 'single' as const } : {}) });
 /** Knockout stage of a groups tournament: `seed` = global player indexes in seed order; match slots index into `seed`. */
 export interface Knockout { format: 'single' | 'double'; seed: number[]; matches: BMatch[] }
-export interface Bracket { /** Names the organiser added by hand and took out of the bracket again: they stay in the registrants list (with +). */ bench?: string[]; /** false = registrants are NOT added to the bracket automatically (the organiser adds them with +). */ auto?: false; /** Organising group (optional, shown on the bracket, the image and the registration page). */ org?: string; /** Winner chosen by the organiser (player index); overrides the one worked out from the results. */ champ?: number; opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[] }
+export interface Bracket { titleEn?: string; /** Names the organiser added by hand and took out of the bracket again: they stay in the registrants list (with +). */ bench?: string[]; /** false = registrants are NOT added to the bracket automatically (the organiser adds them with +). */ auto?: false; /** Organising group (optional, shown on the bracket, the image and the registration page). */ org?: string; /** Winner chosen by the organiser (player index); overrides the one worked out from the results. */ champ?: number; opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[] }
 
 /** number = player index · 'bye' = empty seat · null = not decided yet. */
 export type Who = number | 'bye' | null;
@@ -119,7 +119,7 @@ export function removePlayer(br: Bracket, name: string): Bracket {
 function redraw(br: Bracket, players: string[]): Bracket {
   const keep = br.opts ? { win: br.opts.win, draw: br.opts.draw, loss: br.opts.loss, double: br.opts.double, koFormat: br.opts.koFormat, low: br.opts.low, ...(br.format === 'ffa' ? { rounds: br.opts.rounds } : {}) } : undefined;
   const out = players.length < 2 ? draftBracket(br.format, players, keep) : generate(br.format, players, keep);
-  return { ...out, ...(br.org ? { org: br.org } : {}), ...(br.bench?.length ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) };
+  return { ...out, ...(br.org ? { org: br.org } : {}), ...(br.bench?.length ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}), ...(br.titleEn ? { titleEn: br.titleEn } : {}) };
 }
 
 /** Replaces the list of manual players that are out of the bracket (empty = none). */

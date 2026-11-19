@@ -186,23 +186,33 @@ saveImage?.addEventListener('click', async (event) => {
     context.scale(scale, scale);
     context.fillStyle = color('--bg');
     context.fillRect(0, 0, totalWidth, totalHeight);
-    const brandImg = document.querySelector('.brand img');
-    if (brandImg?.complete && brandImg.naturalWidth > 0) {
-      // No colored plaque behind the logo: the logo sits directly on the page
-      // background, using a dark tint in light mode to remain legible.
-      const isArabic = exportRtl;
-      const boxX = isArabic ? padding : totalWidth - padding - brandBoxW;
+    // Use an actual dark logo image for light mode, not context.filter:
+    // on some mobile Safari versions the Canvas 2D image filter is ignored,
+    // which makes the white logo disappear against the light background.
+    const logoSrc = exportTheme === 'light' ? '/brand/plato-ar-dark.png' : '/brand/plato-ar-white.png';
+    const brandImg = new Image();
+    await new Promise((resolve, reject) => {
+      brandImg.onload = resolve;
+      brandImg.onerror = () => reject(new Error('Could not load export brand image'));
+      brandImg.src = logoSrc;
+    });
+    if (brandImg.naturalWidth > 0) {
+      // Transparent logo on the same background as the saved bracket.
+      // Centre the website address under the "plato" wordmark, close to its bottom.
+      const boxX = exportRtl ? padding : totalWidth - padding - brandBoxW;
       const boxY = padding - 6;
-      const logoWidth = 125;
+      const logoWidth = 144;
       const logoHeight = logoWidth * brandImg.naturalHeight / brandImg.naturalWidth;
-      context.save();
-      if (exportTheme === 'light') context.filter = 'brightness(0) saturate(100%) invert(15%) sepia(39%) saturate(1049%) hue-rotate(184deg)';
-      context.drawImage(brandImg, boxX + (brandBoxW - logoWidth) / 2, boxY + 5, logoWidth, logoHeight);
-      context.restore();
+      const logoX = boxX + (brandBoxW - logoWidth) / 2;
+      const logoY = boxY + 5;
+      context.drawImage(brandImg, logoX, logoY, logoWidth, logoHeight);
       context.fillStyle = color('--fg');
       context.font = '600 15px Arial,Tahoma,sans-serif';
       context.textAlign = 'center';
-      context.fillText('plato-ar.com', boxX + brandBoxW / 2, boxY + 72, brandBoxW - 16);
+      context.direction = 'ltr';
+      const addressBaseline = logoY + logoHeight + 16;
+      // "AR" sits slightly to the right of the actual wordmark.
+      context.fillText('plato-ar.com', logoX + logoWidth * 0.475, addressBaseline, brandBoxW - 16);
     }
     context.fillStyle = color('--fg');
     context.font = 'bold 28px ' + headingFont;
@@ -412,7 +422,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
     if (row.ambiguous) status = 409;
     else if (!row.row) status = 404;
     else {
-      title = row.row.title || title;
+      title = (lang === 'en' ? ((JSON.parse(row.row.data) as Bracket).titleEn?.trim() || row.row.title) : row.row.title) || title;
       shortId = row.row.id.slice(0, 6);
       svg = await snapshot(request, row.row, lang, title, waitUntil);
     }

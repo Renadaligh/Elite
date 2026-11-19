@@ -17,7 +17,7 @@ const isoDate = (iso?: string) => { const d = new Date(iso ?? ''); return !iso |
 const fromLocal = (v: string) => { const t = new Date(v).getTime(); return Number.isNaN(t) ? 0 : t; };
 
 /** Organiser panel for the registration link (#/join/<id>): on/off, solo/team, cap, auto/manual close, and the people who signed up. */
-export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' | 'en'; link: string }) {
+export default function JoinPanel({ id, lang, link, autoOn, onAuto }: { id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void }) {
   const t = T[lang];
   const [c, setC] = useState<Cfg | null>(null);
   const [msg, setMsg] = useState('');
@@ -25,9 +25,8 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
   const [cap, setCap] = useState('');
   const [when, setWhen] = useState('');
   const [desc, setDesc] = useState('');
-  const [titleEn, setTitleEn] = useState('');
-  const load = useCallback(async () => {
-    try { const d = await api<Cfg>(`/brackets/${id}/join`); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setTitleEn(d.titleEn ?? ''); setMsg(''); }
+    const load = useCallback(async () => {
+    try { const d = await api<Cfg>(`/brackets/${id}/join`); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setMsg(''); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }, [id, t.fail, t.migrate]);
   useEffect(() => { void load(); }, [load]);
@@ -65,6 +64,8 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
               </div>
               <small>{t.coverSize}</small>
             </div>
+          <div className="st-shh"><div><span>{lang === 'ar' ? 'إضافة المسجلين للشجرة تلقائيًا' : 'Automatically add registrants to bracket'}</span><small>{lang === 'ar' ? 'يمكنك إيقافها وإضافة المسجلين يدويًا من القائمة.' : 'Turn off to add registrants manually from the list.'}</small></div>
+            <button type="button" role="switch" aria-checked={autoOn} aria-label={lang === 'ar' ? 'الإضافة التلقائية للشجرة' : 'Automatic bracket entry'} className={`st-sw ${autoOn ? 'on' : ''}`} onClick={() => onAuto(!autoOn)}><i /></button></div>
           {c.enabled && (
             <>
               <div className="st-shl"><input readOnly dir="ltr" aria-label={t.link} value={noProto(link)} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={copy}>{copied ? t.copied : t.copy}</button></div>
@@ -72,9 +73,6 @@ export default function JoinPanel({ id, lang, link }: { id: string; lang: 'ar' |
                 <span className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.mode}</span>
                 {(['solo', 'team'] as const).map((m) => <button key={m} type="button" role="radio" aria-checked={c.mode === m} className={`br-chip ${c.mode === m ? 'on' : ''}`} onClick={() => put({ mode: m })}>{m === 'solo' ? t.solo : t.team}</button>)}
               </div>
-              <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.titleEnL}
-                <input dir="ltr" className={line} style={bd} maxLength={80} placeholder={t.titleEnPh} value={titleEn} onChange={(e) => setTitleEn(e.target.value)} onBlur={() => { if (titleEn.trim() !== (c.titleEn ?? '')) void put({ titleEn: titleEn.trim() }); }} />
-              </label>
               <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.descL}
                 <textarea dir="auto" className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (desc.trim() !== (c.description ?? '')) void put({ description: desc.trim() }); }} />
               </label>

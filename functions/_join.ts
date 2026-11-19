@@ -25,6 +25,10 @@ export async function joinDesc(env: Ctx['env'], id: string): Promise<string> {
 
 /** Optional English title of the registration page (own query, works before the `title_en` column exists). */
 export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> {
+  try {
+    const b = await env.DB.prepare('SELECT data FROM user_brackets WHERE id = ?').bind(id).first<{ data: string }>();
+    if (b) { const v = (JSON.parse(b.data) as { titleEn?: unknown }).titleEn; if (typeof v === 'string' && v.trim()) return v.trim(); }
+  } catch { /* fall back to legacy registration title */ }
   try { return (await env.DB.prepare('SELECT title_en FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ title_en: string }>())?.title_en ?? ''; } catch { return ''; }
 }
 
