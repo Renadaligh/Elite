@@ -40,7 +40,12 @@ button:disabled{opacity:.5;cursor:default}h1{font-size:clamp(22px,5vw,36px);marg
 .sheet svg[data-width]{display:block;max-width:none;height:auto;margin:0 auto 8px;width:var(--render-width, auto)}
 .bs-hd,.bs-seed{fill:var(--head)}.bs-row{fill:var(--row)}.bs-row.win{fill:var(--win)}
 .bs-nm,.bs-ht,.bs-sc,.bs-ck{fill:var(--fg)}.bs-nm.win{font-weight:800}.bs-sn,.bs-no,.bs-nm.lose,.bs-nm.bye{fill:var(--mut)}
-.bs-ln{stroke:var(--line)}.bs-cup{stroke:#dca500}[hidden]{display:none!important} .icon-btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.icon-btn svg{width:17px;height:17px;flex:none;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}#zoom{display:inline-flex;align-items:center;gap:4px}#zoom button{min-width:37px}#zoom-level{min-width:52px;text-align:center;font-variant-numeric:tabular-nums} .title-block h1{margin-bottom:4px}.bracket-meta .bracket-organizer{font-size:12px}
+.bs-ln{stroke:var(--line)}.bs-cup{stroke:#dca500}[hidden]{display:none!important} .icon-btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.icon-btn svg{width:17px;height:17px;flex:none;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}#zoom{display:inline-flex;align-items:center;gap:4px}#zoom button{min-width:37px}#zoom-level{min-width:52px;text-align:center;font-variant-numeric:tabular-nums} .title-block h1{margin-bottom:4px} .bracket-meta .bracket-organizer{font-size:12px;text-align:center;margin:6px 0;color:var(--mut);font-weight:400}
+.bracket-meta .bracket-champion{display:flex;align-items:center;justify-content:center;gap:10px;width:fit-content;max-width:100%;margin:12px auto 6px;padding:12px 22px;border-radius:14px;background:linear-gradient(135deg,#fff3bd,#ffd65e);color:#684500;border:1px solid #e4ad28;box-shadow:0 3px 14px #8d621329;text-align:center;flex-wrap:wrap}
+.bracket-meta .bracket-champion strong{font-size:15px;font-weight:800}.bracket-meta .bracket-champion bdi{font-size:18px;font-weight:800;overflow-wrap:anywhere}
+.bracket-meta .bracket-champion .champion-cup{width:24px;height:24px;flex:none;stroke:#a16b00;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn.icon-only{width:39px;height:36px;justify-content:center;padding:7px}.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#theme [data-mode-icon]{display:none}:root[data-theme=light] #theme [data-mode-icon=moon],:root[data-theme=dark] #theme [data-mode-icon=sun]{display:block}
 `;
 
 const controls = `
@@ -274,10 +279,10 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       else if ((stored === 'ar' || stored === 'en') && stored !== lang) location.replace('?lang=' + stored);
     } catch {}</script></head><body>
     <header><a class="brand" href="/" aria-label="Plato AR"><img src="/brand/plato-ar-white.png" alt="PLATO AR"></a><nav>
-      <a class="icon-btn" href="${target}" lang="${ar ? 'en' : 'ar'}">${icon('language')}${ar ? 'English' : 'العربية'}</a>
-      ${status === 200 ? `<button id="copy-link" type="button" data-label="${ar ? 'نسخ الرابط' : 'Copy link'}" data-copied="${ar ? 'تم النسخ ✓' : 'Copied ✓'}" data-failed="${ar ? 'تعذّر النسخ' : 'Copy failed'}" class="icon-btn">${icon('copy')}<span data-button-label>${ar ? 'نسخ الرابط' : 'Copy link'}</span></button>` : ''}
-      ${status === 200 ? `<button id="save-image" type="button" data-saving="${ar ? 'جارٍ حفظ الصورة…' : 'Saving image…'}" data-saved="${ar ? 'تم الحفظ ✓' : 'Saved ✓'}" data-failed="${ar ? 'تعذّر حفظ الصورة' : 'Could not save image'}" class="icon-btn">${icon('download')}<span data-button-label>${ar ? 'حفظ كصورة' : 'Save as image'}</span></button>` : ''}
-      <button id="theme" type="button" class="icon-btn" aria-pressed="false">${icon('sun')}${icon('moon')}<span>${ar ? 'فاتح / داكن' : 'Light / dark'}</span></button>
+      <a class="icon-btn" href="${target}" lang="${ar ? 'en' : 'ar'}">${icon('language')}${ar ? 'EN' : 'عربي'}</a>
+      ${status === 200 ? `<button id="copy-link" type="button" data-label="${ar ? 'نسخ الرابط' : 'Copy link'}" data-copied="${ar ? 'تم النسخ ✓' : 'Copied ✓'}" data-failed="${ar ? 'تعذّر النسخ' : 'Copy failed'}" class="icon-btn icon-only" title="${ar ? 'نسخ الرابط' : 'Copy link'}" aria-label="${ar ? 'نسخ الرابط' : 'Copy link'}">${icon('copy')}<span class="sr-only" role="status" aria-live="polite" data-button-label>${ar ? 'نسخ الرابط' : 'Copy link'}</span></button>` : ''}
+      ${status === 200 ? `<button id="save-image" type="button" data-saving="${ar ? 'جارٍ حفظ الصورة…' : 'Saving image…'}" data-saved="${ar ? 'تم الحفظ ✓' : 'Saved ✓'}" data-failed="${ar ? 'تعذّر حفظ الصورة' : 'Could not save image'}" class="icon-btn icon-only" title="${ar ? 'حفظ كصورة' : 'Save as image'}" aria-label="${ar ? 'حفظ كصورة' : 'Save as image'}">${icon('download')}<span class="sr-only" role="status" aria-live="polite" data-button-label>${ar ? 'حفظ كصورة' : 'Save as image'}</span></button>` : ''}
+      <button id="theme" type="button" class="icon-btn icon-only" aria-pressed="false" title="${ar ? 'تغيير الوضع' : 'Toggle theme'}" aria-label="${ar ? 'تغيير الوضع' : 'Toggle theme'}"><span data-mode-icon="sun">${icon('sun')}</span><span data-mode-icon="moon">${icon('moon')}</span></button>
     </nav></header><main style="--dir:${dir}"><div class="title-block"><h1 dir="auto">${escape(title)}</h1>${status === 200 ? meta : ''}</div>
     ${status === 200 ? `<nav id="zoom" hidden aria-label="${ar ? 'التكبير' : 'Zoom'}">
       <button type="button" id="zoom-out" aria-label="${ar ? 'تصغير' : 'Zoom out'}">−</button>

@@ -86,7 +86,7 @@ export function publicBracketSvg(bracket: Bracket, title: string, lang: Lang) {
   return renderToStaticMarkup(<>
     <div className="bracket-meta">
       {bracket.org && <p className="bracket-organizer">{ar ? 'تنظيم' : 'Organised by'} · <bdi>{bracket.org}</bdi></p>}
-      {winner !== null && bracket.players[winner] && <p>{ar ? 'الفائز' : 'Winner'} · <bdi>{bracket.players[winner]}</bdi></p>}
+      {winner !== null && bracket.players[winner] && <div className="bracket-champion"><svg className="champion-cup" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v6a5 5 0 0 1-10 0V4ZM7 6H4v3a4 4 0 0 0 4 4m9-7h3v3a4 4 0 0 1-4 4" /></svg><strong>{ar ? 'بطل البطولة' : 'Tournament Champion'}</strong><bdi>{bracket.players[winner]}</bdi></div>}
     </div>
     {content}
   </>);
