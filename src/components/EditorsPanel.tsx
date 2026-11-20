@@ -1,6 +1,7 @@
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { api } from '../services/api';
+import Fold from './Fold';
 
 type Person = { id: string; name: string; handle: string; avatar: string };
 type Data = { isOwner: boolean; max: number; editors: Person[] };
@@ -9,13 +10,13 @@ const T = {
     title: 'التحرير المشترك', sub: 'أضف عضواً مسجّلاً بيوزره ليعدّل معك على هذه البطولة.', ph: 'يوزر العضو (مثال: abdullah_9)', add: 'إضافة',
     none: 'لم يُضاف أحد بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذا البراكت.', empty: 'اكتب اليوزر.',
     err: { bad_handle: 'اليوزر غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'ما لقيت عضواً بهذا اليوزر.', self: 'هذا يوزرك أنت.', limit: 'وصلت الحد الأقصى للمحررين.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'ما تمت العملية، حاول مرة ثانية.' },
-    mine: 'يوزرك', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
+    notAdded: 'ما انضاف هؤلاء كمحررين:', mine: 'يوزرك', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
   },
   en: {
     title: 'Co-editors', sub: 'Add a registered member by username so they can edit this bracket with you. It shows in their “My brackets” and they can update results.', ph: 'Username (e.g. abdullah_9)', add: 'Add',
     none: 'Nobody added yet.', remove: 'Remove', leave: 'Leave', asEditor: 'You are a co-editor of this bracket.', empty: 'Enter a username.',
     err: { bad_handle: 'Invalid username: English letters, digits and _ only.', no_user: 'No member with that username.', self: 'That is your own username.', limit: 'Co-editor limit reached.', migrate: 'This feature needs the database update (SQL statements).', fail: 'Something went wrong, try again.' },
-    mine: 'Your username', warn: 'Co-editors can change results and players. Only the organizer manages the link, registration, publishing and deletion.',
+    notAdded: 'These could not be added as co-editors:', mine: 'Your username', warn: 'Co-editors can change results and players. Only the organizer manages the link, registration, publishing and deletion.',
   },
 } as const;
 
@@ -26,6 +27,16 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
   const [h, setH] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
+  const [fails, setFails] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const k = `plato-editor-fail-${id}`, raw = sessionStorage.getItem(k);
+      if (!raw) return;
+      sessionStorage.removeItem(k);
+      const bad = JSON.parse(raw) as { h: string; c: string }[];
+      setFails(bad.map((b) => `@${b.h}: ${(x.err as Record<string, string>)[b.c] ?? x.err.fail}`));
+    } catch { /* ignore */ }
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   const load = () => api<Data>(`/brackets/${id}/editors`).then(setD).catch((e: Error & { detail?: string }) => { if (e.detail === 'migrate') setMsg(x.err.migrate); });
   useEffect(() => { void load(); }, [id]);
   const fail = (e: unknown) => setMsg((x.err as Record<string, string>)[(e as Error & { detail?: string }).detail ?? ''] ?? x.err.fail);
@@ -44,8 +55,8 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
   if (!d) return msg ? <p className="st-shn" style={style}>{msg}</p> : null;
   const owner = d.isOwner;
   return (
-    <div className="st-share" style={style}>
-      <b>{x.title}</b>
+    <Fold title={x.title} style={style} defaultOpen={fails.length > 0}>
+      {fails.length > 0 && <div role="alert" className="grid gap-1 rounded-xl border px-3 py-2 text-[.86rem] font-semibold" style={{ borderColor: 'rgba(255,77,94,.5)', color: '#ff8a80' }}><span>{x.notAdded}</span>{fails.map((f) => <span key={f} dir="auto">{f}</span>)}</div>}
       {owner ? <p className="st-shn">{x.sub}</p> : <p className="st-shn">{x.asEditor}</p>}
       {owner && (
         <div className="st-shl">
@@ -67,6 +78,40 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
         {!d.editors.length && <li className="st-shn">{x.none}</li>}
       </ul>
       {owner && <p className="st-shn" style={{ marginTop: '.6rem' }}>{x.warn}</p>}
-    </div>
+    </Fold>
+  );
+}
+
+/** Same card for a bracket that is not saved yet: the usernames are kept here and added as soon as the bracket is created. */
+export function DraftEditors({ lang, handles, setHandles, style }: { lang: 'ar' | 'en'; handles: string[]; setHandles: (h: string[]) => void; style?: CSSProperties }) {
+  const x = T[lang];
+  const [h, setH] = useState('');
+  const [msg, setMsg] = useState('');
+  function add() {
+    const v = h.trim().replace(/^@/, '').toLowerCase();
+    if (!v) { setMsg(x.empty); return; }
+    if (!/^[a-z0-9_]{3,20}$/.test(v)) { setMsg(x.err.bad_handle); return; }
+    if (!handles.includes(v)) setHandles([...handles, v]);
+    setH(''); setMsg('');
+  }
+  return (
+    <Fold title={x.title} style={style}>
+      <p className="st-shn">{lang === 'ar' ? 'أضف يوزرات المنظمين الإضافيين الحين، وينضافون تلقائياً أول ما تنشئ البطولة.' : 'Add extra organisers now; they are added automatically as soon as you create the tournament.'}</p>
+      <div className="st-shl">
+        <input dir="ltr" placeholder={x.ph} maxLength={30} value={h} onChange={(e) => setH(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+        <button type="button" onClick={add}>{x.add}</button>
+      </div>
+      {msg && <p className="st-shn" role="status" style={{ color: '#ff8a80' }}>{msg}</p>}
+      <ul className="grid gap-2">
+        {handles.map((u) => (
+          <li key={u} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2" style={{ borderColor: 'var(--glass-b)' }}>
+            <small dir="ltr"><b>@{u}</b></small>
+            <button type="button" className="text-[.85rem] font-semibold underline" onClick={() => setHandles(handles.filter((v) => v !== u))}>{x.remove}</button>
+          </li>
+        ))}
+        {!handles.length && <li className="st-shn">{x.none}</li>}
+      </ul>
+      <p className="st-shn">{x.warn}</p>
+    </Fold>
   );
 }

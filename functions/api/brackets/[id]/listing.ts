@@ -1,8 +1,6 @@
 import { currentUser, sameOrigin } from '../../../_auth';
 import { body, denied, json, num, str, type Ctx } from '../../../_lib';
 import { joinExtra } from '../../../_join';
-import { MAIL, adminEmails, organizerEmail, sendMail } from '../../../_mail';
-import { emailOn } from '../../../_auth';
 
 /** A community tournament = a row in `tournaments` with id "u-<bracket id>", owned by the bracket's owner. The owner lists / edits / removes it here. */
 const FORMAT: Record<string, [string, string]> = {
@@ -30,8 +28,7 @@ export const onRequestGet = async (ctx: Ctx) => {
   if (!b) return json({ error: 'not_found' }, 404);
   try {
     const r = await ctx.env.DB.prepare('SELECT * FROM tournaments WHERE id = ? AND owner_id = ?').bind(`u-${b.id}`, u.id).first<Row>();
-    const notifyEmail = await organizerEmail(ctx.env, u.id);
-    return json({ listing: r ? shape(r) : null, mail: emailOn(ctx.env), notifyEmail });
+    return json({ listing: r ? shape(r) : null });
   } catch { return json({ listing: null, migrate: true }); }
 };
 
@@ -46,16 +43,6 @@ export const onRequestPut = async (ctx: Ctx) => {
   if (!name || !isoOk(startsAt)) return json({ error: 'invalid' }, 400);
   const total = num(x.total, 0) === 0 ? 0 : Math.min(4096, Math.max(2, num(x.total, 16))); // 0 = unlimited seats
   const image = (await joinExtra(ctx.env, ctx.params.id)).cover; // one picture per bracket: the one uploaded for the registration page
-  // where the review result is emailed: the address they typed (saved on their account), else the account's own email; required when mail is on
-  const typed = str(x.notifyEmail, 120).toLowerCase();
-  if (typed && !MAIL.test(typed)) return json({ error: 'email_invalid' }, 400);
-  if (typed) { try { await ctx.env.DB.prepare('UPDATE users SET notify_email = ? WHERE id = ?').bind(typed, u.id).run(); } catch { /* column not added yet: the account email is used */ } }
-  const toReview = (review: string) => {
-    if (review !== 'pending') return;
-    const origin = new URL(ctx.request.url).origin;
-    const job = adminEmails(ctx.env).then((to) => sendMail(ctx.env, to, `بطولة جديدة للمراجعة: ${name}`, 'بطولة تنتظر المراجعة', `${u.name || 'منظم'} نشر بطولة «${name}» وتنتظر موافقتك.\n\nA tournament "${name}" is waiting for review.`, { href: `${origin}/admin`, label: 'فتح لوحة الإدارة' }));
-    if (ctx.waitUntil) ctx.waitUntil(job);
-  };
   const mode = x.mode === 'team' ? 'team' : 'solo', game = str(x.gameId, 60).toLowerCase(), prize = str(x.prize, 80), pub = x.published === false ? 0 : 1;
   let fmt = 'single'; try { fmt = JSON.parse(b.data).format; } catch { /* default */ }
   const [fe, fa] = FORMAT[fmt] ?? FORMAT.single;
@@ -68,7 +55,6 @@ export const onRequestPut = async (ctx: Ctx) => {
       const review = old.review === 'rejected' || (changed && old.review === 'approved') ? 'pending' : old.review === 'pending' ? 'pending' : 'approved';
       await ctx.env.DB.prepare('UPDATE tournaments SET image=?,game_id=?,name_en=?,name_ar=?,format_en=?,format_ar=?,prize_en=?,prize_ar=?,starts_at=?,total=?,filled=?,mode=?,published=?,review=?,review_note=? WHERE id=? AND owner_id=?')
         .bind(image, game, name, name, fe, fa, prize, prize, startsAt, total, total > 0 ? Math.min(old.filled, total) : old.filled, mode, pub, review, '', id, u.id).run();
-      if (review === 'pending' && old.review !== 'pending') toReview(review);
       return json({ ok: true, review });
     } else {
       const n = await ctx.env.DB.prepare("SELECT COUNT(*) AS n FROM tournaments WHERE owner_id = ? AND winner_en = '' AND winner_ar = ''").bind(u.id).first<{ n: number }>(); // only tournaments that have not ended (no winner yet) count
@@ -76,7 +62,6 @@ export const onRequestPut = async (ctx: Ctx) => {
       if (await ctx.env.DB.prepare('SELECT 1 AS x FROM tournaments WHERE id = ?').bind(id).first()) return json({ error: 'taken' }, 409);
       await ctx.env.DB.prepare('INSERT INTO tournaments (id,game_id,name_en,name_ar,format_en,format_ar,prize_en,prize_ar,starts_at,ends_at,filled,total,mode,published,owner_id,bracket_id,review,image) VALUES (?,?,?,?,?,?,?,?,?,?,0,?,?,?,?,?,?,?)')
         .bind(id, game, name, name, fe, fa, prize, prize, startsAt, '', total, mode, pub, u.id, b.id, 'pending', image).run();
-      toReview('pending');
       return json({ ok: true, review: 'pending' });
     }
   } catch { return json({ error: 'migrate' }, 500); } // run the ALTER TABLE statements from schema.sql

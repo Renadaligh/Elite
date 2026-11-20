@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { RegistrantsPanel, autoAddNew, type RegRow } from './AddPlayers';
+import Fold from './Fold';
+import { RegistrantsPanel, autoAddNew, regName, type RegRow } from './AddPlayers';
+import { nameKey } from '../data/bracket';
 
 /**
  * ONE list of everybody who registered for this bracket, whichever way they came (the standalone registration link or the tournament published on the site).
@@ -27,11 +29,15 @@ export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, onU
 
   const all = [...join, ...site].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''));
   if (all.length === 0 && players.length === 0 && !(bench?.length)) return null;
+  const have = new Set(all.map((r) => nameKey(regName(r))));
+  const count = all.length + players.filter((p) => !have.has(nameKey(p))).length + (bench ?? []).filter((p) => !have.has(nameKey(p))).length;
   const del = (r: RegRow) => {
     const url = r.src === 'site' ? `/brackets/${id}/regs?rid=${r.id}` : `/brackets/${id}/join?rid=${r.id}`;
     void api(url, { method: 'DELETE' }).then(load).catch(() => undefined);
   };
   return (
-    <RegistrantsPanel lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
+    <Fold title={`${lang === 'ar' ? 'المسجّلون' : 'Registered'} · ${count}`}>
+      <RegistrantsPanel lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
+    </Fold>
   );
 }

@@ -284,18 +284,11 @@ function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
 
 function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; lang: 'ar' | 'en' }) {
   const user = auth.user!;
-  const [name, setName] = useState(user.name);
   const [handle, setHandle] = useState(user.handle ?? '');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const pct = Math.min(100, Math.round((auth.count / auth.max) * 100));
   const joined = user.createdAt ? new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(user.createdAt)) : '–';
-  async function save() {
-    if (name.trim().length < 2) return;
-    setBusy(true);
-    try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ name: name.trim() }) }); auth.reload(); setMsg(s.accSaved); } catch { setMsg(s.fail); }
-    setBusy(false); window.setTimeout(() => setMsg(''), 2200);
-  }
   async function saveHandle() {
     const h = handle.trim().toLowerCase().replace(/^@/, '');
     setBusy(true);
@@ -336,17 +329,14 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
     <div className="st-acc">
       <section className="st-box2">
         <div className="st-prof">
-          {user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av big">{user.name.slice(0, 1)}</span>}
-          <div><b>{user.name}</b><p>{s.via} {user.provider}</p></div>
+          {user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av big">{(user.handle || user.name).slice(0, 1).toUpperCase()}</span>}
+          <div><b dir="ltr">{user.handle || user.name}</b></div>
         </div>
         <div className="st-avrow">
           <label className="st-pbtn">{user.avatar ? s.avChange : s.avAdd}<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={busy} onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ''; }} /></label>
           {user.avatar.startsWith('/api/img/') && <button type="button" className="st-pbtn" disabled={busy} onClick={dropPhoto}>{s.avRemove}</button>}
           <small>{s.avHint}</small>
         </div>
-        <label className="st-fld">{s.accName}
-          <span className="st-inl"><input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} /><button type="button" disabled={busy || name.trim() === user.name || name.trim().length < 2} onClick={save}>{s.accSave}</button></span>
-        </label>
         <label className="st-fld">{lang === 'ar' ? 'اليوزر (لإضافتك محرراً في براكت)' : 'Username (so others can add you as a co-editor)'}
           <span className="st-inl"><input dir="ltr" value={handle} maxLength={20} onChange={(e) => setHandle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveHandle()} /><button type="button" disabled={busy || handle.trim().toLowerCase() === (user.handle ?? '') || handle.trim().length < 3} onClick={saveHandle}>{s.accSave}</button></span>
         </label>
@@ -371,6 +361,41 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
   );
 }
 
+
+/** First sign-in: offers to pick a username (used to add co-editors). Asked once per account on this device; always changeable from "My account". */
+function HandlePrompt({ auth, lang }: { auth: ReturnType<typeof useAuth>; lang: 'ar' | 'en' }) {
+  const user = auth.user!;
+  const key = `plato-handle-asked-${user.id}`;
+  const [open, setOpen] = useState(() => { try { return !localStorage.getItem(key); } catch { return false; } });
+  const [handle, setHandle] = useState(user.handle ?? '');
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const ar = lang === 'ar';
+  useEffect(() => { if (user.handle && !handle) setHandle(user.handle); }, [user.handle]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!open) return null;
+  const done = () => { try { localStorage.setItem(key, '1'); } catch { /* private mode */ } setOpen(false); };
+  async function save() {
+    const h = handle.trim().toLowerCase().replace(/^@/, '');
+    if (h === (user.handle ?? '')) { done(); return; }
+    setBusy(true); setMsg('');
+    try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ handle: h }) }); auth.reload(); done(); }
+    catch (e) { const c = (e as Error & { detail?: string }).detail; setMsg(c === 'taken' ? (ar ? 'اليوزر مستخدم، جرّب غيره.' : 'That username is taken.') : c === 'bad_handle' ? (ar ? 'حروف إنجليزية وأرقام و _ فقط (3–20).' : 'English letters, digits and _ only (3–20).') : (ar ? 'تعذّر الحفظ، حاول مرة ثانية.' : 'Could not save, try again.')); }
+    setBusy(false);
+  }
+  return (
+    <div className="st-modal" role="dialog" aria-modal="true" aria-labelledby="st-hp-t">
+      <div className="st-modal-card">
+        <h3 id="st-hp-t">{ar ? 'اختر اسم اليوزر' : 'Choose your username'}</h3>
+        <p>{ar ? 'اليوزر هو اللي يضيفك فيه المنظمون كمحرر مشترك في البراكت. تبغى تغيّره؟' : 'Organisers add you as a co-editor with your username. Want to change it?'}</p>
+        <span className="st-inl"><input dir="ltr" autoFocus value={handle} maxLength={20} onChange={(e) => setHandle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void save()} /><button type="button" disabled={busy || handle.trim().length < 3} onClick={() => void save()}>{ar ? 'حفظ' : 'Save'}</button></span>
+        <p role="status" className="st-flash" style={{ opacity: msg ? 1 : 0 }}>{msg || '·'}</p>
+        <small>{ar ? 'تقدر تغيّره بأي وقت من صفحة «حسابي».' : 'You can change it any time from “My account”.'}</small>
+        <button type="button" className="st-pbtn" onClick={done}>{ar ? 'لاحقاً، أبقيه كما هو' : 'Later, keep it as is'}</button>
+      </div>
+    </div>
+  );
+}
+
 function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnType<typeof useAuth>; s: St; theme: Theme; setTheme: (t: Theme) => void }) {
   const { lang, dir } = useI18n();
   const tx = TXT[lang];
@@ -382,6 +407,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
   const title = editing ? '' : sec === 'new' ? s.fresh : sec === 'account' ? s.account : s.mine;
   return (
     <div className="st-app" dir={dir} data-st={theme}>
+      <HandlePrompt auth={auth} lang={lang} />
       <aside className="st-side">
         <div className="st-side-top">
           <BrandLockup />
@@ -393,11 +419,11 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
         <div className="st-side-bot">
           <div className="st-tools"><LanguageSwitcher /><ThemeBtn theme={theme} set={setTheme} s={s} />
             <div className="st-mobile-menu">
-              <button type="button" className="st-theme st-menu-trigger" aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open menu'} aria-expanded={mobileMenu} aria-controls="st-mobile-nav" onClick={() => setMobileMenu(!mobileMenu)}><svg viewBox="0 0 24 24" className="h-[20px] w-[20px]" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+              <button type="button" className="st-theme st-menu-trigger" aria-label={mobileMenu ? (lang === 'ar' ? 'إغلاق القائمة' : 'Close menu') : (lang === 'ar' ? 'فتح القائمة' : 'Open menu')} aria-expanded={mobileMenu} aria-controls="st-mobile-nav" onClick={() => setMobileMenu(!mobileMenu)}><svg viewBox="0 0 24 24" className="h-[20px] w-[20px]" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" aria-hidden="true"><path d={mobileMenu ? 'M6 6l12 12M18 6L6 18' : 'M4 6h16M4 12h16M4 18h16'} /></svg></button>
               {mobileMenu && <><button type="button" className="st-menu-backdrop" aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Close menu'} onClick={() => setMobileMenu(false)} /><nav id="st-mobile-nav" className="st-mobile-popup" aria-label={lang === 'ar' ? 'القائمة' : 'Navigation'}>{nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} onClick={() => setMobileMenu(false)}><Ic d={n.i} />{n.label}</a>)}</nav></>}
             </div>
           </div>
-          <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{user.name.slice(0, 1)}</span>}<div><b>{user.name}</b><small>{user.provider}</small></div></div>
+          <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{(user.handle || user.name).slice(0, 1).toUpperCase()}</span>}<div><b dir="ltr">{user.handle || user.name}</b></div></div>
           <div className="st-acts">
             <a href="#top" className="st-logout st-site" aria-label={s.back} title={s.back}><Ic d="site" />{s.back}</a>
             <button type="button" className="st-logout" aria-label={s.logout} title={s.logout} onClick={auth.logout}><Ic d="out" />{s.logout}</button>

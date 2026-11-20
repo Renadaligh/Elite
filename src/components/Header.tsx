@@ -57,6 +57,9 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
                 </li>
               );
             })}
+            <li>
+              <a href="/bracket" aria-current={active === '/bracket' ? 'page' : undefined} className="border-b-2 py-1.5 text-[1.05rem] rtl:font-bold transition-colors hover:text-[var(--text)]" style={{ color: active === '/bracket' ? 'var(--text)' : 'var(--muted)', borderColor: 'transparent' }}>{t.navLogin}</a>
+            </li>
           </ul>
         </nav>
         <div className="flex items-center gap-2">
@@ -74,6 +77,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
             {NAV.map((n) => (
               <li key={n.href}><a href={n.href} onClick={() => { pick(n.href); setOpen(false); }} className="block py-3 text-lg rtl:font-bold" style={{ color: active === n.href ? 'var(--text)' : 'var(--muted)' }}>{t[n.key]}</a></li>
             ))}
+            <li><a href="/bracket" onClick={() => setOpen(false)} className="block py-3 text-lg rtl:font-bold" style={{ color: active === '/bracket' ? 'var(--text)' : 'var(--muted)' }}>{t.navLogin}</a></li>
           </ul>
         </nav>
       )}

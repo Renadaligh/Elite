@@ -35,13 +35,11 @@ export default function CommunityListing({ id, share, lang, title }: { id: strin
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
-  const [mail, setMail] = useState(false);
-  const [email, setEmail] = useState('');
   const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 
   useEffect(() => {
-    api<{ listing: Listing | null; migrate?: boolean; mail?: boolean; notifyEmail?: string }>(`/brackets/${id}/listing`)
-      .then((r) => { setMail(!!r.mail); setEmail(r.notifyEmail ?? ''); if (r.migrate) setMsg(t.migrate); if (r.listing) { setF(r.listing); setListed(true); } else setF((o) => ({ ...o, name: o.name || title })); })
+    api<{ listing: Listing | null; migrate?: boolean}>(`/brackets/${id}/listing`)
+      .then((r) => { if (r.migrate) setMsg(t.migrate); if (r.listing) { setF(r.listing); setListed(true); } else setF((o) => ({ ...o, name: o.name || title })); })
       .catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -50,7 +48,7 @@ export default function CommunityListing({ id, share, lang, title }: { id: strin
   async function save() {
     if (!f.name.trim() || !f.startsAt) { setMsg(t.bad); return; }
     setBusy(true); setMsg('');
-    try { const r = await api<{ review?: 'pending' | 'approved' | 'rejected' }>(`/brackets/${id}/listing`, { method: 'PUT', body: JSON.stringify({ ...f, notifyEmail: email.trim() }) }); setListed(true); setF((o) => ({ ...o, review: r.review ?? o.review, reviewNote: '' })); setMsg(r.review === 'pending' ? t.sent : t.saved); }
+    try { const r = await api<{ review?: 'pending' | 'approved' | 'rejected' }>(`/brackets/${id}/listing`, { method: 'PUT', body: JSON.stringify(f) }); setListed(true); setF((o) => ({ ...o, review: r.review ?? o.review, reviewNote: '' })); setMsg(r.review === 'pending' ? t.sent : t.saved); }
     catch (e) { const d = (e as Error & { detail?: string }).detail; setMsg(d === 'migrate' ? t.migrate : d === 'limit' ? t.limit : d === 'invalid' ? t.bad : d === 'email_required' ? t.needMail : d === 'email_invalid' ? t.badMail : t.fail); }
     setBusy(false);
   }
@@ -85,7 +83,6 @@ export default function CommunityListing({ id, share, lang, title }: { id: strin
             </div>
             <label className="grid gap-1 text-[.82rem]" style={{ color: 'var(--muted)' }}>{t.mode}<select className={fld} style={bd} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{t.solo}</option><option value="team">{t.team}</option></select></label>
             <p className="text-[.8rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.imgNote}</p>
-            {mail && <label className="grid gap-1 text-[.82rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.mailL}<input type="email" dir="ltr" className={fld} style={bd} value={email} maxLength={120} placeholder="name@example.com" autoComplete="email" onChange={(e) => setEmail(e.target.value)} /><span className="text-[.78rem]">{t.mailHint}</span></label>}
             <label className="grid gap-1 text-[.82rem] sm:col-span-2" style={{ color: 'var(--muted)' }}>{t.prize}<input className={fld} style={bd} maxLength={80} value={f.prize} onChange={(e) => setF({ ...f, prize: e.target.value })} /></label>
           </div>
           <div className="st-shh"><div><span>{t.show}</span><small>{t.closes} {t.editNote}</small></div><button type="button" role="switch" aria-checked={f.published} aria-label={t.show} className={`st-sw ${f.published ? 'on' : ''}`} onClick={() => setF({ ...f, published: !f.published })}><i /></button></div>

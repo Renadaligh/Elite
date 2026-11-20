@@ -1462,3 +1462,15 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
   .st-mobile-popup a{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;color:var(--s-fg);font-weight:700;font-size:.9rem;white-space:nowrap}
   .st-mobile-popup a.on,.st-mobile-popup a:hover{background:var(--s-hov)}
 }
+
+/* username popup + bigger avatar */
+.st-modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+.st-modal-card{width:min(420px,100%);display:grid;gap:12px;padding:22px;border-radius:18px;background:var(--s-panel);border:1px solid var(--s-line2);color:var(--s-fg);box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.st-modal-card h3{font-weight:800;font-size:1.1rem}.st-modal-card p{color:var(--s-mut);font-size:.9rem}.st-modal-card small{color:var(--s-dim)}
+.st-modal-card .st-pbtn{justify-self:start}
+.st-me img,.st-av{width:48px;height:48px}
+.st-me b{font-size:1.02rem}
+.st-prof img,.st-prof .st-av.big{width:84px;height:84px;font-size:2rem}
+
+/* menu button: no tilt on hover/tap (it turns into an X when open) */
+.st-menu-trigger:hover,.st-menu-trigger:active{transform:none}

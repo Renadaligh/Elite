@@ -37,12 +37,28 @@ export default function GamesSection() {
   const wide = useWide();
   const [index, setIndex] = useState(0);
   const [category, setCategory] = useState('all');
+  const restored = useRef(false);
   const categories = useMemo(() => {
     const found = new Map<string, { en: string; ar: string }>();
     GAMES.forEach((g) => found.set(g.genre.en, g.genre));
     return [...found.values()];
   }, [GAMES]);
   const games = useMemo(() => category === 'all' ? GAMES : GAMES.filter(g => g.genre.en === category), [category, GAMES]);
+  // coming back from a game page: land on the card we left (and scroll to this section)
+  useEffect(() => {
+    if (restored.current || !GAMES.length) return;
+    let mem: { id: string; cat: string } | null = null;
+    try { mem = JSON.parse(sessionStorage.getItem('plato-last-game') ?? 'null'); } catch { /* ignore */ }
+    restored.current = true;
+    if (!mem) return;
+    const cat = mem.cat !== 'all' && GAMES.some((g) => g.genre.en === mem!.cat) ? mem.cat : 'all';
+    const list = cat === 'all' ? GAMES : GAMES.filter((g) => g.genre.en === cat);
+    const i = list.findIndex((g) => g.id === mem!.id);
+    if (i < 0) return;
+    setCategory(cat); setIndex(i);
+    let back = false; try { back = sessionStorage.getItem('plato-games-back') === '1'; sessionStorage.removeItem('plato-games-back'); } catch { /* ignore */ }
+    if (back) window.setTimeout(() => document.getElementById('games')?.scrollIntoView(), 80);
+  }, [GAMES]);
   const chooseCategory = (id: string) => { setCategory(id); setIndex(0); setLeaving(false); };
   const [leaving, setLeaving] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -64,6 +80,7 @@ export default function GamesSection() {
   const go = (g: Game) => {
     if (leaving) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { sessionStorage.setItem('plato-last-game', JSON.stringify({ id: g.id, cat: category })); sessionStorage.setItem('plato-games-back', '1'); } catch { /* ignore */ }
     const open = () => { navTo(`/games/${g.id}`); };
     if (reduce) { open(); return; }
     setLeaving(true);

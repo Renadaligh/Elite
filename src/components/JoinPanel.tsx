@@ -1,6 +1,7 @@
 import { noProto } from '../hooks/nav';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
+import Fold from './Fold';
 import type { RegRow } from './AddPlayers';
 
 /** First time the registration link is switched on it closes by itself two hours later (the organiser can change the time or the date, or turn it off). */
@@ -49,9 +50,7 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto }: { id: stri
   const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
   const status = !c ? '' : c.reason === 'full' ? t.full : c.reason === 'closed' ? t.closed : t.open;
   return (
-    <div className="st-share" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
-      <b>{t.title}</b>
-      <p className="st-shn">{t.desc}</p>
+    <Fold title={t.title} note={t.desc}>
       {!c ? (msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>) : (
         <div className="grid gap-3">
           <div className="st-shh"><div><span>{t.on}</span></div>
@@ -96,6 +95,6 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto }: { id: stri
           {msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>}
         </div>
       )}
-    </div>
+    </Fold>
   );
 }

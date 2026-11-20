@@ -9,7 +9,8 @@ import BracketActions from './BracketActions';
 import CommunityListing from './CommunityListing';
 import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
-import EditorsPanel from './EditorsPanel';
+import EditorsPanel, { DraftEditors } from './EditorsPanel';
+import Fold from './Fold';
 import { AddPlayerBar, commitAutoAdds } from './AddPlayers';
 import BracketSheetAny from './BracketSheetAny';
 import { useBracketHistory } from '../hooks/useBracketHistory';
@@ -191,6 +192,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   }
   function rebuild() { if (!br || !window.confirm(tx.rebuildAsk)) return; setNames(br.players.join('\n')); setFmt(br.format); edit(null); setEditP(false); }
 
+  const [draftEd, setDraftEd] = useState<string[]>([]);
   async function save() {
     if (!br) return;
     if (!auth.user) { setLogin(true); return; }
@@ -202,6 +204,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
       if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); commitAutoAdds(id); if (ver.current === sent) setDirty(false); setMsg(tx.saved); }
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
+        const bad: { h: string; c: string }[] = [];
+        for (const h of draftEd) { try { await api(`/brackets/${r.id}/editors`, { method: 'POST', body: JSON.stringify({ handle: h }) }); } catch (e) { bad.push({ h, c: (e as Error & { detail?: string }).detail ?? '' }); } }
+        if (bad.length) { try { sessionStorage.setItem(`plato-editor-fail-${r.id}`, JSON.stringify(bad)); } catch { /* ignore */ } } // shown once on the new bracket's co-editors card
         try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
         navTo(`/bracket/${r.id}`);
       }
@@ -269,10 +274,10 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
           {sheetView ? <BracketSheetAny bracket={br} title={displayTitle} lang={lang === 'en' ? 'en' : 'ar'} /> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
           </div>
           {editable && <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />}
+          {editable && !id && <DraftEditors lang={lang === 'en' ? 'en' : 'ar'} handles={draftEd} setHandles={setDraftEd} style={card} />}
           {editable && id && auth.user && <EditorsPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} userId={auth.user.id} style={card} />}
           {editable && isOwner && (
-            <div className="st-share" style={card}>
-              <b>{tx.shTitle}</b>
+            <Fold title={tx.shTitle} style={card}>
               {!id ? <p className="st-shn">{tx.shSave}</p> : (
                 <>
                   <div className="st-shr">
@@ -283,7 +288,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
                   </div>
                 </>
               )}
-            </div>
+            </Fold>
           )}
           {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}/j/${id}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} />}
           {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />}
