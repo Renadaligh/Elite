@@ -16,7 +16,7 @@ async function mineBracket(ctx: Ctx, uid: string) {
   catch { return null; }
 }
 const shape = (r: Row) => ({
-  gameId: r.game_id, image: r.image || '', name: r.name_en, prize: r.prize_en, startsAt: r.starts_at, total: r.total, filled: r.filled,
+  gameId: r.game_id, image: r.image || '', name: r.name_ar || r.name_en, prize: r.prize_en, startsAt: r.starts_at, total: r.total, filled: r.filled,
   mode: r.mode === 'team' ? 'team' : 'solo', published: !!r.published,
   review: r.review === 'pending' || r.review === 'rejected' ? r.review : 'approved', reviewNote: r.review_note || '',
 });
@@ -48,13 +48,13 @@ export const onRequestPut = async (ctx: Ctx) => {
   const [fe, fa] = FORMAT[fmt] ?? FORMAT.single;
   const id = `u-${b.id}`;
   try {
-    const old = await ctx.env.DB.prepare('SELECT filled, game_id, name_en, prize_en, starts_at, review, image FROM tournaments WHERE id = ? AND owner_id = ?').bind(id, u.id).first<{ filled: number; game_id: string; name_en: string; prize_en: string; starts_at: string; review: string; image: string }>();
+    const old = await ctx.env.DB.prepare('SELECT filled, game_id, name_en, name_ar, prize_en, starts_at, review, image FROM tournaments WHERE id = ? AND owner_id = ?').bind(id, u.id).first<{ filled: number; game_id: string; name_en: string; name_ar: string; prize_en: string; starts_at: string; review: string; image: string }>();
     if (old) {
       // Only a new name or picture sends an approved one back to review. An edit of a rejected one is a resubmission.
-      const changed = old.name_en !== name || old.image !== image; // only a new name or picture goes back to review; game, prize, date, seats, etc. change freely
+      const changed = (old.name_ar || old.name_en) !== name || old.image !== image; // only a new name or picture goes back to review; game, prize, date, seats, etc. change freely
       const review = old.review === 'rejected' || (changed && old.review === 'approved') ? 'pending' : old.review === 'pending' ? 'pending' : 'approved';
       await ctx.env.DB.prepare('UPDATE tournaments SET image=?,game_id=?,name_en=?,name_ar=?,format_en=?,format_ar=?,prize_en=?,prize_ar=?,starts_at=?,total=?,filled=?,mode=?,published=?,review=?,review_note=? WHERE id=? AND owner_id=?')
-        .bind(image, game, name, name, fe, fa, prize, prize, startsAt, total, total > 0 ? Math.min(old.filled, total) : old.filled, mode, pub, review, '', id, u.id).run();
+        .bind(image, game, changed ? name : old.name_en, changed ? name : old.name_ar, fe, fa, prize, prize, startsAt, total, total > 0 ? Math.min(old.filled, total) : old.filled, mode, pub, review, '', id, u.id).run();
       return json({ ok: true, review });
     } else {
       const n = await ctx.env.DB.prepare("SELECT COUNT(*) AS n FROM tournaments WHERE owner_id = ? AND winner_en = '' AND winner_ar = ''").bind(u.id).first<{ n: number }>(); // only tournaments that have not ended (no winner yet) count

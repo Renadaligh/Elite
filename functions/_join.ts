@@ -29,7 +29,10 @@ export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> 
     const b = await env.DB.prepare('SELECT data FROM user_brackets WHERE id = ?').bind(id).first<{ data: string }>();
     if (b) { const v = (JSON.parse(b.data) as { titleEn?: unknown }).titleEn; if (typeof v === 'string' && v.trim()) return v.trim(); }
   } catch { /* fall back to legacy registration title */ }
-  try { return (await env.DB.prepare('SELECT title_en FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ title_en: string }>())?.title_en ?? ''; } catch { return ''; }
+  try { const v = (await env.DB.prepare('SELECT title_en FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ title_en: string }>())?.title_en ?? ''; if (v) return v; } catch { /* column not there yet */ }
+  // an English name the admin added to the published tournament (differs from the Arabic one the organiser typed)
+  try { const t = await env.DB.prepare('SELECT name_en, name_ar FROM tournaments WHERE id = ?').bind(`u-${id}`).first<{ name_en: string; name_ar: string }>(); if (t && t.name_en && t.name_en !== t.name_ar) return t.name_en; } catch { /* no tournament */ }
+  return '';
 }
 
 /** Cover picture + start date of the registration page. Separate query so the page keeps working before the two columns are added (see schema.sql). */
