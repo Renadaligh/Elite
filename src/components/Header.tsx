@@ -57,15 +57,13 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
                 </li>
               );
             })}
-            <li>
-              <a href="/bracket" aria-current={active === '/bracket' ? 'page' : undefined} className="border-b-2 py-1.5 text-[1.05rem] rtl:font-bold transition-colors hover:text-[var(--text)]" style={{ color: active === '/bracket' ? 'var(--text)' : 'var(--muted)', borderColor: 'transparent' }}>{t.navLogin}</a>
-            </li>
           </ul>
         </nav>
         <div className="flex items-center gap-2">
           <a href={SOCIALS.discord} target="_blank" rel="noopener noreferrer" className="pill hdr-discord" aria-label="Discord"><DiscordIcon className="h-5 w-5" /><span>Discord</span></a>
           <HeroThemeToggle />
           <LanguageSwitcher />
+          <a href="/bracket" aria-current={active === '/bracket' ? 'page' : undefined} className="pill hidden !px-4 font-bold lg:inline-flex" style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent', color: '#fff' }}>{t.navLogin}</a>
           <button ref={burger} type="button" className="pill !px-0 lg:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t.closeMenu : t.menu}>
             {open ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
           </button>
