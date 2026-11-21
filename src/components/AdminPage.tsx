@@ -667,9 +667,16 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty, br, url, live]);
   const champ = br ? champion(br) : null;
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+  const goBack = async () => { if (dirty && br) await save(true); onClose(); };
 
   return (
-    <Drawer wide title={`${x('إدارة البراكت والبث')} — ${t0.name[lang] || t0.name.ar || t0.name.en}`} onClose={onClose}>
+    <div className="mx-auto w-full max-w-[74rem]">
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <button type="button" className={btnG} style={bd} onClick={() => { void goBack(); }}>{lang === 'en' ? '← ' : '→ '}{x('البطولات')}</button>
+        <h2 className="min-w-0 flex-1 truncate text-[1.3rem] font-extrabold">{t0.name[lang] || t0.name.ar || t0.name.en}</h2>
+        {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}
+      </div>
       <div className="grid min-w-0 grid-cols-1 gap-6 [&>*]:min-w-0">
 
         {(allRegs.length > 0 || (br?.players.length ?? 0) > 0 || (br?.bench?.length ?? 0) > 0) && (() => {
@@ -718,7 +725,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}
         </div>
       </div>
-    </Drawer>
+    </div>
   );
 }
 
@@ -760,6 +767,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   const shown = src === 'all' ? rows : rows.filter((r) => (src === 'users') === !!r.community);
   const pendingN = rows.filter((r) => r.community?.review === 'pending').length;
 
+  // the bracket opens as its own page (like the organisers' tool), not as a pop-up
+  if (brT) return <BracketAdmin key={brT.id} t0={brT} k={k} onClose={() => setBrT(null)} onAuthFail={onAuthFail} onSaved={load} />;
   return (
     <div>
       <PageHead refresh={load} title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF(emptyT()); }}>{x('+ بطولة جديدة')}</button> : undefined} />
@@ -795,7 +804,6 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
         {!rows.length && <Card className="p-8 text-center"><span style={{ color: 'var(--muted)' }}>{x('ما فيه بطولات بعد.')}</span></Card>}
       </div>
 
-      {brT && <BracketAdmin key={brT.id} t0={brT} k={k} onClose={() => setBrT(null)} onAuthFail={onAuthFail} onSaved={load} />}
       {f && (
         <Drawer title={x(f.id ? 'تعديل البطولة' : 'بطولة جديدة')} onClose={() => setF(null)}>
           <form onSubmit={save} className="grid gap-4">
