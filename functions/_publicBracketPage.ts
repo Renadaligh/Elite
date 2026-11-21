@@ -446,7 +446,9 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
         const site = await env.DB.prepare("SELECT id, name_ar AS title, bracket AS data FROM tournaments WHERE id = ? AND bracket <> ''").bind(params.id).first<Row>().catch(() => null);
         if (site) return { row: site, ambiguous: false };
         if (!/^[a-f0-9]{6}$/i.test(params.id)) return { row: null, ambiguous: false };
-        const hits = (await env.DB.prepare('SELECT id, title, data FROM user_brackets WHERE id LIKE ? LIMIT 2').bind(params.id.toLowerCase() + '%').all<Row>()).results;
+        const hits: Row[] = (await env.DB.prepare('SELECT id, title, data FROM user_brackets WHERE id LIKE ? LIMIT 2').bind(params.id.toLowerCase() + '%').all<Row>()).results;
+        const siteHits = (await env.DB.prepare("SELECT id, name_ar AS title, bracket AS data FROM tournaments WHERE id LIKE ? AND bracket <> '' LIMIT 2").bind(params.id.toLowerCase() + '%').all<Row>().catch(() => ({ results: [] as Row[] }))).results;
+        hits.push(...siteHits);
         return { row: hits.length === 1 ? hits[0] : null, ambiguous: hits.length > 1 };
       })(),
       new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Database timeout')), 7000); }),

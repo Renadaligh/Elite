@@ -696,14 +696,14 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <div className="flex flex-wrap items-center gap-2.5">
               {!isDraft(br) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable onChange={(b) => upd(b)} />}
-              <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}/t/${t0.id}`} />
+              <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={siteUrl(`/v/${t0.id.slice(0, 6)}`)} exportId={t0.id} exportTheme={document.documentElement.dataset.hero === 'day' ? 'light' : 'dark'} beforeExport={dirty ? () => save(true) : undefined} />
             </div>
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div>
             <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
             <Fold title={x('رابط العرض')}>
               <div className="grid gap-2">
                 <small style={{ color: 'var(--muted)' }}>{x('صفحة عامة تعرض الشجرة للجميع، تتحدث مع كل تعديل')}</small>
-                <div className="st-shl"><input readOnly dir="ltr" aria-label={x('رابط العرض')} value={noProto(siteUrl(`/v/${t0.id}`))} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => { void navigator.clipboard?.writeText(noProto(siteUrl(`/v/${t0.id}`))).then(() => toast.ok(x('تم نسخ الرابط'))).catch(() => undefined); }}>{x('نسخ')}</button></div>
+                <div className="st-shl"><input readOnly dir="ltr" aria-label={x('رابط العرض')} value={noProto(siteUrl(`/v/${t0.id.slice(0, 6)}`))} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => { void navigator.clipboard?.writeText(noProto(siteUrl(`/v/${t0.id.slice(0, 6)}`))).then(() => toast.ok(x('تم نسخ الرابط'))).catch(() => undefined); }}>{x('نسخ')}</button></div>
               </div>
             </Fold>
             <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
