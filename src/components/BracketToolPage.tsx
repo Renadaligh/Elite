@@ -216,7 +216,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
         for (const h of draftEd) { try { await api(`/brackets/${r.id}/editors`, { method: 'POST', body: JSON.stringify({ handle: h }) }); } catch (e) { bad.push({ h, c: (e as Error & { detail?: string }).detail ?? '' }); } }
         if (bad.length) { try { sessionStorage.setItem(`plato-editor-fail-${r.id}`, JSON.stringify(bad)); } catch { /* ignore */ } } // shown once on the new bracket's co-editors card
         try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
-        navTo(`/bracket/${r.id}`);
+        navTo(`/bracket/${r.id}`, true); // replaces the "new" page in the history, so Back returns to where the user was
       }
     } catch (e) { failed.current = sent; setMsg((e as Error & { detail?: string }).detail === 'limit' ? tx.limit : tx.saveFail); }
     setBusy(false);

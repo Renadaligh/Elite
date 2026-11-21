@@ -361,6 +361,7 @@ function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: 
   const [rej, setRej] = useState(false);
   const [note, setNote] = useState('');
   const c = r.community!;
+  if (c.review !== 'pending') return null; // once accepted or rejected the review box is gone
   async function send(status: 'approved' | 'rejected', n = '') {
     try { await api(`/tournaments/${r.id}/review`, { method: 'PUT', key: k, body: JSON.stringify({ status, note: n }) }); toast.ok(x('تمت المراجعة')); setRej(false); setNote(''); onDone(); }
     catch { toast.err(x('تعذّر تنفيذ العملية')); }
@@ -368,10 +369,8 @@ function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: 
   return (
     <div className="w-full border-t pt-3" style={{ borderColor: 'var(--glass-b)' }}>
       <div className="flex flex-wrap items-center gap-2">
-        <a className={btnG} style={{ borderColor: 'var(--glass-b)' }} href={`/bracket/${c.bracketId}`} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
-        {can && c.review !== 'approved' && <button className={btnP} style={gradBtn} onClick={() => send('approved')}>{x('قبول')}</button>}
-        {can && c.review === 'pending' && !rej && <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} onClick={() => setRej(true)}>{x('رفض')}</button>}
-        {c.review === 'rejected' && c.reviewNote && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{c.reviewNote}</span>}
+        {can && <button className={btnP} style={gradBtn} onClick={() => send('approved')}>{x('قبول')}</button>}
+        {can && !rej && <button className={btnG} style={{ borderColor: 'var(--glass-b)', color: '#ff6b7a' }} onClick={() => setRej(true)}>{x('رفض')}</button>}
       </div>
       {rej && (
         <div className="mt-2.5 grid gap-2">
@@ -926,7 +925,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <a className={btnG} style={bd} href={siteUrl(`/v/${r.id.slice(0, 6)}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
+                {r.community && <a className={btnG} style={bd} href={siteUrl(`/v/${r.community.bracketId}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>}
                 {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => setBrT(r)}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
