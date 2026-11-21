@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { getGame } from '../data/games';
+import { useEffect, useState, type ReactNode } from 'react';
+import { getGame, loadBuiltInTexts } from '../data/games';
 import { useGames } from '../hooks/useGames';
 import { useTournaments } from '../hooks/useTournaments';
 import { statusOf, tournamentsForGame, type TournamentStatus } from '../data/tournaments';
@@ -58,6 +58,10 @@ export default function GamePage({ id }: { id: string }) {
   useGames();
   const g = getGame(id);
   const tones = useImageTones(g?.image);
+  // built-in long texts are a separate file, fetched only here; texts set in the dashboard take priority
+  const [builtIn, setBuiltIn] = useState<GText[] | undefined>();
+  const gid = g?.id;
+  useEffect(() => { setBuiltIn(undefined); if (gid) void loadBuiltInTexts(gid).then(setBuiltIn).catch(() => undefined); }, [gid]);
   const { items: allTours } = useTournaments();
   const [tab, setTab] = useState<Tab>('all');
   const now = Date.now();
@@ -105,8 +109,8 @@ export default function GamePage({ id }: { id: string }) {
           </div>
         </header>
 
-        {!!g.texts?.length && <Block title={t.gSecAbout} bare>
-          <GameTexts texts={g.texts} lang={lang} />
+        {!!(g.texts?.length || builtIn?.length) && <Block title={t.gSecAbout} bare>
+          <GameTexts texts={(g.texts?.length ? g.texts : builtIn) ?? []} lang={lang} />
         </Block>}
 
         {!!g.videos?.length && <Block title={t.gSecVideos}>

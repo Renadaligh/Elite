@@ -1474,3 +1474,6 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* menu button: no tilt on hover/tap (it turns into an X when open) */
 .st-menu-trigger:hover,.st-menu-trigger:active{transform:none}
+
+/* Phones: the blur behind every news card is costly to paint while scrolling and barely visible on these backgrounds. */
+@media (max-width: 767px) { .news-card { -webkit-backdrop-filter: none; backdrop-filter: none; } }

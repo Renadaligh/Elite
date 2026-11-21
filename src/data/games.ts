@@ -1,5 +1,4 @@
 import type { Localized } from './news';
-import { GAME_TEXTS } from './gameTexts';
 
 /** Official names/categories based on Plato's games catalogue (October 2026).
  * Icon URL convention is based on the verified official Poker asset path.
@@ -93,8 +92,9 @@ const BASE_RAW: Game[] = [
   { id: 'deep-thots', name: L('Deep Thots', 'أفكار عميقة'), genre: genres.Social, tagline: L('Give unexpected answers to big questions.', 'أجب بإجابات طريفة عن أسئلة عميقة.'), overview: L('Give unexpected answers to big questions.', 'أجب بإجابات طريفة عن أسئلة عميقة.'), colors: palette.Social, image: '' },
   { id: 'go', name: L('Go', 'غو'), genre: genres.Board, tagline: L('Control territory on the board.', 'سيطر على المساحات على لوحة غو.'), overview: L('Control territory on the board.', 'سيطر على المساحات على لوحة غو.'), colors: palette.Board, image: '' },
 ];
-/** Built-in games carry their page texts from gameTexts.ts unless a game sets its own. */
-const BASE_GAMES: Game[] = BASE_RAW.map((b) => ({ ...b, texts: b.texts ?? GAME_TEXTS[b.id] }));
+/** The long page texts of the built-in games live in gameTexts.ts, which is loaded only when a game page opens (see loadBuiltInTexts); a game's own dashboard texts win over them. */
+const BASE_GAMES: Game[] = BASE_RAW.map((b) => ({ ...b }));
+export const loadBuiltInTexts = (id: string): Promise<Game['texts']> => import('./gameTexts').then((m) => m.GAME_TEXTS[id]);
 
 /* ---------- Dashboard-managed games (D1 table "games") merged over the built-in list ---------- */
 export const GENRE_KEYS = Object.keys(genres);
