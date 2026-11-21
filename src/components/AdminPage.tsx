@@ -620,7 +620,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const autoOn = !!br && br.auto !== false && !hasResults(br);
   useEffect(() => { if (autoOn) autoAddNew(t0.id, 'reg', regs, br?.players ?? [], addToBracket); }, [regs, autoOn]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (autoOn) autoAddNew(t0.id, 'join', jr, br?.players ?? [], addToBracket); }, [jr, autoOn]); // eslint-disable-line react-hooks/exhaustive-deps
-  const allRegs: RegRow[] = [...jr, ...regs].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''));
+  const allRegs: RegRow[] = [...jr, ...regs].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? '')).filter((r, i, a) => a.findIndex((q) => nameKey(regName(q)) === nameKey(regName(r))) === i); // one line per name even if he came in twice (older sign-ups)
   function addToBracket(add: string[]) {
     const have = new Set((br?.players ?? []).map((p) => p.trim().toLowerCase()));
     if (!add.some((n) => n.trim() && !have.has(n.trim().toLowerCase()))) return;

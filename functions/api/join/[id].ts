@@ -37,6 +37,11 @@ export const onRequestPost = async ({ request, env, params }: Ctx) => {
   const { results: taken } = await env.DB.prepare('SELECT mode, plato_id, team_name, members FROM bracket_signups WHERE bracket_id = ? LIMIT 5000').bind(params.id).all<{ mode: string; plato_id: string; team_name: string; members: string }>();
   const used = new Set<string>();
   for (const t of taken ?? []) { used.add(key(t.plato_id)); idsOf(t.members ?? '').forEach((m) => used.add(m)); }
+  // ...and nobody who already registered through the site's own form (tournaments page) can register again here
+  try {
+    const { results: viaSite } = await env.DB.prepare('SELECT plato_id, members FROM registrations WHERE tournament_id IN (?, ?) LIMIT 5000').bind(params.id, `u-${params.id}`).all<{ plato_id: string; members: string }>();
+    for (const t of viaSite ?? []) { used.add(key(t.plato_id)); idsOf(t.members ?? '').forEach((m) => used.add(m)); }
+  } catch { /* table missing */ }
   if (team && (taken ?? []).some((t) => t.mode === 'team' && key(t.team_name) === key(teamName))) return json({ ok: false, error: 'duplicate_team' }, 409);
   if (mine.some((m) => used.has(m))) return json({ ok: false, error: 'duplicate' }, 409);
   await env.DB.prepare('INSERT INTO bracket_signups (bracket_id, mode, plato_id, team_name, members, created_at) VALUES (?,?,?,?,?,?)')

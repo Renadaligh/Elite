@@ -27,7 +27,7 @@ export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, onU
   useEffect(() => { if (auto) autoAddNew(id, 'join', join, players, onAdd); }, [join, auto]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (auto) autoAddNew(id, 'reg', site, players, onAdd); }, [site, auto]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const all = [...join, ...site].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''));
+  const all = [...join, ...site].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? '')).filter((r, i, a) => a.findIndex((q) => nameKey(regName(q)) === nameKey(regName(r))) === i);
   if (all.length === 0 && players.length === 0 && !(bench?.length)) return null;
   const have = new Set(all.map((r) => nameKey(regName(r))));
   const count = all.length + players.filter((p) => !have.has(nameKey(p))).length + (bench ?? []).filter((p) => !have.has(nameKey(p))).length;

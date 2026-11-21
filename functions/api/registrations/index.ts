@@ -23,6 +23,11 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   const { results: taken } = await env.DB.prepare('SELECT mode, plato_id, team_name, members FROM registrations WHERE tournament_id=? LIMIT 5000').bind(tid).all<{ mode: string; plato_id: string; team_name: string; members: string }>();
   const used = new Set<string>();
   for (const r of taken ?? []) { used.add(key(r.plato_id)); idsOf(r.members ?? '').forEach((m) => used.add(m)); }
+  // the same people may not come in again through the tournament's registration link (/j/<id>) as well
+  try {
+    const { results: viaLink } = await env.DB.prepare('SELECT plato_id, members FROM bracket_signups WHERE bracket_id = ? LIMIT 5000').bind(tid.startsWith('u-') ? tid.slice(2) : tid).all<{ plato_id: string; members: string }>();
+    for (const r of viaLink ?? []) { used.add(key(r.plato_id)); idsOf(r.members ?? '').forEach((m) => used.add(m)); }
+  } catch { /* table not created yet */ }
   if (team && (taken ?? []).some((r) => r.mode === 'team' && key(r.team_name) === key(teamName))) return json({ ok: false, error: 'duplicate_team' }, 409);
   if (mine.some((m) => used.has(m))) return json({ ok: false, error: 'duplicate' }, 409);
   try {
