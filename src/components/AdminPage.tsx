@@ -840,7 +840,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'ميجور'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
                 <div className="mt-1 text-[.8rem]" dir="ltr" style={{ color: 'var(--muted)', textAlign: lang === 'ar' ? 'right' : 'left' }}>{when(r.startsAt)}</div>
               </div>
               <div className="w-36">
@@ -865,7 +865,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('name', x('اسم البطولة'), 'Name')}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={x('اللعبة')}><select className={sel} style={bd} value={f.gameId || GAMES[0]?.id || ''} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
-              <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">{lang === 'en' ? 'Major' : 'ميجور'}</option></select></Field>
+              <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</option></select></Field>
               <Field label={x('النوع')}><select className={sel} style={bd} value={f.mode ?? 'solo'} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{x('فردي (Plato ID)')}</option><option value="team">{x('فرق (اسم الفريق + القائد + الأعضاء)')}</option></select></Field>
             </div>
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}

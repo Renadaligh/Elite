@@ -87,7 +87,7 @@ export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
 
 function MajorBadge() {
   const { lang } = useI18n();
-  return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>{lang === 'ar' ? 'ميجور' : 'Major'}</span>;
+  return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>{lang === 'ar' ? 'بطولة كبرى' : 'Major'}</span>;
 }
 
 /** Dice mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
