@@ -1,5 +1,5 @@
 import { validId, validIds, body, json, str, type Ctx } from '../../_lib';
-import { joinCount, joinDesc, joinDoneMsg, joinTitleEn, joinExtra, joinReason, joinRow } from '../../_join';
+import { bracketOf, joinCount, joinDesc, joinDoneMsg, joinTitleEn, joinExtra, joinReason, joinRow } from '../../_join';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const idsOf = (s: string) => s.split(/[\n,،;]+/).map(key).filter(Boolean);
@@ -8,13 +8,13 @@ const idsOf = (s: string) => s.split(/[\n,،;]+/).map(key).filter(Boolean);
 export const onRequestGet = async ({ env, params }: Ctx) => {
   const r = await joinRow(env, params.id);
   if (!r || !r.enabled) return json({ error: 'not_found' }, 404);
-  const row = await env.DB.prepare('SELECT title, data FROM user_brackets WHERE id = ?').bind(params.id).first<{ title: string; data: string }>().catch(() => null);
+  const row = await bracketOf(env, params.id);
   if (!row) return json({ error: 'not_found' }, 404);
   let org = ''; try { const d = JSON.parse(row.data) as { org?: unknown }; if (typeof d.org === 'string') org = d.org.slice(0, 60); } catch { /* corrupt row */ }
   const count = await joinCount(env, params.id);
   const ex = await joinExtra(env, params.id);
   let startsAt = ex.startsAt;
-  if (!startsAt) startsAt = (await env.DB.prepare('SELECT starts_at FROM tournaments WHERE id = ?').bind(`u-${params.id}`).first<{ starts_at: string }>().catch(() => null))?.starts_at ?? '';
+  if (!startsAt) startsAt = (await env.DB.prepare('SELECT starts_at FROM tournaments WHERE id IN (?, ?) ORDER BY id DESC LIMIT 1').bind(`u-${params.id}`, params.id).first<{ starts_at: string }>().catch(() => null))?.starts_at ?? '';
   return json({ titleEn: await joinTitleEn(env, params.id), description: await joinDesc(env, params.id), doneMsg: await joinDoneMsg(env, params.id), title: row.title, org, cover: ex.cover, startsAt, mode: r.mode === 'team' ? 'team' : 'solo', count, cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
 };
 
@@ -41,5 +41,7 @@ export const onRequestPost = async ({ request, env, params }: Ctx) => {
   if (mine.some((m) => used.has(m))) return json({ ok: false, error: 'duplicate' }, 409);
   await env.DB.prepare('INSERT INTO bracket_signups (bracket_id, mode, plato_id, team_name, members, created_at) VALUES (?,?,?,?,?,?)')
     .bind(params.id, team ? 'team' : 'solo', plato, team ? teamName : '', team ? members : '', new Date().toISOString()).run();
+  // a tournament run by the site admins: its "registered" counter goes up like it does for the site form (no row = nothing happens)
+  await env.DB.prepare('UPDATE tournaments SET filled = filled + 1 WHERE id = ?').bind(params.id).run().catch(() => undefined);
   return json({ ok: true });
 };

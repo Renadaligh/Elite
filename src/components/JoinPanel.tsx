@@ -19,8 +19,11 @@ const isoDate = (iso?: string) => { const d = new Date(iso ?? ''); return !iso |
 const fromLocal = (v: string) => { const t = new Date(v).getTime(); return Number.isNaN(t) ? 0 : t; };
 
 /** Organiser panel for the registration link (#/join/<id>): on/off, solo/team, cap, auto/manual close, and the people who signed up. */
-export default function JoinPanel({ id, lang, link, autoOn, onAuto }: { id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void }) {
+/** `admin` = a tournament run by the site admins: its settings go through the admin API (password/session key `k`) instead of the organiser's account. */
+export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin }: { id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void; admin?: { k: string } }) {
   const t = T[lang];
+  const path = admin ? `/tournaments/${id}/join` : `/brackets/${id}/join`;
+  const akey = admin ? { key: admin.k } : {};
   const [c, setC] = useState<Cfg | null>(null);
   const [msg, setMsg] = useState('');
   const [copied, setCopied] = useState(false);
@@ -29,22 +32,22 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto }: { id: stri
   const [desc, setDesc] = useState('');
   const [doneMsg, setDoneMsg] = useState('');
     const load = useCallback(async () => {
-    try { const d = await api<Cfg>(`/brackets/${id}/join`); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
+    try { const d = await api<Cfg>(path, akey); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
-  }, [id, t.fail, t.migrate]);
+  }, [path, t.fail, t.migrate]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [load]);
   async function pickCover(file?: File | null) {
     if (!file) return;
     const fd = new FormData(); fd.append('file', await shrinkImage(file, 1280), 'image');
     try {
-      const res = await fetch(`/api/brackets/${id}/image`, { method: 'POST', body: fd });
+      const res = admin ? await fetch('/api/upload', { method: 'POST', headers: { authorization: `Bearer ${admin.k}` }, body: fd }) : await fetch(`/api/brackets/${id}/image`, { method: 'POST', body: fd });
       if (!res.ok) throw new Error(String(res.status));
       const j = (await res.json()) as { url: string };
       await put({ cover: j.url });
     } catch { setMsg(t.imgFail); }
   }
   async function put(patch: Record<string, unknown>) {
-    try { await api(`/brackets/${id}/join`, { method: 'PUT', body: JSON.stringify(patch) }); await load(); }
+    try { await api(path, { method: 'PUT', body: JSON.stringify(patch), ...akey }); await load(); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }
   async function copy() { try { await navigator.clipboard.writeText(noProto(link)); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { window.prompt('', noProto(link)); } }

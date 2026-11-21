@@ -442,6 +442,9 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       (async () => {
         const exact = await env.DB.prepare('SELECT id, title, data FROM user_brackets WHERE id = ?').bind(params.id).first<Row>();
         if (exact) return { row: exact, ambiguous: false };
+        // a tournament the site admins run (its bracket lives in the tournaments table)
+        const site = await env.DB.prepare("SELECT id, name_ar AS title, bracket AS data FROM tournaments WHERE id = ? AND bracket <> ''").bind(params.id).first<Row>().catch(() => null);
+        if (site) return { row: site, ambiguous: false };
         if (!/^[a-f0-9]{6}$/i.test(params.id)) return { row: null, ambiguous: false };
         const hits = (await env.DB.prepare('SELECT id, title, data FROM user_brackets WHERE id LIKE ? LIMIT 2').bind(params.id.toLowerCase() + '%').all<Row>()).results;
         return { row: hits.length === 1 ? hits[0] : null, ambiguous: hits.length > 1 };

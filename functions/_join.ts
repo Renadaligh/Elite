@@ -14,6 +14,14 @@ export function joinReason(r: JoinRow, count: number, now = Date.now()): '' | 'c
   return '';
 }
 
+/** Title + bracket data of the thing a registration link belongs to: an organiser's bracket, or a tournament the site admins run (same id space, the bracket wins). */
+export async function bracketOf(env: Ctx['env'], id: string): Promise<{ title: string; data: string } | null> {
+  const b = await env.DB.prepare('SELECT title, data FROM user_brackets WHERE id = ?').bind(id).first<{ title: string; data: string }>().catch(() => null);
+  if (b) return b;
+  const t = await env.DB.prepare('SELECT name_ar, name_en, bracket FROM tournaments WHERE id = ?').bind(id).first<{ name_ar: string; name_en: string; bracket: string }>().catch(() => null);
+  return t ? { title: t.name_ar || t.name_en, data: t.bracket || '{}' } : null;
+}
+
 export async function joinCount(env: Ctx['env'], id: string): Promise<number> {
   try { return (await env.DB.prepare('SELECT COUNT(*) AS n FROM bracket_signups WHERE bracket_id = ?').bind(id).first<{ n: number }>())?.n ?? 0; } catch { return 0; }
 }
@@ -36,7 +44,7 @@ export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> 
   } catch { /* fall back to legacy registration title */ }
   try { const v = (await env.DB.prepare('SELECT title_en FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ title_en: string }>())?.title_en ?? ''; if (v) return v; } catch { /* column not there yet */ }
   // an English name the admin added to the published tournament (differs from the Arabic one the organiser typed)
-  try { const t = await env.DB.prepare('SELECT name_en, name_ar FROM tournaments WHERE id = ?').bind(`u-${id}`).first<{ name_en: string; name_ar: string }>(); if (t && t.name_en && t.name_en !== t.name_ar) return t.name_en; } catch { /* no tournament */ }
+  try { const t = await env.DB.prepare('SELECT name_en, name_ar FROM tournaments WHERE id IN (?, ?) ORDER BY id DESC LIMIT 1').bind(`u-${id}`, id).first<{ name_en: string; name_ar: string }>(); if (t && t.name_en && t.name_en !== t.name_ar) return t.name_en; } catch { /* no tournament */ }
   return '';
 }
 

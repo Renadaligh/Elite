@@ -4,11 +4,15 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, addPlayers, draftBracket, hasResults, shuffled, swapSeats, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { MAX_PLAYERS, MAX_RR, isLeague, champion, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
 import FormatOpts, { fmtInit, hasOpts, toOpts } from './FormatOpts';
 import BracketActions from './BracketActions';
-import { AddPlayerBar, RegistrantsPanel } from './AddPlayers';
+import { AddPlayerBar, RegistrantsPanel, autoAddNew, commitAutoAdds, regName, type RegRow } from './AddPlayers';
+import JoinPanel from './JoinPanel';
+import { siteUrl, noProto } from '../hooks/nav';
+import Fold from './Fold';
+import WinnerCard from './WinnerCard';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
@@ -50,7 +54,7 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
-  'البراكت': 'Bracket', 'إعادة البناء': 'Rebuild', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'البراكت': 'Bracket', 'إعادة البناء': 'Rebuild', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'المسجّلون': 'Registered', 'رابط العرض': 'View link', 'صفحة عامة تعرض الشجرة للجميع، تتحدث مع كل تعديل': 'A public page showing the bracket to everyone, updated with every change', 'تم نسخ الرابط': 'Link copied', 'نسخ': 'Copy', 'إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟': 'Removing a player after matches started clears the current results (Undo brings them back). Sure?', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
   'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
   'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
   'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
@@ -574,8 +578,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [shuf, setShuf] = useState(false);
   const [lo, setLo] = useState(fmtInit());
   const [, setEditP] = useState(false);
-  const [url, setUrl] = useState(t0.streamUrl ?? '');
-  const [live, setLive] = useState(!!t0.streamLive);
+  const url = t0.streamUrl ?? ''; // the stream section was removed from the screen: keep whatever is already saved
+  const live = !!t0.streamLive;
   const ver = useRef(0); // bumps on every edit, so a save that ends late never marks newer edits as saved
   const failed = useRef(-1);
   const typing = useRef(false); // the stream link is being typed: don't autosave half a link (use the save button)
@@ -606,15 +610,39 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   }
   const rename = (i: number, v: string) => { if (!br) return; if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) }); };
   const [regs, setRegs] = useState<Reg[]>([]);
-  const loadRegs = useCallback(() => { api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined); }, [k, t0.id]);
-  useEffect(() => { loadRegs(); }, [loadRegs]);
+  const [jr, setJr] = useState<RegRow[]>([]); // people who signed up through the registration link
+  const loadRegs = useCallback(() => {
+    api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined);
+    api<{ signups?: RegRow[] }>(`/tournaments/${t0.id}/join`, { key: k }).then((r) => setJr((r.signups ?? []).map((q) => ({ ...q, src: 'join' as const })))).catch(() => undefined);
+  }, [k, t0.id]);
+  useEffect(() => { loadRegs(); const t = window.setInterval(() => { if (document.visibilityState === 'visible') loadRegs(); }, 30000); return () => window.clearInterval(t); }, [loadRegs]);
+  // new registrants go straight into the bracket (same as the organiser tool)
+  const autoOn = !!br && br.auto !== false && !hasResults(br);
+  useEffect(() => { if (autoOn) autoAddNew(t0.id, 'reg', regs, br?.players ?? [], addToBracket); }, [regs, autoOn]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoOn) autoAddNew(t0.id, 'join', jr, br?.players ?? [], addToBracket); }, [jr, autoOn]); // eslint-disable-line react-hooks/exhaustive-deps
+  const allRegs: RegRow[] = [...jr, ...regs].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''));
   function addToBracket(add: string[]) {
     const have = new Set((br?.players ?? []).map((p) => p.trim().toLowerCase()));
     if (!add.some((n) => n.trim() && !have.has(n.trim().toLowerCase()))) return;
     if (!br) { upd(addPlayers(draftBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined), add)); return; }
     if (br.format === 'rr' && br.players.length + add.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
     if (hasResults(br) && !window.confirm(x('إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟'))) return;
-    upd(addPlayers(br, add));
+    upd(setBench(addPlayers(br, add), (br.bench ?? []).filter((b) => !add.some((a) => nameKey(a) === nameKey(b)))));
+  }
+  /** keep = a player added by hand: he stays in the registrants list (with +) after leaving the bracket. */
+  function removeFromBracket(name: string, keep = false) {
+    if (!br) return;
+    if (br.players.some((p) => nameKey(p) === nameKey(name)) && hasResults(br) && !window.confirm(x('إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟'))) return;
+    const bench = (br.bench ?? []).filter((b) => nameKey(b) !== nameKey(name));
+    if (keep) bench.push(name);
+    upd(setBench(removePlayer(br, name), bench));
+  }
+  /** Everybody out of the bracket; the players added by hand stay in the list. */
+  function removeAllFromBracket(keep: string[]) {
+    if (!br || !br.players.length) return;
+    let b = br; for (const p of [...br.players]) b = removePlayer(b, p);
+    const bench = [...(br.bench ?? [])]; for (const q of keep) if (!bench.some((z) => nameKey(z) === nameKey(q))) bench.push(q);
+    upd(setBench(b, bench));
   }
   function rebuild() {
     if (!br || !window.confirm(x('إعادة البناء تمسح النتائج الحالية. متأكد؟'))) return;
@@ -625,6 +653,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     const sent = ver.current;
     try {
       await api(`/tournaments/${t0.id}/bracket`, { method: 'PUT', body: JSON.stringify({ bracket: br, streamUrl: url, streamLive: live }), key: k });
+      commitAutoAdds(t0.id);
       if (ver.current === sent) setDirty(false);
       if (!auto) toast.ok(x('تم حفظ البراكت'));
       onSaved();
@@ -642,15 +671,16 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   return (
     <Drawer wide title={`${x('إدارة البراكت والبث')} — ${t0.name[lang] || t0.name.ar || t0.name.en}`} onClose={onClose}>
       <div className="grid min-w-0 grid-cols-1 gap-6 [&>*]:min-w-0">
-        <div className="rounded-xl border p-4" style={bd}>
-          <b className="mb-3 block">{x('البث المباشر')}</b>
-          <div className="grid gap-3">
-            <Field label={x('رابط البث (Twitch / YouTube / Kick)')}><input dir="ltr" className={inp} style={bd} value={url} placeholder="https://twitch.tv/…" onChange={(e) => { setUrl(e.target.value); ver.current += 1; typing.current = true; setDirty(true); }} /></Field>
-            <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={live} onChange={(e) => { setLive(e.target.checked); ver.current += 1; setDirty(true); }} />{x('تشغيل البث للزوار')} <span style={{ color: 'var(--muted)' }}>· {x('إيقافه = لا شيء يظهر للزوار')}</span></label>
-          </div>
-        </div>
 
-        <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={regs} players={br?.players ?? []} onAdd={addToBracket} onRefresh={loadRegs} onDelete={(r) => { void api(`/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
+        {(allRegs.length > 0 || (br?.players.length ?? 0) > 0 || (br?.bench?.length ?? 0) > 0) && (() => {
+          const have = new Set(allRegs.map((r) => nameKey(regName(r))));
+          const count = allRegs.length + (br?.players ?? []).filter((p) => !have.has(nameKey(p))).length + (br?.bench ?? []).filter((p) => !have.has(nameKey(p))).length;
+          return (
+            <Fold title={`${x('المسجّلون')} · ${count}`}>
+              <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
+            </Fold>
+          );
+        })()}
 
         {!br ? (
           <div className="grid gap-4 rounded-xl border p-4" style={bd}>
@@ -664,9 +694,19 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
-            <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}/t/${t0.id}`} />
+            <div className="flex flex-wrap items-center gap-2.5">
+              {!isDraft(br) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable onChange={(b) => upd(b)} />}
+              <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={`${window.location.origin}/t/${t0.id}`} />
+            </div>
             <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div>
             <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
+            <Fold title={x('رابط العرض')}>
+              <div className="grid gap-2">
+                <small style={{ color: 'var(--muted)' }}>{x('صفحة عامة تعرض الشجرة للجميع، تتحدث مع كل تعديل')}</small>
+                <div className="st-shl"><input readOnly dir="ltr" aria-label={x('رابط العرض')} value={noProto(siteUrl(`/v/${t0.id}`))} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => { void navigator.clipboard?.writeText(noProto(siteUrl(`/v/${t0.id}`))).then(() => toast.ok(x('تم نسخ الرابط'))).catch(() => undefined); }}>{x('نسخ')}</button></div>
+              </div>
+            </Fold>
+            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>
           </div>
         )}
@@ -745,7 +785,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </div>
               <div className="flex gap-2">
                 <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('البراكت')}{r.bracket ? ' ✓' : ''}</button>
-                {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: r.registerUrl ?? '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>)}
+                {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
               {r.community && <ReviewBox k={k} r={r} can={can('tournaments', 'edit')} onDone={load} />}
@@ -777,7 +817,6 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
               </Field>
               <Field label={x('المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)')}><input type="number" min={0} className={inp} style={bd} value={f.slots.filled} onChange={(e) => setF({ ...f, slots: { ...f.slots, filled: Number(e.target.value) } })} /></Field>
             </div>
-            <Field label={x('رابط تسجيل خارجي (اختياري، يلغي نموذج الموقع)')}><input dir="ltr" className={inp} style={bd} value={f.registerUrl ?? ''} placeholder="https://…" onChange={(e) => setF({ ...f, registerUrl: e.target.value })} /></Field>
             <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={f.image ?? ''} onChange={(v) => setF({ ...f, image: v })} />
             {f.image && <FocusPicker src={f.image} pos={f.imagePos ?? ''} onChange={(p) => setF({ ...f, imagePos: p })} />}
             {pair('winner', x('الفائز (بعد الانتهاء)'), 'Winner')}
