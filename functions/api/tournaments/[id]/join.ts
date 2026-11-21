@@ -1,6 +1,6 @@
 import { guard } from '../../../_admin';
 import { sameOrigin } from '../../../_auth';
-import { joinCount, joinDescPair, packDesc, joinDoneMsg, joinTitleEn, joinExtra, joinReason, joinRow } from '../../../_join';
+import { joinCount, joinDescPair, packDesc, joinDoneMsgPair, joinTitleEn, joinExtra, joinReason, joinRow } from '../../../_join';
 import { body, json, type Ctx } from '../../../_lib';
 
 async function exists(ctx: Ctx) {
@@ -16,7 +16,7 @@ export const onRequestGet = async (ctx: Ctx) => {
   try { signups = (await ctx.env.DB.prepare('SELECT id, mode, plato_id, team_name, members, created_at FROM bracket_signups WHERE bracket_id = ? ORDER BY id ASC LIMIT 5000').bind(ctx.params.id).all()).results ?? []; } catch { return json({ error: 'migrate' }, 500); }
   const count = signups.length;
   const ex = await joinExtra(ctx.env, ctx.params.id);
-  return json({ titleEn: await joinTitleEn(ctx.env, ctx.params.id), ...(await (async () => { const d = await joinDescPair(ctx.env, ctx.params.id); return { description: d.ar, descriptionEn: d.en }; })()), doneMsg: await joinDoneMsg(ctx.env, ctx.params.id), cover: ex.cover, startsAt: ex.startsAt, enabled: !!r?.enabled, mode: r?.mode === 'team' ? 'team' : 'solo', cap: r?.cap ?? 0, closesAt: r?.closes_at ?? 0, closed: !!r?.closed, reason: r ? joinReason(r, count) : '', count, signups });
+  return json({ titleEn: await joinTitleEn(ctx.env, ctx.params.id), ...(await (async () => { const d = await joinDescPair(ctx.env, ctx.params.id); return { description: d.ar, descriptionEn: d.en }; })()), ...(await (async () => { const d = await joinDoneMsgPair(ctx.env, ctx.params.id); return { doneMsg: d.ar, doneMsgEn: d.en }; })()), cover: ex.cover, startsAt: ex.startsAt, enabled: !!r?.enabled, mode: r?.mode === 'team' ? 'team' : 'solo', cap: r?.cap ?? 0, closesAt: r?.closes_at ?? 0, closed: !!r?.closed, reason: r ? joinReason(r, count) : '', count, signups });
 };
 
 /** Site tournament (admin): turn the link on/off, solo/team, cap, auto-close time (epoch ms, 0 = none), close now / reopen. */
@@ -56,8 +56,11 @@ export const onRequestPut = async (ctx: Ctx) => {
     const en = typeof b.descriptionEn === 'string' ? String(b.descriptionEn).trim().slice(0, 600) : was.en;
     try { await ctx.env.DB.prepare('UPDATE bracket_join SET description = ? WHERE bracket_id = ?').bind(packDesc(ar, en), ctx.params.id).run(); } catch { return json({ error: 'migrate' }, 500); }
   }
-  if (typeof b.doneMsg === 'string') {
-    try { await ctx.env.DB.prepare('UPDATE bracket_join SET done_msg = ? WHERE bracket_id = ?').bind(String(b.doneMsg).trim().slice(0, 400), ctx.params.id).run(); } catch { return json({ error: 'migrate' }, 500); }
+  if (typeof b.doneMsg === 'string' || typeof b.doneMsgEn === 'string') {
+    const was = await joinDoneMsgPair(ctx.env, ctx.params.id);
+    const ar = typeof b.doneMsg === 'string' ? String(b.doneMsg).trim().slice(0, 400) : was.ar;
+    const en = typeof b.doneMsgEn === 'string' ? String(b.doneMsgEn).trim().slice(0, 400) : was.en;
+    try { await ctx.env.DB.prepare('UPDATE bracket_join SET done_msg = ? WHERE bracket_id = ?').bind(packDesc(ar, en), ctx.params.id).run(); } catch { return json({ error: 'migrate' }, 500); }
   }
   return json({ ok: true, count: await joinCount(ctx.env, ctx.params.id) });
 };

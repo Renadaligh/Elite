@@ -61,7 +61,10 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
   // The description written in the registration-link panel is shown on the site's registration card too (same text, one place to edit it).
   const desc = new Map<string, { ar: string; en: string }>();
   try { for (const d of (await env.DB.prepare("SELECT bracket_id, description FROM bracket_join WHERE description <> ''").all<{ bracket_id: string; description: string }>()).results) desc.set(d.bracket_id, unpackDesc(d.description)); } catch { /* column not added yet */ }
-  const data = rows.map((r) => { const d = desc.get(r.bracket_id || r.id); return { ...out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined), ...(d && (d.ar || d.en) ? { description: { ar: d.ar || d.en, en: d.en || d.ar } } : {}) }; });
+  const done = new Map<string, { ar: string; en: string }>();
+  try { for (const d of (await env.DB.prepare("SELECT bracket_id, done_msg FROM bracket_join WHERE done_msg <> ''").all<{ bracket_id: string; done_msg: string }>()).results) done.set(d.bracket_id, unpackDesc(d.done_msg)); } catch { /* column not added yet */ }
+  const both = (d?: { ar: string; en: string }) => (d && (d.ar || d.en) ? { ar: d.ar || d.en, en: d.en || d.ar } : undefined);
+  const data = rows.map((r) => { const k = r.bracket_id || r.id; const d = both(desc.get(k)), m = both(done.get(k)); return { ...out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined), ...(d ? { description: d } : {}), ...(m ? { doneMsg: m } : {}) }; });
   return all ? json(data) : jsonPublic(data);
 };
 

@@ -43,9 +43,10 @@ export function unpackDesc(raw: string): { ar: string; en: string } {
 export const packDesc = (ar: string, en: string): string => (en.trim() ? JSON.stringify({ ar: ar.trim(), en: en.trim() }) : ar.trim());
 
 /** Optional message the organiser shows after someone registers (own query: works before the `done_msg` column exists). */
-export async function joinDoneMsg(env: Ctx['env'], id: string): Promise<string> {
-  try { return (await env.DB.prepare('SELECT done_msg FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ done_msg: string }>())?.done_msg ?? ''; } catch { return ''; }
+export async function joinDoneMsgPair(env: Ctx['env'], id: string): Promise<{ ar: string; en: string }> {
+  try { return unpackDesc((await env.DB.prepare('SELECT done_msg FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ done_msg: string }>())?.done_msg ?? ''); } catch { return { ar: '', en: '' }; }
 }
+export const joinDoneMsg = async (env: Ctx['env'], id: string): Promise<string> => (await joinDoneMsgPair(env, id)).ar;
 
 /** Optional English title of the registration page (own query, works before the `title_en` column exists). */
 export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> {

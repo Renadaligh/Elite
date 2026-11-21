@@ -54,7 +54,7 @@ const EN: Record<string, string> = {
   'رابط الخبر (اختياري)': 'Story link (optional)', 'منشور (يظهر في الموقع)': 'Published (visible on the site)',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'مسودة': 'Draft', 'منشور': 'Published', 'تعديل': 'Edit', 'حذف': 'Delete', 'ما فيه أخبار بعد.': 'No news yet.',
   'تعذّر تحميل البطولات': 'Could not load tournaments', 'تحقق من الاسم وتاريخ البداية': 'Check the name and start date',
-  'البراكت': 'Bracket', 'إعادة البناء': 'Rebuild', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'المسجّلون': 'Registered', 'رابط العرض': 'View link', 'صفحة عامة تعرض الشجرة للجميع، تتحدث مع كل تعديل': 'A public page showing the bracket to everyone, updated with every change', 'تم نسخ الرابط': 'Link copied', 'نسخ': 'Copy', 'إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟': 'Removing a player after matches started clears the current results (Undo brings them back). Sure?', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
+  'البراكت': 'Bracket', 'إعادة البناء': 'Rebuild', 'حذف هذه اللعبة من الموقع؟ تقدر تستعيدها من زر الاستعادة': 'Delete this game from the site? You can restore it with the restore button', 'تمت الاستعادة': 'Restored', 'تعذّر حفظ الترتيب': 'Could not save the order', 'ألعاب محذوفة': 'Deleted games', 'استعادة الألعاب المحذوفة': 'Restore deleted games', 'لتغيير الترتيب امسح البحث واختر كل الأنواع': 'To reorder, clear the search and choose all genres', 'اسحب لتغيير الترتيب': 'Drag to reorder', 'تحريك للأعلى': 'Move up', 'تحريك للأسفل': 'Move down', 'انتهت مهلة الرفع، الاتصال بطيء. حاول مرة ثانية': 'Upload timed out, the connection is slow. Try again', 'تحديد كالمباراة الحالية': 'Mark as current match', 'إلغاء "المباراة الحالية"': 'Unmark current match', 'تعديل أسماء اللاعبين': 'Edit player names', 'إعادة البناء تمسح النتائج الحالية. متأكد؟': 'Rebuilding clears the current results. Sure?', 'تغيير الاسم يحافظ على النتائج. لإضافة لاعب أو حذفه أو تغيير النظام:': 'Renaming keeps the results. To add/remove a player or change the format:', 'تعديل القائمة وإعادة البناء': 'Edit list & rebuild', 'براكت محفوظ': 'Bracket saved', 'المسجّلون': 'Registered', 'نصوص التسجيل': 'Registration texts', 'تظهر في بطاقة التسجيل بالموقع وفي صفحة رابط التسجيل. اكتب نسخة لكل لغة (إذا كتبت واحدة تظهر للغتين).': 'Shown on the site registration card and on the registration link page. Write one version per language (if you write only one it shows for both).', 'وصف التسجيل (عربي)': 'Registration description (Arabic)', 'وصف التسجيل (إنجليزي)': 'Registration description (English)', 'رسالة بعد التسجيل (عربي)': 'Message after registering (Arabic)', 'رسالة بعد التسجيل (إنجليزي)': 'Message after registering (English)', 'الروابط في الرسالة تنضغط تلقائياً. فاضية = الرسالة الافتراضية': 'Links in the message become clickable. Empty = the default message', 'رابط العرض': 'View link', 'صفحة عامة تعرض الشجرة للجميع، تتحدث مع كل تعديل': 'A public page showing the bracket to everyone, updated with every change', 'تم نسخ الرابط': 'Link copied', 'نسخ': 'Copy', 'إزالة لاعب بعد بدء المباريات تمسح النتائج الحالية (وتقدر تتراجع). متأكد؟': 'Removing a player after matches started clears the current results (Undo brings them back). Sure?', 'إدارة البراكت والبث': 'Bracket & stream', 'نظام البراكت': 'Bracket format', 'دوري (كل لاعب ضد الكل)': 'Round robin', 'سويسري': 'Swiss', 'مجموعات ثم إقصائيات': 'Groups then knockout', 'لوحة صدارة (الكل ضد الكل)': 'Leaderboard (free-for-all)', 'اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً': 'Type the numbers of each round, the ranking updates automatically', 'نقاط الفوز': 'Win points', 'نقاط التعادل': 'Draw points', 'نقاط الخسارة': 'Loss points', 'عدد الجولات (فارغ = تلقائي)': 'Rounds (empty = auto)', 'دوري مزدوج (ذهاب وإياب)': 'Double round robin (home & away)', 'اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً': 'Type the score of each match, standings update automatically', 'خروج المغلوب (فردي)': 'Single elimination', 'خروج مزدوج': 'Double elimination',
   'اللاعبون (اسم في كل سطر، الأعلى = الأقوى)': 'Players (one per line, top = strongest seed)', 'خلط اللاعبين عشوائياً': 'Shuffle players randomly', 'إنشاء البراكت': 'Create bracket',
   'أدخل لاعبَين على الأقل': 'Enter at least 2 players', 'اضغط على اسم الفائز في كل مباراة': 'Click the winner of each match', 'نتيجة المباراة (اختياري)': 'Match score (optional)',
   'تراجع (إلغاء الفائز)': 'Undo winner', 'حفظ البراكت': 'Save bracket', 'تم حفظ البراكت': 'Bracket saved', 'حذف البراكت': 'Delete bracket', 'حذف البراكت وإعادة البدء؟': 'Delete the bracket and start over?',
@@ -567,6 +567,47 @@ const emptyT = (): Adm<Tournament> => ({ id: '', gameId: '', name: { ar: '', en:
 const ST_TONE = { live: 'red', upcoming: 'amber', completed: 'gray' } as const;
 const ST_AR = { live: 'مباشرة', upcoming: 'قادمة', completed: 'منتهية' } as const;
 
+/** Registration text of a site tournament: one version per language. Shown on the site's registration card AND on the standalone registration page, so it has its own place (works with the link switched off). */
+function RegDescription({ id, k }: { id: string; k: string }) {
+  const { x } = useX();
+  const toast = useToast();
+  type V = { ar: string; en: string; dAr: string; dEn: string };
+  const [v, setV] = useState<V>({ ar: '', en: '', dAr: '', dEn: '' });
+  const [was, setWas] = useState<V>({ ar: '', en: '', dAr: '', dEn: '' });
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    api<{ description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string }>(`/tournaments/${id}/join`, { key: k })
+      .then((d) => { const n = { ar: d.description ?? '', en: d.descriptionEn ?? '', dAr: d.doneMsg ?? '', dEn: d.doneMsgEn ?? '' }; setV(n); setWas(n); setReady(true); })
+      .catch(() => setReady(true));
+  }, [id, k]);
+  async function save() {
+    const n = { ar: v.ar.trim(), en: v.en.trim(), dAr: v.dAr.trim(), dEn: v.dEn.trim() };
+    if (n.ar === was.ar && n.en === was.en && n.dAr === was.dAr && n.dEn === was.dEn) return;
+    try {
+      await api(`/tournaments/${id}/join`, { method: 'PUT', body: JSON.stringify({ description: n.ar, descriptionEn: n.en, doneMsg: n.dAr, doneMsgEn: n.dEn }), key: k });
+      setWas(n); toast.ok(x('تم الحفظ'));
+    } catch { toast.err(x('تعذّر تنفيذ العملية')); }
+  }
+  const area = (key: keyof V, label: string, dir: 'rtl' | 'ltr', max: number, rows = 5) => (
+    <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{label}
+      <textarea dir={dir} className={`${inp} resize-y`} style={{ ...bd, minHeight: `${rows}rem` }} maxLength={max} value={v[key]} onChange={(e) => setV({ ...v, [key]: e.target.value })} onBlur={() => { void save(); }} />
+    </label>
+  );
+  return (
+    <Fold title={x('نصوص التسجيل')} note={x('تظهر في بطاقة التسجيل بالموقع وفي صفحة رابط التسجيل. اكتب نسخة لكل لغة (إذا كتبت واحدة تظهر للغتين).')}>
+      {!ready ? <p style={{ color: 'var(--muted)' }}>…</p> : (
+        <div className="grid gap-3">
+          {area('ar', x('وصف التسجيل (عربي)'), 'rtl', 600)}
+          {area('en', x('وصف التسجيل (إنجليزي)'), 'ltr', 600)}
+          {area('dAr', x('رسالة بعد التسجيل (عربي)'), 'rtl', 400, 4)}
+          {area('dEn', x('رسالة بعد التسجيل (إنجليزي)'), 'ltr', 400, 4)}
+          <small style={{ color: 'var(--muted)' }}>{x('الروابط في الرسالة تنضغط تلقائياً. فاضية = الرسالة الافتراضية')}</small>
+        </div>
+      )}
+    </Fold>
+  );
+}
+
 /* ---------- Bracket + live stream (per tournament) ---------- */
 function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournament>; k: string; onClose: () => void; onAuthFail: () => void; onSaved: () => void }) {
   const { lang, x } = useX();
@@ -717,6 +758,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                 <div className="st-shl"><input readOnly dir="ltr" aria-label={x('رابط العرض')} value={noProto(siteUrl(`/v/${t0.id.slice(0, 6)}`))} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => { void navigator.clipboard?.writeText(noProto(siteUrl(`/v/${t0.id.slice(0, 6)}`))).then(() => toast.ok(x('تم نسخ الرابط'))).catch(() => undefined); }}>{x('نسخ')}</button></div>
               </div>
             </Fold>
+            <RegDescription id={t0.id} k={k} />
             <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
             {regsBlock}
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>

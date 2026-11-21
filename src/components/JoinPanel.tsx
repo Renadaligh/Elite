@@ -30,10 +30,9 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin }: { i
   const [cap, setCap] = useState('');
   const [when, setWhen] = useState('');
   const [desc, setDesc] = useState('');
-  const [descEn, setDescEn] = useState('');
   const [doneMsg, setDoneMsg] = useState('');
     const load = useCallback(async () => {
-    try { const d = await api<Cfg>(path, akey); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDescEn(d.descriptionEn ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
+    try { const d = await api<Cfg>(path, akey); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }, [path, t.fail, t.migrate]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [load]);
@@ -78,16 +77,13 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin }: { i
                 <span className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.mode}</span>
                 {(['solo', 'team'] as const).map((m) => <button key={m} type="button" role="radio" aria-checked={c.mode === m} className={`br-chip ${c.mode === m ? 'on' : ''}`} onClick={() => put({ mode: m })}>{m === 'solo' ? t.solo : t.team}</button>)}
               </div>
-              <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{admin ? 'وصف التسجيل (عربي)' : t.descL}
-                <textarea dir="auto" className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (desc.trim() !== (c.description ?? '')) void put({ description: desc.trim() }); }} />
-              </label>
-              {admin && (<label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>Registration description (English)
-                  <textarea dir="auto" className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={descEn} onChange={(e) => setDescEn(e.target.value)} onBlur={() => { if (descEn.trim() !== (c.descriptionEn ?? '')) void put({ descriptionEn: descEn.trim() }); }} />
+              {!admin && (<label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.descL}
+                  <textarea dir="auto" className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (desc.trim() !== (c.description ?? '')) void put({ description: desc.trim() }); }} />
                 </label>)}
-              <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.doneL}
-                <textarea dir="auto" className={`${line} min-h-[4.5rem] resize-y`} style={bd} maxLength={400} value={doneMsg} onChange={(e) => setDoneMsg(e.target.value)} onBlur={() => { if (doneMsg.trim() !== (c.doneMsg ?? '')) void put({ doneMsg: doneMsg.trim() }); }} />
-                <small>{t.doneHint}</small>
-              </label>
+              {!admin && (<label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.doneL}
+                  <textarea dir="auto" className={`${line} min-h-[4.5rem] resize-y`} style={bd} maxLength={400} value={doneMsg} onChange={(e) => setDoneMsg(e.target.value)} onBlur={() => { if (doneMsg.trim() !== (c.doneMsg ?? '')) void put({ doneMsg: doneMsg.trim() }); }} />
+                  <small>{t.doneHint}</small>
+                </label>)}
               <label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.start}
                 <input type="datetime-local" className={line} style={bd} dir="ltr" value={isoDate(c.startsAt)} onChange={(e) => { const v = e.target.value; const d = v ? new Date(v) : null; void put({ startsAt: d && !Number.isNaN(d.getTime()) ? d.toISOString() : '' }); }} />
               </label>

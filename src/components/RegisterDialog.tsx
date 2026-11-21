@@ -1,3 +1,4 @@
+import { linkify } from './linkify';
 import { ChipInput } from './ChipInput';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -70,8 +71,14 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
 
         {state === 'done' ? (
           <div className="py-8 text-center" role="status">
-            <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
-            <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
+            {x.doneMsg?.[lang] ? (
+              <div className="text-[1.05rem] font-semibold leading-relaxed">{x.doneMsg[lang].split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'center' }}>{linkify(ln)}</p> : <div key={i} className="h-2" />))}</div>
+            ) : (
+              <>
+                <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
+                <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
+              </>
+            )}
             <button type="button" className="btn-glass mt-6 !px-6 !py-2.5" onClick={onClose}>{t.regClose}</button>
           </div>
         ) : (

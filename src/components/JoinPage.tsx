@@ -1,10 +1,11 @@
+import { linkify } from './linkify';
 import { ChipInput } from './ChipInput';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
 
-interface Info { titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+interface Info { titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full';
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
@@ -51,18 +52,6 @@ const X = {
 };
 
 /** Standalone registration page of a bracket (#/join/<id>): same form as the site's, shows only the count and the status. */
-/** Turns links typed in the organiser's message into clickable ones (http/https, www. and a few well-known short domains only; everything else stays plain text). */
-const LINK = /((?:https?:\/\/|www\.|(?:discord\.gg|discord\.com|twitter\.com|x\.com|youtube\.com|youtu\.be|twitch\.tv|instagram\.com|tiktok\.com|t\.me|wa\.me|forms\.gle)\/)[^\s<>"'،؛]+)/gi;
-function linkify(text: string): ReactNode[] {
-  return text.split(LINK).map((part, i) => {
-    if (i % 2 === 0) return part;
-    const m = part.match(/^(.*?)([.,;:!?)\]]*)$/);
-    const url = m ? m[1] : part, tail = m ? m[2] : '';
-    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    return <span key={i}><a href={href} target="_blank" rel="noopener noreferrer nofollow" dir="ltr" style={{ color: 'var(--link-on)', textDecoration: 'underline', wordBreak: 'break-all' }}>{url}</a>{tail}</span>;
-  });
-}
-
 export default function JoinPage({ id }: { id: string }) {
   const { t, lang } = useI18n();
   const x = X[lang === 'en' ? 'en' : 'ar'];
@@ -135,8 +124,8 @@ export default function JoinPage({ id }: { id: string }) {
             {!closedNow && when && <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{x.closes}: {when}</p>}
             {state === 'done' ? (
               <div className="py-8 text-center" role="status">
-                {info.doneMsg ? (
-                  <div className="text-[1.05rem] font-semibold leading-relaxed">{info.doneMsg.split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'center' }}>{linkify(ln)}</p> : <div key={i} className="h-2" />))}</div>
+                {(lang === 'en' ? info.doneMsgEn || info.doneMsg : info.doneMsg || info.doneMsgEn) ? (
+                  <div className="text-[1.05rem] font-semibold leading-relaxed">{((lang === 'en' ? info.doneMsgEn || info.doneMsg : info.doneMsg || info.doneMsgEn) ?? '').split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'center' }}>{linkify(ln)}</p> : <div key={i} className="h-2" />))}</div>
                 ) : (
                   <>
                     <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
