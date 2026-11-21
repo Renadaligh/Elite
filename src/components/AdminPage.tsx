@@ -582,6 +582,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const live = !!t0.streamLive;
   const ver = useRef(0); // bumps on every edit, so a save that ends late never marks newer edits as saved
   const failed = useRef(-1);
+  const fresh = useRef(false); // just created: saved at once, not after the usual short wait
   const typing = useRef(false); // the stream link is being typed: don't autosave half a link (use the save button)
   const hist = useBracketHistory<Bracket>();
   const upd = (b: Bracket | null) => { if (br) hist.record(br); ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
@@ -606,6 +607,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     if (fmt === 'rr' && list.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
     // fewer than 2 names: an empty draft; players are added afterwards (typed, or with + from the registrants)
+    fresh.current = true;
     upd(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts));
   }
   const rename = (i: number, v: string) => { if (!br) return; if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) }); };
@@ -662,7 +664,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   // changes save themselves ~1.5 s after the last edit
   useEffect(() => {
     if (!dirty || !br || typing.current || failed.current === ver.current) return undefined;
-    const h = window.setTimeout(() => { void save(true); }, 1500);
+    const wait = fresh.current ? 0 : 1500; fresh.current = false;
+    const h = window.setTimeout(() => { void save(true); }, wait);
     return () => window.clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty, br, url, live]);
@@ -754,8 +757,16 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
     if (!f) return;
     if (f.mode === 'team' && (f.winner?.ar.trim() || f.winner?.en.trim()) && !(f.winnerMembers ?? []).some((m) => m.trim())) { toast.err(x('أسماء أعضاء الفريق الفائز إجبارية')); return; }
     try {
-      await api(f.id ? `/tournaments/${f.id}` : '/tournaments', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
-      setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح')); load();
+      const r = await api<{ id?: string }>(f.id ? `/tournaments/${f.id}` : '/tournaments', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
+      setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح'));
+      if (!f.id && r?.id) {
+        // a new tournament goes straight to its bracket page
+        const list = await api<Adm<Tournament>[]>('/tournaments', { key: k });
+        setRows(list);
+        const made = list.find((q) => q.id === r.id);
+        if (made) { setBrT(made); return; }
+      }
+      load();
     } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تحقق من الاسم وتاريخ البداية'))); }
   }
   async function del(id: string) {
@@ -787,7 +798,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">Major</Badge>}{r.community && <Badge tone="green">{x('مجتمع')}{r.community.organizer ? ` · ${r.community.organizer}` : ''}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'ميجور'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('براكت محفوظ')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
                 <div className="mt-1 text-[.8rem]" dir="ltr" style={{ color: 'var(--muted)', textAlign: lang === 'ar' ? 'right' : 'left' }}>{when(r.startsAt)}</div>
               </div>
               <div className="w-36">
@@ -812,7 +823,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
             {pair('name', x('اسم البطولة'), 'Name')}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={x('اللعبة')}><select className={sel} style={bd} value={f.gameId || GAMES[0]?.id || ''} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
-              <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">Major</option></select></Field>
+              <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">{lang === 'en' ? 'Major' : 'ميجور'}</option></select></Field>
               <Field label={x('النوع')}><select className={sel} style={bd} value={f.mode ?? 'solo'} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{x('فردي (Plato ID)')}</option><option value="team">{x('فرق (اسم الفريق + القائد + الأعضاء)')}</option></select></Field>
             </div>
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}

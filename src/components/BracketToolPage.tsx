@@ -38,7 +38,7 @@ export const TXT = {
     loginFailed: 'تعذّر تسجيل الدخول، جرّب مرة ثانية.', loginUnavailable: 'تسجيل الدخول غير مفعّل بعد.', limit: 'وصلت الحد الأقصى من البطولات المحفوظة (100). احذف واحد قديم.', private: 'هذه البطولة غير منشورة. اطلب من صاحبها تفعيل رابط العرض.', shTitle: 'المشاركة', shView: 'نشر رابط للعرض', shViewD: 'أي شخص معه الرابط يشوف البطولة (عرض فقط).', shCopy: 'نسخ', shCopied: 'تم النسخ', shSave: 'احفظ البطولة أولاً لتفعيل المشاركة.', twitch: 'الدخول بحساب Twitch', steam: 'الدخول بحساب Steam', orMail: 'أو بالبريد', saveFail: 'تعذّر الحفظ',
     myTitle: 'بطولاتي', newOne: '+ بطولة جديدة', empty: 'ما عندك بطولات محفوظة بعد.', open: 'فتح وتعديل', link: 'نسخ الرابط', linkDone: 'تم نسخ الرابط', img: 'صورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟',
     needLogin: 'سجّل دخولك لتشوف بطولاتك المحفوظة.', players_n: 'لاعبين', hello: 'أهلاً',
-    org: 'اسم المنظم (اختياري)', orgPh: 'مثلاً: النخبة', orgBy: 'تنظيم',
+    org: 'اسم المنظم / القروب (اختياري)', orgPh: 'مثلاً: النخبة', orgBy: 'تنظيم',
   },
   en: {
     title: 'Bracket tool', sub: 'Make a bracket for any server or community: single or double elimination, round robin or swiss. Update results, save it as an image or share it.',
@@ -52,7 +52,7 @@ export const TXT = {
     loginFailed: 'Sign-in failed, please try again.', loginUnavailable: 'Sign-in is not enabled yet.', limit: 'You reached the limit of saved brackets (100). Delete an old one.', private: 'This bracket is not published. Ask its owner to turn on the view link.', shTitle: 'Sharing', shView: 'Publish a view link', shViewD: 'Anyone with the link can view the bracket (read-only).', shCopy: 'Copy', shCopied: 'Copied', shSave: 'Save the bracket first to turn on sharing.', twitch: 'Continue with Twitch', steam: 'Continue with Steam', orMail: 'or by email', saveFail: 'Could not save',
     myTitle: 'My brackets', newOne: '+ New bracket', empty: 'No saved brackets yet.', open: 'Open & edit', link: 'Copy link', linkDone: 'Link copied', img: 'Image', del: 'Delete', delAsk: 'Delete this bracket?',
     needLogin: 'Sign in to see your saved brackets.', players_n: 'players', hello: 'Hi',
-    org: 'Organizer name (optional)', orgPh: 'e.g. Elite', orgBy: 'Organised by',
+    org: 'Organizer / group name (optional)', orgPh: 'e.g. Elite', orgBy: 'Organised by',
   },
 } as const;
 type Tx = (typeof TXT)['ar'] | (typeof TXT)['en'];
@@ -162,6 +162,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     if (fmt === 'rr' && list.length > MAX_RR) { setMsg(tx.maxRr); return; }
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
     // fewer than 2 names: an empty draft, players are added later (typed or from the registrants)
+    justMade.current = true;
     edit({ ...setOrg(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts), org), ...(titleEn.trim() ? { titleEn: titleEn.trim() } : {}) });
   }
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
@@ -193,6 +194,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   function rebuild() { if (!br || !window.confirm(tx.rebuildAsk)) return; setNames(br.players.join('\n')); setFmt(br.format); edit(null); setEditP(false); }
 
   const [draftEd, setDraftEd] = useState<string[]>([]);
+  const justMade = useRef(false); // the bracket was just created here: save it at once (no "save" button, no trip to the saved list)
   async function save() {
     if (!br) return;
     if (!auth.user) { setLogin(true); return; }
@@ -213,6 +215,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     } catch (e) { failed.current = sent; setMsg((e as Error & { detail?: string }).detail === 'limit' ? tx.limit : tx.saveFail); }
     setBusy(false);
   }
+  // a bracket that was just created is saved right away (signed-in users); it opens at its own address and goes on autosaving
+  useEffect(() => {
+    if (id || !justMade.current || !br || !auth.user || busy) return;
+    justMade.current = false;
+    void save();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [br]);
   // saved brackets save themselves ~1.5 s after the last change (new, unsaved ones still need the button: they have no name/link yet)
   useEffect(() => {
     if (!id || !mine || !dirty || busy || !br || !auth.user || failed.current === ver.current) return undefined;

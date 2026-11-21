@@ -86,7 +86,8 @@ export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
 }
 
 function MajorBadge() {
-  return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>Major</span>;
+  const { lang } = useI18n();
+  return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>{lang === 'ar' ? 'ميجور' : 'Major'}</span>;
 }
 
 /** Dice mark, faint, in the bottom corner of a tournament card (same mark as the logo). */
@@ -94,13 +95,12 @@ function MajorBadge() {
 /** Image on top (full colour, no overlay) with the status chips on it; the text sits below on a plain surface. */
 function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: boolean }) {
   useGames();
-  const { lang } = useI18n();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
-    <div className="tc-im" style={x.community || x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
+    <div className="tc-im" style={x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
       {x.image && <RetryImg src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
-      <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{x.community && <span className="comm-badge" title={x.community.organizer || undefined}>{lang === 'ar' ? 'مجتمع' : 'Community'}</span>}</div>
+      <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</div>
     </div>
   );
 }
@@ -159,7 +159,7 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
   const showCd = s === 'upcoming';
   const showBr = (s === 'live' || s === 'completed') && !!x.bracket;
   return (
-    <article className={`tc ${x.image ? 'tc-pic' : ''} ${x.community ? `tc-user ${x.image ? '' : 'tc-comm'}` : ''}`}>
+    <article className={`tc ${x.image ? 'tc-pic' : ''} `}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
