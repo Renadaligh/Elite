@@ -37,7 +37,7 @@ a,button{color:inherit;font:inherit}
 nav a,button,.retry{border:1px solid var(--line);border-radius:10px;background:var(--toolbar);padding:7px 10px;text-decoration:none;cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
 h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-size:18px}
-.sheet{margin-top:14px;background:transparent;border:0;border-radius:0;overflow:auto;padding:0 0 8px;direction:ltr;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;overscroll-behavior-x:contain;touch-action:pan-x pan-y}.sheet::-webkit-scrollbar{display:none}.sheet.is-dragging{cursor:grabbing;user-select:none}.sheet.is-dragging *{user-select:none}.sheet section{margin-block:14px}.sheet h2{direction:var(--dir,ltr)}
+.sheet{margin-top:14px;background:transparent;border:0;border-radius:0;overflow:auto;padding:0 0 8px;direction:ltr;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;overscroll-behavior-x:contain;touch-action:pan-x pan-y pinch-zoom}.sheet::-webkit-scrollbar{display:none}.sheet.is-dragging{cursor:grabbing;user-select:none}.sheet.is-dragging *{user-select:none}.sheet section{margin-block:14px}.sheet h2{direction:var(--dir,ltr)}
 .bracket-meta{direction:var(--dir,ltr);display:flex;flex-direction:column;gap:10px;margin:5px 0 18px}.bracket-meta p{margin:0;color:var(--mut)}.bracket-meta .bracket-organizer{font-size:12px}
 /* Same winner card palette and vector trophy as the original dashboard. */
 .bracket-champion{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;border-radius:14px;background:linear-gradient(135deg,rgba(214,165,40,.24),rgba(214,165,40,.09));border:1px solid rgba(232,184,64,.5);color:#fff;width:min(100%,420px);margin-inline:auto;text-align:center}
@@ -356,10 +356,10 @@ if (sheet) {
   const charts = [...sheet.querySelectorAll('svg[data-width]')];
   const zoomIn = document.getElementById('zoom-in');
   const zoomOut = document.getElementById('zoom-out');
-  // Phones: no +/- buttons; the tree opens at ~65% and is pinched like a picture. Desktop keeps the buttons.
+  // Phones: no +/- buttons; the tree opens at a fixed 70% and the browser's own pinch zooms the whole page. Desktop keeps the buttons.
   const phoneQuery = window.matchMedia('(max-width: 720px)');
   const isPhone = () => phoneQuery.matches;
-  let zoom = isPhone() ? .65 : 1;
+  let zoom = isPhone() ? .7 : 1;
   const level = document.getElementById('zoom-level');
   const draw = (keepScroll) => {
     const available = sheet.clientWidth - 20;
@@ -381,27 +381,6 @@ if (sheet) {
   const ZMIN = () => (isPhone() ? .3 : .6);
   zoomIn.addEventListener('click', () => { zoom = Math.min(3, zoom + .25); draw(); });
   zoomOut.addEventListener('click', () => { zoom = Math.max(ZMIN(), zoom - .25); draw(); });
-  // Two-finger pinch (touch only): zoom around the fingers; one finger still scrolls natively.
-  let pinch = null;
-  const tdist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1;
-  sheet.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 2) return;
-    const r = sheet.getBoundingClientRect();
-    const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-    pinch = { d0: tdist(e.touches), z0: zoom, cx: cx - r.left, cyAbs: cy, fx: (sheet.scrollLeft + cx - r.left) / sheet.scrollWidth, fy: (cy - r.top) / Math.max(1, r.height) };
-  }, { passive: true });
-  sheet.addEventListener('touchmove', (e) => {
-    if (!pinch || e.touches.length !== 2) return;
-    e.preventDefault();
-    zoom = Math.round(Math.min(3, Math.max(ZMIN(), pinch.z0 * (tdist(e.touches) / pinch.d0))) * 100) / 100;
-    draw(true);
-    sheet.scrollLeft = pinch.fx * sheet.scrollWidth - pinch.cx;
-    const r2 = sheet.getBoundingClientRect();
-    window.scrollBy(0, (r2.top + pinch.fy * r2.height) - pinch.cyAbs);
-  }, { passive: false });
-  const endPinch = (e) => { if (e.touches.length < 2) pinch = null; };
-  sheet.addEventListener('touchend', endPinch);
-  sheet.addEventListener('touchcancel', endPinch);
   window.addEventListener('resize', draw);
   document.getElementById('zoom').hidden = false;
   draw();
