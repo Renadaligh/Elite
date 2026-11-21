@@ -8,6 +8,7 @@ import { useNow } from '../hooks/useNow';
 import { useI18n } from '../i18n/I18nProvider';
 import type { Dict } from '../i18n/translations';
 import { ArrowIcon } from './icons';
+import RetryImg from './RetryImg';
 
 type Tab = 'all' | TournamentStatus;
 const TABS: Tab[] = ['all', 'live', 'upcoming', 'completed'];
@@ -98,7 +99,7 @@ function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: bo
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
   return (
     <div className="tc-im" style={x.community || x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {x.image && <img src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+      {x.image && <RetryImg src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}{x.community && <span className="comm-badge" title={x.community.organizer || undefined}>{lang === 'ar' ? 'مجتمع' : 'Community'}</span>}</div>
     </div>
   );

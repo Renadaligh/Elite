@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import RetryImg from './RetryImg';
 import RichText from './RichText';
 import type { NewsItem, NewsTag } from '../data/news';
 import { useI18n } from '../i18n/I18nProvider';
@@ -25,7 +26,7 @@ export default function NewsCard({ item, eager }: { item: NewsItem; eager?: bool
   return (
     <article className="news-card news-card-hover group">
       <div className="news-art">
-        {item.image && <img src={item.image} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
+        {item.image && <RetryImg src={item.image} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-5">
         <div className="flex items-center gap-3 text-[.82rem]" style={{ color: 'var(--muted)' }}>

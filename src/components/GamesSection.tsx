@@ -9,9 +9,16 @@ const BASE = import.meta.env.BASE_URL;
 
 function OfficialGameImage({ src, eager, first }: { src: string; eager?: boolean; first?: boolean }) {
   const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
+  const [tries, setTries] = useState(0);
+  useEffect(() => { setFailed(false); setTries(0); }, [src]);
+  // One failed request (a slow moment, a dropped connection) must not leave the dice placeholder for good: retry a few times first.
+  const onErr = () => {
+    if (tries >= 3) { setFailed(true); return; }
+    window.setTimeout(() => setTries((n) => n + 1), 1200 * (tries + 1));
+  };
+  const url = tries > 0 ? `${src}${src.includes('?') ? '&' : '?'}r=${tries}` : src;
   return failed ? <div className="gcard-art" /> : (
-    <img src={src} alt="" draggable={false} loading={eager ? 'eager' : 'lazy'} fetchPriority={first ? 'high' : eager ? 'auto' : 'low'} decoding="async" onError={() => setFailed(true)} className={`absolute inset-0 h-full w-full object-cover ${/^https?:/.test(src) ? 'scale-[1.35] origin-center' : 'object-top'}`} />
+    <img key={tries} src={url} alt="" draggable={false} loading={eager ? 'eager' : 'lazy'} fetchPriority={first ? 'high' : eager ? 'auto' : 'low'} decoding="async" onError={onErr} className={`absolute inset-0 h-full w-full object-cover ${/^https?:/.test(src) ? 'scale-[1.35] origin-center' : 'object-top'}`} />
   );
 }
 
