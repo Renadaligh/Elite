@@ -680,7 +680,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const goBack = async () => { if (dirty && br) await save(true); onClose(); };
 
   return (
-    <div className="mx-auto w-full max-w-[74rem]">
+    <div className="st-page st-wide">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <button type="button" className={btnG} style={bd} onClick={() => { void goBack(); }}>{lang === 'en' ? '← ' : '→ '}{x('البطولات')}</button>
         <h2 className="min-w-0 flex-1 truncate text-[1.3rem] font-extrabold">{t0.name[lang] || t0.name.ar || t0.name.en}</h2>
@@ -700,7 +700,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             <div><button type="button" className={btnP} style={gradBtn} onClick={create}>{x('إنشاء البراكت')}</button></div>
           </div>
         ) : (
-          <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
             <div className="flex flex-wrap items-center gap-2.5">
               {!isDraft(br) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable onChange={(b) => upd(b)} />}
