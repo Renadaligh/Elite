@@ -326,7 +326,18 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     const can = (w: Who) => (!!onApply || !!onPick) && typeof w === 'number' && !isBye;
     // dashboard: one tap on a name = winner (tap the winner again to undo); the pencil still opens the full card
     const pickW = (side: 'a' | 'b') => (onApply ? onApply(setWinner(bracket, m.id, m.win === side ? undefined : side)) : onPick!(m, side));
-    const seat = (side: 'a' | 'b') => { const v = m[side]; return !!onSwap && !m.win && ('p' in v || 'bye' in v) ? { slot: `${m.id}|${side}`, grip: 'p' in v } : { slot: undefined, grip: false }; };
+    const seat = (side: 'a' | 'b') => {
+      const none = { slot: undefined, grip: false }, v = m[side];
+      if (!onSwap || m.win) return none;
+      if ('p' in v || 'bye' in v) return { slot: `${m.id}|${side}`, grip: 'p' in v };
+      // a player who advanced from round 1 by a bye (round 2 onward) can be moved too: he really sits in the bye match's seat, so that seat is what moves
+      if ('w' in v) {
+        const f = bracket.matches.find((x) => x.id === v.w);
+        const ps = f && !f.win ? ('p' in f.a && 'bye' in f.b ? 'a' : 'p' in f.b && 'bye' in f.a ? 'b' : null) : null;
+        if (f && ps) return { slot: `${f.id}|${ps}`, grip: true };
+      }
+      return none;
+    };
     const sc = !onApply && !!onScore && !isBye && typeof r.a === 'number' && typeof r.b === 'number';
     const sa = seat('a'), sb = seat('b');
     const crowned = (side: 'a' | 'b') => champ !== null && m.id === finalId && !isBye && m.win === side; // the trophy sits next to the champion's name in the last match

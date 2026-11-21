@@ -192,7 +192,7 @@ export function setWinner(br: Bracket, id: string, side?: 'a' | 'b'): Bracket {
   return { ...br, matches: br.matches.map((m) => (m.id === id ? { ...m, win: side } : clear.has(m.id) ? { ...m, win: undefined, sa: undefined, sb: undefined } : m)) };
 }
 
-/** Swaps two first-round seats (a player or a bye). Only while neither match has a result; scores of those matches are cleared. */
+/** Swaps two first-round seats (a player or a bye). Only while neither match has a result; scores of those matches are cleared. A player who advanced by a bye is moved through his bye-match seat, so he can be swapped in round 2 as well. */
 export interface SeatRef { id: string; side: 'a' | 'b' }
 export function swapSeats(br: Bracket, x: SeatRef, y: SeatRef): Bracket | null {
   const mx = br.matches.find((m) => m.id === x.id), my = br.matches.find((m) => m.id === y.id);
@@ -200,8 +200,11 @@ export function swapSeats(br: Bracket, x: SeatRef, y: SeatRef): Bracket | null {
   const sx = mx[x.side], sy = my[y.side];
   const seat = (v: Slot) => 'p' in v || 'bye' in v;
   if (!seat(sx) || !seat(sy)) return null;
+  const feeds = (m: BMatch, id: string) => [m.a, m.b].some((s) => ('w' in s && s.w === id) || ('l' in s && s.l === id));
+  if (br.matches.some((m) => m.win && (feeds(m, mx.id) || feeds(m, my.id)))) return null; // a player who already advanced from a bye match into a decided match stays put
   const clr = (m: BMatch): BMatch => ({ ...m, sa: undefined, sb: undefined });
   return { ...br, matches: br.matches.map((m) => {
+    if (m.id !== mx.id && m.id !== my.id && (feeds(m, mx.id) || feeds(m, my.id))) return clr(m); // scores typed for the players who were there are no longer valid
     if (m.id === mx.id && m.id === my.id) return clr({ ...m, [x.side]: sy, [y.side]: sx });
     if (m.id === mx.id) return clr({ ...m, [x.side]: sy });
     if (m.id === my.id) return clr({ ...m, [y.side]: sx });
