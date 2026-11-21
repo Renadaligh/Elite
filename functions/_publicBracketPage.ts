@@ -485,9 +485,9 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
     }
   }
   const target = ar ? 'en' : 'ar';
-  const message = status === 409 ? (ar ? 'هذا الرابط المختصر مشترك بين بطولتين. استخدمي الرابط الأصلي الكامل.' : 'This short link is ambiguous. Please use the original full link.') : status === 404
-    ? (ar ? 'البطولة غير موجودة. تأكدي من الرابط.' : 'Bracket not found. Check the link.')
-    : (ar ? 'تعذّر عرض البطولة الآن. حاولي مرة ثانية.' : 'Could not load the bracket. Please try again.');
+  const message = status === 409 ? (ar ? 'هذا الرابط المختصر مشترك بين بطولتين. استخدم الرابط الأصلي الكامل.' : 'This short link is ambiguous. Please use the original full link.') : status === 404
+    ? (ar ? 'البطولة غير موجودة. تأكد من الرابط.' : 'Bracket not found. Check the link.')
+    : (ar ? 'تعذّر عرض البطولة الآن. حاول مرة أخرى.' : 'Could not load the bracket. Please try again.');
   // Small inline icons preserve the familiar compact toolbar rather than replacing actions with text-only buttons.
   const icon = (name: 'language' | 'sun' | 'moon' | 'copy' | 'download') => {
     const shapes = {

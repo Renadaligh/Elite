@@ -124,7 +124,7 @@ export default function GamesSection() {
       <div ref={barRef} className="gm-bar mx-auto max-w-[30rem]">
         <button type="button" className="gm-fbtn" aria-expanded={menu} aria-haspopup="true" onClick={() => setMenu((m) => !m)}>
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
-          {lang === 'ar' ? 'فلتر' : 'Filter'}
+          {lang === 'ar' ? 'تصفية' : 'Filter'}
         </button>
         <span className="gm-title" aria-live="polite">{active?.name[lang]}</span>
         {menu && (

@@ -7,10 +7,10 @@ type Person = { id: string; name: string; handle: string; avatar: string };
 type Data = { isOwner: boolean; max: number; editors: Person[] };
 const T = {
   ar: {
-    title: 'التحرير المشترك', sub: 'أضف عضواً مسجّلاً بيوزره ليعدّل معك على هذه البطولة.', ph: 'يوزر العضو (مثال: abdullah_9)', add: 'إضافة',
-    none: 'لم يُضاف أحد بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذا البراكت.', empty: 'اكتب اليوزر.',
-    err: { bad_handle: 'اليوزر غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'ما لقيت عضواً بهذا اليوزر.', self: 'هذا يوزرك أنت.', limit: 'وصلت الحد الأقصى للمحررين.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'ما تمت العملية، حاول مرة ثانية.' },
-    notAdded: 'ما انضاف هؤلاء كمحررين:', mine: 'يوزرك', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
+    title: 'التحرير المشترك', sub: 'أضف عضواً مسجّلاً باسم المستخدم الخاص به ليعدّل معك على هذه البطولة.', ph: 'اسم مستخدم العضو (مثال: abdullah_9)', add: 'إضافة',
+    none: 'لم يُضاف أحد بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذه القرعة.', empty: 'اكتب اسم المستخدم.',
+    err: { bad_handle: 'اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'لم يتم العثور على عضو بهذا الاسم.', self: 'هذا اسم المستخدم الخاص بك.', limit: 'وصلت الحد الأقصى للمحررين.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'لم تتم العملية، حاول مرة أخرى.' },
+    notAdded: 'لم يُضَف هؤلاء محررين:', mine: 'اسم المستخدم', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
   },
   en: {
     title: 'Co-editors', sub: 'Add a registered member by username so they can edit this bracket with you. It shows in their “My brackets” and they can update results.', ph: 'Username (e.g. abdullah_9)', add: 'Add',
@@ -96,7 +96,7 @@ export function DraftEditors({ lang, handles, setHandles, style }: { lang: 'ar' 
   }
   return (
     <Fold title={x.title} style={style}>
-      <p className="st-shn">{lang === 'ar' ? 'أضف يوزرات المنظمين الإضافيين الحين، وينضافون تلقائياً أول ما تنشئ البطولة.' : 'Add extra organisers now; they are added automatically as soon as you create the tournament.'}</p>
+      <p className="st-shn">{lang === 'ar' ? 'أضف أسماء مستخدمي المنظمين الإضافيين الآن، وسيُضافون تلقائياً فور إنشاء البطولة.' : 'Add extra organisers now; they are added automatically as soon as you create the tournament.'}</p>
       <div className="st-shl">
         <input dir="ltr" placeholder={x.ph} maxLength={30} value={h} onChange={(e) => setH(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
         <button type="button" onClick={add}>{x.add}</button>

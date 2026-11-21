@@ -21,10 +21,10 @@ export const S = {
     discord: 'المتابعة عبر Discord', google: 'المتابعة عبر Google', twitch: 'Twitch', steam: 'Steam', orMail: 'أو بالبريد الإلكتروني', perks: 'ماذا ستحصل عليه',
     p1: 'بطولاتك محفوظة في حسابك', p2: 'خروج مغلوب، دوري، سويسري، مجموعات، لوحة صدارة', p3: 'صورة جاهزة للنشر ورابط للمشاركة',
     fine: 'بتسجيل الدخول نحفظ اسمك وصورتك من الحساب فقط. لا ننشر شيئاً باسمك.', back: 'العودة للموقع',
-    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'بطولة مباشرة، ترتيب يتحدث لحاله، وصورة جاهزة للمشاركة في ثواني.',
-    none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة ثانية.', unavailable: 'هذا الخيار غير مفعّل بعد.', expired: 'انتهى الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.',
+    pl: 'لاعب', rr: 'نظام الدوري', lb: 'لوحة الصدارة', grp: 'المجموعة', cP: 'لعب', cW: 'فوز', cD: 'تعادل', cL: 'خسارة', cPts: 'نقاط', h1: 'نظّم بطولتك', h2: 'بشكل', h3: 'احترافي', hp: 'بطولة مباشرة، وترتيب يتحدّث تلقائياً، وصورة جاهزة للمشاركة في ثوانٍ.',
+    none: 'تسجيل الدخول غير مفعّل بعد.', failed: 'تعذّر تسجيل الدخول، حاول مرة أخرى.', unavailable: 'هذا الخيار غير مفعّل بعد.', expired: 'انتهى الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.',
     mine: 'بطولاتي', fresh: 'بطولة جديدة', account: 'حسابي', toLight: 'الوضع الفاتح', toDark: 'الوضع الداكن', logout: 'تسجيل الخروج', newBtn: '+ بطولة جديدة',
-    total: 'بطولاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ما عندك بطولات محفوظة بعد.', emptyBtn: 'أنشئ أول بطولة',
+    total: 'بطولاتي', live: 'جارية الآن', done: 'مكتملة', stNew: 'جديد', recent: 'آخر التعديلات', empty: 'ليس لديك بطولات محفوظة بعد.', emptyBtn: 'أنشئ أول بطولة',
     limitMsg: 'وصلت الحد الأقصى من البطولات (100)', dup: 'تكرار البطولة', dupSfx: '(نسخة)', dupOk: 'تم إنشاء نسخة', edit: 'فتح وتعديل', link: 'نسخ الرابط', copied: 'تم نسخ الرابط', img: 'حفظ كصورة', del: 'حذف', delAsk: 'حذف هذه البطولة؟', players: 'لاعب', fail: 'تعذّر تنفيذ العملية',
     backList: 'بطولاتي', via: 'الدخول عبر', count: 'عدد بطولاتي', needShare: 'فعّل «نشر رابط للعرض» من صفحة التعديل أولاً', accName: 'الاسم الظاهر', avChange: 'تغيير الصورة', avAdd: 'رفع صورة', avRemove: 'حذف الصورة', avHint: 'صورة واحدة، تُصغَّر تلقائياً (خفيفة جداً).', avBad: 'اختر صورة PNG أو JPG أو WebP.', accSave: 'حفظ', accSaved: 'تم الحفظ', accEmail: 'البريد', accJoined: 'تاريخ الانضمام', accUse: 'الاستخدام', accOf: 'من', accDanger: 'حذف الحساب', accDangerP: 'يحذف حسابك وكل بطولاتك نهائياً ولا يمكن التراجع.', accDel: 'حذف حسابي نهائياً', accMailT: 'الدخول بالبريد', accMailP: 'تبقى مسجّلاً 30 يوماً على هذا الجهاز. إذا سجّلت الخروج أو دخلت من جهاز أو متصفح آخر، اطلب رابط دخول جديداً من شاشة الدخول (يصلك على بريدك ويعمل مرة واحدة).', accAsk: 'سيتم حذف حسابك وكل بطولاتك نهائياً. متأكد؟', fmt: { single: 'خروج المغلوب', double: 'خروج مزدوج', rr: 'دوري', swiss: 'سويسري', groups: 'مجموعات', ffa: 'لوحة صدارة' },
   },
@@ -293,7 +293,7 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
     const h = handle.trim().toLowerCase().replace(/^@/, '');
     setBusy(true);
     try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ handle: h }) }); auth.reload(); setMsg(s.accSaved); }
-    catch (e) { const c = (e as Error & { detail?: string }).detail; setMsg(c === 'taken' ? (lang === 'ar' ? 'اليوزر مستخدم، جرّب غيره.' : 'That username is taken.') : c === 'bad_handle' ? (lang === 'ar' ? 'حروف إنجليزية وأرقام و _ فقط (3–20).' : 'English letters, digits and _ only (3–20).') : s.fail); }
+    catch (e) { const c = (e as Error & { detail?: string }).detail; setMsg(c === 'taken' ? (lang === 'ar' ? 'اسم المستخدم محجوز، جرّب غيره.' : 'That username is taken.') : c === 'bad_handle' ? (lang === 'ar' ? 'حروف إنجليزية وأرقام و _ فقط (3–20).' : 'English letters, digits and _ only (3–20).') : s.fail); }
     setBusy(false); window.setTimeout(() => setMsg(''), 2600);
   }
   async function pickPhoto(f: File | undefined) {
@@ -337,7 +337,7 @@ function Account({ s, auth, lang }: { s: St; auth: ReturnType<typeof useAuth>; l
           {user.avatar.startsWith('/api/img/') && <button type="button" className="st-pbtn" disabled={busy} onClick={dropPhoto}>{s.avRemove}</button>}
           <small>{s.avHint}</small>
         </div>
-        <label className="st-fld">{lang === 'ar' ? 'اليوزر (لإضافتك محرراً في براكت)' : 'Username (so others can add you as a co-editor)'}
+        <label className="st-fld">{lang === 'ar' ? 'اسم المستخدم (لإضافتك محرراً في القرعة)' : 'Username (so others can add you as a co-editor)'}
           <span className="st-inl"><input dir="ltr" value={handle} maxLength={20} onChange={(e) => setHandle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveHandle()} /><button type="button" disabled={busy || handle.trim().toLowerCase() === (user.handle ?? '') || handle.trim().length < 3} onClick={saveHandle}>{s.accSave}</button></span>
         </label>
         <p role="status" className="st-flash" style={{ opacity: msg ? 1 : 0 }}>{msg || '·'}</p>
@@ -379,17 +379,17 @@ function HandlePrompt({ auth, lang }: { auth: ReturnType<typeof useAuth>; lang: 
     if (h === (user.handle ?? '')) { done(); return; }
     setBusy(true); setMsg('');
     try { await api('/auth/me', { method: 'PUT', body: JSON.stringify({ handle: h }) }); auth.reload(); done(); }
-    catch (e) { const c = (e as Error & { detail?: string }).detail; setMsg(c === 'taken' ? (ar ? 'اليوزر مستخدم، جرّب غيره.' : 'That username is taken.') : c === 'bad_handle' ? (ar ? 'حروف إنجليزية وأرقام و _ فقط (3–20).' : 'English letters, digits and _ only (3–20).') : (ar ? 'تعذّر الحفظ، حاول مرة ثانية.' : 'Could not save, try again.')); }
+    catch (e) { const c = (e as Error & { detail?: string }).detail; setMsg(c === 'taken' ? (ar ? 'اسم المستخدم محجوز، جرّب غيره.' : 'That username is taken.') : c === 'bad_handle' ? (ar ? 'حروف إنجليزية وأرقام و _ فقط (3–20).' : 'English letters, digits and _ only (3–20).') : (ar ? 'تعذّر الحفظ، حاول مرة أخرى.' : 'Could not save, try again.')); }
     setBusy(false);
   }
   return (
     <div className="st-modal" role="dialog" aria-modal="true" aria-labelledby="st-hp-t">
       <div className="st-modal-card">
-        <h3 id="st-hp-t">{ar ? 'اختر اسم اليوزر' : 'Choose your username'}</h3>
-        <p>{ar ? 'اليوزر هو اللي يضيفك فيه المنظمون كمحرر مشترك في البراكت. تبغى تغيّره؟' : 'Organisers add you as a co-editor with your username. Want to change it?'}</p>
+        <h3 id="st-hp-t">{ar ? 'اختر اسم المستخدم' : 'Choose your username'}</h3>
+        <p>{ar ? 'اسم المستخدم هو ما يضيفك به المنظمون محرراً مشاركاً في القرعة. هل تريد تغييره؟' : 'Organisers add you as a co-editor with your username. Want to change it?'}</p>
         <span className="st-inl"><input dir="ltr" autoFocus value={handle} maxLength={20} onChange={(e) => setHandle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void save()} /><button type="button" disabled={busy || handle.trim().length < 3} onClick={() => void save()}>{ar ? 'حفظ' : 'Save'}</button></span>
         <p role="status" className="st-flash" style={{ opacity: msg ? 1 : 0 }}>{msg || '·'}</p>
-        <small>{ar ? 'تقدر تغيّره بأي وقت من صفحة «حسابي».' : 'You can change it any time from “My account”.'}</small>
+        <small>{ar ? 'يمكنك تغييره في أي وقت من صفحة «حسابي».' : 'You can change it any time from “My account”.'}</small>
         <button type="button" className="st-pbtn" onClick={done}>{ar ? 'لاحقاً، أبقيه كما هو' : 'Later, keep it as is'}</button>
       </div>
     </div>

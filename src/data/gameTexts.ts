@@ -299,7 +299,7 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Tips to win"
    },
    "body": {
-    "ar": "• طابق ألواناً تشحن الوحش الأقوى عندك أولاً.\n• ابحث عن مطابقة 4 قطع أو أكثر لتحصل على حركة إضافية.\n• خطّط لحركتين متتاليتين بدل حركة واحدة.\n• عطّل خطط الخصم بتغيير القطع التي يحتاجها.",
+    "ar": "• طابق ألواناً تشحن الوحش الأقوى لديك أولاً.\n• ابحث عن مطابقة 4 قطع أو أكثر لتحصل على حركة إضافية.\n• خطّط لحركتين متتاليتين بدل حركة واحدة.\n• عطّل خطط الخصم بتغيير القطع التي يحتاجها.",
     "en": "• Match colours that charge your strongest monster first.\n• Look for matches of four or more to earn an extra move.\n• Plan two moves ahead instead of one.\n• Spoil your opponent’s plans by changing the tiles they need."
    }
   },
@@ -1291,7 +1291,7 @@ export const GAME_TEXTS: Record<string, NonNullable<Game['texts']>> = {
     "en": "Tips to win"
    },
    "body": {
-    "ar": "• تذكّر القطع التي نزلت، واستنتج ما بقي مع خصمك.\n• تخلّص من القطع الثقيلة مبكراً، فنقاطها تنقلب عليك إن انتهت الجولة.\n• احتفظ بأرقام متنوعة لتبقى خياراتك مفتوحة.\n• تجنّب فتح رقم عندك منه قطع قليلة، فهذا يساعد خصمك.",
+    "ar": "• تذكّر القطع التي نزلت، واستنتج ما بقي مع خصمك.\n• تخلّص من القطع الثقيلة مبكراً، فنقاطها تنقلب عليك إن انتهت الجولة.\n• احتفظ بأرقام متنوعة لتبقى خياراتك مفتوحة.\n• تجنّب فتح رقم لديك منه قطع قليلة، فهذا يساعد خصمك.",
     "en": "• Track the tiles played and deduce what your opponent holds.\n• Shed heavy tiles early; their points count against you if the round ends.\n• Keep varied numbers so your options stay open.\n• Avoid opening a number you hold few of; it helps your opponent."
    }
   },

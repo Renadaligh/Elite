@@ -28,7 +28,7 @@ export const announceNews = (env: Env, request: Request, id: string, v: { title_
 export const announceTournament = (env: Env, request: Request, id: string, v: { name: { ar: string }; prize: { ar: string }; startsAt: string; total: number; mode: string; image: string }) =>
   discord(env, request, {
     title: `🏆 فتح باب التسجيل: ${v.name.ar}`, path: `/t/${id}`, image: v.image,
-    description: 'سجّل الحين من صفحة البطولة في الموقع.',
+    description: 'سجّل الآن من صفحة البطولة في الموقع.',
     fields: [
       { name: 'الموعد', value: fmtDate(v.startsAt) || '—', inline: true },
       { name: 'المقاعد', value: v.total > 0 ? `${v.total} ${v.mode === 'team' ? 'فريق' : 'لاعب'}` : 'غير محدود', inline: true },

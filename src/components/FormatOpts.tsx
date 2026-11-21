@@ -1,8 +1,10 @@
-import type { BFormat, LeagueOpts } from '../data/bracket';
+import type { BFormat, Bracket, LeagueOpts } from '../data/bracket';
 
 /** Settings shown under the format select for the non-elimination formats (shared by the dashboard and the public tool). */
 export interface FmtState { win: string; draw: string; loss: string; rounds: string; double: boolean; groups: string; adv: string; ko: 'single' | 'double'; low: boolean }
 export const fmtInit = (): FmtState => ({ win: '1', draw: '0.5', loss: '0', rounds: '', double: false, groups: '', adv: '', ko: 'single', low: false });
+/** The settings form filled from an existing bracket (so the info card shows what the bracket really uses). */
+export const loOf = (b: Bracket): FmtState => { const o = b.opts; const s0 = fmtInit(); if (!o) return s0; return { ...s0, win: String(o.win), draw: String(o.draw), loss: String(o.loss), rounds: o.rounds ? String(o.rounds) : '', double: !!o.double, groups: o.groups ? String(o.groups) : '', adv: o.adv ? String(o.adv) : '', ko: o.koFormat === 'double' ? 'double' : 'single', low: !!o.low }; };
 export const hasOpts = (f: BFormat) => f !== 'single' && f !== 'double';
 
 const n = (v: string, d: number) => (v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : d);
