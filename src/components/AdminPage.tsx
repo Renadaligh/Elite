@@ -352,6 +352,8 @@ const toInput = (iso: string) => {
 };
 const fromInput = (v: string) => { const d = new Date(v); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
 const when = (iso: string) => toInput(iso);
+/** A readable date and time (the viewer's own zone), e.g. "20 Nov 2026, 11:00 PM". */
+const niceWhen = (iso: string, lang: string) => { const d = new Date(iso); return !iso || Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).format(d); };
 
 
 /** Review of a community tournament: approve, or reject with a reason the owner sees. */
@@ -917,8 +919,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="truncate">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('قرعة محفوظة')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
-                <div className="mt-1 text-[.8rem]" dir="ltr" style={{ color: 'var(--muted)', textAlign: lang === 'ar' ? 'right' : 'left' }}>{when(r.startsAt)}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="w-full break-words text-[1.02rem] leading-snug">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('قرعة محفوظة')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="mt-1.5 text-[.82rem]" style={{ color: 'var(--muted)' }}><time dateTime={r.startsAt}>{niceWhen(r.startsAt, lang)}</time></div>
               </div>
               <div className="w-36">
                 <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.total > 0 ? `${r.slots.filled}/${r.slots.total}` : `${r.slots.filled} / ∞`}</span></div>
