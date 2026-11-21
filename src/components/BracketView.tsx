@@ -85,29 +85,37 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   }, [showTree]);
   const single = bracket.format !== 'double';
   // zoom (phone): the bracket's own sizes scale with --z, so the connector lines re-measure by themselves; pinch works on the tree only
-  const ZMIN = 0.5, ZMAX = 1.7, Z0 = 0.85;
+  const ZMIN = 0.4, ZMAX = 2, Z0 = 0.65;
   const [z, setZ] = useState(Z0);
   const zoomable = narrow && showTree;
   const zref = useRef(z); zref.current = z;
   const setZc = (v: number) => setZ(Math.round(Math.min(ZMAX, Math.max(ZMIN, v)) * 100) / 100);
+  // two-finger pinch zooms like a picture, around the fingers (one finger still scrolls); the anchor keeps the same spot of the tree under the fingers
+  const anch = useRef<{ fx: number; fy: number; cx: number; cy: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = box.current, a = anch.current; if (!el || !a) return;
+    const rtl = getComputedStyle(el).direction === 'rtl';
+    el.scrollLeft = a.fx * el.scrollWidth - a.cx - (rtl ? el.scrollWidth - el.clientWidth : 0);
+    el.scrollTop = a.fy * el.scrollHeight - a.cy;
+  }, [z]);
   useEffect(() => {
     const el = box.current; if (!el || !zoomable) return;
-    const pts = new Map<number, { x: number; y: number }>();
-    let d0 = 0, z0 = 1;
-    const dist = () => { const a = [...pts.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
-    const down = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') return;
-      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pts.size === 2) { d0 = dist() || 1; z0 = zref.current; el.classList.add('is-pinch'); }
+    let d0 = 1, z0 = 1, on = false;
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1;
+    const start = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      on = true; d0 = dist(e.touches); z0 = zref.current;
+      const r = el.getBoundingClientRect(), rtl = getComputedStyle(el).direction === 'rtl';
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+      const nx = el.scrollLeft + (rtl ? el.scrollWidth - el.clientWidth : 0);
+      anch.current = { fx: (nx + cx) / el.scrollWidth, fy: (el.scrollTop + cy) / el.scrollHeight, cx, cy };
     };
-    const move = (e: PointerEvent) => {
-      if (!pts.has(e.pointerId)) return;
-      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pts.size === 2) setZc(z0 * (dist() / d0));
-    };
-    const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size < 2) el.classList.remove('is-pinch'); };
-    el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
-    return () => { el.removeEventListener('pointerdown', down); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); };
+    const move = (e: TouchEvent) => { if (!on || e.touches.length !== 2) return; e.preventDefault(); setZc(z0 * (dist(e.touches) / d0)); };
+    const end = (e: TouchEvent) => { if (e.touches.length < 2) { on = false; anch.current = null; } };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
+    return () => { el.removeEventListener('touchstart', start); el.removeEventListener('touchmove', move); el.removeEventListener('touchend', end); el.removeEventListener('touchcancel', end); };
   }, [zoomable, showTree]);
   // «Top N»: show only the last rounds of a big single-elimination bracket (like Challonge's Full / Top 32 / Top 16 / Top 8)
   const [top, setTop] = useState(0);
@@ -398,7 +406,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     <div className={`br-outer ${pub ? 'br-out-pv' : ''}`} dir={dir}>
       <div className="br-bar">{toggle}{topSel}
         <span className="br-sbox"><input type="search" className="br-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={lang === 'ar' ? 'ابحث باسم لاعب أو رقم مباراة' : 'Search a player or match no.'} aria-label={lang === 'ar' ? 'بحث' : 'Search'} />{qs && <i className="br-scount">{nHits ? nHits : (lang === 'ar' ? 'لا نتيجة' : 'None')}</i>}</span>
-        {zoomable && <span className="br-zbar" role="group" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom'}>
+        {zoomable && !pub && <span className="br-zbar" role="group" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom'}>
           <button type="button" aria-label={lang === 'ar' ? 'تصغير' : 'Zoom out'} onClick={() => setZc(z - 0.15)}>−</button>
           <button type="button" aria-label={lang === 'ar' ? 'ملاءمة' : 'Reset zoom'} onClick={() => setZ(Z0)}>{Math.round(z * 100)}%</button>
           <button type="button" aria-label={lang === 'ar' ? 'تكبير' : 'Zoom in'} onClick={() => setZc(z + 0.15)}>+</button>
