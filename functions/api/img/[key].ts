@@ -20,11 +20,15 @@ export const onRequestGet = async ({ request, env, params, waitUntil }: Ctx) => 
   }
   // Pictures are kept in Cloudflare's edge cache too (the first visitor in a region warms it), so most loads never reach R2.
   const edge = !video && typeof caches !== 'undefined' ? (caches as unknown as { default?: Cache }).default : undefined;
-  const cacheKey = new Request(new URL(request.url).origin + '/api/img/' + key);
-  if (edge) { const hit = await edge.match(cacheKey).catch(() => undefined); if (hit) return hit; }
+  const cacheKey = new Request(new URL(request.url).origin + '/api/img/v2/' + key);
+  if (edge) { const hit = await edge.match(cacheKey).catch(() => undefined); if (hit) return new Response(hit.body, { headers: { ...Object.fromEntries(hit.headers), 'cache-control': base['cache-control'] } }); }
   const obj = await env.IMAGES.get(key);
   if (!obj) return new Response('Not found', { status: 404 });
   const res = new Response(obj.body, { headers: { ...base, 'content-type': obj.httpMetadata?.contentType ?? 'application/octet-stream', ...(video ? { 'content-length': String(obj.size) } : {}) } });
-  if (edge) { const put = edge.put(cacheKey, res.clone()).catch(() => undefined); if (waitUntil) waitUntil(put); }
+  if (edge) {
+    // The edge copy lives one day only (the browser copy stays immutable), so a picture the dashboard re-compresses in place is replaced everywhere within a day.
+    const copy = new Response(res.clone().body, { headers: { ...Object.fromEntries(res.headers), 'cache-control': 'public, max-age=86400' } });
+    const put = edge.put(cacheKey, copy).catch(() => undefined); if (waitUntil) waitUntil(put);
+  }
   return res;
 };

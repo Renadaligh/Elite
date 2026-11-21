@@ -1,4 +1,5 @@
 import { noProto } from '../hooks/nav';
+import { shrinkImage } from '../data/shrinkImage';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
 import Fold from './Fold';
@@ -33,7 +34,7 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto }: { id: stri
   useEffect(() => { void load(); }, [load]);
   async function pickCover(file?: File | null) {
     if (!file) return;
-    const fd = new FormData(); fd.append('file', file);
+    const fd = new FormData(); fd.append('file', await shrinkImage(file, 1280), 'image');
     try {
       const res = await fetch(`/api/brackets/${id}/image`, { method: 'POST', body: fd });
       if (!res.ok) throw new Error(String(res.status));

@@ -1,4 +1,5 @@
 import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type SVGProps } from 'react';
+import { shrinkImage } from '../data/shrinkImage';
 import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGames, youtubeId, type AdminGame, type GameDetails, type GameRow } from '../data/games';
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
@@ -29,7 +30,7 @@ const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'ب�
 const EN: Record<string, string> = {
   'فيه أسماء مكررة، عدّلها أولاً': 'Some names are repeated, fix them first', 'هذا الاسم مستخدم عند لاعب آخر': 'This name is already used by another player',
   'الوضع الداكن': 'Dark mode', 'الوضع الفاتح': 'Light mode',
- 'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic',
+ 'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic', 'تحسين الصور القديمة': 'Optimize old images', 'يصغّر صور PNG وJPG الثقيلة اللي انرفعت من قبل (تظل بنفس الرابط، وتنحفظ نسخة من الأصل). هذا يسرّع الموقع كثير.': 'Shrinks heavy PNG/JPG pictures uploaded earlier (same address; a copy of the original is kept). This makes the site much faster.', 'تعذّر فحص الصور': 'Could not scan the images', 'انتهى تصغير الصور': 'Images shrunk', 'عدد الصور': 'Images', 'الحجم الكلي': 'Total size', 'صور ثقيلة': 'Heavy images', 'وفّرنا': 'Saved', 'تعذّر': 'Failed', 'جارٍ الفحص…': 'Scanning…', 'فحص الصور': 'Scan images', 'جارٍ التصغير… لا تغلق الصفحة': 'Shrinking… keep this page open', 'تصغير الصور الثقيلة': 'Shrink heavy images', 
 
   'تحديث': 'Update', 'بطولة': 'Tournament', 'مجتمع': 'Community', 'فعالية': 'Event',
   'لوحة التحكم': 'Dashboard', 'مرحبًا بك': 'Welcome back', 'أدخل كلمة السر للمتابعة': 'Enter the password to continue',
@@ -1610,7 +1611,61 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
         </Drawer>
       )}
       {temp && <TempPw r={temp} onClose={() => setTemp(null)} />}
+      <ImagesCard k={k} />
     </div>
+  );
+}
+
+/** Owner tool: shrink the heavy PNG/JPG pictures already uploaded (same address, so every page keeps working; the originals are kept aside in storage). */
+function ImagesCard({ k }: { k: string }) {
+  const { x } = useX();
+  const toast = useToast();
+  const [list, setList] = useState<{ key: string; size: number }[] | null>(null);
+  const [prog, setProg] = useState<{ done: number; total: number; saved: number; fail: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const HEAVY = 250 * 1024;
+  const mb = (n: number) => (n / 1048576).toFixed(1);
+  const heavy = (list ?? []).filter((o) => /\.(png|jpg)$/.test(o.key) && o.size > HEAVY);
+  const all = (list ?? []).reduce((a, o) => a + o.size, 0);
+  async function scan() {
+    setBusy(true);
+    try { setList(await api<{ key: string; size: number }[]>('/admin/images', { key: k })); setProg(null); }
+    catch { toast.err(x('تعذّر فحص الصور')); }
+    setBusy(false);
+  }
+  async function run() {
+    if (busy || !heavy.length) return;
+    setBusy(true);
+    let saved = 0, fail = 0;
+    setProg({ done: 0, total: heavy.length, saved, fail });
+    for (let i = 0; i < heavy.length; i++) {
+      const o = heavy[i];
+      try {
+        const src = await (await fetch(`/api/img/${o.key}?o=1`)).blob();
+        const out = await shrinkImage(src, 1400);
+        if (out.type === 'image/webp' && out.size < o.size * 0.8) {
+          const fd = new FormData(); fd.append('file', out, 'image');
+          const res = await fetch(`/api/admin/images?key=${o.key}`, { method: 'POST', headers: { authorization: `Bearer ${k}` }, body: fd });
+          if (res.ok) saved += o.size - out.size; else fail++;
+        }
+      } catch { fail++; }
+      setProg({ done: i + 1, total: heavy.length, saved, fail });
+    }
+    setBusy(false);
+    toast.ok(x('انتهى تصغير الصور'));
+    void scan().then(() => setProg({ done: heavy.length, total: heavy.length, saved, fail }));
+  }
+  return (
+    <Card className="mt-6 p-5">
+      <div className="text-[1.02rem] font-extrabold">{x('تحسين الصور القديمة')}</div>
+      <p className="mt-1.5 text-[.88rem]" style={{ color: 'var(--muted)' }}>{x('يصغّر صور PNG وJPG الثقيلة اللي انرفعت من قبل (تظل بنفس الرابط، وتنحفظ نسخة من الأصل). هذا يسرّع الموقع كثير.')}</p>
+      {list && <p className="mt-3 text-[.9rem]">{x('عدد الصور')}: {list.length} · {x('الحجم الكلي')}: {mb(all)} MB · {x('صور ثقيلة')}: <b>{heavy.length}</b> ({mb(heavy.reduce((a, o) => a + o.size, 0))} MB)</p>}
+      {prog && <p className="mt-2 text-[.9rem]" role="status">{prog.done}/{prog.total} · {x('وفّرنا')} {mb(prog.saved)} MB{prog.fail ? ` · ${x('تعذّر')} ${prog.fail}` : ''}</p>}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" disabled={busy} className={btnG} style={bd} onClick={scan}>{busy && !prog ? x('جارٍ الفحص…') : x('فحص الصور')}</button>
+        {!!heavy.length && <button type="button" disabled={busy} className={btnP} style={gradBtn} onClick={run}>{busy ? x('جارٍ التصغير… لا تغلق الصفحة') : x('تصغير الصور الثقيلة')}</button>}
+      </div>
+    </Card>
   );
 }
 

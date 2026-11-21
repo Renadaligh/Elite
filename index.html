@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
   <script>var m="night";try{if(localStorage.getItem("plato-hero")==="day")m="day"}catch(e){}document.documentElement.dataset.hero=m</script>
+  <script>try{var d=document.documentElement.dataset.hero==="day",ph=matchMedia("(max-width:767px)").matches,l=document.createElement("link");l.rel="preload";l.as="image";l.href="%BASE_URL%art/hero2-bg"+(ph?"-m":"")+(d?"":"-night")+".webp";l.setAttribute("fetchpriority","high");document.head.appendChild(l)}catch(e){}</script>
+  <meta name="description" content="Plato AR: مجتمع بلاتو العربي. بطولات، ألعاب، أخبار وتسجيل. Arabic Plato community: tournaments, games, news and sign-ups." />
   <meta name="theme-color" content="#0a0d33" />
   <script>try{if(document.documentElement.dataset.hero==="day")document.querySelector('meta[name="theme-color"]').setAttribute("content","#283695")}catch(e){}</script>
   <title>Plato AR</title>

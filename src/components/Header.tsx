@@ -5,15 +5,9 @@ import BrandLockup from './BrandLockup';
 import HeroThemeToggle from './HeroThemeToggle';
 import { CloseIcon, DiscordIcon, MenuIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
-import { useAuth } from '../hooks/useAuth';
 
 export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'admin' }) {
   const { t, dir, lang } = useI18n();
-  const auth = useAuth();
-  // "My account" for a signed-in visitor, "Sign in" otherwise (the last known state is kept so the label does not flash)
-  const signed = auth.ready ? !!auth.user : (() => { try { return localStorage.getItem('plato-signed-in') === '1'; } catch { return false; } })();
-  useEffect(() => { if (auth.ready) { try { localStorage.setItem('plato-signed-in', auth.user ? '1' : '0'); } catch { /* private mode */ } } }, [auth.ready, auth.user]);
-  const loginLabel = signed ? t.navAccount : t.navLogin;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('#top');
@@ -69,7 +63,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
           <a href={SOCIALS.discord} target="_blank" rel="noopener noreferrer" className="pill hdr-discord" aria-label="Discord"><DiscordIcon className="h-5 w-5" /><span>Discord</span></a>
           <HeroThemeToggle />
           <LanguageSwitcher />
-          <a href="/bracket" aria-current={active === '/bracket' ? 'page' : undefined} className="pill hidden !px-4 font-bold lg:inline-flex" style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent', color: '#fff' }}>{loginLabel}</a>
+          <a href="/bracket" aria-current={active === '/bracket' ? 'page' : undefined} className="pill hidden !px-4 font-bold lg:inline-flex" style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent', color: '#fff' }}>{t.navAccount}</a>
           <button ref={burger} type="button" className="pill !px-0 lg:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t.closeMenu : t.menu}>
             {open ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
           </button>
@@ -81,7 +75,7 @@ export default function Header({ page }: { page: 'home' | 'news' | 'game' | 'tou
             {NAV.map((n) => (
               <li key={n.href}><a href={n.href} onClick={() => { pick(n.href); setOpen(false); }} className="block py-3 text-lg rtl:font-bold" style={{ color: active === n.href ? 'var(--text)' : 'var(--muted)' }}>{t[n.key]}</a></li>
             ))}
-            <li><a href="/bracket" onClick={() => setOpen(false)} className="block py-3 text-lg rtl:font-bold" style={{ color: active === '/bracket' ? 'var(--text)' : 'var(--muted)' }}>{loginLabel}</a></li>
+            <li><a href="/bracket" onClick={() => setOpen(false)} className="block py-3 text-lg rtl:font-bold" style={{ color: active === '/bracket' ? 'var(--text)' : 'var(--muted)' }}>{t.navAccount}</a></li>
           </ul>
         </nav>
       )}
