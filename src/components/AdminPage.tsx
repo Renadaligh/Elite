@@ -926,8 +926,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <button className={btnG} style={bd} onClick={() => setBrT(r)}>{x('القرعة')}{r.bracket ? ' ✓' : ''}</button>
-                {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => { setF({ ...r, winner: r.winner ?? { ar: '', en: '' }, registerUrl: '', image: r.image ?? '', winnerMembers: r.winnerMembers ?? [] }); }}><PenI className="h-4 w-4" /></button>)}
+                <a className={btnG} style={bd} href={siteUrl(`/v/${r.id.slice(0, 6)}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
+                {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => setBrT(r)}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
               {r.community && <ReviewBox k={k} r={r} can={can('tournaments', 'edit')} onDone={load} />}
