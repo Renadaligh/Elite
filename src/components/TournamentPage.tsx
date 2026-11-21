@@ -1,4 +1,3 @@
-import { siteUrl } from '../hooks/nav';
 import { getGame } from '../data/games';
 import { streamEmbed } from '../data/stream';
 import { statusOf } from '../data/tournaments';
@@ -6,8 +5,6 @@ import { useGames } from '../hooks/useGames';
 import { useTournaments } from '../hooks/useTournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { ArrowIcon } from './icons';
-import BracketView from './BracketView';
-import BracketActions from './BracketActions';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
 const ST = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' } as const;
@@ -59,9 +56,11 @@ export default function TournamentPage({ id }: { id: string }) {
       <section aria-label={t.tBracketTitle}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[1.2rem] font-extrabold">{t.tBracketTitle}</h2>
-          {x.bracket && <BracketActions bracket={x.bracket} title={x.name[lang]} url={`${siteUrl(`/t/${x.id}`)}`} />}
         </div>
-        {x.bracket ? <BracketView bracket={x.bracket} />
+        {x.bracket ? (
+          // the same public bracket page as the organisers' view link (/v/<id>): one design everywhere, with its own save-image / copy-link / zoom controls
+          <iframe key={`${x.id}:${lang}`} src={`/v/${encodeURIComponent(x.id)}`} title={x.name[lang]} loading="lazy" className="block h-[88svh] min-h-[32rem] w-full rounded-2xl border-0" style={{ background: 'var(--bg)' }} />
+        )
           : <p className="rounded-2xl border px-5 py-6" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{t.tNoBracket}</p>}
       </section>
     </article>
