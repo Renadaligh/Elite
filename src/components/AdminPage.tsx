@@ -1532,7 +1532,7 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   );
 }
 
-function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+function AdminsTab({ k, onAuthFail, meName }: { k: string; onAuthFail: () => void; meName: string }) {
   const { x, lang } = useX();
   const toast = useToast();
   const [rows, setRows] = useState<AdminRow[]>([]);
@@ -1579,6 +1579,12 @@ function AdminsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
                   <span>{x('آخر دخول')}: {when2(r.lastLogin)}</span>
                 </div>
               </div>
+              {r.role === 'owner' && r.username !== meName && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {r.locked && <button className={btnG} style={{ ...bd, color: '#27c27a' }} onClick={() => patch(r.username, { action: 'unlock' }, x('تم فتح الحساب'))}>{x('فتح الحساب')}</button>}
+                  <button className={btnG} style={bd} onClick={() => { if (window.confirm(x('إنشاء كلمة مرور مؤقتة جديدة؟ بتنتهي جلساته الحالية'))) void patch(r.username, { action: 'reset' }, ''); }}>{x('كلمة مرور جديدة')}</button>
+                </div>
+              )}
               {r.role !== 'owner' && (
                 <div className="flex flex-wrap items-center gap-2">
                   {r.locked && <button className={btnG} style={{ ...bd, color: '#27c27a' }} onClick={() => patch(r.username, { action: 'unlock' }, x('تم فتح الحساب'))}>{x('فتح الحساب')}</button>}
@@ -1814,7 +1820,7 @@ function AdminInner() {
           {tab === 'tournaments' && <TournamentsTab k={key} onAuthFail={logout} />}
           {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
-          {tab === 'admins' && me.role === 'owner' && <AdminsTab k={key} onAuthFail={logout} />}
+          {tab === 'admins' && me.role === 'owner' && <AdminsTab k={key} onAuthFail={logout} meName={me.username} />}
           {tab === 'log' && me.role === 'owner' && <LogTab k={key} onAuthFail={logout} />}
           </div>
         </main>

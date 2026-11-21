@@ -8,8 +8,9 @@ export const onRequestPatch = async ({ request, env, params }: Ctx) => {
   const u = String(params.username || '').toLowerCase();
   const r = await env.DB.prepare('SELECT username, role, perms, disabled FROM admins WHERE username=?').bind(u).first<{ username: string; role: string; perms: string; disabled: number }>();
   if (!r) return json({ error: 'not_found' }, 404);
-  if (r.role === 'owner') return json({ error: 'owner_protected' }, 400);
   const b = await body(request);
+  // Another owner may be unlocked or get a new temporary password by a fellow owner (so nobody has to ask the site's developer); permissions and disabling stay protected, and nobody resets themselves here.
+  if (r.role === 'owner' && (u === a.username || ('perms' in b) || ('disabled' in b) || (b.action !== 'unlock' && b.action !== 'reset'))) return json({ error: 'owner_protected' }, 400);
   let password: string | undefined;
   if ('perms' in b) {
     const p = cleanPerms(b.perms);
