@@ -23,6 +23,11 @@ export async function joinDesc(env: Ctx['env'], id: string): Promise<string> {
   try { return (await env.DB.prepare('SELECT description FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ description: string }>())?.description ?? ''; } catch { return ''; }
 }
 
+/** Optional message the organiser shows after someone registers (own query: works before the `done_msg` column exists). */
+export async function joinDoneMsg(env: Ctx['env'], id: string): Promise<string> {
+  try { return (await env.DB.prepare('SELECT done_msg FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ done_msg: string }>())?.done_msg ?? ''; } catch { return ''; }
+}
+
 /** Optional English title of the registration page (own query, works before the `title_en` column exists). */
 export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> {
   try {

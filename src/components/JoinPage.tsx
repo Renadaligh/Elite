@@ -4,7 +4,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
 
-interface Info { titleEn?: string; description?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+interface Info { titleEn?: string; description?: string; doneMsg?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full';
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
@@ -123,8 +123,14 @@ export default function JoinPage({ id }: { id: string }) {
             {!closedNow && when && <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{x.closes}: {when}</p>}
             {state === 'done' ? (
               <div className="py-8 text-center" role="status">
-                <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
-                <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
+                {info.doneMsg ? (
+                  <div className="text-[1.05rem] font-semibold leading-relaxed">{info.doneMsg.split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'center' }}>{ln}</p> : <div key={i} className="h-2" />))}</div>
+                ) : (
+                  <>
+                    <p className="text-[1.5rem] font-extrabold">{t.regDone}</p>
+                    <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
+                  </>
+                )}
                 <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId('');  setIds([]); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
               </div>
             ) : closedNow ? null : (
