@@ -109,7 +109,7 @@ export default function JoinPage({ id }: { id: string }) {
       setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'bad_id' ? 'badId' : d.error === 'required' ? 'required' : 'error');
     } catch { setState('error'); }
   }
-  const msg = state === 'required' ? t.regRequired : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
+  const msg = state === 'required' ? (team ? t.regRequiredTeam : t.regRequired) : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
   const closedNow = info && info !== 'gone' ? (info.reason || (state === 'closed' ? 'closed' : state === 'full' ? 'full' : '')) : '';
   const when = info && info !== 'gone' && info.closesAt > Date.now() ? new Date(info.closesAt).toLocaleString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
