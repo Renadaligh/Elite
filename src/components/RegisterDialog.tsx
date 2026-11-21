@@ -58,8 +58,8 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
   const msg = state === 'required' ? t.regRequired : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'error' ? t.regErr : '';
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div role="dialog" aria-modal="true" aria-labelledby="reg-title" className="max-h-[92svh] w-full max-w-[30rem] overflow-y-auto rounded-t-3xl border p-6 sm:rounded-3xl" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="reg-title" className="max-h-[88svh] w-full max-w-[30rem] overflow-y-auto rounded-3xl border p-6" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h3 id="reg-title" className="text-[1.3rem] font-extrabold">{t.regTitle}</h3>
