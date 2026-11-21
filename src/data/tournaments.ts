@@ -26,7 +26,7 @@ export interface Tournament {
   /** Optional external registration link. No link → no register button. */
   registerUrl?: string;
   /** Optional text from the organiser (registration-link panel), shown on the registration card. */
-  description?: string;
+  description?: Localized;
   /** Optional cover image (path under /public or full URL). Faded behind the text; no image → plain game-colour card. */
   image?: string;
   /** Which part of the image the cards show, e.g. "35% 60%" (picked in the dashboard). */

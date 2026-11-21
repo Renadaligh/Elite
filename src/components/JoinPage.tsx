@@ -4,7 +4,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
 
-interface Info { titleEn?: string; description?: string; doneMsg?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+interface Info { titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full';
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
@@ -131,7 +131,7 @@ export default function JoinPage({ id }: { id: string }) {
               <span>· {x.count}: {info.count}{info.cap > 0 ? ` / ${info.cap}` : ''}</span>
             </p>
             {info.startsAt && !Number.isNaN(Date.parse(info.startsAt)) && <p className="mt-1 text-[.9rem] font-semibold" style={{ color: 'var(--muted)' }}>{x.starts}: <span style={{ color: 'var(--text)' }}>{new Date(info.startsAt).toLocaleString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></p>}
-            {info.description && <div className="mt-3 text-[.92rem] leading-relaxed" style={{ color: 'var(--text)' }}>{info.description.split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}>{ln}</p> : <div key={i} className="h-2" />))}</div>}
+            {(lang === 'en' ? info.descriptionEn || info.description : info.description || info.descriptionEn) && <div className="mt-3 text-[.92rem] leading-relaxed" style={{ color: 'var(--text)' }}>{((lang === 'en' ? info.descriptionEn || info.description : info.description || info.descriptionEn) ?? '').split(/\r?\n/).map((ln, i) => (ln.trim() ? <p key={i} dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}>{ln}</p> : <div key={i} className="h-2" />))}</div>}
             {!closedNow && when && <p className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{x.closes}: {when}</p>}
             {state === 'done' ? (
               <div className="py-8 text-center" role="status">

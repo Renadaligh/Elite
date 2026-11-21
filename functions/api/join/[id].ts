@@ -1,5 +1,5 @@
 import { validId, validIds, body, json, str, type Ctx } from '../../_lib';
-import { bracketOf, joinCount, joinDesc, joinDoneMsg, joinTitleEn, joinExtra, joinReason, joinRow } from '../../_join';
+import { bracketOf, joinCount, joinDescPair, joinDoneMsg, joinTitleEn, joinExtra, joinReason, joinRow } from '../../_join';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const idsOf = (s: string) => s.split(/[\n,،;]+/).map(key).filter(Boolean);
@@ -15,7 +15,7 @@ export const onRequestGet = async ({ env, params }: Ctx) => {
   const ex = await joinExtra(env, params.id);
   let startsAt = ex.startsAt;
   if (!startsAt) startsAt = (await env.DB.prepare('SELECT starts_at FROM tournaments WHERE id IN (?, ?) ORDER BY id DESC LIMIT 1').bind(`u-${params.id}`, params.id).first<{ starts_at: string }>().catch(() => null))?.starts_at ?? '';
-  return json({ titleEn: await joinTitleEn(env, params.id), description: await joinDesc(env, params.id), doneMsg: await joinDoneMsg(env, params.id), title: row.title, org, cover: ex.cover, startsAt, mode: r.mode === 'team' ? 'team' : 'solo', count, cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
+  return json({ titleEn: await joinTitleEn(env, params.id), ...(await (async () => { const d = await joinDescPair(env, params.id); return { description: d.ar, descriptionEn: d.en }; })()), doneMsg: await joinDoneMsg(env, params.id), title: row.title, org, cover: ex.cover, startsAt, mode: r.mode === 'team' ? 'team' : 'solo', count, cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
 };
 
 export const onRequestPost = async ({ request, env, params }: Ctx) => {

@@ -27,9 +27,20 @@ export async function joinCount(env: Ctx['env'], id: string): Promise<number> {
 }
 
 /** Optional description of the registration page. Own query: works before the `description` column exists. */
-export async function joinDesc(env: Ctx['env'], id: string): Promise<string> {
-  try { return (await env.DB.prepare('SELECT description FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ description: string }>())?.description ?? ''; } catch { return ''; }
+export async function joinDescPair(env: Ctx['env'], id: string): Promise<{ ar: string; en: string }> {
+  try { return unpackDesc((await env.DB.prepare('SELECT description FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ description: string }>())?.description ?? ''); } catch { return { ar: '', en: '' }; }
 }
+export const joinDesc = async (env: Ctx['env'], id: string): Promise<string> => (await joinDescPair(env, id)).ar;
+
+/** The description is plain text (organisers: one version), or {"ar":…,"en":…} when the site admins wrote one version per language (same column, no migration). */
+export function unpackDesc(raw: string): { ar: string; en: string } {
+  const t = (raw ?? '').trim();
+  if (t.startsWith('{')) {
+    try { const o = JSON.parse(t) as { ar?: unknown; en?: unknown }; if (o && typeof o === 'object') return { ar: typeof o.ar === 'string' ? o.ar : '', en: typeof o.en === 'string' ? o.en : '' }; } catch { /* plain text that starts with { */ }
+  }
+  return { ar: t, en: '' };
+}
+export const packDesc = (ar: string, en: string): string => (en.trim() ? JSON.stringify({ ar: ar.trim(), en: en.trim() }) : ar.trim());
 
 /** Optional message the organiser shows after someone registers (own query: works before the `done_msg` column exists). */
 export async function joinDoneMsg(env: Ctx['env'], id: string): Promise<string> {

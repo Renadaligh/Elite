@@ -1,4 +1,5 @@
 import { announceTournament } from '../../_discord';
+import { unpackDesc } from '../../_join';
 import { body, json, jsonPublic, newId, num, safeUrl, str, type Ctx } from '../../_lib';
 import { logAdmin } from '../../_audit';
 import { guard, seesAll } from '../../_admin';
@@ -58,9 +59,9 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
   }
   const rows = results.filter((r) => !r.bracket_id || all || (ub.has(r.bracket_id) && (r.review ?? 'approved') === 'approved'));
   // The description written in the registration-link panel is shown on the site's registration card too (same text, one place to edit it).
-  const desc = new Map<string, string>();
-  try { for (const d of (await env.DB.prepare("SELECT bracket_id, description FROM bracket_join WHERE description <> ''").all<{ bracket_id: string; description: string }>()).results) desc.set(d.bracket_id, d.description); } catch { /* column not added yet */ }
-  const data = rows.map((r) => { const d = desc.get(r.bracket_id || r.id); return { ...out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined), ...(d ? { description: d } : {}) }; });
+  const desc = new Map<string, { ar: string; en: string }>();
+  try { for (const d of (await env.DB.prepare("SELECT bracket_id, description FROM bracket_join WHERE description <> ''").all<{ bracket_id: string; description: string }>()).results) desc.set(d.bracket_id, unpackDesc(d.description)); } catch { /* column not added yet */ }
+  const data = rows.map((r) => { const d = desc.get(r.bracket_id || r.id); return { ...out(r, all, r.bracket_id ? ub.get(r.bracket_id) : undefined), ...(d && (d.ar || d.en) ? { description: { ar: d.ar || d.en, en: d.en || d.ar } } : {}) }; });
   return all ? json(data) : jsonPublic(data);
 };
 

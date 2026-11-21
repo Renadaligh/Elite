@@ -63,7 +63,7 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
           <div>
             <h3 id="reg-title" className="text-[1.3rem] font-extrabold">{t.regTitle}</h3>
             <p className="mt-1 text-[.9rem]" style={{ color: 'var(--muted)' }}>{t.regFor}: <b style={{ color: 'var(--text)' }}>{x.name[lang]}</b></p>
-            {x.description && state !== 'done' && <p dir="auto" className="mt-3 whitespace-pre-line text-[.92rem] leading-relaxed [overflow-wrap:anywhere]" style={{ color: 'var(--text)' }}>{x.description}</p>}
+            {x.description?.[lang] && state !== 'done' && <p dir="auto" className="mt-3 whitespace-pre-line text-[.92rem] leading-relaxed [overflow-wrap:anywhere]" style={{ color: 'var(--text)' }}>{x.description[lang]}</p>}
           </div>
           <button type="button" onClick={onClose} aria-label={t.regClose} className="rounded-full border p-2" style={{ borderColor: 'var(--glass-b)' }}><CloseIcon className="h-4 w-4" /></button>
         </div>
