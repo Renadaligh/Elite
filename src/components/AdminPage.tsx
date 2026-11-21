@@ -667,6 +667,15 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty, br, url, live]);
   const champ = br ? champion(br) : null;
+  const regsBlock = (allRegs.length > 0 || (br?.players.length ?? 0) > 0 || (br?.bench?.length ?? 0) > 0) && (() => {
+          const have = new Set(allRegs.map((r) => nameKey(regName(r))));
+          const count = allRegs.length + (br?.players ?? []).filter((p) => !have.has(nameKey(p))).length + (br?.bench ?? []).filter((p) => !have.has(nameKey(p))).length;
+          return (
+            <Fold title={`${x('المسجّلون')} · ${count}`}>
+              <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
+            </Fold>
+          );
+        })();
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const goBack = async () => { if (dirty && br) await save(true); onClose(); };
 
@@ -679,15 +688,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
       </div>
       <div className="grid min-w-0 grid-cols-1 gap-6 [&>*]:min-w-0">
 
-        {(allRegs.length > 0 || (br?.players.length ?? 0) > 0 || (br?.bench?.length ?? 0) > 0) && (() => {
-          const have = new Set(allRegs.map((r) => nameKey(regName(r))));
-          const count = allRegs.length + (br?.players ?? []).filter((p) => !have.has(nameKey(p))).length + (br?.bench ?? []).filter((p) => !have.has(nameKey(p))).length;
-          return (
-            <Fold title={`${x('المسجّلون')} · ${count}`}>
-              <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
-            </Fold>
-          );
-        })()}
+        {!br && regsBlock}
 
         {!br ? (
           <div className="grid gap-4 rounded-xl border p-4" style={bd}>
@@ -705,7 +706,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
               {!isDraft(br) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable onChange={(b) => upd(b)} />}
               <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={t0.name[lang] || t0.name.ar || t0.name.en} url={siteUrl(`/v/${t0.id.slice(0, 6)}`)} exportId={t0.id} exportTheme={document.documentElement.dataset.hero === 'day' ? 'light' : 'dark'} beforeExport={dirty ? () => save(true) : undefined} />
             </div>
-            <div className="rounded-xl border p-3" style={bd}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div>
+            <div className="st-stage"><div className="st-brcard rounded-2xl border p-3" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div></div>
             <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
             <Fold title={x('رابط العرض')}>
               <div className="grid gap-2">
@@ -714,6 +715,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
               </div>
             </Fold>
             <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
+            {regsBlock}
             <div><button type="button" className={btnG} style={{ ...bd, color: '#ffb02e' }} onClick={rebuild}>{x('إعادة البناء')}</button></div>
           </div>
         )}
