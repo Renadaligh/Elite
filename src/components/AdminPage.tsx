@@ -905,7 +905,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   if (brT) return <BracketAdmin key={brT.id} t0={brT} k={k} onClose={() => setBrT(null)} onAuthFail={onAuthFail} onSaved={load} />;
   return (
     <div>
-      <PageHead refresh={load} title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF({ ...emptyT(), startsAt: new Date(Date.now() + 864e5).toISOString(), published: false }); }}>{x('+ بطولة جديدة')}</button> : undefined} />
+      <PageHead refresh={load} title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF({ ...emptyT(), startsAt: new Date(Date.now() + 2 * 36e5).toISOString(), published: false }); }}>{x('+ بطولة جديدة')}</button> : undefined} />
       <div className="mb-3 flex flex-wrap gap-2">
         {(['all', 'site', 'users'] as const).map((k) => (
           <button key={k} type="button" aria-pressed={src === k} onClick={() => setSrc(k)} className="rounded-full border px-4 py-1.5 text-[.85rem] font-semibold transition" style={src === k ? { ...gradBtn, color: '#fff', borderColor: 'transparent' } : { borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{k === 'all' ? x('الكل') : k === 'site' ? x('بطولات Plato AR') : x('بطولات المستخدمين')} ({srcN(k)})</button>
@@ -918,7 +918,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           const pct = r.slots.total > 0 ? Math.min(100, (r.slots.filled / r.slots.total) * 100) : 0;
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
-              <div className="min-w-0 flex-1">
+              <div className="w-full min-w-0 sm:w-auto sm:flex-1">
                 <div className="flex flex-wrap items-center gap-2"><b className="w-full break-words text-[1.02rem] leading-snug">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('قرعة محفوظة')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
                 <div className="mt-1.5 text-[.82rem]" style={{ color: 'var(--muted)' }}><time dateTime={r.startsAt}>{niceWhen(r.startsAt, lang)}</time></div>
               </div>
