@@ -52,7 +52,7 @@ h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-
 #zoom{display:inline-flex;align-items:center;gap:6px}#zoom button{min-width:39px;min-height:39px;padding:7px 12px}#zoom-level{min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
 .title-block h1{margin-bottom:4px}
 #page-toast{position:fixed;inset-inline-start:50%;bottom:clamp(24px,6vh,64px);transform:translateX(-50%) translateY(10px);z-index:1000;min-width:140px;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:#213b70;color:#fff;box-shadow:0 12px 36px rgba(0,0,0,.24);font-size:14px;font-weight:750;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}#page-toast[data-visible="true"]{opacity:1;transform:translateX(-50%) translateY(0)}
-@media (max-width: 720px){header,main{padding-inline:14px}.bracket-champion{width:100%}.sheet{padding-bottom:12px}}
+@media (max-width: 720px){#zoom{display:none!important}header,main{padding-inline:14px}.bracket-champion{width:100%}.sheet{padding-bottom:12px}}
 `;
 
 const controls = `
@@ -356,9 +356,12 @@ if (sheet) {
   const charts = [...sheet.querySelectorAll('svg[data-width]')];
   const zoomIn = document.getElementById('zoom-in');
   const zoomOut = document.getElementById('zoom-out');
-  let zoom = 1;
+  // Phones: no +/- buttons; the tree opens at ~65% and is pinched like a picture. Desktop keeps the buttons.
+  const phoneQuery = window.matchMedia('(max-width: 720px)');
+  const isPhone = () => phoneQuery.matches;
+  let zoom = isPhone() ? .65 : 1;
   const level = document.getElementById('zoom-level');
-  const draw = () => {
+  const draw = (keepScroll) => {
     const available = sheet.clientWidth - 20;
     const desktopBoost = window.innerWidth >= 1180 ? 1.12 : window.innerWidth >= 860 ? 1.05 : 1;
     for (const chart of charts) {
@@ -369,13 +372,36 @@ if (sheet) {
     // The sheet is LTR internally so its scrolling coordinates remain consistent.
     // The Arabic SVG is visually mirrored: begin at the rightmost rounds after
     // refresh and after zooming, without reversing the bracket itself.
-    if (root.lang === 'ar') sheet.scrollLeft = Math.max(0, sheet.scrollWidth - sheet.clientWidth);
+    if (root.lang === 'ar' && !keepScroll) sheet.scrollLeft = Math.max(0, sheet.scrollWidth - sheet.clientWidth);
     if (level) level.textContent = Math.round(zoom * 100) + '%';
     zoomIn.disabled = zoom >= 3;
     zoomOut.disabled = zoom <= .6;
+    if (isPhone()) { zoomIn.disabled = false; zoomOut.disabled = false; }
   };
+  const ZMIN = () => (isPhone() ? .3 : .6);
   zoomIn.addEventListener('click', () => { zoom = Math.min(3, zoom + .25); draw(); });
-  zoomOut.addEventListener('click', () => { zoom = Math.max(.6, zoom - .25); draw(); });
+  zoomOut.addEventListener('click', () => { zoom = Math.max(ZMIN(), zoom - .25); draw(); });
+  // Two-finger pinch (touch only): zoom around the fingers; one finger still scrolls natively.
+  let pinch = null;
+  const tdist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1;
+  sheet.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 2) return;
+    const r = sheet.getBoundingClientRect();
+    const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    pinch = { d0: tdist(e.touches), z0: zoom, cx: cx - r.left, cyAbs: cy, fx: (sheet.scrollLeft + cx - r.left) / sheet.scrollWidth, fy: (cy - r.top) / Math.max(1, r.height) };
+  }, { passive: true });
+  sheet.addEventListener('touchmove', (e) => {
+    if (!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    zoom = Math.round(Math.min(3, Math.max(ZMIN(), pinch.z0 * (tdist(e.touches) / pinch.d0))) * 100) / 100;
+    draw(true);
+    sheet.scrollLeft = pinch.fx * sheet.scrollWidth - pinch.cx;
+    const r2 = sheet.getBoundingClientRect();
+    window.scrollBy(0, (r2.top + pinch.fy * r2.height) - pinch.cyAbs);
+  }, { passive: false });
+  const endPinch = (e) => { if (e.touches.length < 2) pinch = null; };
+  sheet.addEventListener('touchend', endPinch);
+  sheet.addEventListener('touchcancel', endPinch);
   window.addEventListener('resize', draw);
   document.getElementById('zoom').hidden = false;
   draw();
