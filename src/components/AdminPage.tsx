@@ -215,8 +215,7 @@ function FocusPicker({ src, pos, onChange }: { src: string; pos: string; onChang
   const drag = useRef<{ x: number; y: number; px: number; py: number; w: number; h: number } | null>(null);
   const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)));
   const frames = [
-    { key: 'card', label: x('بطاقة البطولة'), w: 16, h: 9 },
-    { key: 'wide', label: x('البطاقة الكبيرة (حاسوب)'), w: 16, h: 9 },
+    { key: 'card', label: x('البطولة'), w: 16, h: 9 },
   ];
   function down(e: React.PointerEvent<HTMLDivElement>, w: number, h: number) {
     const r = e.currentTarget.getBoundingClientRect();
