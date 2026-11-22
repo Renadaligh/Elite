@@ -8,6 +8,14 @@ import { dataId } from '../../../_tid';
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
   const a = await guard(request, env, 'tournaments', 'edit'); if (a instanceof Response) return a;
   const b = await body(request);
+  // The champion of the bracket is the tournament's winner, and the tournament ends at that moment (an empty string = the final was undone: the winner is cleared and it is open again)
+  if (typeof b.champion === 'string') {
+    const w = b.champion.trim().slice(0, 80);
+    try {
+      const row = await env.DB.prepare('SELECT winner_en FROM tournaments WHERE id = ?').bind(params.id).first<{ winner_en: string }>();
+      if (row && (row.winner_en || '') !== w) await env.DB.prepare('UPDATE tournaments SET winner_en = ?, winner_ar = ?, winner_members = ?, ends_at = ? WHERE id = ?').bind(w, w, '', w ? new Date().toISOString() : '', params.id).run();
+    } catch { /* columns missing on an older database: nothing to update */ }
+  }
   // A community tournament keeps its bracket and stream in the organiser's saved bracket: the admin edits that one (it is what visitors see)
   const did = await dataId(env, String(params.id));
   if (did !== params.id) {

@@ -686,6 +686,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [lo, setLo] = useState(t0.bracket ? loOf(t0.bracket) : fmtInit());
   const [tf, setTf] = useState<Adm<Tournament>>({ ...t0, winner: t0.winner ?? { ar: '', en: '' }, registerUrl: '', image: t0.image ?? '', winnerMembers: t0.winnerMembers ?? [] }); // the tournament's own info (closed card)
   const [infoBusy, setInfoBusy] = useState(false);
+  const savedChamp = useRef(!!(t0.bracket && champion(t0.bracket) !== null)); // did the last saved bracket already have a champion
   const tfNow = tf;
   const url = t0.streamUrl ?? ''; // the stream section was removed from the screen: keep whatever is already saved
   const live = !!t0.streamLive;
@@ -733,8 +734,13 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     setInfoBusy(true);
     try {
       let body = tf;
-      if (tf.slots.filled === t0.slots.filled) { // the seat counter moves by itself with every sign-up: keep the live value unless it was edited here
-        try { const cur = (await api<Adm<Tournament>[]>('/tournaments', { key: k })).find((q) => q.id === t0.id); if (cur) body = { ...tf, slots: { ...tf.slots, filled: cur.slots.filled } }; } catch { /* keep as is */ }
+      // the seat counter moves by itself with every sign-up, and the winner is set by the bracket's champion: keep the live values unless they were edited here
+      const sameW = JSON.stringify(tf.winner ?? null) === JSON.stringify(t0.winner ?? { ar: '', en: '' }) || (!tf.winner?.ar && !tf.winner?.en && !t0.winner);
+      if (tf.slots.filled === t0.slots.filled || sameW) {
+        try {
+          const cur = (await api<Adm<Tournament>[]>('/tournaments', { key: k })).find((q) => q.id === t0.id);
+          if (cur) body = { ...tf, slots: tf.slots.filled === t0.slots.filled ? { ...tf.slots, filled: cur.slots.filled } : tf.slots, ...(sameW ? { winner: cur.winner ?? { ar: '', en: '' }, winnerMembers: cur.winnerMembers ?? [] } : {}) };
+        } catch { /* keep as is */ }
       }
       await api(`/tournaments/${t0.id}`, { method: 'PUT', body: JSON.stringify(body), key: k });
       toast.ok(x('تم التحديث بنجاح')); onSaved();
@@ -780,7 +786,10 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   async function save(auto = false) {
     const sent = ver.current;
     try {
-      await api(`/tournaments/${t0.id}/bracket`, { method: 'PUT', body: JSON.stringify({ bracket: br, streamUrl: url, streamLive: live }), key: k });
+      const cw = br ? champion(br) : null; // the champion becomes the tournament's winner and ends it; '' only when a champion that was saved before is now undone
+      const champ = cw !== null && br ? br.players[cw] ?? '' : savedChamp.current ? '' : undefined;
+      await api(`/tournaments/${t0.id}/bracket`, { method: 'PUT', body: JSON.stringify({ bracket: br, streamUrl: url, streamLive: live, ...(champ !== undefined ? { champion: champ } : {}) }), key: k });
+      savedChamp.current = !!champ;
       commitAutoAdds(t0.id);
       if (ver.current === sent) setDirty(false);
       if (!auto) toast.ok(x('تم حفظ القرعة'));
@@ -927,7 +936,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
-                {r.community && <a className={btnG} style={bd} href={siteUrl(`/v/${r.community.bracketId}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>}
+                <a className={btnG} style={bd} href={siteUrl(`/v/${r.community ? r.community.bracketId : r.id}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
                 {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => setBrT(r)}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
