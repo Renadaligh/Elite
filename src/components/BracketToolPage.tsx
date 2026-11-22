@@ -228,6 +228,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     void save();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [br]);
+  // a final decided before the winner sync existed: sync the published tournament once on open
+  const syncedChamp = useRef(false);
+  useEffect(() => {
+    if (syncedChamp.current || !id || !mine || !br || !auth.user || busy || champion(br) === null) return;
+    syncedChamp.current = true; void save();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, mine, br, auth.user]);
   // saved brackets save themselves ~1.5 s after the last change (new, unsaved ones still need the button: they have no name/link yet)
   useEffect(() => {
     if (!id || !mine || !dirty || busy || !br || !auth.user || failed.current === ver.current) return undefined;

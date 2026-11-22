@@ -631,7 +631,7 @@ function PublishToggle({ on, onChange, busy }: { on: boolean; onChange: (v: bool
 function TournamentFields({ f, setF, k, nameOnly, hidePublish }: { f: Adm<Tournament>; setF: (t: Adm<Tournament>) => void; k: string; nameOnly?: boolean; hidePublish?: boolean }) {
   const { lang, x } = useX();
   const GAMES = useGames();
-  const pair = (name: 'name' | 'format' | 'prize' | 'winner', label: string, en: string, ph = '') => (
+  const pair = (name: 'name' | 'format' | 'prize', label: string, en: string, ph = '') => (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label={lang === 'en' ? `${en} (Arabic)` : `${label} (عربي)`}><input className={inp} style={bd} value={f[name]?.ar ?? ''} placeholder={ph} onChange={(e) => setF({ ...f, [name]: { ar: e.target.value, en: f[name]?.en ?? '' } })} /></Field>
       <Field label={`${en} (English)`}><input dir="ltr" className={inp} style={bd} value={f[name]?.en ?? ''} onChange={(e) => setF({ ...f, [name]: { en: e.target.value, ar: f[name]?.ar ?? '' } })} /></Field>
@@ -662,12 +662,6 @@ function TournamentFields({ f, setF, k, nameOnly, hidePublish }: { f: Adm<Tourna
             </div>
             <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={f.image ?? ''} onChange={(v) => setF({ ...f, image: v })} />
             {f.image && <FocusPicker src={f.image} pos={f.imagePos ?? ''} onChange={(p) => setF({ ...f, imagePos: p })} />}
-            {pair('winner', x('الفائز (بعد الانتهاء)'), 'Winner')}
-            {f.mode === 'team' && (
-              <Field label={`${x('أسماء أعضاء الفريق الفائز (اسم في كل سطر)')} *`}>
-                <textarea rows={4} dir="auto" className={inp} style={bd} value={(f.winnerMembers ?? []).join('\n')} placeholder={'Faisal\nSara\nOmar'} onChange={(e) => setF({ ...f, winnerMembers: e.target.value.split('\n') })} required={!!(f.winner?.ar.trim() || f.winner?.en.trim())} />
-              </Field>
-            )}
             {!hidePublish && <PublishToggle on={f.published !== false} onChange={(v) => setF({ ...f, published: v })} />}
         </>
       )}
@@ -729,7 +723,6 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   }
   async function saveInfo(next?: Adm<Tournament>) {
     const tf = next ?? tfNow;
-    if (tf.mode === 'team' && (tf.winner?.ar.trim() || tf.winner?.en.trim()) && !(tf.winnerMembers ?? []).some((m) => m.trim())) { toast.err(x('أسماء أعضاء الفريق الفائز إجبارية')); return; }
     if (!tf.name.ar.trim()) { toast.err(x('اكتب اسم البطولة أولاً')); return; }
     setInfoBusy(true);
     try {
@@ -796,6 +789,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
       onSaved();
     } catch (err) { failed.current = sent; if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تعذّر تنفيذ العملية'))); }
   }
+  // a final that was decided before the winner sync existed: write the winner + end the tournament once when it is opened
+  useEffect(() => { if (br && champion(br) !== null && !t0.winner?.ar && !t0.winner?.en) void save(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // changes save themselves ~1.5 s after the last edit
   useEffect(() => {
     if (!dirty || !br || typing.current || failed.current === ver.current) return undefined;
@@ -885,7 +880,6 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
     e.preventDefault();
     if (!f) return;
     if (!f.id && !f.name.ar.trim()) { toast.err(x('اكتب اسم البطولة أولاً')); return; }
-    if (f.mode === 'team' && (f.winner?.ar.trim() || f.winner?.en.trim()) && !(f.winnerMembers ?? []).some((m) => m.trim())) { toast.err(x('أسماء أعضاء الفريق الفائز إجبارية')); return; }
     try {
       const r = await api<{ id?: string }>(f.id ? `/tournaments/${f.id}` : '/tournaments', { method: f.id ? 'PUT' : 'POST', body: JSON.stringify(f), key: k });
       setF(null); toast.ok(x(f.id ? 'تم التحديث بنجاح' : 'تمت الإضافة بنجاح'));
