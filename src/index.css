@@ -1477,3 +1477,19 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* Phones: the blur behind every news card is costly to paint while scrolling and barely visible on these backgrounds. */
 @media (max-width: 767px) { .news-card { -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* ---- Hero entrance (CSS only: it needs no script, so the picture paints with the page) ---- */
+@keyframes hero-art-in { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
+@keyframes hero-up-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  html.hero-on [data-anim='art'] { animation: hero-art-in 1.4s cubic-bezier(.25, .46, .45, .94) backwards; }
+  html.hero-on .hero-desc { animation: hero-up-in .55s cubic-bezier(.215, .61, .355, 1) .75s backwards; }
+  html.hero-on .hero-cta > * { animation: hero-up-in .5s cubic-bezier(.215, .61, .355, 1) .95s backwards; }
+  html.hero-on .hero-cta > *:nth-child(2) { animation-delay: 1.04s; }
+  html.hero-on .hero-cta > *:nth-child(3) { animation-delay: 1.13s; }
+}
+/* News cards wait hidden until the motion library is ready (see useCardsReveal) */
+.cards-wait .news-card { opacity: 0; transform: translateY(28px); }
+
+/* the small «bracket» button next to a tournament name: as narrow as its word, so the name keeps the room */
+.tc-body .btn-primary.tc-brk{min-width:0;width:auto;margin-top:0;align-self:flex-start;padding:.4rem .9rem;font-size:.8rem;line-height:1.3}

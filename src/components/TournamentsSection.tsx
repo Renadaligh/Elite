@@ -162,7 +162,7 @@ export function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; 
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
         <div className="mt-0.5 flex items-start justify-between gap-3">
           <h3 className="min-w-0 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
-          {showBr && <a href={bracketViewHref(x)} className="btn-primary shrink-0 !px-4 !py-1.5 !text-[.82rem]">{t.tBracketTitle}</a>}
+          {showBr && <a href={bracketViewHref(x)} className="btn-primary tc-brk shrink-0">{t.tBracketTitle}</a>}
         </div>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{fmt(x.endsAt)}</time></> : null}</p>
         <Facts x={x} />
