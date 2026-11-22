@@ -7,6 +7,7 @@ import HeroSection from './components/HeroSection';
 import NewsSection from './components/NewsSection';
 const NewsPage = lazyPage(() => import('./components/NewsPage'));
 import GamesSection from './components/GamesSection';
+const TournamentsPage = lazyPage(() => import('./components/TournamentsPage'));
 const GamePage = lazyPage(() => import('./components/GamePage'));
 const TournamentPage = lazyPage(() => import('./components/TournamentPage'));
 const BracketStudio = lazyPage(() => import('./components/BracketStudio'));
@@ -41,6 +42,8 @@ function Pages() {
       <main key={route.key} className={route.key === firstKey.current ? undefined : 'route-fade'}>
         {route.page === 'news' ? (
           <Suspense fallback={<Wait />}><NewsPage /></Suspense>
+        ) : route.page === 'tournaments' ? (
+          <Suspense fallback={<Wait />}><TournamentsPage /></Suspense>
         ) : route.page === 'game' ? (
           <Suspense fallback={<Wait />}><GamePage id={route.id ?? ''} /></Suspense>
         ) : route.page === 'tournament' ? (

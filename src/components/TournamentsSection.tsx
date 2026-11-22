@@ -10,9 +10,6 @@ import type { Dict } from '../i18n/translations';
 import { ArrowIcon } from './icons';
 import RetryImg from './RetryImg';
 
-type Tab = 'all' | TournamentStatus;
-const TABS: Tab[] = ['all', 'live', 'upcoming', 'completed'];
-const TAB_KEY: Record<Tab, keyof Dict> = { all: 'tabAll', live: 'tabLive', upcoming: 'tabUpcoming', completed: 'tabDone' };
 const ST_KEY: Record<TournamentStatus, keyof Dict> = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' };
 const ST_COLOR: Record<TournamentStatus, string> = { live: '#27c27a', upcoming: '#ffb02e', completed: '#8d8d9b' };
 
@@ -151,7 +148,7 @@ function WinnerMembers({ x }: { x: Tournament }) {
   );
 }
 
-function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: boolean }) {
+export function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: boolean }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   useGames();
@@ -165,7 +162,7 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}
         <div className="mt-0.5 flex items-start justify-between gap-3">
           <h3 className="min-w-0 text-[1.15rem] font-extrabold leading-snug [overflow-wrap:anywhere]">{x.name[lang]}</h3>
-          {showBr && <a href={bracketViewHref(x)} className="btn-primary shrink-0 !px-3.5 !py-1.5 !text-[.82rem]">{t.tBracket} <ArrowIcon className="h-3.5 w-3.5 rtl:rotate-180" /></a>}
+          {showBr && <a href={bracketViewHref(x)} className="btn-primary shrink-0 !px-4 !py-1.5 !text-[.82rem]">{t.tBracketTitle}</a>}
         </div>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{fmt(x.endsAt)}</time></> : null}</p>
         <Facts x={x} />
@@ -178,31 +175,23 @@ function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?:
   );
 }
 
-/** Tournaments: live → upcoming → completed, with tabs and a countdown on the next/live event. */
+const LIMIT = 3;
+
+/** Home: the 3 tournaments that matter most right now (live → upcoming → completed) + a link to the full list. */
 export default function TournamentsSection() {
   const { t } = useI18n();
   const now = useNow(30000);
-  const [tab, setTab] = useState<Tab>('all');
   const { items, status, retry } = useTournaments();
-  const sorted = useMemo(() => sortTournaments(items, now), [items, now]);
-  const withStatus = sorted.map((x) => ({ x, s: statusOf(x, now) }));
-  const count = (k: Tab) => (k === 'all' ? withStatus.length : withStatus.filter((r) => r.s === k).length);
-  const list = tab === 'all' ? withStatus : withStatus.filter((r) => r.s === tab);
-  const chip = (on: boolean) => ({ color: on ? '#fff' : 'var(--muted)', background: on ? 'linear-gradient(135deg, #3d7bff, #5b5ff0)' : 'var(--glass)', borderColor: on ? 'transparent' : 'var(--glass-b)' });
+  const list = useMemo(() => sortTournaments(items, now).slice(0, LIMIT).map((x) => ({ x, s: statusOf(x, now) })), [items, now]);
 
   return (
     <section id="tournaments" aria-labelledby="tournaments-title" className="scroll-mt-20 px-[clamp(1.1rem,7vw,6.9rem)] py-[clamp(3rem,8vw,6rem)]" style={{ backgroundColor: 'var(--bg)' }}>
-      <div className="mb-7 max-w-[40rem]">
-        <h2 id="tournaments-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.tournTitle}</h2>
-        <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.tournSub}</p>
-      </div>
-
-      <div role="group" aria-label={t.tournTitle} className="gm-filters mb-7 flex flex-wrap gap-2.5">
-        {TABS.map((k) => (
-          <button key={k} type="button" aria-pressed={tab === k} onClick={(e) => { setTab(k); try { e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch { /* ignore */ } }} className="rounded-full border px-4 py-2 text-[.9rem] font-semibold transition-colors" style={chip(tab === k)}>
-            {t[TAB_KEY[k]]} <span className="opacity-70">({count(k)})</span>
-          </button>
-        ))}
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="max-w-[40rem]">
+          <h2 id="tournaments-title" className="font-display text-[clamp(1.8rem,4vw,3.2rem)] font-black leading-tight rtl:font-sans rtl:font-extrabold">{t.tournTitle}</h2>
+          <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.tournSub}</p>
+        </div>
+        <a href="/tournaments" className="btn-glass !px-5 !py-2.5 text-[.9rem]">{t.tournAll} <span aria-hidden="true" className="ms-2 inline-block rtl:-scale-x-100">→</span></a>
       </div>
 
       {status === 'loading' && <div className="m-rail md:grid md:gap-5 md:grid-cols-2 lg:grid-cols-3" aria-busy="true">{[0, 1, 2].map((i) => <div key={i} className="news-skel" />)}</div>}
@@ -214,7 +203,7 @@ export default function TournamentsSection() {
       )}
       {status === 'ready' && list.length === 0 && <p style={{ color: 'var(--muted)' }}>{t.tEmpty}</p>}
       {status === 'ready' && list.length > 0 && (
-        <div className="m-rail md:block"><div className="m-cont">{list.map((r, i) => <TourCard key={r.x.id} x={r.x} s={r.s} eager={i < 6} />)}</div></div>
+        <div className="m-rail md:block"><div className="m-cont">{list.map((r, i) => <TourCard key={r.x.id} x={r.x} s={r.s} eager={i < 3} />)}</div></div>
       )}
     </section>
   );

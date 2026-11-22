@@ -59,14 +59,15 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
 
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div role="dialog" aria-modal="true" aria-labelledby="reg-title" className="max-h-[88svh] w-full max-w-[30rem] overflow-y-auto rounded-3xl border p-6" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="reg-title" className="relative max-h-[88svh] w-full max-w-[30rem] overflow-y-auto rounded-3xl border p-6" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+        {x.image && <img src={x.image} alt="" draggable={false} style={{ display: 'block', width: 'calc(100% + 3rem)', maxWidth: 'none', margin: '-1.5rem -1.5rem 1.25rem', aspectRatio: '16 / 9', objectFit: 'cover', objectPosition: x.imagePos || undefined, borderRadius: '1.5rem 1.5rem 0 0', background: 'var(--chip-bg)' }} />}
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h3 id="reg-title" className="text-[1.3rem] font-extrabold">{t.regTitle}</h3>
             <p className="mt-1 text-[.9rem]" style={{ color: 'var(--muted)' }}>{t.regFor}: <b style={{ color: 'var(--text)' }}>{x.name[lang]}</b></p>
             {x.description?.[lang] && state !== 'done' && <p dir="auto" className="mt-3 whitespace-pre-line text-[.92rem] leading-relaxed [overflow-wrap:anywhere]" style={{ color: 'var(--text)' }}>{x.description[lang]}</p>}
           </div>
-          <button type="button" onClick={onClose} aria-label={t.regClose} className="rounded-full border p-2" style={{ borderColor: 'var(--glass-b)' }}><CloseIcon className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} aria-label={t.regClose} className={x.image ? 'absolute end-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full text-white backdrop-blur' : 'rounded-full border p-2'} style={x.image ? { background: 'rgba(8,10,30,.62)', border: '1px solid rgba(255,255,255,.35)', boxShadow: '0 2px 10px rgba(0,0,0,.4)' } : { borderColor: 'var(--glass-b)' }}><CloseIcon className={x.image ? 'h-5 w-5' : 'h-4 w-4'} /></button>
         </div>
 
         {state === 'done' ? (

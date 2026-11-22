@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { appPath, BASE, go, goSection, takeAnchor, upgradeLegacyHash } from './nav';
 
-export type Route = { page: 'home' | 'news' | 'game' | 'tournament' | 'bracket' | 'view' | 'join' | 'admin'; id?: string; key: string };
+export type Route = { page: 'home' | 'news' | 'game' | 'tournament' | 'tournaments' | 'bracket' | 'view' | 'join' | 'admin'; id?: string; key: string };
 
-/** Path routing: /news · /games/<id> · /bracket[/<id>] · /v/<id> (view) · /j/<id> (join) · /t/<id> (tournament) · /admin.
+/** Path routing: /news · /tournaments · /games/<id> · /bracket[/<id>] · /v/<id> (view) · /j/<id> (join) · /t/<id> (tournament) · /admin.
  *  Anything else (/, /#games, …) is the home page. The server answers every path with index.html. */
 function parse(): Route {
   upgradeLegacyHash();
@@ -16,7 +16,8 @@ function parse(): Route {
     case 'games': if (id) return { page: 'game', id, key: `game:${id}` }; break;
     case 'view': case 'v': if (id) return { page: 'view', id, key: `view:${id}` }; break;
     case 'join': case 'j': if (id) return { page: 'join', id, key: `join:${id}` }; break;
-    case 'tournaments': case 't': if (id) return { page: 'tournament', id, key: `tournament:${id}` }; break;
+    case 'tournaments': if (!id) return { page: 'tournaments', key: 'tournaments' }; // falls through
+    case 't': if (id) return { page: 'tournament', id, key: `tournament:${id}` }; break;
     case 'bracket': return { page: 'bracket', id, key: `bracket:${id ?? ''}` };
   }
   return { page: 'home', key: 'home' };
