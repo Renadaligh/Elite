@@ -1496,3 +1496,78 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* language switch: gentle cross-fade (View Transitions) */
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:ease-in-out}
+
+/* start picker: compact selects (time + AM/PM) sharing one row with the date */
+select.dt-in.sel { padding-inline: .7rem 1.9rem; background-position: right .6rem center; background-size: .7rem; }
+[dir='rtl'] select.dt-in.sel { background-position: left .6rem center; }
+
+/* add-players bubbles: rectangular, not pills */
+.br-chips.rect .br-chip{border-radius:.7rem;padding:8px 16px}
+
+/* phone dashboard header: no account name/photo and no round buttons; sign-out and back-to-site live in the menu */
+@media(max-width:1023px){
+  .st-side-bot .st-me,.st-side-bot .st-acts{display:none!important}
+  .st-pop-hr{border:0;border-top:1px solid var(--s-line2);margin:4px 2px}
+  .st-mobile-popup .st-pop-out{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;color:#ff6b7a;font-weight:700;font-size:.9rem;white-space:nowrap;text-align:start}
+  .st-mobile-popup .st-pop-out:hover{background:rgba(255,107,122,.13)}
+}
+/* sections strip under the header (one page per section, like the tournament pages of Challonge) */
+.st-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--glass-b);margin-bottom:6px}
+.st-tabs::-webkit-scrollbar{display:none}
+.st-tabs button{flex:none;padding:11px 15px;font-weight:700;font-size:.92rem;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.st-tabs button.on{color:var(--text);border-bottom-color:#3d7bff}
+/* tournament card above the tree */
+.hc{border-radius:22px;border:1px solid var(--glass-b);background:var(--glass);overflow:hidden}
+.hc-org{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:999px;background:var(--chip-bg,rgba(255,255,255,.08));margin:10px}
+.hc-av{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;border:3px solid #fff;display:grid;place-items:center;background:#8a93b8;color:#fff;font-weight:800;font-size:1.25rem}
+.hc-org small{display:block;color:var(--muted);font-size:.85rem}.hc-org b{display:block;font-size:1.05rem;color:#ff9a4d;overflow-wrap:anywhere}
+.hc-t{padding:6px 18px 0;font-size:1.35rem;font-weight:800;overflow-wrap:anywhere}
+.hc-dl{display:grid;grid-template-columns:auto 1fr;gap:9px 18px;padding:12px 18px 16px;margin:0}
+.hc-dl dt{color:var(--muted)}.hc-dl dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.hc-pod{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;padding:14px 12px 18px;border-top:1px solid var(--glass-b)}
+.hc-pl{display:inline-flex;align-items:center;gap:9px;padding:8px 16px;border-radius:14px;border:1.5px solid var(--c);color:var(--text);background:color-mix(in srgb,var(--c) 14%,transparent);max-width:100%}
+.hc-pl small{font-size:.74rem;font-weight:800;color:var(--c);white-space:nowrap}.hc-pl b{overflow-wrap:anywhere}
+.hc-pl.p1{--c:#f5c542;font-size:1.08rem}.hc-pl.p2{--c:#c4ccdb}.hc-pl.p3{--c:#d98b4a}.hc-pl.none{--c:#8a93b8;opacity:.8}
+/* publish switch box */
+.pb-box{display:grid;gap:10px;border-radius:16px;border:1px solid var(--glass-b);background:var(--glass);padding:14px}
+.pb-st{border-radius:12px;padding:11px 13px;font-size:.88rem;line-height:1.7;border:1px solid}
+.pb-st.y{background:rgba(255,176,46,.12);border-color:rgba(255,176,46,.5);color:#ffb02e}
+.pb-st.g{background:rgba(46,204,140,.12);border-color:rgba(46,204,140,.5);color:#2ecc8c}
+.pb-st.r{background:rgba(255,77,94,.12);border-color:rgba(255,77,94,.5);color:#ff6b7a}
+.pb-st u{display:block;text-decoration:none;margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.22);color:var(--text)}
+
+/* side menu of an open tournament: its sections instead of the dashboard links (desktop); the in-page strip is for phones */
+.st-nav-tab,.st-nav-back{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border-radius:12px;font-weight:700;font-size:.93rem;text-align:start;color:var(--s-mut,var(--muted))}
+.st-nav-tab:hover,.st-nav-back:hover{background:var(--s-hov,rgba(255,255,255,.06));color:var(--s-fg,var(--text))}
+.st-nav-tab.on{background:var(--s-hov,rgba(255,255,255,.08));color:var(--s-fg,var(--text));box-shadow:inset 3px 0 0 #3d7bff}
+[dir='rtl'] .st-nav-tab.on{box-shadow:inset -3px 0 0 #3d7bff}
+.st-nav-back{margin-bottom:6px;font-size:.85rem}
+@media(min-width:1024px){.st-app .st-tabs{display:none}}
+.hc-pod.bare{border-top:0;margin-top:6px}
+.reg-grip{flex:none;cursor:grab;touch-action:none;user-select:none;padding:4px 6px;margin-inline-start:-4px;color:var(--muted);font-size:1.1rem;line-height:1;border-radius:8px}.reg-grip:active{cursor:grabbing;background:var(--chip-bg)}
+
+.hc-grid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);align-items:start}
+@media(min-width:1024px){.hc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.st-secsel{position:relative}
+.st-secbtn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-b);background:var(--glass);font-weight:700;font-size:.95rem;text-align:start}
+.st-secbd{position:fixed;inset:0;z-index:79;background:transparent;border:0}
+.st-secmenu{position:absolute;z-index:80;top:calc(100% + 6px);inset-inline:0;padding:6px;display:grid;gap:2px;border:1px solid var(--glass-b);border-radius:14px;background:var(--dialog,var(--bg));box-shadow:0 14px 36px rgba(0,0,0,.35)}
+.st-secmenu button{padding:12px 13px;border-radius:9px;font-weight:700;font-size:.92rem;text-align:start;color:var(--muted)}
+.st-secmenu button.on{background:var(--chip-bg);color:var(--text);box-shadow:inset 3px 0 0 #3d7bff}
+[dir='rtl'] .st-secmenu button.on{box-shadow:inset -3px 0 0 #3d7bff}
+@media(min-width:1024px){.st-app .st-secsel{display:none}}
+
+/* placement matches (decide places down to 16th) */
+.br-place { margin-top: 18px; }
+.br-pbody { display: flex; flex-direction: column; gap: 16px; height: auto !important; }
+.br-pgrp { display: flex; flex-direction: column; gap: 8px; }
+.br-pcap { font-size: .72rem; font-weight: 700; color: var(--muted); }
+.br-place .br-col-body > * { position: static !important; }
+
+/* typewriter name (after a swap / shuffle) */
+.br-typed { position: relative; display: inline-block; max-width: 100%; }
+.br-typed-sz { visibility: hidden; white-space: pre; }
+.br-typed-on { position: absolute; inset-inline-start: 0; top: 0; white-space: pre; }
+.br-caret { display: inline-block; width: 1px; height: 1em; margin-inline-start: 1px; vertical-align: -.12em; background: currentColor; animation: br-blink .6s steps(1) infinite; }
+@keyframes br-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }

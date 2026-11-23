@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { appPath, BASE, go, goSection, takeAnchor, upgradeLegacyHash } from './nav';
+import { flushSync } from 'react-dom';
+import { appPath, BASE, go, goSection, isCode, takeAnchor, upgradeLegacyHash } from './nav';
 
 export type Route = { page: 'home' | 'news' | 'game' | 'tournament' | 'tournaments' | 'bracket' | 'view' | 'join' | 'admin'; id?: string; key: string };
 
@@ -10,6 +11,7 @@ function parse(): Route {
   const p = appPath();
   const seg = p.split('/').filter(Boolean);
   const id = seg[1] ? decodeURIComponent(seg[1]) : undefined;
+  if (seg.length === 1 && isCode(seg[0])) return { page: 'join', id: seg[0].toLowerCase(), key: `join:${seg[0].toLowerCase()}` }; // short registration link /<code>
   switch (seg[0]) {
     case 'admin': return { page: 'admin', key: 'admin' };
     case 'news': return { page: 'news', key: 'news' };
@@ -30,7 +32,7 @@ function onClick(e: MouseEvent) {
   if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
   const raw = a.getAttribute('href') ?? '';
   // These routes are served directly by Cloudflare Pages Functions.
-  if (/^\/api(?:[/?#]|$)/.test(raw) || /^\/(?:v|view)\//.test(raw)) return;
+  if (/^\/api(?:[/?#]|$)/.test(raw) || /^\/(?:v|view)\//.test(raw) || /^\/[a-f0-9]{6,8}v(?:[?#]|$)/i.test(raw)) return;
   if (raw.startsWith('/') && !raw.startsWith('//')) { e.preventDefault(); go(raw); }
   else if (raw.startsWith('#') && raw.length > 1) { e.preventDefault(); goSection(raw.slice(1)); }
 }
@@ -39,7 +41,15 @@ export function useRoute(): Route {
   const [route, setRoute] = useState<Route>(parse);
 
   useEffect(() => {
-    const on = () => { const r = parse(); setRoute((p) => (p.key === r.key ? p : r)); };
+    // page switch: the browser cross-fades the old page into the new one (like the language switch); older browsers and "reduce motion" just switch
+    const on = () => {
+      const r = parse();
+      const apply = () => setRoute((p) => (p.key === r.key ? p : r));
+      const d = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+      const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (typeof d.startViewTransition === 'function' && !calm) d.startViewTransition(() => { flushSync(apply); });
+      else apply();
+    };
     window.addEventListener('popstate', on);
     window.addEventListener('hashchange', on); // a hand-typed old "#/…" address
     window.addEventListener('plato:nav', on);

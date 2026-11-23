@@ -14,10 +14,11 @@ function cleanMatches(raw: unknown, max: number): Record<string, unknown>[] | nu
   const out: Record<string, unknown>[] = [];
   for (const r of raw) {
     const m = r as Record<string, unknown>;
-    if (!m || typeof m.id !== 'string' || m.id.length > 12 || !['W', 'L', 'F'].includes(m.br as string) || !slotOk(m.a) || !slotOk(m.b)) return null;
+    if (!m || typeof m.id !== 'string' || m.id.length > 12 || !['W', 'L', 'F', 'T', 'P'].includes(m.br as string) || !slotOk(m.a) || !slotOk(m.b)) return null;
     out.push({
       id: m.id, br: m.br, round: Math.min(40, Math.max(1, Number(m.round) | 0)), idx: Math.min(64, Math.max(1, Number(m.idx) | 0)),
       a: slot(m.a as Record<string, unknown>), b: slot(m.b as Record<string, unknown>),
+      ...(m.br === 'P' ? { pl: Math.min(32, Math.max(1, Number(m.pl) | 0)), gs: Math.min(32, Math.max(2, Number(m.gs) | 0)), g: txt(m.g, 16), sec: m.sec === 'L' ? 'L' : 'W' } : {}),
       sa: txt(m.sa, 4) || undefined, sb: txt(m.sb, 4) || undefined, win: m.win === 'a' || m.win === 'b' ? m.win : undefined,
     });
   }
@@ -27,9 +28,27 @@ function cleanMatches(raw: unknown, max: number): Record<string, unknown>[] | nu
 const orgOf = (o: Record<string, unknown>) => { const v = txt(o.org, 60).trim(); return v ? { org: v } : {}; };
 /** Keeps only the bracket fields we know, with limits, so nothing odd can be stored. */
 /** Optional organiser settings kept with the bracket: manual players currently out of it, and the automatic-adding switch. */
+
+/** Tournament details card (game, prize, start, seats, solo/team); copied field by field so nothing else gets stored. */
+function infoOf(v: unknown) {
+  const x = (v ?? {}) as Record<string, unknown>;
+  const info: Record<string, unknown> = {};
+  const g = txt(x.gameId, 60).trim().toLowerCase(), pr = txt(x.prize, 80).trim(), st = txt(x.startsAt, 40).trim();
+  if (g) info.gameId = g;
+  if (pr) info.prize = pr;
+  if (st && !Number.isNaN(Date.parse(st))) info.startsAt = st;
+  if (Number.isInteger(x.total) && (x.total as number) >= 0) info.total = Math.min(4096, x.total as number);
+  if (x.mode === 'team' || x.mode === 'solo') info.mode = x.mode;
+  if (x.showCount === false) info.showCount = false;
+  return Object.keys(info).length ? { info } : {};
+}
 const extraOf = (o: Record<string, unknown>) => ({
   ...(Array.isArray(o.bench) && o.bench.length ? { bench: o.bench.slice(0, 2000).map((p) => txt(p, 40).trim()).filter(Boolean) } : {}),
   ...(o.auto === false ? { auto: false } : {}),
+  ...(o.third === true ? { third: true } : {}),
+  ...(o.place === true ? { place: true } : {}),
+  ...(o.gf === 'two' || o.gf === 'one' || o.gf === 'none' ? { gf: o.gf } : {}),
+  ...infoOf(o.info),
   ...(txt(o.titleEn, 80).trim() ? { titleEn: txt(o.titleEn, 80).trim() } : {}),
 });
 
@@ -101,7 +120,9 @@ export function bracketStatus(v: unknown): 'new' | 'live' | 'done' {
   const scored = (m: Record<string, unknown>) => m.sa !== undefined && m.sa !== '' && m.sb !== undefined && m.sb !== '';
   const hasBye = (m: Record<string, unknown>) => [m.a, m.b].some((s) => (s as { bye?: boolean })?.bye);
   const elimDone = (list: Record<string, unknown>[]) => {
-    const last = list.find((m) => m.br === 'F') ?? list.filter((m) => m.br === 'W').sort((x, y) => Number(y.round) - Number(x.round))[0];
+    const f1 = list.find((m) => m.id === 'F-1'), f2 = list.find((m) => m.id === 'F-2');
+    if (f1 && f2) return f1.win === 'a' || !!f2.win; // the winners-bracket champion winning the first final ends it
+    const last = f1 ?? list.filter((m) => m.br === 'W').sort((x, y) => Number(y.round) - Number(x.round))[0];
     return !!last?.win;
   };
   const f = b?.format;

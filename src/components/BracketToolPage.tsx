@@ -1,23 +1,26 @@
-import { siteUrl, noProto } from '../hooks/nav';
+import { siteUrl, noProto, viewPath, joinPath } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
-import CommunityListing from './CommunityListing';
+import BracketHeadCard, { PodiumRow } from './BracketHeadCard';
+import PublishToggle from './PublishToggle';
+import InfoFields, { defaultStart } from './InfoFields';
 import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
-import EditorsPanel, { DraftEditors } from './EditorsPanel';
-import Fold from './Fold';
+import EditorsPanel from './EditorsPanel';
+import Fold, { FlatFold } from './Fold';
+import type { BInfo } from '../data/bracket';
 import { AddPlayerBar, commitAutoAdds } from './AddPlayers';
 import BracketSheetAny from './BracketSheetAny';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import BracketView from './BracketView';
-import WinnerCard from './WinnerCard';
 import EmailLogin from './EmailLogin';
-import FormatOpts, { fmtInit, hasOpts, loOf, toOpts, type FmtState } from './FormatOpts';
+import { buildBracket, fmtInit, hasOpts, loOf, toOpts, type FmtState } from './FormatOpts';
+import { shrinkImage } from '../data/shrinkImage';
 
 const WRAP = 'px-[clamp(1.1rem,7vw,6.9rem)]';
 const DRAFT = 'elite-bracket-draft';
@@ -101,7 +104,10 @@ function Shell({ tx, user, children, bare }: { tx: Tx; user: AuthUser | null; ch
 interface Draft { title: string; titleEn?: string; names: string; fmt: BFormat; br: Bracket | null; org?: string }
 const readDraft = (): Draft => { try { const d = JSON.parse(localStorage.getItem(DRAFT) ?? ''); if (d && typeof d.title === 'string') return d; } catch { /* none */ } return { title: '', names: '', fmt: 'single', br: null }; };
 
-export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth>; readOnly?: boolean; onForeign?: () => void }) {
+/** Sections of a saved tournament; each is a page of its own. In the dashboard the side menu (desktop) shows the same list, so the strip only shows on phones. */
+export type EditorTab = 'tree' | 'info' | 'editors' | 'join' | 'regs';
+export interface TabDef { k: EditorTab; label: string }
+export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab, onTabs }: { id?: string; tx: Tx; auth: ReturnType<typeof useAuth>; readOnly?: boolean; onForeign?: () => void; tab?: EditorTab; onTab?: (t: EditorTab) => void; onTabs?: (t: TabDef[]) => void }) {
   const { lang } = useI18n();
   const init = useMemo(() => (id ? { title: '', names: '', fmt: 'single' as BFormat, br: null } : readDraft()), [id]);
   const [title, setTitle] = useState(init.title);
@@ -109,7 +115,6 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   const [org, setOrgName] = useState((init as Draft).org ?? '');
   const [names, setNames] = useState(init.names);
   const [fmt, setFmt] = useState<BFormat>(init.br?.format ?? init.fmt);
-  const [shuf, setShuf] = useState(true);
   const [br, setBr] = useState<Bracket | null>(init.br);
   const [owner, setOwner] = useState('');
   const [mine, setMine] = useState(!id);
@@ -123,11 +128,21 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(() => { const n = loginNote(); return n === 'failed' ? tx.loginFailed : n === 'unavailable' ? tx.loginUnavailable : ''; });
   const [, setEditP] = useState(false);
+  const [secOpen, setSecOpen] = useState(false);
+  const [tabS, setTabS] = useState<EditorTab>('tree');
+  const tab = tabProp ?? tabS;
+  const setTab = onTab ?? setTabS;
+  const [ownerAv, setOwnerAv] = useState('');
+  const [newInfo, setNewInfo] = useState<BInfo>(() => ({ startsAt: defaultStart(), total: 0, mode: 'solo' })); // the form of a tournament being created
+  const [newCover, setNewCover] = useState<File | null>(null);
+  const [newCoverUrl, setNewCoverUrl] = useState('');
+  const [cover, setCover] = useState(''); // picture of a saved tournament (kept with its registration link)
+  const [coverBusy, setCoverBusy] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    api<{ title: string; bracket: Bracket | null; owner: string; mine: boolean; isOwner?: boolean; share: boolean }>(`/brackets/${id}`)
-      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setTitleEn(r.bracket.titleEn ?? ''); setFmt(r.bracket.format); setLo(loOf(r.bracket)); setBr(r.bracket); setOwner(r.owner); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setState('ok'); })
+    api<{ title: string; bracket: Bracket | null; owner: string; ownerAvatar?: string; mine: boolean; isOwner?: boolean; share: boolean }>(`/brackets/${id}`)
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setTitleEn(r.bracket.titleEn ?? ''); setFmt(r.bracket.format); setLo(loOf(r.bracket)); setBr(r.bracket); setOwner(r.owner); setOwnerAv(r.ownerAvatar ?? ''); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
@@ -152,16 +167,75 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
   });
-  const url = id ? `${base()}/v/${id.slice(0, 6)}` : `${base()}/bracket`;
+  const url = id ? `${base()}${viewPath(id)}` : `${base()}/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
   const displayTitle = (lang === 'en' && titleEn.trim() ? titleEn.trim() : shownTitle);
 
-  /** "New tournament": only the name is asked, then the (empty) tree opens at once; everything else lives in the closed info card. */
+  const [needPrize, setNeedPrize] = useState(false);
+  /** "New tournament": the whole settings form (name, organiser, format, game, start, seats, type, prize, picture), then the empty tree opens and is saved at once. */
   function create() {
     if (!title.trim()) { setMsg(tx.needName); return; }
+    if (!(newInfo.prize ?? '').trim()) { setNeedPrize(true); setMsg(lang === 'ar' ? 'الجائزة مطلوبة' : 'The prize is required'); return; }
+    if (!newInfo.startsAt) { setMsg(lang === 'ar' ? 'حدد تاريخ ووقت البداية' : 'Choose the start date and time'); return; }
     justMade.current = true;
-    edit(draftBracket('single', []));
+    const opts = hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined;
+    edit({ ...setOrg(buildBracket(fmt, [], opts, lo), org), info: newInfo });
   }
+  const fmtLabels = { single: tx.single, double: tx.double, rr: tx.rr, swiss: tx.swiss, groups: tx.groups, ffa: tx.ffa } as Record<BFormat, string>;
+  /** Details edits are not "steps" for Undo: they change the bracket quietly (and autosave). */
+  const patchBr = (nb: Bracket) => { ver.current += 1; setBr(nb); setDirty(true); setMsg(''); };
+  const setInfo = (patch: Partial<BInfo>) => { if (br) patchBr({ ...br, info: { ...(br.info ?? {}), ...patch } }); };
+  const uploadCover = async (bid: string, f: File) => {
+    const fd = new FormData(); fd.append('file', await shrinkImage(f, 1280), 'image');
+    const res = await fetch(`/api/brackets/${bid}/image`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(String(res.status));
+    const j = (await res.json()) as { url: string };
+    await api(`/brackets/${bid}/join`, { method: 'PUT', body: JSON.stringify({ cover: j.url }) });
+    return j.url;
+  };
+  async function pickCover(f: File | null) {
+    if (!id) { setNewCover(f); setNewCoverUrl(f ? URL.createObjectURL(f) : ''); return; }
+    setCoverBusy(true);
+    try {
+      if (!f) { await api(`/brackets/${id}/join`, { method: 'PUT', body: JSON.stringify({ cover: '' }) }); setCover(''); }
+      else setCover(await uploadCover(id, f));
+    } catch { setMsg(lang === 'ar' ? 'تعذّر رفع الصورة' : 'Could not upload the picture'); }
+    setCoverBusy(false);
+  }
+  // picture of a saved tournament
+  useEffect(() => {
+    if (!id || !mine || !isOwner) return;
+    api<{ cover?: string }>(`/brackets/${id}/join`).then((d) => setCover(d.cover ?? '')).catch(() => undefined);
+  }, [id, mine, isOwner]);
+  // a tournament made before the details card existed: take them from its published copy (if any), once
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current || !id || !mine || !isOwner || !br || br.info) return;
+    seeded.current = true;
+    api<{ listing: { gameId?: string; prize?: string; startsAt?: string; total?: number; mode?: 'solo' | 'team' } | null }>(`/brackets/${id}/listing`).then((r) => {
+      const l = r.listing;
+      const info: BInfo = l ? { ...(l.gameId ? { gameId: l.gameId } : {}), ...(l.prize ? { prize: l.prize } : {}), ...(l.startsAt ? { startsAt: l.startsAt } : {}), total: l.total ?? 0, mode: l.mode === 'team' ? 'team' : 'solo' } : { startsAt: defaultStart(), total: 0, mode: 'solo' };
+      setBr((b) => (b && !b.info ? { ...b, info } : b));
+    }).catch(() => undefined);
+  }, [id, mine, isOwner, br]);
+  // seats / type / start date also live on the registration link: keep it in step
+  const joinKey = br?.info ? `${br.info.mode ?? 'solo'}|${br.info.total ?? 0}|${br.info.startsAt ?? ''}` : '';
+  const joinSent = useRef('');
+  useEffect(() => {
+    if (!id || !mine || !isOwner || !joinKey) return undefined;
+    if (joinSent.current === '') { joinSent.current = joinKey; return undefined; }
+    if (joinSent.current === joinKey) return undefined;
+    const inf = br?.info; if (!inf) return undefined;
+    const h = window.setTimeout(() => { joinSent.current = joinKey; void api(`/brackets/${id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}) }) }).catch(() => undefined); }, 1000);
+    return () => window.clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joinKey, id, mine, isOwner]);
+  const tabsDef: TabDef[] = id && mine ? [
+    { k: 'tree', label: lang === 'ar' ? 'الشجرة' : 'Bracket' }, { k: 'info', label: tx.info }, { k: 'editors', label: lang === 'ar' ? 'إضافة منظم' : 'Add organizer' },
+    ...(isOwner ? [{ k: 'join' as const, label: lang === 'ar' ? 'رابط التسجيل' : 'Registration link' }, { k: 'regs' as const, label: lang === 'ar' ? 'المسجلون' : 'Registrants' }] : []),
+  ] : [];
+  const tabsKey = tabsDef.map((t) => `${t.k}:${t.label}`).join('|');
+  useEffect(() => { onTabs?.(tabsDef); return () => onTabs?.([]); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [tabsKey]);
   /** Changes the format / its settings of the open tournament: the players stay, the matches are redrawn (a random draw if ticked). */
   function applyFmt() {
     if (!br) return;
@@ -169,8 +243,10 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     const list = br.players;
     if (fmt === 'rr' && list.length > MAX_RR) { setMsg(tx.maxRr); return; }
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
-    const nb = setOrg(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts), br.org ?? '');
-    edit({ ...nb, ...(br.bench ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) });
+    const nb0 = setOrg(buildBracket(fmt, list, opts, { ...lo, place: lo.place && !!br.place }), br.org ?? '');
+    const nb1 = br.third && fmt === 'single' && canThird(nb0) ? setThird(nb0, true) : nb0;
+    const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true), place: true as const } : nb1;
+    edit({ ...nb, ...(br.info ? { info: br.info } : {}), ...(br.bench ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) });
   }
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
   function addToBracket(add: string[]) {
@@ -181,6 +257,14 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
     // players join without a rebuild: the bracket is redrawn around them. Only if results exist does it ask first (they are cleared; Undo brings them back).
     if (hasResults(br) && !window.confirm(lang === 'ar' ? 'إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟' : 'Adding players after matches started clears the current results (Undo brings them back). Sure?')) return;
     edit(setBench(addPlayers(br, add), (br.bench ?? []).filter((b) => !add.some((a) => nameKey(a) === nameKey(b))))); setMsg('');
+  }
+  /** Two names traded places in the Registrants list: their seats in the tree trade places (after results the bracket is redrawn, which clears them: ask first). */
+  function reorderPlayers(a: string, b: string) {
+    if (!br) return;
+    const i = br.players.findIndex((p) => nameKey(p) === nameKey(a)), j = br.players.findIndex((p) => nameKey(p) === nameKey(b));
+    if (i < 0 || j < 0 || i === j) return;
+    if (hasResults(br) && !window.confirm(lang === 'ar' ? 'تغيير الأماكن بعد بدء المباريات يمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟' : 'Changing places after matches started clears the current results (Undo brings them back). Sure?')) return;
+    edit(swapPlayers(br, i, j)); setMsg('');
   }
   /** keep = a player added by hand: he stays in the registrants list (with +) after leaving the bracket. */
   function removeFromBracket(name: string, keep = false) {
@@ -212,6 +296,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
       if (id) { await api(`/brackets/${id}`, { method: 'PUT', body }); commitAutoAdds(id); if (ver.current === sent) setDirty(false); setMsg(tx.saved); }
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
+        const inf = br.info;
+        if (inf) { try { await api(`/brackets/${r.id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}) }) }); } catch { /* the details are also kept inside the bracket */ } }
+        if (newCover) { try { await uploadCover(r.id, newCover); } catch { /* can be added later from Tournament info */ } }
         const bad: { h: string; c: string }[] = [];
         for (const h of draftEd) { try { await api(`/brackets/${r.id}/editors`, { method: 'POST', body: JSON.stringify({ handle: h }) }); } catch (e) { bad.push({ h, c: (e as Error & { detail?: string }).detail ?? '' }); } }
         if (bad.length) { try { sessionStorage.setItem(`plato-editor-fail-${r.id}`, JSON.stringify(bad)); } catch { /* ignore */ } } // shown once on the new bracket's co-editors card
@@ -254,69 +341,81 @@ export function Editor({ id, tx, auth, readOnly, onForeign }: { id?: string; tx:
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
   if (state === 'private') return <p className="text-lg">{tx.private}</p>;
-  const viewUrl = id ? `${base()}/v/${id.slice(0, 6)}` : `${base()}/bracket`;
+  const viewUrl = id ? `${base()}${viewPath(id)}` : `${base()}/bracket`;
 
+  const ar = lang !== 'en';
+  const L2 = lang === 'en' ? 'en' : 'ar';
+  const flat = (node: ReactNode) => <FlatFold.Provider value>{node}</FlatFold.Provider>;
   return (
     <>
       {!br ? (
         editable && (
           <div className="st-nf grid gap-4 rounded-2xl border p-5" style={card}>
-            <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.name}<input autoFocus className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') create(); }} /></label>
+            <b className="text-[1.1rem]">{tx.info}</b>
+            <InfoFields lang={L2} title={title} onTitle={setTitle} org={org} onOrg={setOrgName} fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={0} fmtLabels={fmtLabels}
+              placeOpt={{ on: lo.place, disabled: false, set: (on) => setLo({ ...lo, place: on }) }}
+              info={newInfo} onInfo={(pt) => setNewInfo((o) => ({ ...o, ...pt }))} cover={newCoverUrl} onCover={(f) => void pickCover(f)} needPrize={needPrize} />
             <div><button type="button" className="btn-primary" onClick={create}>{tx.create}</button></div>
             {msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>}
           </div>
         )
       ) : (
         <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4 ${!editable && readOnly ? 'pv-body' : ''}`}>
-          <div className={`flex flex-wrap items-center justify-between gap-2 ${!editable && readOnly ? 'pv-pad' : ''}`}>
-            {!sheetView && <div>
-              <h2 className="text-[1.7rem] md:text-[2rem] font-extrabold">{editable ? shownTitle : title}</h2>
-              {editable && br.org && <p className="mt-1 text-[.95rem] font-semibold" style={{ color: 'var(--muted)' }}>{tx.orgBy}: <span dir="auto" style={{ color: 'var(--text)' }}>{br.org}</span></p>}
-              {!editable && br.org && <p className="mt-1 text-[.95rem] font-semibold" style={{ color: 'var(--muted)' }}>{tx.orgBy}: <span dir="auto" style={{ color: 'var(--text)' }}>{br.org}</span></p>}
-              {!editable && <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>}
-            </div>}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {!isDraft(br) && (champ !== null || editable) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable={editable} onChange={editable ? (b) => edit(b) : undefined} />}
-              <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} exportId={id} exportTheme={typeof document !== 'undefined' && (document.querySelector('[data-st]')?.getAttribute('data-st') === 'light' || (!document.querySelector('[data-st]') && document.documentElement.dataset.hero === 'day')) ? 'light' : 'dark'} beforeExport={dirty && editable ? save : undefined} />
-              {editable && <button type="button" className={`${pill} text-white`} style={{ background: 'linear-gradient(135deg,#3d7bff,#5b5ff0)', borderColor: 'transparent' }} disabled={busy} onClick={save}>{busy ? tx.saving : tx.save}</button>}
+          {tabsDef.length > 0 && (
+            <div className="st-secsel">
+              <button type="button" className="st-secbtn" aria-haspopup="listbox" aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{tabsDef.find((t) => t.k === tab)?.label}</span><span aria-hidden>{secOpen ? '▴' : '▾'}</span></button>
+              {secOpen && <>
+                <button type="button" className="st-secbd" aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Close menu'} onClick={() => setSecOpen(false)} />
+                <div className="st-secmenu" role="listbox">{tabsDef.map((t) => <button key={t.k} type="button" role="option" aria-selected={tab === t.k} className={tab === t.k ? 'on' : ''} onClick={() => { setTab(t.k); setSecOpen(false); }}>{t.label}</button>)}</div>
+              </>}
             </div>
-          </div>
-          {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
-          {editable && br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hintL}</p>}
-          <div className="st-stage">
-          {sheetView ? <BracketSheetAny bracket={br} title={displayTitle} lang={lang === 'en' ? 'en' : 'ar'} /> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
-          </div>
-          {editable && <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />}
-          {editable && (
-            <Fold title={tx.info} style={card}>
-              <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.name}<input className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={title} placeholder={tx.namePh} onChange={(e) => { ver.current += 1; setTitle(e.target.value); setDirty(true); }} /></label>
-              <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.org}<input className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)' }} maxLength={60} value={br.org ?? ''} placeholder={tx.orgPh} onChange={(e) => { const v = e.target.value.slice(0, 60); const { org: _o, ...rest } = br; void _o; ver.current += 1; setBr(v ? { ...rest, org: v } : rest); setDirty(true); }} /></label>
-              <label className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.format}
-                <select className={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', backgroundColor: 'var(--bg)' }} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{tx.single}</option><option value="double">{tx.double}</option><option value="rr">{tx.rr}</option><option value="swiss">{tx.swiss}</option><option value="groups">{tx.groups}</option><option value="ffa">{tx.ffa}</option></select></label>
-              <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={{ borderColor: 'var(--glass-b)', color: 'var(--text)', backgroundColor: 'var(--bg)' }} border={{ borderColor: 'var(--glass-b)' }} players={br.players.length} />
-              <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{tx.shuffle}</label>
-              <div><button type="button" className="btn-primary" onClick={applyFmt}>{tx.apply}</button></div>
-            </Fold>
           )}
-          {editable && !id && <DraftEditors lang={lang === 'en' ? 'en' : 'ar'} handles={draftEd} setHandles={setDraftEd} style={card} />}
-          {editable && id && auth.user && <EditorsPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} userId={auth.user.id} style={card} />}
-          {editable && isOwner && (
-            <Fold title={tx.shTitle} style={card}>
-              {!id ? <p className="st-shn">{tx.shSave}</p> : (
-                <>
-                  <div className="st-shr">
-                    <div className="st-shh">
-                      <div><span>{tx.shView}</span><small>{tx.shViewD}</small></div>
-                    </div>
-                    {share && <div className="st-shl"><input readOnly dir="ltr" value={noProto(viewUrl)} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => copyLink('share', viewUrl)}>{copied === 'share' ? tx.shCopied : tx.shCopy}</button></div>}
-                  </div>
-                </>
+          {(!editable || !id || tab === 'tree') && (
+            <>
+              {editable ? (
+                <div className="hc-grid">
+                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} />
+                  <Fold title={ar ? 'إضافة لاعبين' : 'Add players'} style={card}>
+                    <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />
+                    {isOwner && id && <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} />}
+                  </Fold>
+                </div>
+              ) : (
+                <div className={`flex flex-wrap items-center justify-between gap-2 ${readOnly ? 'pv-pad' : ''}`}>
+                  {!sheetView && <div>
+                    <h2 className="text-[1.7rem] md:text-[2rem] font-extrabold">{title}</h2>
+                    {br.org && <p className="mt-1 text-[.95rem] font-semibold" style={{ color: 'var(--muted)' }}>{tx.orgBy}: <span dir="auto" style={{ color: 'var(--text)' }}>{br.org}</span></p>}
+                    <p className="mt-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{tx.readonly}</p>
+                  </div>}
+                </div>
               )}
-            </Fold>
+              <div className={`flex flex-wrap items-center justify-between gap-2 ${!editable && readOnly ? 'pv-pad' : ''}`}>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} exportId={id} exportTheme={typeof document !== 'undefined' && (document.querySelector('[data-st]')?.getAttribute('data-st') === 'light' || (!document.querySelector('[data-st]') && document.documentElement.dataset.hero === 'day')) ? 'light' : 'dark'} beforeExport={dirty && editable ? save : undefined} onShuffle={editable ? () => { if (hasResults(br) && !window.confirm(lang === 'ar' ? 'خلط الأماكن يمسح النتائج الحالية (ويمكنك التراجع). متأكد؟' : 'Shuffling clears the current results (you can undo). Sure?')) return; edit(reshuffle(br)); } : undefined} />
+                </div>
+              </div>
+              {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
+              {editable && br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hintL}</p>}
+              <div className="st-stage">
+                {sheetView ? <><BracketSheetAny bracket={br} title={displayTitle} lang={lang === 'en' ? 'en' : 'ar'} /><PodiumRow bracket={br} lang={lang === 'en' ? 'en' : 'ar'} bare /></> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
+              </div>
+            </>
           )}
-          {editable && isOwner && id && <JoinPanel id={id} lang={lang === 'en' ? 'en' : 'ar'} link={`${base()}/j/${id}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} />}
-          {editable && isOwner && id && <RegistrantsCard id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />}
-          {editable && isOwner && id && <CommunityListing id={id} share={share} lang={lang} title={title} />}
+          {editable && id && tab === 'info' && flat(
+            <div className="grid gap-3 rounded-2xl border p-4" style={card}>
+              <b className="text-[1.05rem]">{tx.info}</b>
+              <InfoFields lang={L2} title={title} onTitle={(v) => { ver.current += 1; setTitle(v); setDirty(true); }}
+                org={br.org ?? ''} onOrg={(v) => { const { org: _o, ...rest } = br; void _o; patchBr(v ? { ...rest, org: v } : rest); }}
+                fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={br.players.length} fmtLabels={fmtLabels}
+                info={br.info ?? {}} onInfo={setInfo} cover={cover} onCover={(f) => void pickCover(f)} coverBusy={coverBusy} needPrize
+                third={br.format === 'single' ? { on: !!br.third, disabled: !canThird(br) || !!br.place, set: (on) => edit(setThird(br, on)) } : undefined}
+                placeOpt={br.format === 'single' || br.format === 'double' ? { on: !!br.place, disabled: !canPlace(br) && !br.place, set: (on) => { setLo({ ...lo, place: on }); edit(on ? { ...setPlace(br, true), place: true as const } : setPlace(br, false)); } } : undefined}
+                apply={{ label: tx.apply, run: applyFmt }} />
+            </div>
+          )}
+          {editable && id && tab === 'editors' && auth.user && flat(<EditorsPanel id={id} lang={L2} userId={auth.user.id} style={card} />)}
+          {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}${joinPath(id)}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} />)}
+          {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
         </div>
       )}
       {login && <LoginModal tx={tx} providers={auth.providers} r="tool" onClose={() => setLogin(false)} />}

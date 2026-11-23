@@ -1,10 +1,17 @@
-import type { BFormat, Bracket, LeagueOpts } from '../data/bracket';
+import { draftBracket, generate, setPlace, type BFormat, type Bracket, type GrandFinal, type LeagueOpts } from '../data/bracket';
 
 /** Settings shown under the format select for the non-elimination formats (shared by the dashboard and the public tool). */
-export interface FmtState { win: string; draw: string; loss: string; rounds: string; double: boolean; groups: string; adv: string; ko: 'single' | 'double'; low: boolean }
-export const fmtInit = (): FmtState => ({ win: '1', draw: '0.5', loss: '0', rounds: '', double: false, groups: '', adv: '', ko: 'single', low: false });
+export interface FmtState { win: string; draw: string; loss: string; rounds: string; double: boolean; groups: string; adv: string; ko: 'single' | 'double'; low: boolean; gf: GrandFinal; place: boolean }
+export const fmtInit = (): FmtState => ({ win: '1', draw: '0.5', loss: '0', rounds: '', double: false, groups: '', adv: '', ko: 'single', low: false, gf: 'two', place: false });
 /** The settings form filled from an existing bracket (so the info card shows what the bracket really uses). */
-export const loOf = (b: Bracket): FmtState => { const o = b.opts; const s0 = fmtInit(); if (!o) return s0; return { ...s0, win: String(o.win), draw: String(o.draw), loss: String(o.loss), rounds: o.rounds ? String(o.rounds) : '', double: !!o.double, groups: o.groups ? String(o.groups) : '', adv: o.adv ? String(o.adv) : '', ko: o.koFormat === 'double' ? 'double' : 'single', low: !!o.low }; };
+export const loOf = (b: Bracket): FmtState => { const o = b.opts; const s0 = { ...fmtInit(), gf: b.gf ?? 'one', place: !!b.place }; if (!o) return s0; return { ...s0, win: String(o.win), draw: String(o.draw), loss: String(o.loss), rounds: o.rounds ? String(o.rounds) : '', double: !!o.double, groups: o.groups ? String(o.groups) : '', adv: o.adv ? String(o.adv) : '', ko: o.koFormat === 'double' ? 'double' : 'single', low: !!o.low }; };
+/** Builds a bracket the way the settings say: the grand-final rule (double elimination) and the placement matches (single / double). Players < 2 gives an empty draft that remembers the choices. */
+export function buildBracket(f: BFormat, list: string[], opts: Partial<LeagueOpts> | undefined, s: FmtState): Bracket {
+  const gf = f === 'double' ? s.gf : undefined;
+  let b: Bracket = list.length < 2 ? { ...draftBracket(f, list, opts), ...(gf ? { gf } : {}) } : generate(f, list, opts, gf);
+  if ((f === 'single' || f === 'double') && s.place) b = list.length < 2 ? { ...b, place: true } : { ...setPlace(b, true), place: true };
+  return b;
+}
 export const hasOpts = (f: BFormat) => f !== 'single' && f !== 'double';
 
 const n = (v: string, d: number) => (v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : d);
@@ -19,8 +26,17 @@ export function toOpts(f: BFormat, s: FmtState, players: number): Partial<League
 
 interface P { fmt: BFormat; value: FmtState; onChange: (v: FmtState) => void; lang: 'ar' | 'en'; inpCls: string; style?: React.CSSProperties; border?: React.CSSProperties; players: number }
 export default function FormatOpts({ fmt, value: v, onChange, lang, inpCls, style, border, players }: P) {
-  if (!hasOpts(fmt)) return null;
   const ar = lang === 'ar';
+  if (fmt === 'double') return (
+    <label className="grid gap-1.5 text-[.8rem]" style={{ color: 'var(--muted)' }}>{ar ? 'النهائي الكبير' : 'Grand final'}
+      <select className={`${inpCls} sel`} style={style} value={v.gf} onChange={(e) => onChange({ ...v, gf: e.target.value as GrandFinal })}>
+        <option value="two">{ar ? 'مباراتان (تُعاد إن فاز القادم من الخاسرين)' : 'Two matches (reset if the losers-side player wins)'}</option>
+        <option value="one">{ar ? 'مباراة واحدة' : 'One match'}</option>
+        <option value="none">{ar ? 'بدون نهائي كبير' : 'No grand final'}</option>
+      </select>
+    </label>
+  );
+  if (!hasOpts(fmt)) return null;
   const set = (p: Partial<FmtState>) => onChange({ ...v, ...p });
   const F = ({ l, children }: { l: string; children: React.ReactNode }) => <label className="grid gap-1.5 text-[.8rem]" style={{ color: 'var(--muted)' }}>{l}{children}</label>;
   const num = (k: keyof FmtState, ph?: string) => <input dir="ltr" inputMode="decimal" className={inpCls} style={style} value={v[k] as string} placeholder={ph} onChange={(e) => set({ [k]: e.target.value } as Partial<FmtState>)} />;

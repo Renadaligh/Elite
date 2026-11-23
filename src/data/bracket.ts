@@ -10,8 +10,10 @@ export const isLeague = (b: { format: BFormat }) => b.format === 'rr' || b.forma
 export type Slot = { p: number } | { w: string } | { l: string } | { bye: true };
 export interface BMatch {
   id: string;
-  /** W = winners bracket, L = losers bracket (double elimination), F = grand final. */
-  br: 'W' | 'L' | 'F';
+  /** W = winners bracket, L = losers bracket (double elimination), F = grand final, T = third-place match (single elimination, between the two semifinal losers). */
+  br: 'W' | 'L' | 'F' | 'T' | 'P';
+  /** P = a placement match (decides the places of players who were knocked out together). `round` is the column it sits under; `pl` the best place it decides, `gs` how many places the group covers, `g` the group + stage (a caption is drawn once per group in a column), `sec` the section whose columns it sits under. */
+  pl?: number; gs?: number; g?: string; sec?: 'W' | 'L';
   round: number;
   idx: number;
   a: Slot;
@@ -26,7 +28,11 @@ export interface LeagueOpts { win: number; draw: number; loss: number; rounds?: 
 export const defaultOpts = (format: BFormat, n: number): LeagueOpts => ({ win: 1, draw: 0.5, loss: 0, ...(format === 'swiss' ? { rounds: Math.max(1, Math.ceil(Math.log2(Math.max(2, n)))) } : format === 'ffa' ? { rounds: 3 } : format === 'groups' ? { groups: n >= 12 ? 4 : 2, adv: 2, koFormat: 'single' as const } : {}) });
 /** Knockout stage of a groups tournament: `seed` = global player indexes in seed order; match slots index into `seed`. */
 export interface Knockout { format: 'single' | 'double'; seed: number[]; matches: BMatch[] }
-export interface Bracket { titleEn?: string; /** Names the organiser added by hand and took out of the bracket again: they stay in the registrants list (with +). */ bench?: string[]; /** false = registrants are NOT added to the bracket automatically (the organiser adds them with +). */ auto?: false; /** Organising group (optional, shown on the bracket, the image and the registration page). */ org?: string; /** Winner chosen by the organiser (player index); overrides the one worked out from the results. */ champ?: number; opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[] }
+/** Tournament details the organiser fills in (shown on the card above the tree; the publish switch sends them to the site). */
+export interface BInfo { gameId?: string; prize?: string; startsAt?: string; total?: number; mode?: 'solo' | 'team'; /** false = the registration page does not show how many registered */ showCount?: false }
+/** Double elimination: how the grand final is played. 'two' = a second match F-2 when the losers-bracket finalist wins the first; 'one' = a single match; 'none' = no grand final (the winners-bracket champion wins). Absent = 'one' (brackets made before the option). */
+export type GrandFinal = 'two' | 'one' | 'none';
+export interface Bracket { info?: BInfo; /** all places are decided with placement matches (up to 16th) */ place?: true; gf?: GrandFinal; /** single elimination: a match for 3rd place is played (Challonge-style option). */ third?: true; titleEn?: string; /** Names the organiser added by hand and took out of the bracket again: they stay in the registrants list (with +). */ bench?: string[]; /** false = registrants are NOT added to the bracket automatically (the organiser adds them with +). */ auto?: false; /** Organising group (optional, shown on the bracket, the image and the registration page). */ org?: string; /** Winner chosen by the organiser (player index); overrides the one worked out from the results. */ champ?: number; opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[] }
 
 /** number = player index · 'bye' = empty seat · null = not decided yet. */
 export type Who = number | 'bye' | null;
@@ -59,7 +65,7 @@ export function dupNames(list: string[]): string[] {
 }
 export const hasName = (br: Bracket, name: string, except = -1) => br.players.some((p, i) => i !== except && nameKey(p) === nameKey(name));
 
-export function generate(format: BFormat, players: string[], opts?: Partial<LeagueOpts>): Bracket {
+export function generate(format: BFormat, players: string[], opts?: Partial<LeagueOpts>, gf: GrandFinal = 'two'): Bracket {
   const names = players.map((p) => p.trim()).filter(Boolean).filter((n, i, a) => a.findIndex((x) => nameKey(x) === nameKey(n)) === i).slice(0, format === 'rr' ? MAX_RR : MAX_PLAYERS);
   const n = names.length;
   if (format === 'ffa') return generateFfa(names, { ...defaultOpts('ffa', n), ...opts });
@@ -86,8 +92,9 @@ export function generate(format: BFormat, players: string[], opts?: Partial<Leag
     for (let i = 1; i <= size / 2 ** (j + 1); i++) add('L', drop, i, { w: `L${drop - 1}-${i}` }, { l: `W${j + 1}-${i}` });
     if (j < k - 1) for (let i = 1; i <= size / 2 ** (j + 2); i++) add('L', drop + 1, i, { w: `L${drop}-${2 * i - 1}` }, { w: `L${drop}-${2 * i}` });
   }
-  add('F', 1, 1, { w: `W${k}-1` }, { w: `L${2 * k - 2}-1` });
-  return { format, players: names, matches };
+  if (gf !== 'none') add('F', 1, 1, { w: `W${k}-1` }, { w: `L${2 * k - 2}-1` });
+  if (gf === 'two') matches.push({ id: 'F-2', br: 'F', round: 2, idx: 1, a: { l: 'F-1' }, b: { w: 'F-1' } });
+  return { format, players: names, matches, gf };
 }
 
 /** A bracket with fewer than 2 players is a draft: players are listed but nothing is drawn yet. Adding the 2nd player builds it. */
@@ -116,10 +123,74 @@ export function removePlayer(br: Bracket, name: string): Bracket {
   return players.length === br.players.length ? br : redraw(br, players);
 }
 
+/** Single elimination: adds (or removes) the third-place match, played by the two semifinal losers. Needs at least 4 players. Nothing else in the bracket changes. */
+export function canThird(br: Bracket): boolean { return br.format === 'single' && br.players.length >= 4 && br.matches.some((m) => m.br === 'W' && m.round >= 2); }
+export function setThird(br: Bracket, on: boolean): Bracket {
+  const rest = br.matches.filter((m) => m.br !== 'T');
+  const { third: _t, ...bare } = br; void _t;
+  if (!on) return { ...bare, matches: rest };
+  if (!canThird(br)) return br;
+  const k = Math.max(...rest.filter((m) => m.br === 'W').map((m) => m.round));
+  const semis = rest.filter((m) => m.br === 'W' && m.round === k - 1).sort((x, y) => x.idx - y.idx);
+  if (semis.length !== 2) return br;
+  return { ...bare, third: true, matches: [...rest, { id: 'T-1', br: 'T', round: k, idx: 1, a: { l: semis[0].id }, b: { l: semis[1].id } }] };
+}
+
+
+/** Placement matches ("break ties with placement matches"): players knocked out in the same round play each other for the places, down to 16th. Single elimination: every round's losers; the semifinal losers' match is the 3rd-place match. Double elimination: the players who go out in the same losers-bracket round. */
+export const MAX_PLACE = 16;
+export function canPlace(br: Bracket): boolean {
+  if (br.format !== 'single' && br.format !== 'double') return false;
+  return pow2(br.players.length) >= 8 && br.matches.some((m) => m.br === 'W');
+}
+function placeMatches(br: Bracket): BMatch[] {
+  const out: BMatch[] = [];
+  const classify = (slots: Slot[], start: number, col: number, stage: number, g: string, sec: 'W' | 'L') => {
+    const n = slots.length;
+    if (n < 2 || n % 2) return;
+    const ws: Slot[] = [], ls: Slot[] = [];
+    for (let i = 0; i < n / 2; i++) {
+      const id = `P${g}.${start}.${n}.${i + 1}`;
+      out.push({ id, br: 'P', round: col + stage, idx: i + 1, a: slots[2 * i], b: slots[2 * i + 1], pl: start, gs: n, g: `${g}.${stage}.${start}`, sec });
+      ws.push({ w: id }); ls.push({ l: id });
+    }
+    classify(ws, start, col, stage + 1, g, sec);
+    classify(ls, start + n / 2, col, stage + 1, g, sec);
+  };
+  const L = layout(br);
+  if (br.format === 'single') {
+    const k = L.winners.length, size = 2 ** k;
+    for (let r = 1; r < k - 1; r++) { // the round before the final is the 3rd-place match
+      const n = size / 2 ** r, start = n + 1;
+      if (start + n - 1 > MAX_PLACE) continue;
+      classify(L.winners[r - 1].map((m) => ({ l: m.id })), start, r, 0, `W${r}`, 'W');
+    }
+  } else {
+    let start = 3;
+    for (let r = L.losers.length; r >= 1; r--) {
+      const ms = L.losers[r - 1], n = ms.length;
+      if (n >= 2 && start + n - 1 <= MAX_PLACE) classify(ms.map((m) => ({ l: m.id })), start, r, 0, `L${r}`, 'L');
+      start += n;
+    }
+  }
+  return out;
+}
+export function setPlace(br: Bracket, on: boolean): Bracket {
+  const rest = br.matches.filter((m) => m.br !== 'P');
+  const { place: _p, ...bare } = br; void _p;
+  if (!on) return { ...bare, matches: rest };
+  if (!canPlace(br)) return br;
+  let b: Bracket = { ...bare, matches: rest };
+  if (b.format === 'single' && !b.third) b = setThird(b, true);
+  return { ...b, place: true, matches: [...b.matches, ...placeMatches(b)] };
+}
+
 function redraw(br: Bracket, players: string[]): Bracket {
   const keep = br.opts ? { win: br.opts.win, draw: br.opts.draw, loss: br.opts.loss, double: br.opts.double, koFormat: br.opts.koFormat, low: br.opts.low, ...(br.format === 'ffa' ? { rounds: br.opts.rounds } : {}) } : undefined;
-  const out = players.length < 2 ? draftBracket(br.format, players, keep) : generate(br.format, players, keep);
-  return { ...out, ...(br.org ? { org: br.org } : {}), ...(br.bench?.length ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}), ...(br.titleEn ? { titleEn: br.titleEn } : {}) };
+  const out = players.length < 2 ? { ...draftBracket(br.format, players, keep), ...(br.gf ? { gf: br.gf } : {}) } : generate(br.format, players, keep, br.gf ?? 'one');
+  const thirded = br.third && br.format === 'single' ? setThird(out, true) : out;
+  const redrawn = br.place ? { ...setPlace(thirded, true), place: true as const } : thirded;
+  return { ...redrawn, ...(br.org ? { org: br.org } : {}), ...(br.bench?.length ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}), ...(br.titleEn ? { titleEn: br.titleEn } : {}), ...(br.info ? { info: br.info } : {}) };
 }
 
 /** Replaces the list of manual players that are out of the bracket (empty = none). */
@@ -161,6 +232,7 @@ export function resolve(br: Bracket): Map<string, Resolved> {
   for (const m of br.matches) {
     const a = who(m.a), b = who(m.b);
     let win: Who = null, lose: Who = null;
+    if (m.id === 'F-2' && br.matches.find((x) => x.id === 'F-1')?.win === 'a') { M.set(m.id, { a: 'bye', b: 'bye', win: 'bye', lose: 'bye' }); continue; } // the winners-bracket champion won the first final: no second match
     if (a === 'bye' && b === 'bye') { win = 'bye'; lose = 'bye'; }
     else if (a === 'bye') { win = b; lose = 'bye'; }
     else if (b === 'bye') { win = a; lose = 'bye'; }
@@ -213,6 +285,25 @@ export function swapSeats(br: Bracket, x: SeatRef, y: SeatRef): Bracket | null {
 }
 
 
+/** Swaps two players' places. Knockouts with no results yet: the two seats trade places in the tree. Otherwise (after results, or other formats) the order of the list changes and the bracket is redrawn, which clears the results: ask first. */
+/** Random re-seating: the same players, a new random draw (results are cleared; only call after the user agreed). */
+export function reshuffle(br: Bracket): Bracket { return redraw(br, shuffled(br.players)); }
+
+export function swapPlayers(br: Bracket, i: number, j: number): Bracket {
+  if (i === j || i < 0 || j < 0 || i >= br.players.length || j >= br.players.length) return br;
+  if ((br.format === 'single' || br.format === 'double') && !br.matches.some((m) => m.win)) {
+    const seat = (p: number): SeatRef | null => {
+      const m = [...br.matches].filter((x) => ('p' in x.a && x.a.p === p) || ('p' in x.b && x.b.p === p)).sort((x, y) => x.round - y.round)[0];
+      return m ? { id: m.id, side: 'p' in m.a && m.a.p === p ? 'a' : 'b' } : null;
+    };
+    const x = seat(i), y = seat(j);
+    const nb = x && y ? swapSeats(br, x, y) : null;
+    if (nb) return nb;
+  }
+  const players = [...br.players]; [players[i], players[j]] = [players[j], players[i]];
+  return redraw(br, players);
+}
+
 /** Rename one player (everywhere they appear). Empty names are ignored. */
 export function renamePlayer(br: Bracket, i: number, name: string): Bracket {
   const v = name.trim().slice(0, 40);
@@ -245,9 +336,29 @@ export function champion(br: Bracket): number | null {
   if (isLeague(br)) return leagueChampion(br);
   if (br.format === 'ffa') return ffaChampion(br);
   if (br.format === 'groups') { const k = koSub(br); const w = k ? champion(k) : null; return w === null || !br.ko ? null : br.ko.seed[w]; }
-  const last = br.matches.find((m) => m.br === 'F') ?? br.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0];
-  const w = last ? resolve(br).get(last.id)?.win : null;
+  const f2 = br.matches.find((m) => m.id === 'F-2'), f1 = br.matches.find((m) => m.id === 'F-1');
+  const Rz = resolve(br);
+  const last = f2 && Rz.get(f2.id)?.a !== 'bye' ? f2 : f1 ?? (br.format === 'double' ? br.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0] : br.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0]);
+  const w = last ? Rz.get(last.id)?.win : null;
   return typeof w === 'number' ? w : null;
+}
+
+
+/** 1st, 2nd and 3rd place (player indexes, null = not known). Knockouts: the final's loser is 2nd; 3rd comes from the 3rd-place match, or (double elimination) from whoever lost the last losers-bracket match. Leagues and leaderboards: the table order. */
+export function podium(br: Bracket): [number | null, number | null, number | null] {
+  const c = champion(br);
+  if (c === null) return [null, null, null];
+  if (isLeague(br)) { const o = standings(br).map((x) => x.p).filter((p) => p !== c); return [c, o[0] ?? null, o[1] ?? null]; }
+  if (br.format === 'ffa') { const o = ffaRows(br).map((x) => x.p).filter((p) => p !== c); return [c, o[0] ?? null, o[1] ?? null]; }
+  if (br.format === 'groups') return [c, null, null];
+  if (typeof br.champ === 'number' && autoChampion(br) !== c) return [c, null, null]; // chosen by hand: the matches do not say who was second
+  const R = resolve(br), L = layout(br);
+  const fin = L.final ?? L.winners[L.winners.length - 1]?.[0];
+  const lose = fin ? R.get(fin.id)?.lose : null;
+  let third: number | null = null;
+  if (L.third) { const w = R.get(L.third.id)?.win; third = typeof w === 'number' ? w : null; }
+  else if (br.format === 'double') { const m = L.losers[L.losers.length - 1]?.[0]; const l = m ? R.get(m.id)?.lose : null; third = typeof l === 'number' ? l : null; }
+  return [c, typeof lose === 'number' ? lose : null, third];
 }
 
 /** Matches grouped as sections → rounds (for drawing). */
@@ -255,7 +366,7 @@ export function champion(br: Bracket): number | null {
 export function matchNumbers(br: Bracket): Map<string, number> {
   const L = layout(br), R = resolve(br), out = new Map<string, number>();
   let n = 0;
-  for (const ms of [...L.winners, ...L.losers, ...(L.final ? [[L.final]] : [])]) for (const m of ms) if (!hasBye(R, m.id)) out.set(m.id, ++n);
+  for (const ms of [...L.winners, ...L.losers, ...(L.final ? [[L.final]] : []), ...(L.final2 ? [[L.final2]] : []), ...(L.third ? [[L.third]] : []), ...(L.place.length ? [L.place] : [])]) for (const m of ms) if (!hasBye(R, m.id)) out.set(m.id, ++n);
   return out;
 }
 
@@ -264,7 +375,7 @@ export function layout(br: Bracket) {
     const rs = [...new Set(br.matches.filter((m) => m.br === b).map((m) => m.round))].sort((x, y) => x - y);
     return rs.map((r) => br.matches.filter((m) => m.br === b && m.round === r).sort((x, y) => x.idx - y.idx));
   };
-  return { winners: rounds('W'), losers: rounds('L'), final: br.matches.find((m) => m.br === 'F') };
+  return { winners: rounds('W'), losers: rounds('L'), final: br.matches.find((m) => m.id === 'F-1'), final2: br.matches.find((m) => m.id === 'F-2'), third: br.matches.find((m) => m.br === 'T'), place: br.matches.filter((m) => m.br === 'P').sort((x, y) => x.round - y.round || (x.g ?? '').localeCompare(y.g ?? '') || x.idx - y.idx) };
 }
 
 /** Short label for an undecided slot, e.g. "W2-1" → winner/loser of that match. */

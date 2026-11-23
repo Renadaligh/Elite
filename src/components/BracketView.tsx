@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, Fragment, type CSSProperties } from 'react';
 import { PencilIcon, TrophyIcon } from './icons';
 import { champion, hasBye, isDraft, isLeague, layout, matchNumbers, packSlots, nameKey, resolve, setWinner, type BMatch, type Bracket, type Resolved, type SeatRef, type Who } from '../data/bracket';
 import { useI18n } from '../i18n/I18nProvider';
@@ -21,7 +21,19 @@ function roundName(lang: 'ar' | 'en', br: 'W' | 'L', round: number, total: numbe
   return ar ? `الجولة ${round}` : `Round ${round}`;
 }
 
-function Row({ hit, seed, name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename }: { hit?: boolean; seed?: number; crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
+/** Types a name letter by letter (used when a swap or a shuffle puts a new name in a seat). */
+function Typed({ text }: { text: string }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const chars = [...text]; let i = 0; setN(0);
+    const t = window.setInterval(() => { i += 1; setN(i); if (i >= chars.length) window.clearInterval(t); }, Math.max(28, Math.min(70, 700 / Math.max(1, chars.length))));
+    return () => window.clearInterval(t);
+  }, [text]);
+  const chars = [...text];
+  return <span className="br-typed"><span className="br-typed-sz" aria-hidden>{text}</span><span className="br-typed-on">{chars.slice(0, n).join('')}{n < chars.length && <i className="br-caret" />}</span></span>;
+}
+
+function Row({ typing, hit, seed, name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename }: { typing?: boolean; hit?: boolean; seed?: number; crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
   const [editing, setEditing] = useState(false);
   return (
     <div className={`br-row ${hit ? 'is-hit' : ''} ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-drag={grip ? slot : undefined}>
@@ -34,7 +46,7 @@ function Row({ hit, seed, name, state, score, win, lose, onClick, onScore, slot,
           onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); else if (e.key === 'Escape') { e.currentTarget.value = name; e.currentTarget.blur(); } }} />
       ) : (
         <>
-          <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name" style={name.length > 20 ? { fontSize: `${Math.max(0.68, 20 / name.length)}em` } : undefined}>{name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
+          <button type="button" disabled={!onClick} onClick={onClick} className="br-pick"><span className="br-name" style={name.length > 20 ? { fontSize: `${Math.max(0.68, 20 / name.length)}em` } : undefined}>{typing && state === 'ok' ? <Typed text={name} /> : name}</span>{crown && <TrophyIcon className="br-crown" />}</button>
           {onRename && <button type="button" className="br-edit" aria-label="Rename" title="Rename" onClick={(e) => { e.stopPropagation(); setEditing(true); }}><PencilIcon className="br-pen" /></button>}
         </>
       )}
@@ -69,7 +81,8 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   const R = useMemo(() => resolve(bracket), [bracket]);
   const L = useMemo(() => layout(bracket), [bracket]);
   const champ = champion(bracket);
-  const finalId = (bracket.matches.find((m) => m.br === 'F') ?? bracket.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0])?.id;
+  const f2on = bracket.matches.some((m) => m.id === 'F-2') && !hasBye(R, 'F-2');
+  const finalId = f2on ? 'F-2' : (bracket.matches.find((m) => m.id === 'F-1') ?? bracket.matches.filter((m) => m.br === 'W').sort((x, y) => y.round - x.round)[0])?.id;
   const narrow = useNarrow();
   const [open, setOpen] = useState<string | null>(null);
   const [tree, setTree] = useState(true); // phone: the full tree is the default, the round list is optional
@@ -123,11 +136,12 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   const topOpts = bracket.format === 'single' ? [32, 16, 8].filter((n) => n / 2 < m1) : [];
   const topN = topOpts.includes(top) ? top : 0;
   const Wv = topN ? L.winners.filter((ms) => ms.length <= topN / 2) : L.winners;
-  const nCols = Wv.length + (L.final ? 1 : 0);
+  const nF = (L.final ? 1 : 0) + (L.final2 && f2on ? 1 : 0);
+  const nCols = Wv.length + nF;
   const fitStyle = (() => {
     // Desktop: shrink the columns so the whole tree fits the width (like Challonge); very big brackets keep readable columns and scroll sideways.
     if (!narrow && showTree && bw) {
-      const n = Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0);
+      const n = Math.max(Wv.length, L.losers.length) + nF;
       if (!n) return undefined;
       const g = 22, av = bw - 24;
       const maxLen = bracket.players.reduce((q, p) => Math.max(q, [...p].length), 6);
@@ -148,13 +162,13 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
   // Phone list view: pick a branch + round; opens on the round of the current match (else the first round still to play).
   const playable = (m: BMatch) => { const r = R.get(m.id); return !!r && r.a !== 'bye' && r.b !== 'bye'; };
   const start = useMemo(() => {
-    const open = bracket.matches.find((m) => { const r = R.get(m.id); return !m.win && playable(m) && typeof r?.a === 'number' && typeof r?.b === 'number'; });
+    const open = bracket.matches.find((m) => { if (m.br === 'T' || m.br === 'P') return false; const r = R.get(m.id); return !m.win && playable(m) && typeof r?.a === 'number' && typeof r?.b === 'number'; });
     const last = L.final ?? L.winners[L.winners.length - 1]?.[0];
     const m0 = open ?? last;
-    return { br: m0?.br ?? 'W', round: m0?.round ?? 1 };
+    return { br: (m0?.br === 'T' || m0?.br === 'P' ? 'W' : m0?.br) ?? 'W', round: m0?.round ?? 1 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [sbr, setSbr] = useState<'W' | 'L' | 'F'>(start.br);
+  const [sbr, setSbr] = useState<'W' | 'L' | 'F' | 'P'>(start.br);
   const [srd, setSrd] = useState(start.round);
   const wrap = useRef<HTMLDivElement>(null);
   const els = useRef(new Map<string, HTMLElement>());
@@ -233,6 +247,26 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     return () => window.clearTimeout(t);
   }, [qs, bracket]);
 
+  // a swap or a shuffle puts other names in the first-round seats: those names are typed out (same players, other seats; renames, adds and removals do not count)
+  const seen = useRef<{ k: string; m: Map<string, string> } | null>(null);
+  const [typing, setTyping] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const cur = new Map<string, string>();
+    for (const m of bracket.matches) {
+      if (m.br !== 'W' || m.round !== 1) continue;
+      const r = R.get(m.id); if (!r) continue;
+      for (const sd of ['a', 'b'] as const) { const w = r[sd]; if (typeof w === 'number') cur.set(`${m.id}|${sd}`, bracket.players[w]); }
+    }
+    const k = [...bracket.players].sort().join('\u0001'), prev = seen.current;
+    seen.current = { k, m: cur };
+    if (!prev || prev.k !== k) return undefined;
+    const ch = new Set<string>();
+    cur.forEach((v, key) => { const o = prev.m.get(key); if (o !== undefined && o !== v) ch.add(key); });
+    if (!ch.size) return undefined;
+    setTyping(ch);
+    const t = window.setTimeout(() => setTyping(new Set()), 1600);
+    return () => window.clearTimeout(t);
+  }, [bracket]); // eslint-disable-line react-hooks/exhaustive-deps
   const swapRef = useRef(onSwap); swapRef.current = onSwap; const hasSwap = !!onSwap;
   // Drag a first-round player onto another seat to swap the two: hold the player's row (mouse: just drag; touch: press and hold) or use the grip. Works with mouse and touch.
   useEffect(() => {
@@ -346,20 +380,22 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         {onApply && !isBye && typeof r.a === 'number' && typeof r.b === 'number' ? (
           <div className="br-mwrap">
             <div className="br-mrows">
-          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|a`)} hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|b`)} hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
             </div>
             <button type="button" className="br-medit" aria-label={lang === 'ar' ? 'تعديل نتيجة المباراة' : 'Edit match result'} title={lang === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setOpen(m.id)}><PencilIcon className="br-pen" /></button>
           </div>
         ) : (
           <>
-          <Row hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|a`)} hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|b`)} hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
           </>
         )}
       </div>
     );
   };
+  const placeLabel = (m: BMatch) => { const a = m.pl ?? 0, z = a + (m.gs ?? 2) - 1; return lang === 'ar' ? `المركز ${a}–${z}` : `Places ${a}–${z}`; };
+  const placeCaption = (m: BMatch) => <div className="br-round br-pcap">{placeLabel(m)}</div>;
   const section = (title: string, rounds: BMatch[][], br: 'W' | 'L') => (
     <div className="br-sec">
       {title && <div className="br-sec-title">{title}</div>}
@@ -374,9 +410,10 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     </div>
   );
 
-  const branches: ('W' | 'L' | 'F')[] = bracket.format === 'double' ? ['W', 'L', 'F'] : ['W'];
-  const bname = (b: 'W' | 'L' | 'F') => (b === 'W' ? (bracket.format === 'double' ? (lang === 'ar' ? 'الفائزين' : 'Winners') : '') : b === 'L' ? (lang === 'ar' ? 'الخاسرين' : 'Losers') : (lang === 'ar' ? 'النهائي الكبير' : 'Grand final'));
-  const rounds = sbr === 'W' ? L.winners : sbr === 'L' ? L.losers : L.final ? [[L.final]] : [];
+  const branches: ('W' | 'L' | 'F' | 'P')[] = [...(bracket.format === 'double' ? ['W', 'L', ...(L.final ? ['F'] : [])] : ['W']) as ('W' | 'L' | 'F')[], ...(L.place.length ? ['P' as const] : [])];
+  const bname = (b: 'W' | 'L' | 'F' | 'P') => (b === 'P' ? (lang === 'ar' ? 'المراكز' : 'Places') : b === 'W' ? (bracket.format === 'double' ? (lang === 'ar' ? 'الفائزين' : 'Winners') : '') : b === 'L' ? (lang === 'ar' ? 'الخاسرين' : 'Losers') : (lang === 'ar' ? 'النهائي الكبير' : 'Grand final'));
+  const placeCols = (() => { const o = new Map<number, BMatch[]>(); for (const m of L.place) o.set(m.round, [...(o.get(m.round) ?? []), m]); return [...o.entries()].sort((x, y) => x[0] - y[0]).map((e) => e[1]); })();
+  const rounds = sbr === 'W' ? L.winners : sbr === 'L' ? L.losers : sbr === 'P' ? placeCols : L.final ? [[L.final, ...(L.final2 ? [L.final2] : [])]] : [];
   const ri = Math.max(0, rounds.findIndex((ms) => ms[0].round === srd));
   const shown = (rounds[ri] ?? []).filter(playable);
   const chip = (on: boolean, label: string, click: () => void, key: string) => (
@@ -395,6 +432,36 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     </select>
   );
 
+  // placement matches: one column per round, laid out under the section they belong to; a caption (e.g. «المركز 9–12») stands over each group
+  const placeSec = (() => {
+    if (!L.place.length || topN) return null;
+    const secs = (['W', 'L'] as const).filter((x) => L.place.some((m) => m.sec === x));
+    return secs.map((sec) => {
+      const ms = L.place.filter((m) => m.sec === sec && !hasBye(R, m.id));
+      const nCol = Math.max(0, ...ms.map((m) => m.round));
+      if (!ms.length) return null;
+      return (
+        <div key={sec} className="br-sec br-place">
+          <div className="br-sec-title">{lang === 'ar' ? 'مباريات تحديد المراكز' : 'Placement matches'}</div>
+          <div className="br-cols">
+            {Array.from({ length: nCol }, (_, i) => i + 1).map((rd) => {
+              const col = ms.filter((m) => m.round === rd);
+              const groups = [...new Set(col.map((m) => m.g))];
+              return (
+                <div key={rd} className="br-col">
+                  <div className="br-round">&nbsp;</div>
+                  <div className="br-col-body br-pbody">
+                    {groups.map((g) => { const gm = col.filter((m) => m.g === g); return <div key={g} className="br-pgrp">{placeCaption(gm[0])}{gm.map(card)}</div>; })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    });
+  })();
+
   const openM = open ? bracket.matches.find((m) => m.id === open) : undefined;
   const matchCard = onApply && openM ? <MatchCard bracket={bracket} match={openM} canRename={canRename} onApply={onApply} onClose={() => setOpen(null)} /> : null;
 
@@ -402,10 +469,11 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     return (
       <div className="br-mobile" dir={dir} data-bv={uid}>
         {toggle}
-        {branches.length > 1 && <div className="br-chips">{branches.map((b) => chip(sbr === b, bname(b), () => { setSbr(b); setSrd(b === 'W' ? 1 : b === 'L' ? 1 : 1); }, b))}</div>}
-        {sbr !== 'F' && <div className="br-chips">{rounds.map((ms) => chip(ms[0].round === rounds[ri]?.[0].round, roundName(lang, sbr as 'W' | 'L', ms[0].round, rounds.length), () => setSrd(ms[0].round), String(ms[0].round)))}</div>}
+        {branches.length > 1 && <div className="br-chips">{branches.map((b) => chip(sbr === b, bname(b), () => { setSbr(b); setSrd(b === 'P' ? (L.place[0]?.round ?? 1) : b === 'F' ? 1 : 1); }, b))}</div>}
+        {sbr !== 'F' && <div className="br-chips">{rounds.map((ms) => chip(ms[0].round === rounds[ri]?.[0].round, sbr === 'P' ? (lang === 'ar' ? `جولة ${ms[0].round}` : `Round ${ms[0].round}`) : roundName(lang, sbr as 'W' | 'L', ms[0].round, rounds.length), () => setSrd(ms[0].round), String(ms[0].round)))}</div>}
         <div className="br-list">
-          {shown.length ? shown.map(card) : <p style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'لا توجد مباريات' : 'No matches'}</p>}
+          {shown.length ? (sbr === 'P' ? shown.map((m) => <Fragment key={m.id}>{placeCaption(m)}{card(m)}</Fragment>) : shown.map(card)) : <p style={{ color: 'var(--muted)' }}>{lang === 'ar' ? 'لا توجد مباريات' : 'No matches'}</p>}
+          {L.third && playable(L.third) && sbr === 'W' && ri === rounds.length - 1 && <><div className="br-round" style={{ marginTop: '.75rem' }}>{lang === 'ar' ? 'المركز الثالث' : '3rd place'}</div>{card(L.third)}</>}
         </div>
         {champ !== null && <div className="br-champ"><TrophyIcon className="h-5 w-5 shrink-0" style={{ color: '#ffc93c' }} /><b>{bracket.players[champ]}</b></div>}
         {matchCard}
@@ -424,7 +492,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         </span>}
       </div>
     <div ref={box} data-bv={uid} className={`br-scroll ${pub ? 'pv' : ''} ${fitStyle ? 'br-fit' : ''} ${pub && single ? 'pv-bar' : ''} ${zoomable ? 'br-zm' : ''}`} style={zoomable ? ({ ...fitStyle, '--z': z } as CSSProperties) : fitStyle} dir={dir}>
-      <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(Wv.length, L.losers.length) + (L.final ? 1 : 0) + 1 } as CSSProperties}>
+      <div className="br-wrap" ref={wrap} style={{ '--nc': Math.max(Wv.length, L.losers.length) + nF + 1 } as CSSProperties}>
         <svg className="br-lines" width={size.w} height={size.h} aria-hidden>
           {lines.map((l, i) => <path key={i} d={l.d} className={l.on ? 'on' : ''} />)}
           {nums.map((t) => <text key={t.n} className="br-no" x={t.x} y={t.y} textAnchor={rtl ? 'end' : 'start'}>{t.n}</text>)}
@@ -433,11 +501,28 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
           <div className="br-stack">
             {section(bracket.format === 'double' ? (lang === 'ar' ? 'فرع الفائزين' : 'Winners bracket') : '', Wv, 'W')}
             {L.losers.length > 0 && section(lang === 'ar' ? 'فرع الخاسرين' : 'Losers bracket', L.losers, 'L')}
+            {placeSec}
+            {L.third && !hasBye(R, L.third.id) && !topN && (
+              <div className="br-sec br-third">
+                <div className="br-cols" style={{ justifyContent: 'flex-end' }}>
+                  <div className="br-col">
+                    <div className="br-round">{lang === 'ar' ? 'المركز الثالث' : '3rd place'}</div>
+                    <div className="br-col-body">{card(L.third)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           {L.final && (
             <div className="br-col br-final">
               <div className="br-round">{lang === 'ar' ? 'النهائي الكبير' : 'Grand final'}</div>
               <div className="br-col-body">{card(L.final)}</div>
+            </div>
+          )}
+          {L.final2 && f2on && (
+            <div className="br-col br-final">
+              <div className="br-round">{lang === 'ar' ? 'النهائي الكبير (إعادة)' : 'Grand final (reset)'}</div>
+              <div className="br-col-body">{card(L.final2)}</div>
             </div>
           )}
         </div>

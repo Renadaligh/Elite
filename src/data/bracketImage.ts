@@ -219,7 +219,44 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
     pos.set(L.final.id, { x, y: fs.length ? fs.reduce((t, f) => t + f.y, 0) / fs.length : top + PS / 2 });
     nums.set(L.final.id, ++n);
     heads.push({ x, y: top - HD, label: ar ? 'النهائي الكبير' : 'Grand final' });
+    const fy = pos.get(L.final.id)!.y;
     cols += 1;
+    if (L.final2 && !hasBye(R, L.final2.id)) { // the reset match
+      pos.set(L.final2.id, { x: IP + cols * (BW + NUMW + GAP), y: fy }); nums.set(L.final2.id, ++n);
+      heads.push({ x: IP + cols * (BW + NUMW + GAP), y: top - HD, label: ar ? 'النهائي الكبير (إعادة)' : 'Grand final (reset)' });
+      cols += 1;
+    }
+  }
+  if (L.third && !hasBye(R, L.third.id)) { // 3rd place match: under the last column of the winners bracket (the final)
+    const x = IP + (L.winners.length - 1) * (BW + NUMW + GAP), hy = bottom + 8, y = hy + HD + RHs - 2;
+    pos.set(L.third.id, { x, y }); nums.set(L.third.id, ++n);
+    heads.push({ x, y: hy, label: ar ? 'المركز الثالث' : '3rd place' });
+    bottom = y + RHs + 8;
+  }
+  // placement matches: columns under their section, a caption over each group
+  const pm = L.place.filter((m) => !hasBye(R, m.id));
+  if (pm.length) {
+    for (const m of pm) nums.set(m.id, ++n);
+    for (const sec of ['W', 'L'] as const) {
+      const ms = pm.filter((m) => m.sec === sec);
+      if (!ms.length) continue;
+      const y0 = bottom + SEC / 2;
+      let sb = y0;
+      for (const rd of [...new Set(ms.map((m) => m.round))].sort((a, b) => a - b)) {
+        const x = IP + (rd - 1) * (BW + NUMW + GAP);
+        let cy = y0;
+        for (const g of [...new Set(ms.filter((m) => m.round === rd).map((m) => m.g))]) {
+          const gm = ms.filter((m) => m.round === rd && m.g === g);
+          const a = gm[0].pl ?? 0, z = a + (gm[0].gs ?? 2) - 1;
+          heads.push({ x, y: cy, label: ar ? `المركز ${a}–${z}` : `Places ${a}–${z}` });
+          cy += HD;
+          for (const m of gm) { pos.set(m.id, { x, y: cy + RHs }); cy += PS; }
+          cy += 8;
+        }
+        sb = Math.max(sb, cy);
+      }
+      bottom = sb;
+    }
   }
   const W = Math.max(440, IP * 2 + cols * (BW + NUMW + GAP) - GAP);
   const H = bottom + 16 + FOOT;
@@ -278,7 +315,7 @@ async function treeCanvas(br: Bracket, { title, lang, scale = 2 }: Opts): Promis
       c.fillStyle = win ? P.winBg : P.card; c.fillRect(bodyX, y + 1, BW - SEED, RHs - 2);
       c.fillStyle = P.soft; c.font = `500 11px ${family}`; txt(sd(w), seedX + SEED / 2, y + RHs / 2 + 1, 'center', SEED - 4);
       c.fillStyle = win ? P.win : lose ? P.lose : P.fg;
-      const crown = win && champion(br) !== null && m.id === (L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id);
+      const crown = win && champion(br) !== null && m.id === (L.final2 && !hasBye(R, L.final2.id) ? L.final2.id : L.final ? L.final.id : L.winners[L.winners.length - 1]?.[0]?.id);
       { // long names (a team's IDs) get a smaller font before they are cut
         const maxW = BW - SEED - (crown ? 66 : 40); let f = 12.5;
         for (; f > 9; f -= 0.5) { c.font = `${win ? 800 : 500} ${f}px ${family}`; if (c.measureText(nm(w)).width <= maxW) break; }

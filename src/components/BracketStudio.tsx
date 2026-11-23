@@ -1,4 +1,4 @@
-import { siteUrl, noProto } from '../hooks/nav';
+import { siteUrl, noProto, viewPath } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useRef, useState } from 'react';
 import { downloadBlob } from '../data/bracketImage';
@@ -9,7 +9,7 @@ import EmailLogin from './EmailLogin';
 import { useI18n } from '../i18n/I18nProvider';
 import { api } from '../services/api';
 import BrandLockup from './BrandLockup';
-import { Editor, TXT } from './BracketToolPage';
+import { Editor, TXT, type EditorTab, type TabDef } from './BracketToolPage';
 import Footer from './Footer';
 import Header from './Header';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -247,7 +247,7 @@ function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
     } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
   }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); say(s.copied); } catch { say(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); } }
+  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}${viewPath(r.id)}`)); say(s.copied); } catch { say(noProto(`${base()}${viewPath(r.id)}`)); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -269,9 +269,7 @@ function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
               <span className="st-meta">{(s.fmt as Record<string, string>)[r.format] ?? r.format} · {r.players} {s.players}</span>
               <div className="st-act">
                 <a href={`/bracket/${r.id}`} title={s.edit} aria-label={s.edit}><Ic d="pen" /></a>
-                <button type="button" title={s.dup} aria-label={s.dup} onClick={() => dup(r)}><Ic d="dup" /></button>
                 <button type="button" title={s.link} aria-label={s.link} onClick={() => copy(r)}><Ic d="link" /></button>
-                <button type="button" title={s.img} aria-label={s.img} onClick={() => image(r)}><Ic d="img" /></button>
                 {!r.shared && <button type="button" title={s.del} aria-label={s.del} className="dng" onClick={() => del(r)}><Ic d="trash" /></button>}
               </div>
             </div>
@@ -401,6 +399,8 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
   const tx = TXT[lang];
   const user = auth.user!;
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [tab, setTab] = useState<EditorTab>('tree'); // section of the open tournament (side menu on desktop, strip on phones)
+  const [tabs, setTabs] = useState<TabDef[]>([]);
   const sec: 'mine' | 'new' | 'account' = id === 'new' ? 'new' : id === 'account' ? 'account' : 'mine';
   const editing = !!id && !RESERVED.includes(id);
   const nav = [{ k: 'mine', href: '/bracket', label: s.mine, i: 'list' }, { k: 'new', href: '/bracket/new', label: s.fresh, i: 'plus' }, { k: 'account', href: '/bracket/account', label: s.account, i: 'user' }] as const;
@@ -413,14 +413,19 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           <BrandLockup />
           <span className="st-tool">{s.tool}</span>
           <nav className="st-nav">
-            {nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} aria-current={sec === n.k ? 'page' : undefined}><Ic d={n.i} />{n.label}</a>)}
+            {editing && tabs.length > 0 ? (
+              <>
+                <a href="/bracket" className="st-nav-back">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
+                {tabs.map((t) => <button key={t.k} type="button" className={`st-nav-tab ${tab === t.k ? 'on' : ''}`} aria-current={tab === t.k ? 'page' : undefined} onClick={() => setTab(t.k)}>{t.label}</button>)}
+              </>
+            ) : nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} aria-current={sec === n.k ? 'page' : undefined}><Ic d={n.i} />{n.label}</a>)}
           </nav>
         </div>
         <div className="st-side-bot">
           <div className="st-tools"><LanguageSwitcher /><ThemeBtn theme={theme} set={setTheme} s={s} />
             <div className="st-mobile-menu">
               <button type="button" className="st-theme st-menu-trigger" aria-label={mobileMenu ? (lang === 'ar' ? 'إغلاق القائمة' : 'Close menu') : (lang === 'ar' ? 'فتح القائمة' : 'Open menu')} aria-expanded={mobileMenu} aria-controls="st-mobile-nav" onClick={() => setMobileMenu(!mobileMenu)}><svg viewBox="0 0 24 24" className="h-[20px] w-[20px]" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" aria-hidden="true"><path d={mobileMenu ? 'M6 6l12 12M18 6L6 18' : 'M4 6h16M4 12h16M4 18h16'} /></svg></button>
-              {mobileMenu && <><button type="button" className="st-menu-backdrop" aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Close menu'} onClick={() => setMobileMenu(false)} /><nav id="st-mobile-nav" className="st-mobile-popup" aria-label={lang === 'ar' ? 'القائمة' : 'Navigation'}>{nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} onClick={() => setMobileMenu(false)}><Ic d={n.i} />{n.label}</a>)}</nav></>}
+              {mobileMenu && <><button type="button" className="st-menu-backdrop" aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Close menu'} onClick={() => setMobileMenu(false)} /><nav id="st-mobile-nav" className="st-mobile-popup" aria-label={lang === 'ar' ? 'القائمة' : 'Navigation'}>{nav.map((n) => <a key={n.k} href={n.href} className={sec === n.k ? 'on' : ''} onClick={() => setMobileMenu(false)}><Ic d={n.i} />{n.label}</a>)}<hr className="st-pop-hr" /><a href="#top" onClick={() => setMobileMenu(false)}><Ic d="site" />{s.back}</a><button type="button" className="st-pop-out" onClick={() => { setMobileMenu(false); auth.logout(); }}><Ic d="out" />{s.logout}</button></nav></>}
             </div>
           </div>
           <div className="st-me">{user.avatar ? <img src={user.avatar} alt="" referrerPolicy="no-referrer" /> : <span className="st-av">{(user.handle || user.name).slice(0, 1).toUpperCase()}</span>}<div><b dir="ltr">{user.handle || user.name}</b></div></div>
@@ -435,7 +440,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           {editing ? (
             <>
               <a href="/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
-              <Editor id={id} tx={tx} auth={auth} onForeign={() => { window.location.assign(siteUrl(`/v/${encodeURIComponent(id.slice(0, 6))}`)); }} />
+              <Editor key={id} id={id} tx={tx} auth={auth} tab={tab} onTab={setTab} onTabs={setTabs} onForeign={() => { window.location.assign(siteUrl(viewPath(id))); }} />
             </>
           ) : (
             <>
@@ -454,7 +459,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
 /** Handoff for old hash links and clients still running an earlier bundle. */
 export function PublicView({ id }: { id: string }) {
   const { lang } = useI18n();
-  const url = siteUrl(`/v/${encodeURIComponent(id.slice(0, 6))}`);
+  const url = siteUrl(viewPath(id));
   useEffect(() => {
     if (window.location.href !== url) window.location.replace(url);
   }, [url]);

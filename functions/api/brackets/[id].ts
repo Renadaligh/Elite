@@ -2,10 +2,10 @@ import { currentUser, sameOrigin } from '../../_auth';
 import { cleanBracket } from '../../_bracket';
 import { body, denied, json, safeUrl, str, type Ctx } from '../../_lib';
 
-type Row = { id: string; user_id: string; title: string; data: string; owner: string | null; updated_at: string; share: number; live: number; stream_url: string };
+type Row = { id: string; user_id: string; title: string; data: string; owner: string | null; ownerAvatar?: string | null; updated_at: string; share: number; live: number; stream_url: string };
 const COLS = 'b.id, b.user_id, b.title, b.data, b.updated_at';
 async function load(env: Ctx['env'], id: string): Promise<Row | null> {
-  const q = (cols: string) => env.DB.prepare(`SELECT ${COLS}, ${cols}u.name AS owner FROM user_brackets b LEFT JOIN users u ON u.id = b.user_id WHERE b.id = ?`).bind(id).first<Row>();
+  const q = (cols: string) => env.DB.prepare(`SELECT ${COLS}, ${cols}u.name AS owner, u.avatar AS ownerAvatar FROM user_brackets b LEFT JOIN users u ON u.id = b.user_id WHERE b.id = ?`).bind(id).first<Row>();
   try { return await q('b.share, b.live, b.stream_url, '); } catch { /* stream_url column not added yet */ }
   try { const r = await q('b.share, b.live, '); return r ? { ...r, stream_url: '' } : null; } catch { /* share/live not added yet: nothing is published */ }
   const r = await q(''); return r ? { ...r, share: 0, live: 0, stream_url: '' } : null;
@@ -27,7 +27,7 @@ export const onRequestGet = async ({ request, env, params }: Ctx) => {
   const mine = !!role; // may edit (owner or co-editor)
   let bracket = null; try { bracket = JSON.parse(r.data); } catch { /* corrupt row */ }
   const streamLive = !!r.live && !!r.stream_url;
-  return json({ id: r.id, title: r.title, bracket, owner: mine ? r.owner ?? '' : '', mine, isOwner: role === 'owner', share: true, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
+  return json({ id: r.id, title: r.title, bracket, owner: mine ? r.owner ?? '' : '', ownerAvatar: mine ? r.ownerAvatar ?? '' : '', mine, isOwner: role === 'owner', share: true, live: !!r.live, streamLive, streamUrl: mine || streamLive ? r.stream_url || '' : '', updatedAt: r.updated_at });
 };
 
 export const onRequestPut = async ({ request, env, params }: Ctx) => {

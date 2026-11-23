@@ -8,7 +8,7 @@ import { nameKey } from '../data/bracket';
  * ONE list of everybody who registered for this bracket, whichever way they came (the standalone registration link or the tournament published on the site).
  * Registrants go straight into the bracket; × deletes the registration (and takes the player out of the bracket), − only takes the player out of the bracket.
  */
-export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, onUnaddAll, auto, autoOn, onAuto, bench }: { id: string; lang: 'ar' | 'en'; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; auto?: boolean; autoOn?: boolean; onAuto?: (on: boolean) => void; bench?: string[] }) {
+export default function RegistrantsCard({ onReorder, id, lang, players, onAdd, onUnadd, onUnaddAll, auto, autoOn, onAuto, bench }: { onReorder?: (from: string, to: string) => void; id: string; lang: 'ar' | 'en'; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; auto?: boolean; autoOn?: boolean; onAuto?: (on: boolean) => void; bench?: string[] }) {
   const [join, setJoin] = useState<RegRow[]>([]);
   const [site, setSite] = useState<RegRow[]>([]);
   const load = useCallback(() => {
@@ -37,7 +37,7 @@ export default function RegistrantsCard({ id, lang, players, onAdd, onUnadd, onU
   };
   return (
     <Fold title={`${lang === 'ar' ? 'المسجّلون' : 'Registered'} · ${count}`}>
-      <RegistrantsPanel lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
+      <RegistrantsPanel onReorder={onReorder} lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
     </Fold>
   );
 }

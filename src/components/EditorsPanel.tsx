@@ -7,13 +7,13 @@ type Person = { id: string; name: string; handle: string; avatar: string };
 type Data = { isOwner: boolean; max: number; editors: Person[] };
 const T = {
   ar: {
-    title: 'التحرير المشترك', sub: 'أضف عضواً مسجّلاً باسم المستخدم الخاص به ليعدّل معك على هذه البطولة.', ph: 'اسم مستخدم العضو (مثال: abdullah_9)', add: 'إضافة',
+    title: 'إضافة منظم', sub: 'أضف عضواً مسجّلاً باسم المستخدم الخاص به ليعدّل معك على هذه البطولة.', ph: 'اسم مستخدم العضو (مثال: abdullah_9)', add: 'إضافة',
     none: 'لم يُضاف أحد بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذه القرعة.', empty: 'اكتب اسم المستخدم.',
     err: { bad_handle: 'اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'لم يتم العثور على عضو بهذا الاسم.', self: 'هذا اسم المستخدم الخاص بك.', limit: 'وصلت الحد الأقصى للمحررين.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'لم تتم العملية، حاول مرة أخرى.' },
     notAdded: 'لم يُضَف هؤلاء محررين:', mine: 'اسم المستخدم', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
   },
   en: {
-    title: 'Co-editors', sub: 'Add a registered member by username so they can edit this bracket with you. It shows in their “My brackets” and they can update results.', ph: 'Username (e.g. abdullah_9)', add: 'Add',
+    title: 'Add organizer', sub: 'Add a registered member by username so they can edit this bracket with you. It shows in their “My brackets” and they can update results.', ph: 'Username (e.g. abdullah_9)', add: 'Add',
     none: 'Nobody added yet.', remove: 'Remove', leave: 'Leave', asEditor: 'You are a co-editor of this bracket.', empty: 'Enter a username.',
     err: { bad_handle: 'Invalid username: English letters, digits and _ only.', no_user: 'No member with that username.', self: 'That is your own username.', limit: 'Co-editor limit reached.', migrate: 'This feature needs the database update (SQL statements).', fail: 'Something went wrong, try again.' },
     notAdded: 'These could not be added as co-editors:', mine: 'Your username', warn: 'Co-editors can change results and players. Only the organizer manages the link, registration, publishing and deletion.',

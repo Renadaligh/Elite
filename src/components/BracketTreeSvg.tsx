@@ -52,6 +52,45 @@ export function treeGeometry(bracket: Bracket, ar: boolean) {
     pos.set(L.final.id, { x, y }); nums.set(L.final.id, ++n);
     heads.push({ x, y: top - HEAD, label: ar ? 'النهائي الكبير' : 'Grand final' });
     cols += 1;
+    if (L.final2 && !hasBye(R, L.final2.id)) { // the reset match, right after the first final
+      const x2 = PAD + cols * (BW + NUMW + GAP);
+      pos.set(L.final2.id, { x: x2, y }); nums.set(L.final2.id, ++n);
+      heads.push({ x: x2, y: top - HEAD, label: ar ? 'النهائي الكبير (إعادة)' : 'Grand final (reset)' });
+      cols += 1;
+    }
+  }
+  if (L.third && !hasBye(R, L.third.id) && L.winners.length) {
+    // Challonge-style: a small match under the last column, between the two semifinal losers
+    const x = PAD + (L.winners.length - 1) * (BW + NUMW + GAP);
+    const hy = bottom + 6, y = hy + HEAD + RH;
+    pos.set(L.third.id, { x, y }); nums.set(L.third.id, ++n);
+    heads.push({ x, y: hy, label: ar ? 'المركز الثالث' : '3rd place' });
+    bottom = y + RH + 8;
+  }
+  // placement matches: columns under the section they belong to, a caption over each group (e.g. «المركز 9–12»)
+  const pm = L.place.filter((m) => !hasBye(R, m.id));
+  if (pm.length) {
+    for (const m of pm) nums.set(m.id, ++n);
+    for (const sec of ['W', 'L'] as const) {
+      const ms = pm.filter((m) => m.sec === sec);
+      if (!ms.length) continue;
+      const y0 = bottom + SEC_GAP / 2;
+      let sb = y0;
+      for (const rd of [...new Set(ms.map((m) => m.round))].sort((a, b) => a - b)) {
+        const x = PAD + (rd - 1) * (BW + NUMW + GAP);
+        let cy = y0;
+        for (const g of [...new Set(ms.filter((m) => m.round === rd).map((m) => m.g))]) {
+          const gm = ms.filter((m) => m.round === rd && m.g === g);
+          const a = gm[0].pl ?? 0, z = a + (gm[0].gs ?? 2) - 1;
+          heads.push({ x, y: cy, label: ar ? `المركز ${a}–${z}` : `Places ${a}–${z}` });
+          cy += HEAD;
+          for (const m of gm) { pos.set(m.id, { x, y: cy + RH }); cy += P; }
+          cy += 8;
+        }
+        sb = Math.max(sb, cy);
+      }
+      bottom = sb;
+    }
   }
   const W = PAD * 2 + cols * (BW + NUMW + GAP) - GAP;
   return { L, R, pos, nums, heads, W, H: bottom + PAD };
@@ -64,7 +103,7 @@ export default function BracketTreeSvg({ bracket, title, lang, uid, geometry, sc
   const ar = lang === 'ar';
   const g = geometry;
   const champ = champion(bracket);
-  const finalId = g.L.final ? g.L.final.id : g.L.winners[g.L.winners.length - 1]?.[0]?.id;
+  const finalId = g.L.final2 && !hasBye(g.R, g.L.final2.id) ? g.L.final2.id : g.L.final ? g.L.final.id : g.L.winners[g.L.winners.length - 1]?.[0]?.id;
   const name = (w: Who) => (typeof w === 'number' ? bracket.players[w] ?? '' : w === 'bye' ? 'BYE' : '');
   const seed = (w: Who) => (typeof w === 'number' ? String(w + 1) : '');
 
@@ -108,7 +147,7 @@ export default function BracketTreeSvg({ bracket, title, lang, uid, geometry, sc
       lines.push(<path key={`${m.id}-${f.x}-${f.y}`} d={`M${x1},${f.y} H${xm} V${c.y} H${x2}`} className="bs-ln" fill="none" strokeWidth="1" />);
     }
   }
-  const all = [...g.L.winners.flat(), ...g.L.losers.flat(), ...(g.L.final ? [g.L.final] : [])].filter((m) => !hasBye(g.R, m.id));
+  const all = [...g.L.winners.flat(), ...g.L.losers.flat(), ...(g.L.final ? [g.L.final] : []), ...(g.L.final2 ? [g.L.final2] : []), ...(g.L.third ? [g.L.third] : []), ...g.L.place].filter((m) => !hasBye(g.R, m.id));
 
   return (
         <svg width={g.W * scale} height={g.H * scale} viewBox={`0 0 ${g.W} ${g.H}`} role="img" aria-label={title} fontFamily="Outfit, Tajawal, system-ui, sans-serif" direction="ltr" data-width={g.W}>

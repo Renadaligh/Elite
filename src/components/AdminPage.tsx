@@ -4,15 +4,17 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import BracketView from './BracketView';
-import FormatOpts, { fmtInit, hasOpts, loOf, toOpts } from './FormatOpts';
+import FormatOpts, { buildBracket, fmtInit, hasOpts, loOf, toOpts } from './FormatOpts';
 import StartPicker from './StartPicker';
+import BracketHeadCard from './BracketHeadCard';
+import { clearSectionNav, setSectionNav, useSectionNav } from '../data/sectionNav';
 import BracketActions from './BracketActions';
 import { AddPlayerBar, RegistrantsPanel, autoAddNew, commitAutoAdds, regName, type RegRow } from './AddPlayers';
 import JoinPanel from './JoinPanel';
-import { siteUrl, noProto } from '../hooks/nav';
-import Fold from './Fold';
+import { siteUrl, noProto, viewPath, joinPath } from '../hooks/nav';
+import Fold, { FlatFold } from './Fold';
 import WinnerCard from './WinnerCard';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import { useI18n } from '../i18n/I18nProvider';
@@ -83,6 +85,7 @@ const EN: Record<string, string> = {
 };
 
 Object.assign(EN, {
+  'مباراة المركز الثالث': '3rd place match',
   'يظهر في الموقع بعد تحديد الفائز': 'Shown on the site once a winner is set',
   'تاريخ نهاية البطولة': 'Tournament end date',"ليس لديك صلاحية لهذا الإجراء": "You do not have permission for this action", "اسم المستخدم": "Username", "كلمة المرور": "Password", "الحساب مقفل. تواصل مع المشرف الرئيسي لفتحه": "This account is locked. Contact the main admin to unlock it", "الحساب موقوف. تواصل مع المشرف الرئيسي": "This account is disabled. Contact the main admin", "انتهت صلاحية كلمة المرور المؤقتة. اطلب من المشرف الرئيسي كلمة جديدة": "The temporary password expired. Ask the main admin for a new one", "اسم المستخدم أو كلمة المرور غير صحيحة": "Wrong username or password", "محاولات متبقية": "attempts left", "يجب أن تتكون كلمة المرور من 10 أحرف على الأقل": "The password must be at least 10 characters", "كلمتا المرور غير متطابقتين": "The passwords do not match", "كلمة المرور الحالية غير صحيحة": "The current password is wrong", "اختر كلمة مختلفة عن الحالية وعن اسم المستخدم": "Choose a password different from the current one and from the username", "كلمة المرور الحالية": "Current password", "كلمة المرور الجديدة (10 أحرف على الأقل)": "New password (at least 10 characters)", "أعد كتابة كلمة المرور الجديدة": "Repeat the new password", "اختر كلمة مرور جديدة": "Choose a new password", "الحساب": "Account", "كلمة المرور الحالية مؤقتة. يجب تغييرها قبل المتابعة": "The current password is temporary. You must change it before continuing", "جارٍ الحفظ…": "Saving…", "حفظ ومتابعة": "Save and continue", "تسجيل خروج": "Sign out", "تم تغيير كلمة المرور": "Password changed", "تغيير كلمة المرور": "Change password", "الإداريين": "Admins", "أنشئ حسابات وحدد صلاحيات كل مشرف": "Create accounts and set each admin's permissions", "+ مشرف جديد": "+ New admin", "المشرف الرئيسي": "Main admin", "مشرف": "Admin", "موقوف": "Disabled", "مقفل": "Locked", "كلمة مؤقتة": "Temp password", "كل الصلاحيات": "All permissions", "آخر دخول": "Last login", "فتح الحساب": "Unlock", "الصلاحيات": "Permissions", "كلمة مرور جديدة": "New password", "إنشاء كلمة مرور مؤقتة جديدة؟ ستنتهي جلساته الحالية": "Create a new temporary password? His current sessions will end", "تفعيل": "Enable", "إيقاف": "Disable", "تم فتح الحساب": "Account unlocked", "تم تفعيل الحساب": "Account enabled", "تم إيقاف الحساب": "Account disabled", "تم حفظ الصلاحيات": "Permissions saved", "جارٍ التحميل…": "Loading…", "مشرف جديد": "New admin", "اسم المستخدم (إنجليزي، ما يتغير بعد الإنشاء)": "Username (English, cannot be changed later)", "ستُنشأ له كلمة مرور مؤقتة تظهر لك مرة واحدة، ويغيّرها عند أول دخول": "A temporary password is generated, shown to you once, and he changes it at first sign-in", "جارٍ الإنشاء…": "Creating…", "إنشاء الحساب": "Create account", "تعذّر تحميل الحسابات": "Could not load accounts", "اسم المستخدم مستخدم من قبل": "That username is taken", "تعذّر إنشاء الحساب": "Could not create the account", "تعذّر تنفيذ العملية": "Could not complete the action", "اسم المستخدم: 3 إلى 24 حرف إنجليزي صغير أو رقم أو _": "Username: 3 to 24 lowercase English letters, digits or _", "اختر صلاحية واحدة على الأقل": "Choose at least one permission", "محرر أخبار": "News editor", "منظم بطولات": "Tournament organizer", "مدير ألعاب": "Games manager", "كامل": "Full", "إضافة": "Add", "عرض": "View", "بدون صلاحيات": "No permissions", "كلمة المرور المؤقتة": "Temporary password", "سلّمها للمشرف بنفسك. تظهر مرة واحدة فقط، وصلاحيتها 7 أيام، وسيُطلب منه تغييرها عند أول دخول": "Hand it to the admin yourself. It is shown once only, valid for 7 days, and he must change it at first sign-in", "نسخ": "Copy", "تم النسخ": "Copied", "تم": "Done"});
 
@@ -680,7 +683,6 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [br, setBr] = useState<Bracket | null>(t0.bracket ?? null);
   const [dirty, setDirty] = useState(false);
   const [fmt, setFmt] = useState<BFormat>(t0.bracket?.format ?? 'single');
-  const [shuf, setShuf] = useState(true);
   const [lo, setLo] = useState(t0.bracket ? loOf(t0.bracket) : fmtInit());
   const [tf, setTf] = useState<Adm<Tournament>>({ ...t0, winner: t0.winner ?? { ar: '', en: '' }, registerUrl: '', image: t0.image ?? '', winnerMembers: t0.winnerMembers ?? [] }); // the tournament's own info (closed card)
   const [infoBusy, setInfoBusy] = useState(false);
@@ -713,7 +715,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   useEffect(() => {
     if (br) return;
     fresh.current = true;
-    upd(draftBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined));
+    upd(buildBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined, lo));
   }, [br === null]); // eslint-disable-line react-hooks/exhaustive-deps
   /** Changes the format / settings: the players stay, the matches are redrawn (a random draw if ticked). */
   function applyFmt() {
@@ -722,7 +724,9 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     const list = br.players;
     if (fmt === 'rr' && list.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
-    const nb = setOrg(list.length < 2 ? draftBracket(fmt, list, opts) : generate(fmt, shuf ? shuffled(list) : list, opts), br.org ?? '');
+    const nb0 = setOrg(buildBracket(fmt, list, opts, { ...lo, place: !!br.place }), br.org ?? '');
+    const nb1 = br.third && fmt === 'single' && canThird(nb0) ? setThird(nb0, true) : nb0;
+    const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true), place: true as const } : nb1;
     upd({ ...nb, ...(br.bench ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) });
   }
   async function saveInfo(next?: Adm<Tournament>) {
@@ -760,10 +764,18 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   function addToBracket(add: string[]) {
     const have = new Set((br?.players ?? []).map((p) => p.trim().toLowerCase()));
     if (!add.some((n) => n.trim() && !have.has(n.trim().toLowerCase()))) return;
-    if (!br) { upd(addPlayers(draftBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined), add)); return; }
+    if (!br) { upd(addPlayers(buildBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined, lo), add)); return; }
     if (br.format === 'rr' && br.players.length + add.length > MAX_RR) { toast.err(`${x('أقصى عدد لاعبين')} ${MAX_RR}`); return; }
     if (hasResults(br) && !window.confirm(x('إضافة لاعبين بعد بدء المباريات تمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟'))) return;
     upd(setBench(addPlayers(br, add), (br.bench ?? []).filter((b) => !add.some((a) => nameKey(a) === nameKey(b)))));
+  }
+  /** Two names traded places in the Registrants list: their seats in the tree trade places (after results the bracket is redrawn and the results are cleared: ask first). */
+  function reorderPlayers(a: string, b: string) {
+    if (!br) return;
+    const i = br.players.findIndex((p) => nameKey(p) === nameKey(a)), j = br.players.findIndex((p) => nameKey(p) === nameKey(b));
+    if (i < 0 || j < 0 || i === j) return;
+    if (hasResults(br) && !window.confirm(x('تغيير الأماكن بعد بدء المباريات يمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟'))) return;
+    upd(swapPlayers(br, i, j));
   }
   /** keep = a player added by hand: he stays in the registrants list (with +) after leaving the bracket. */
   function removeFromBracket(name: string, keep = false) {
@@ -809,12 +821,22 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           const count = allRegs.length + (br?.players ?? []).filter((p) => !have.has(nameKey(p))).length + (br?.bench ?? []).filter((p) => !have.has(nameKey(p))).length;
           return (
             <Fold title={`${x('المسجّلون')} · ${count}`}>
-              <RegistrantsPanel lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
+              <RegistrantsPanel onReorder={br && br.format !== 'ffa' && br.format !== 'groups' ? reorderPlayers : undefined} lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
             </Fold>
           );
         })();
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const goBack = async () => { if (dirty && br) await save(true); onClose(); };
+  const [sec, setSec] = useState<'tree' | 'info' | 'join' | 'regs'>('tree');
+  const [secOpen, setSecOpen] = useState(false);
+  const secs = [{ k: 'tree', label: x('الشجرة') }, { k: 'info', label: x('معلومات البطولة') }, { k: 'join', label: x('رابط التسجيل') }, { k: 'regs', label: x('المسجّلون') }] as const;
+  const backRef = useRef(goBack); backRef.current = goBack;
+  useEffect(() => {
+    if (!br) return undefined;
+    setSectionNav({ tabs: secs.map((q) => ({ k: q.k, label: q.label })), active: sec, pick: (k) => setSec(k as typeof sec), back: () => { void backRef.current(); }, backLabel: x('البطولات') });
+    return () => clearSectionNav();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sec, lang, !!br]);
 
   return (
     <div className="st-page st-wide">
@@ -824,37 +846,50 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}
       </div>
       <div className="grid min-w-0 grid-cols-1 gap-6 [&>*]:min-w-0">
-        <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} />
-
         {br && (
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              {!isDraft(br) && <WinnerCard pill bracket={br} lang={lang === 'en' ? 'en' : 'ar'} editable onChange={(b) => upd(b)} />}
-              <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={tf.name[lang] || tf.name.ar || tf.name.en} url={siteUrl(`/v/${t0.id.slice(0, 6)}`)} exportId={t0.id} exportTheme={document.documentElement.dataset.hero === 'day' ? 'light' : 'dark'} beforeExport={dirty ? () => save(true) : undefined} />
+            <div className="relative lg:hidden">
+              <button type="button" className="flex w-full items-center justify-between rounded-xl border px-3.5 py-3 text-start font-bold" style={{ ...bd, background: 'var(--glass)' }} aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{secs.find((q) => q.k === sec)?.label}</span><span aria-hidden>{secOpen ? '▴' : '▾'}</span></button>
+              {secOpen && <><button type="button" className="fixed inset-0 z-[79]" aria-label={x('إغلاق')} onClick={() => setSecOpen(false)} /><div className="absolute inset-x-0 top-[calc(100%+6px)] z-[80] grid gap-0.5 rounded-2xl border p-1.5 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>{secs.map((q) => <button key={q.k} type="button" className="rounded-lg px-3 py-3 text-start font-bold" style={{ color: sec === q.k ? 'var(--text)' : 'var(--muted)', background: sec === q.k ? 'var(--chip-bg)' : undefined }} onClick={() => { setSec(q.k); setSecOpen(false); }}>{q.label}</button>)}</div></>}
             </div>
-            <div className="st-stage"><div className="st-brcard rounded-2xl border p-3" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div></div>
-            <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
-            <Fold title={x('معلومات البطولة')}>
+            {sec === 'tree' && (
+              <>
+                <div className="hc-grid">
+                  <BracketHeadCard bracket={{ ...br, info: { ...(tf.gameId ? { gameId: tf.gameId } : {}), ...(tf.startsAt ? { startsAt: tf.startsAt } : {}) } }} title={tf.name[lang] || tf.name.ar || tf.name.en} ownerName="Plato AR" formatLabel={({ single: x('خروج المغلوب (فردي)'), double: x('خروج مزدوج'), rr: x('دوري (كل لاعب ضد الكل)'), swiss: x('سويسري'), groups: x('مجموعات ثم إقصائيات'), ffa: x('لوحة صدارة (الكل ضد الكل)') } as Record<BFormat, string>)[br.format]} lang={lang === 'en' ? 'en' : 'ar'} />
+                  <Fold title={x('إضافة لاعبين')}>
+                    <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
+                    <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} />
+                  </Fold>
+                </div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={tf.name[lang] || tf.name.ar || tf.name.en} url={siteUrl(viewPath(t0.id))} exportId={t0.id} exportTheme={document.documentElement.dataset.hero === 'day' ? 'light' : 'dark'} beforeExport={dirty ? () => save(true) : undefined} onShuffle={() => { if (hasResults(br) && !window.confirm(x('خلط الأماكن يمسح النتائج الحالية (ويمكنك التراجع). متأكد؟'))) return; upd(reshuffle(br)); }} />
+                </div>
+                <div className="st-stage"><div className="st-brcard rounded-2xl border p-3" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div></div>
+              </>
+            )}
+            {sec === 'info' && (
+            <div className="grid gap-3 rounded-2xl border p-4" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
+              <b className="text-[1.05rem]">{x('معلومات البطولة')}</b>
               <TournamentFields f={tf} setF={setTf} k={k} hidePublish />
               <div><button type="button" className={btnP} style={gradBtn} disabled={infoBusy} onClick={() => { void saveInfo(); }}>{x('حفظ معلومات البطولة')}</button></div>
               <div className="grid gap-3 border-t pt-4" style={bd}>
                 <b>{x('نظام القرعة')}</b>
                 <Field label={x('نظام القرعة')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option><option value="rr">{x('دوري (كل لاعب ضد الكل)')}</option><option value="swiss">{x('سويسري')}</option><option value="groups">{x('مجموعات ثم إقصائيات')}</option><option value="ffa">{x('لوحة صدارة (الكل ضد الكل)')}</option></select></Field>
                 <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={bd} border={bd} players={br.players.length} />
-                <label className="flex items-center gap-2.5 text-[.9rem]"><input type="checkbox" className="h-4 w-4" checked={shuf} onChange={(e) => setShuf(e.target.checked)} />{x('قرعة عشوائية للاعبين')}</label>
+                {br.format === 'single' && <label className="flex items-center gap-2.5 text-[.9rem]" style={canThird(br) && !br.place ? undefined : { opacity: .55 }}><input type="checkbox" className="h-4 w-4" disabled={!canThird(br) || !!br.place} checked={!!br.third} onChange={(e) => upd(setThird(br, e.target.checked))} />{x('مباراة المركز الثالث')}</label>}
+                {(br.format === 'single' || br.format === 'double') && <label className="flex items-center gap-2.5 text-[.9rem]" style={canPlace(br) || br.place ? undefined : { opacity: .55 }}><input type="checkbox" className="h-4 w-4" disabled={!canPlace(br) && !br.place} checked={!!br.place} onChange={(e) => { setLo({ ...lo, place: e.target.checked }); upd(e.target.checked ? { ...setPlace(br, true), place: true as const } : setPlace(br, false)); }} />{x('مباريات تحديد المراكز (حتى المركز 16)')}</label>}
                 <div><button type="button" className={btnG} style={bd} onClick={applyFmt}>{x('تطبيق النظام')}</button></div>
               </div>
-            </Fold>
-            <Fold title={x('رابط العرض')}>
-              <div className="grid gap-2">
-                <small style={{ color: 'var(--muted)' }}>{x('صفحة عامة تعرض الشجرة للجميع، تتحدث مع كل تعديل')}</small>
-                <div className="st-shl"><input readOnly dir="ltr" aria-label={x('رابط العرض')} value={noProto(siteUrl(`/v/${t0.id.slice(0, 6)}`))} onFocus={(e) => e.currentTarget.select()} /><button type="button" onClick={() => { void navigator.clipboard?.writeText(noProto(siteUrl(`/v/${t0.id.slice(0, 6)}`))).then(() => toast.ok(x('تم نسخ الرابط'))).catch(() => undefined); }}>{x('نسخ')}</button></div>
-              </div>
-            </Fold>
+            </div>
+            )}
+            {sec === 'join' && (
+              <FlatFold.Provider value>
             <RegDescription id={t0.id} k={k} />
-            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
-            {regsBlock}
+            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
+              </FlatFold.Provider>
+            )}
+            {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
           </div>
         )}
 
@@ -934,7 +969,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <a className={btnG} style={bd} href={siteUrl(`/v/${r.community ? r.community.bracketId : r.id}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
+                <a className={btnG} style={bd} href={siteUrl(viewPath(r.community ? r.community.bracketId : r.id, true))} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
                 {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => setBrT(r)}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
@@ -1906,6 +1941,7 @@ function AdminInner() {
   if (!key || !me) return <Login onDone={onLogin} />;
   if (me.mustChange) return <ForceChange k={key} me={me} onLogout={logout} onDone={() => { const n = { ...me, mustChange: false, recovery: false }; saveMe(n); setMe(n); }} />;
 
+  const sn = useSectionNav();
   const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || ((id === 'admins' || id === 'log') ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
   return (
     <ToastHost><PermCtx.Provider value={can}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
@@ -1914,6 +1950,15 @@ function AdminInner() {
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-5 w-5 bg-current" style={ninja} /></span>
           <div className="leading-tight"><div className="text-[1.05rem] font-extrabold">Plato AR</div><div className="text-[.78rem]" style={{ color: 'var(--muted)' }}>{x('لوحة التحكم')}</div></div>
         </div>
+        {sn.tabs.length > 0 ? (
+          <nav className="flex flex-col gap-1">
+            <button type="button" onClick={() => sn.back?.()} className="mb-1 flex items-center gap-2 rounded-xl px-3.5 py-2 text-start text-[.85rem] font-semibold" style={{ color: 'var(--muted)' }}>{document.documentElement.dir === 'ltr' ? '← ' : '→ '}{sn.backLabel}</button>
+            {sn.tabs.map((q) => (
+              <button key={q.k} type="button" aria-current={sn.active === q.k ? 'page' : undefined} onClick={() => sn.pick(q.k)} className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-[.95rem] font-semibold transition"
+                style={sn.active === q.k ? { color: '#fff', ...gradBtn } : { color: 'var(--muted)' }}>{q.label}</button>
+            ))}
+          </nav>
+        ) : (
         <nav className="flex flex-col gap-1">
           {tabs.map((id) => {
             const I = TAB_ICON[id]; const on = tab === id;
@@ -1925,6 +1970,7 @@ function AdminInner() {
             );
           })}
         </nav>
+        )}
         <div className="mt-auto pt-6">
           <div className="mb-3 grid gap-2">
             <a href="/" className="pill !h-10 w-full justify-center" style={{ gap: '.4rem' }}><ArrowIcon className="h-4 w-4 -scale-x-100 rtl:scale-x-100" />{x('العودة للموقع')}</a>
@@ -2002,3 +2048,4 @@ export default function AdminPage() {
 Object.assign(EN, {"الإشعارات": "Notifications", "لا توجد إشعارات جديدة": "No new notifications", "بطولة جديدة بانتظار المراجعة": "New tournament awaiting review", "البريد الإلكتروني للإشعارات": "Notification email", "تم حفظ البريد الإلكتروني": "Email saved", "البريد الإلكتروني غير صحيح": "That email looks wrong", "تعذّر الحفظ (تأكد من إضافة عمود البريد الإلكتروني في قاعدة البيانات)": "Could not save (make sure the email column was added to the database)", "يصلك على هذا البريد تنبيه عند إرسال بطولة جديدة للمراجعة. اختياري: اتركه فارغاً وسترى الإشعارات داخل لوحة الإدارة فقط (الجرس).": "You get an alert at this email when a new tournament is sent for review. Optional: leave it empty and you will see notifications inside the admin panel only (the bell).", "البريد الإلكتروني": "Email"});
 Object.assign(EN, {"معلومات البطولة": "Tournament info", "حفظ معلومات البطولة": "Save tournament info", "تطبيق النظام": "Apply format", "تغيير النظام يمسح النتائج الحالية. متأكد؟": "Changing the format clears the current results. Sure?", "اكتب اسم البطولة أولاً": "Enter the tournament name first", "إنشاء البطولة": "Create tournament"});
 Object.assign(EN, {"البطولة منشورة": "Tournament is published", "البطولة غير منشورة": "Tournament is not published", "تظهر الآن للزوار في الموقع. اضغط لإخفائها": "Visible to visitors on the site. Tap to hide it", "مخفية عن الزوار. اضغط لنشرها في الموقع": "Hidden from visitors. Tap to publish it on the site"});
+Object.assign(EN, {"الشجرة": "Bracket", "رابط التسجيل": "Registration link", "إضافة لاعبين": "Add players", "تغيير الأماكن بعد بدء المباريات يمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟": "Changing places after matches started clears the current results (Undo brings them back). Sure?"});

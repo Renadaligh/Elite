@@ -1,3 +1,4 @@
+import { viewPath } from '../hooks/nav';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import RegisterDialog from './RegisterDialog';
 import { getGame } from '../data/games';
@@ -18,7 +19,7 @@ const ST_BG: Record<TournamentStatus, string> = { live: '#ef4565', upcoming: '#1
 /** Published community brackets open the fast public SVG view; admin-created brackets keep their tournament page. */
 function bracketViewHref(x: Tournament): string {
   const id = x.community?.bracketId;
-  return id ? `/v/${encodeURIComponent(id.slice(0, 6))}` : `/tournaments/${encodeURIComponent(x.id)}`;
+  return id ? viewPath(id) : `/tournaments/${encodeURIComponent(x.id)}`;
 }
 
 function StatusPill({ s }: { s: TournamentStatus }) {
@@ -54,7 +55,7 @@ function useFmt() {
   return (iso: string) => new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 }
 
-function Facts({ x }: { x: Tournament }) {
+function Facts({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
   const unlimited = x.slots.total <= 0;
   const full = !unlimited && x.slots.filled >= x.slots.total;
@@ -62,7 +63,7 @@ function Facts({ x }: { x: Tournament }) {
   return (
     <dl className="tc-facts">
       <div><dt>{t.tPrize}</dt><dd title={x.prize[lang]}>{x.prize[lang] || "—"}</dd></div>
-      <div><dt>{t.tTeams}</dt><dd>{seats}</dd></div>
+      {s === 'upcoming' ? <div><dt>{t.tTeams}</dt><dd>{seats}</dd></div> : <div><dt>{lang === 'ar' ? 'اللاعبين' : 'Players'}</dt><dd>{x.bracket?.players?.length || '-'}</dd></div>}
       <div className="tc-fmt"><dt>{t.tFormat}</dt><dd title={x.format[lang]}>{x.format[lang]}</dd></div>
     </dl>
   );
@@ -165,7 +166,7 @@ export function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; 
           {showBr && <a href={bracketViewHref(x)} className="btn-primary tc-brk shrink-0">{t.tBracketTitle}</a>}
         </div>
         <p className="mt-1 text-[.88rem]" style={{ color: 'var(--muted)' }}><time dateTime={x.startsAt}>{fmt(x.startsAt)}</time>{s === 'completed' && x.endsAt ? <> – <time dateTime={x.endsAt}>{fmt(x.endsAt)}</time></> : null}</p>
-        <Facts x={x} />
+        <Facts x={x} s={s} />
         {showCd && <div><Countdown to={x.startsAt} label={t.tStartsIn} /></div>}
         {s === 'completed' && x.winner && <p className="tc-win"><span style={{ color: 'var(--muted)' }}>{t.tWinner}</span><b>{x.winner[lang]}</b></p>}
         {s === 'completed' && x.winner && <WinnerMembers x={x} />}

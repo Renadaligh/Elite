@@ -9,7 +9,7 @@ import { DownloadIcon } from './icons';
 /** "Save as image" + "Share" for a bracket. Works on the public page and in the dashboard. */
 export interface UndoApi { onUndo: () => void; onRedo: () => void; canUndo: boolean; canRedo: boolean }
 
-export default function BracketActions({ bracket, title, url, undo, linkOk, exportId, exportTheme, beforeExport }: { bracket: Bracket; title: string; url: string; undo?: UndoApi; linkOk?: boolean; exportId?: string; exportTheme?: 'dark' | 'light'; beforeExport?: () => Promise<void> }) {
+export default function BracketActions({ bracket, title, url, undo, linkOk, exportId, exportTheme, beforeExport, onShuffle }: { bracket: Bracket; title: string; url: string; undo?: UndoApi; linkOk?: boolean; exportId?: string; exportTheme?: 'dark' | 'light'; beforeExport?: () => Promise<void>; onShuffle?: () => void }) {
   const { lang } = useI18n();
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -44,8 +44,9 @@ export default function BracketActions({ bracket, title, url, undo, linkOk, expo
           <button type="button" className={b} style={st} disabled={!undo.canRedo} title={ar ? 'إعادة (Ctrl+Shift+Z)' : 'Redo (Ctrl+Shift+Z)'} onClick={undo.onRedo}><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 14l5-5-5-5" /><path d="M20 9H10a6 6 0 000 12h3" /></svg><span className="max-sm:sr-only">{ar ? 'إعادة' : 'Redo'}</span></button>
         </>
       )}
+      {onShuffle && !isDraft(bracket) && bracket.format !== 'ffa' && <button type="button" className={b} style={st} title={ar ? 'خلط أماكن اللاعبين عشوائياً' : 'Shuffle the seats randomly'} onClick={onShuffle}><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></svg><span className="max-sm:sr-only">{ar ? 'خلط الأماكن' : 'Shuffle'}</span></button>}
       {!isDraft(bracket) && <button type="button" className={b} style={st} disabled={busy} title={ar ? 'حفظ كصورة' : 'Save as image'} onClick={() => run('save')}><DownloadIcon className="h-4 w-4" /><span className="max-sm:sr-only">{ar ? 'حفظ كصورة' : 'Save as image'}</span></button>}
-      {!isDraft(bracket) && <button type="button" className={`${b} !px-0 h-10 w-10`} style={st} title={ar ? 'نسخ الرابط وفتحه' : 'Copy link and open it'} aria-label={ar ? 'نسخ الرابط وفتحه' : 'Copy link and open it'} onClick={copyLink}><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" /></svg></button>}
+      {!isDraft(bracket) && <button type="button" className={`${b} !px-0 h-10 w-10`} style={st} title={ar ? 'نسخ الرابط وفتحه' : 'Copy link and open it'} aria-label={ar ? 'نسخ الرابط وفتحه' : 'Copy link and open it'} onClick={copyLink}><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 9V4h10v5" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M7 14h10v6H7z" /></svg></button>}
       {msg && <span className="text-[.82rem]" style={{ color: 'var(--muted)' }} role="status">{msg}</span>}
     </div>
   );
