@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import { BRAND } from '../config/site';
 import { translations, type Dict, type Lang } from './translations';
 
@@ -13,10 +14,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.cookie = `plato-lang=${lang}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
   }, [lang]);
   const setLang = useCallback((l: Lang) => {
-    document.documentElement.lang = l;
-    document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
-    try { localStorage.setItem('elite-lang', l); } catch { /* storage unavailable */ }
-    setLangState(l);
+    const apply = () => {
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+      try { localStorage.setItem('elite-lang', l); } catch { /* storage unavailable */ }
+      setLangState(l);
+    };
+    // smooth switch: the browser cross-fades the old page into the new one (direction + texts change inside one frame); older browsers just switch
+    type VT = { startViewTransition?: (cb: () => void) => unknown };
+    const d = document as Document & VT;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (typeof d.startViewTransition === 'function' && !calm) d.startViewTransition(() => { flushSync(apply); });
+    else apply();
   }, []);
   const value = useMemo<Ctx>(() => ({ lang, dir: lang === 'ar' ? 'rtl' : 'ltr', t: translations[lang], setLang }), [lang, setLang]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

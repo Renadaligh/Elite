@@ -1493,3 +1493,6 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 
 /* the small «bracket» button next to a tournament name: as narrow as its word, so the name keeps the room */
 .tc-body .btn-primary.tc-brk{min-width:0;width:auto;margin-top:0;align-self:flex-start;padding:.4rem .9rem;font-size:.8rem;line-height:1.3}
+
+/* language switch: gentle cross-fade (View Transitions) */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:ease-in-out}
