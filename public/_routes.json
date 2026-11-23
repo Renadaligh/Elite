@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*", "/art/*", "/brand/*", "/games/*",
+    "/index.html", "/sw.js", "/manifest.webmanifest", "/robots.txt", "/favicon*", "/.well-known/*",
+    "/news", "/news/*", "/admin", "/admin/*", "/bracket", "/bracket/*",
+    "/tournaments", "/tournaments/*", "/t/*", "/j/*", "/join/*"
+  ]
+}
