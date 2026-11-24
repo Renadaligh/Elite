@@ -1571,7 +1571,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261204; }
+:root { --build: 20261205; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
@@ -1654,3 +1654,6 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 .cp-hex{display:flex;align-items:center;gap:10px;font-size:.78rem;font-weight:700;color:var(--muted)}
 .cp-hex input{flex:1;min-width:0;border:1px solid var(--glass-b);border-radius:10px;background:transparent;color:var(--text);padding:7px 10px;font:600 .9rem ui-monospace,monospace;text-transform:uppercase;outline:none}
 .cp-hex input:focus{border-color:#3d7bff}
+
+/* hero: on phones with a floating browser bar the page also runs under the bar; cover that area too (no dark strip under the picture) */
+@supports (height:100lvh){section#top{min-height:100lvh}}
