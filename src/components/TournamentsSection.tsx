@@ -9,6 +9,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import type { Dict } from '../i18n/translations';
 import { ArrowIcon } from './icons';
 import RetryImg from './RetryImg';
+import { viewPath } from '../data/links';
 
 const ST_KEY: Record<TournamentStatus, keyof Dict> = { live: 'stLive', upcoming: 'stUpcoming', completed: 'stDone' };
 const ST_COLOR: Record<TournamentStatus, string> = { live: '#27c27a', upcoming: '#ffb02e', completed: '#8d8d9b' };
@@ -18,7 +19,7 @@ const ST_BG: Record<TournamentStatus, string> = { live: '#ef4565', upcoming: '#1
 /** Published community brackets open the fast public SVG view; admin-created brackets keep their tournament page. */
 function bracketViewHref(x: Tournament): string {
   const id = x.community?.bracketId;
-  return id ? `/v/${encodeURIComponent(id.slice(0, 6))}` : `/tournaments/${encodeURIComponent(x.id)}`;
+  return id ? viewPath(id) : `/tournaments/${encodeURIComponent(x.id)}`;
 }
 
 function StatusPill({ s }: { s: TournamentStatus }) {

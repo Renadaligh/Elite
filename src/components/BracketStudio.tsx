@@ -248,7 +248,7 @@ function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
     } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
   }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}${viewPath(r.id)}`)); say(s.copied); } catch { say(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); } }
+  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}${viewPath(r.id)}`)); say(s.copied); } catch { say(noProto(`${base()}${viewPath(r.id)}`)); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -460,7 +460,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
 /** Handoff for old hash links and clients still running an earlier bundle. */
 export function PublicView({ id }: { id: string }) {
   const { lang } = useI18n();
-  const url = siteUrl(`/v/${encodeURIComponent(id.slice(0, 6))}`);
+  const url = siteUrl(viewPath(id));
   useEffect(() => {
     if (window.location.href !== url) window.location.replace(url);
   }, [url]);
