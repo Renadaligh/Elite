@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import type { FormQ } from './RegForm';
 import { readNames, splitNames } from '../data/importNames';
 import { nameKey } from '../data/bracket';
 import { ChipInput } from './ChipInput';
@@ -10,7 +11,7 @@ const T = {
 };
 export const addTxt = (lang: 'ar' | 'en') => T[lang];
 
-export interface RegRow { id: number; mode: string; plato_id: string; team_name: string; members: string; src?: 'join' | 'site' | 'manual'; created_at?: string }
+export interface RegRow { id: number; mode: string; plato_id: string; team_name: string; members: string; src?: 'join' | 'site' | 'manual'; created_at?: string; /** answers to the organiser's own questions (question id → answer) */ answers?: Record<string, string | string[]> }
 export const regName = (r: RegRow) => (r.mode === 'team' ? r.team_name : r.plato_id).trim();
 
 /**
@@ -88,7 +89,7 @@ const regTime = (iso: string, lang: 'ar' | 'en') => {
   const d = new Date(`${iso.replace(' ', 'T')}${/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? '' : 'Z'}`);
   return Number.isNaN(d.getTime()) ? iso.slice(0, 16) : d.toLocaleString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
 };
-export function RegistrantsPanel({ onReorder, lang, regs, players, onAdd, onRefresh, onDelete, onUnadd, onUnaddAll, bench = [], autoOn = true, onAuto }: { onReorder?: (from: string, to: string) => void; lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void; onDelete?: (r: RegRow) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; bench?: string[]; autoOn?: boolean; onAuto?: (on: boolean) => void }) {
+export function RegistrantsPanel({ onReorder, lang, regs, players, onAdd, onRefresh, onDelete, onUnadd, onUnaddAll, bench = [], autoOn = true, onAuto, qs = [] }: { qs?: FormQ[]; onReorder?: (from: string, to: string) => void; lang: 'ar' | 'en'; regs: RegRow[]; players: string[]; onAdd: (names: string[]) => void; onRefresh?: () => void; onDelete?: (r: RegRow) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; bench?: string[]; autoOn?: boolean; onAuto?: (on: boolean) => void }) {
   const t = T[lang];
   const [q, setQ] = useState('');
   const [az, setAz] = useState(false);
@@ -104,7 +105,8 @@ export function RegistrantsPanel({ onReorder, lang, regs, players, onAdd, onRefr
   const needle = nameKey(q);
   const seat = new Map(players.map((p, i) => [nameKey(p), i] as const));
   const seedSort = !!onReorder && !az;
-  const shown0 = all.filter((r) => !needle || nameKey(regName(r)).includes(needle) || nameKey(r.team_name ?? '').includes(needle)).sort((a, b) => (az ? regName(a).localeCompare(regName(b), lang, { sensitivity: 'base', numeric: true }) : 0));
+  const ansText = (r: RegRow) => Object.entries(r.answers ?? {}).map(([id, v]) => `${qs.find((q) => q.id === id)?.t ?? ''} ${[v].flat().join(' ')}`).join(' ');
+  const shown0 = all.filter((r) => !needle || nameKey(regName(r)).includes(needle) || nameKey(r.team_name ?? '').includes(needle) || nameKey(r.members ?? '').includes(needle) || nameKey(ansText(r)).includes(needle)).sort((a, b) => (az ? regName(a).localeCompare(regName(b), lang, { sensitivity: 'base', numeric: true }) : 0));
   const shown = seedSort ? [...shown0].sort((a, b) => (seat.get(nameKey(regName(a))) ?? 1e9) - (seat.get(nameKey(regName(b))) ?? 1e9)) : shown0;
   // drag a name by its dots onto another name to trade their places in the tree
   const [dragging, setDragging] = useState<string | null>(null);
@@ -138,7 +140,7 @@ export function RegistrantsPanel({ onReorder, lang, regs, players, onAdd, onRefr
           {shown.map((r, i) => {
             const n = regName(r), done = have.has(nameKey(n));
             return (
-              <li key={`${r.src ?? ''}-${r.id}`} data-nk={nameKey(n)} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: over === nameKey(n) && dragging && dragging !== nameKey(n) ? '#3d7bff' : 'var(--glass-b)', opacity: dragging === nameKey(n) ? 0.5 : done && !onUnadd ? 0.6 : 1, background: over === nameKey(n) && dragging && dragging !== nameKey(n) ? 'rgba(61,123,255,.14)' : undefined }}>
+              <li key={`${r.src ?? ''}-${r.id}`} data-nk={nameKey(n)} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[.88rem]" style={{ borderColor: over === nameKey(n) && dragging && dragging !== nameKey(n) ? '#3d7bff' : 'var(--glass-b)', opacity: dragging === nameKey(n) ? 0.5 : done && !onUnadd ? 0.6 : 1, background: over === nameKey(n) && dragging && dragging !== nameKey(n) ? 'rgba(61,123,255,.14)' : undefined }}>
                 <div className="flex min-w-0 items-center gap-2">{onReorder && done && !needle && !az && <span className="reg-grip" role="button" aria-label={lang === 'ar' ? 'اسحب لتغيير المكان' : 'Drag to change the place'} title={lang === 'ar' ? 'اسحب لتغيير المكان' : 'Drag to change the place'} onPointerDown={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); setDragging(nameKey(n)); setOver(null); }} onPointerMove={(e) => { if (dragging === nameKey(n)) setOver(rowAt(e.clientX, e.clientY)); }} onPointerUp={(e) => { const to = rowAt(e.clientX, e.clientY); const from = dragging; setDragging(null); setOver(null); if (from && to && to !== from) { const a = players.find((p) => nameKey(p) === from), b = players.find((p) => nameKey(p) === to); if (a && b) onReorder(a, b); } }} onPointerCancel={() => { setDragging(null); setOver(null); }}>⠿</span>}<div className="min-w-0"><b dir="auto">{done && onUnadd && <span style={{ color: '#2ecc8c' }}>✓ </span>}{i + 1}. {n}</b>{r.created_at && <small dir="ltr" className="ms-2 text-[.74rem] font-normal" style={{ color: 'var(--muted)' }}>{regTime(r.created_at, lang)}</small>}{r.mode === 'team' && <div dir="auto" className="truncate" style={{ color: 'var(--muted)', fontSize: '.78rem' }}>{t.captain}: {r.plato_id}{r.members ? ` · ${r.members.replace(/\n/g, '، ')}` : ''}</div>}</div></div>
                 <div className="flex shrink-0 items-center gap-2">
                   {done ? (onUnadd
@@ -147,6 +149,14 @@ export function RegistrantsPanel({ onReorder, lang, regs, players, onAdd, onRefr
                     : <button type="button" className={btn} style={{ borderColor: 'rgba(143,178,255,.55)', background: 'rgba(61,123,255,.2)', color: 'var(--text)' }} aria-label={t.add} title={t.add} onClick={() => onAdd([n])}>+</button>}
                   {(onDelete || r.src === 'manual') && <button type="button" className={btn} style={{ borderColor: 'rgba(255,120,120,.5)', background: 'rgba(255,90,90,.14)', color: 'var(--text)' }} aria-label={t.del} title={t.del} onClick={() => { if (r.src === 'manual') { if (window.confirm(t.delManualAsk)) onUnadd?.(n, false); } else if (window.confirm(t.delAsk)) { onDelete?.(r); if (done) onUnadd?.(n); } }}>×</button>}
                 </div>
+                {r.answers && qs.some((q) => r.answers?.[q.id] !== undefined) && (
+                  <details className="basis-full border-t pt-1.5 text-[.78rem]" style={{ borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>
+                    <summary className="cursor-pointer font-semibold">{lang === 'ar' ? 'الإجابات' : 'Answers'} ({qs.filter((q) => r.answers?.[q.id] !== undefined).length})</summary>
+                    <dl className="m-0 mt-1 grid gap-0.5">
+                      {qs.filter((q) => r.answers?.[q.id] !== undefined).map((q) => <div key={q.id} className="flex flex-wrap gap-x-1.5"><dt dir="auto" className="font-semibold">{q.t}:</dt><dd dir="auto" className="m-0" style={{ color: 'var(--text)', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>{[r.answers?.[q.id]].flat().join('، ')}</dd></div>)}
+                    </dl>
+                  </details>
+                )}
               </li>
             );
           })}

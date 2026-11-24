@@ -12,6 +12,7 @@ import InfoFields, { defaultStart } from './InfoFields';
 import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
 import NewRegOpts, { regInit, defaultClose, type RegOpts } from './NewRegOpts';
+import RegFormEditor from './RegFormEditor';
 import EditorsPanel from './EditorsPanel';
 import Fold, { FlatFold } from './Fold';
 import type { BInfo } from '../data/bracket';
@@ -137,6 +138,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const [reg, setReg] = useState<RegOpts>(regInit); // registration link options chosen on the "new tournament" form
   const [newInfo, setNewInfo] = useState<BInfo>(() => ({ startsAt: defaultStart(), total: 0, mode: 'solo' })); // the form of a tournament being created
   const [newCover, setNewCover] = useState<File | null>(null);
+  const [designing, setDesigning] = useState(false); // the registration page designer is open (new tournament form)
   const [newCoverUrl, setNewCoverUrl] = useState('');
   const [cover, setCover] = useState(''); // picture of a saved tournament (kept with its registration link)
   const [coverBusy, setCoverBusy] = useState(false);
@@ -298,7 +300,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
         const inf = br.info;
-        if (inf) { try { await api(`/brackets/${r.id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}), ...(reg.on ? { enabled: true, closesAt: reg.autoClose ? (reg.closeAt || defaultClose(inf.startsAt)) : 0, description: reg.desc.trim(), doneMsg: reg.done.trim() } : {}) }) }); } catch { /* the details are also kept inside the bracket */ } }
+        if (inf) { try { await api(`/brackets/${r.id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}), ...(reg.on ? { form: reg.form, enabled: true, closesAt: reg.autoClose ? (reg.closeAt || defaultClose(inf.startsAt)) : 0, description: reg.desc.trim(), doneMsg: reg.done.trim() } : {}) }) }); } catch { /* the details are also kept inside the bracket */ } }
         if (newCover) { try { await uploadCover(r.id, newCover); } catch { /* can be added later from Tournament info */ } }
         const bad: { h: string; c: string }[] = [];
         for (const h of draftEd) { try { await api(`/brackets/${r.id}/editors`, { method: 'POST', body: JSON.stringify({ handle: h }) }); } catch (e) { bad.push({ h, c: (e as Error & { detail?: string }).detail ?? '' }); } }
@@ -350,17 +352,19 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   return (
     <>
       {!br ? (
-        editable && (
+        editable && (designing ? (
+          <RegFormEditor lang={L2} title={title} org={org} mode={newInfo.mode ?? 'solo'} cover={newCoverUrl} onCover={(f) => void pickCover(f)} desc={reg.desc} onDesc={(desc) => setReg((o) => ({ ...o, desc }))} form={reg.form} onForm={(form) => setReg((o) => ({ ...o, form }))} onClose={() => setDesigning(false)} />
+        ) : (
           <div className="st-nf grid gap-4 rounded-2xl border p-5" style={card}>
             <b className="text-[1.1rem]">{tx.info}</b>
             <InfoFields lang={L2} title={title} onTitle={setTitle} org={org} onOrg={setOrgName} fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={0} fmtLabels={fmtLabels}
               placeOpt={{ on: lo.place, disabled: false, set: (on) => setLo({ ...lo, place: on }), to: lo.placeTo, setTo: (n) => setLo({ ...lo, placeTo: n }) }}
               info={newInfo} onInfo={(pt) => setNewInfo((o) => ({ ...o, ...pt }))} cover={newCoverUrl} onCover={(f) => void pickCover(f)}
-              after={<NewRegOpts lang={L2} v={reg} onChange={(pt) => setReg((o) => ({ ...o, ...pt }))} startsAt={newInfo.startsAt} cover={newCoverUrl} onCover={(f) => void pickCover(f)} />} />
+              after={<NewRegOpts lang={L2} v={reg} onChange={(pt) => setReg((o) => ({ ...o, ...pt }))} startsAt={newInfo.startsAt} onDesign={() => setDesigning(true)} />} />
             <div><button type="button" className="btn-primary" onClick={create}>{tx.create}</button></div>
             {msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>}
           </div>
-        )
+        ))
       ) : (
         <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4 ${!editable && readOnly ? 'pv-body' : ''}`}>
           {tabsDef.length > 0 && (
@@ -415,7 +419,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             </div>
           )}
           {editable && id && tab === 'editors' && auth.user && flat(<EditorsPanel id={id} lang={L2} userId={auth.user.id} style={card} />)}
-          {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}/j/${id}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} />)}
+          {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}/j/${id}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
           {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
         </div>
       )}

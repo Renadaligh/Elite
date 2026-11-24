@@ -24,7 +24,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
-type Reg = { id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
+type Reg = { qa?: { q: string; a: string }[]; id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
 type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins' | 'log';
 type Perms = Partial<Record<'news' | 'tournaments' | 'games' | 'regs', string[]>>;
 type Me = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; recovery?: boolean };
@@ -887,7 +887,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             {sec === 'join' && (
               <FlatFold.Provider value>
             <RegDescription id={t0.id} k={k} />
-            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
+            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
               </FlatFold.Provider>
             )}
             {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
@@ -1333,6 +1333,18 @@ function GamesTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
 /* ---------- Registrations ---------- */
 const csvCell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
+/** Answers to the organiser's own questions, folded under a registration. */
+function QaFold({ qa }: { qa?: { q: string; a: string }[] }) {
+  const { x } = useX();
+  if (!qa?.length) return null;
+  return (
+    <details className="mt-2 text-start text-[.8rem] font-normal" dir="auto">
+      <summary className="cursor-pointer font-semibold" style={{ color: 'var(--muted)' }}>{x('الإجابات')} ({qa.length})</summary>
+      <dl className="m-0 mt-1 grid gap-0.5">{qa.map((p, i) => <div key={i} className="flex flex-wrap gap-x-1.5"><dt dir="auto" className="font-semibold" style={{ color: 'var(--muted)' }}>{p.q}:</dt><dd dir="auto" className="m-0 [overflow-wrap:anywhere]" style={{ whiteSpace: 'pre-wrap' }}>{p.a}</dd></div>)}</dl>
+    </details>
+  );
+}
+
 function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const can = useCan();
   const { x } = useX();
@@ -1344,11 +1356,11 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   useEffect(load, [load]);
 
   const tournaments = useMemo(() => [...new Map(rows.map((r) => [r.tournament_id, r.tournament_name])).entries()], [rows]);
-  const shown = rows.filter((r) => (tid === 'all' || r.tournament_id === tid) && (!q.trim() || `${r.plato_id} ${r.team_name} ${r.members}`.toLowerCase().includes(q.trim().toLowerCase())));
+  const shown = rows.filter((r) => (tid === 'all' || r.tournament_id === tid) && (!q.trim() || `${r.plato_id} ${r.team_name} ${r.members} ${(r.qa ?? []).map((p) => `${p.q} ${p.a}`).join(' ')}`.toLowerCase().includes(q.trim().toLowerCase())));
 
   function exportCsv() {
-    const head = ['البطولة', 'النوع', 'Plato ID', 'اسم الفريق', 'الأعضاء', 'اللغة', 'التاريخ'];
-    const lines = [head, ...shown.map((r) => [r.tournament_name, r.mode === 'team' ? 'فريق' : 'فردي', r.plato_id, r.team_name, r.members, r.lang, r.created_at])];
+    const head = ['البطولة', 'النوع', 'Plato ID', 'اسم الفريق', 'الأعضاء', 'اللغة', 'التاريخ', 'الإجابات'];
+    const lines = [head, ...shown.map((r) => [r.tournament_name, r.mode === 'team' ? 'فريق' : 'فردي', r.plato_id, r.team_name, r.members, r.lang, r.created_at, (r.qa ?? []).map((p) => `${p.q}: ${p.a}`).join(' | ')])];
     const blob = new Blob(['﻿' + lines.map((l) => l.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'elite-registrations.csv'; a.click();
@@ -1386,6 +1398,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
             </div>
             {r.team_name && <div className="mt-2 text-[.88rem]"><span style={{ color: 'var(--muted)' }}>{x('الفريق')}: </span>{r.team_name}</div>}
             {r.members && <div className="mt-1 whitespace-pre-line text-[.85rem] [overflow-wrap:anywhere]" dir="ltr" style={{ textAlign: 'start' }}>{r.members}</div>}
+            <QaFold qa={r.qa} />
             <div className="mt-2 text-[.78rem]" dir="ltr" style={{ textAlign: 'start', color: 'var(--muted)' }}>{r.created_at}</div>
           </Card>
         ))}
@@ -1398,7 +1411,7 @@ function RegsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
             {shown.map((r) => (
               <tr key={r.id} className="border-t align-top" style={{ borderColor: 'var(--glass-b)' }}>
                 <td className="px-4 py-3 text-center">{r.tournament_name}</td>
-                <td className="px-4 py-3 font-semibold" dir="ltr" style={{ textAlign: 'center' }}>{r.plato_id}</td>
+                <td className="px-4 py-3 font-semibold" dir="ltr" style={{ textAlign: 'center' }}>{r.plato_id}<QaFold qa={r.qa} /></td>
                 <td className="px-4 py-3 text-center">{r.team_name || '—'}</td>
                 <td className="whitespace-pre-line px-4 py-3 text-center" dir="ltr" style={{ textAlign: 'center' }}>{r.members || '—'}</td>
                 <td className="px-4 py-3" dir="ltr" style={{ textAlign: 'center', color: 'var(--muted)' }}>{r.created_at}</td>

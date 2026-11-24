@@ -1573,7 +1573,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261127; }
+:root { --build: 20261129; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
@@ -1607,3 +1607,29 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 /* publish switch at the bottom of the tournament card */
 .hc-foot{border-top:1px solid var(--glass-b);padding:12px 16px 14px}
 .hc-foot .pb-box{border:0!important;background:transparent!important;padding:0!important;margin:0!important;box-shadow:none!important}
+
+/* registration page designer */
+.rf{display:grid;gap:12px}
+.rf-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:5;padding:8px 0;background:var(--bg)}
+.rf-segs{display:inline-flex;border:1px solid var(--glass-b);border-radius:999px;overflow:hidden}
+.rf-seg{padding:7px 14px;font-size:.85rem;font-weight:700;color:var(--muted);background:transparent}
+.rf-seg.on{background:rgba(61,123,255,.22);color:var(--text)}
+.rf-done{padding:8px 22px;border-radius:999px;font-weight:800;font-size:.9rem;color:#fff;background:linear-gradient(135deg,#3d7bff,#5b5ff0)}
+.rf-colour{display:grid;gap:8px;border:1px solid var(--glass-b);border-radius:14px;padding:10px 12px;background:var(--glass)}
+.rf-lbl{font-size:.85rem;font-weight:700;color:var(--muted)}
+.rf-note{font-size:.8rem;color:var(--muted);margin:0}
+.rf-sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;outline-offset:2px;flex:none}
+.rf-pick{position:relative;width:30px;height:30px;border-radius:50%;overflow:hidden;border:1px solid var(--glass-b);display:inline-block;background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)}
+.rf-pick input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer}
+.rf-link{font-size:.82rem;font-weight:700;color:var(--link-on);text-decoration:underline}
+.rf-pg{border-radius:20px;padding:16px 10px 22px;background:radial-gradient(800px 520px at 50% 0,var(--bg2),var(--bg));color:var(--text);--link-on:var(--jn-ac)}
+.rf-pg .jn-card{margin:0 auto;color:var(--text)}
+.rf-pg .btn-primary{background:var(--jn-ac);color:#fff;box-shadow:0 10px 28px color-mix(in srgb,var(--jn-ac) 50%,transparent)}
+.rf-emptycover{display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--muted)}
+.rf-covbtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-.4rem 0 1rem}
+.rf-btn{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--glass-b);font-size:.82rem;font-weight:700;cursor:pointer;background:transparent;color:var(--text)}
+
+.rf-open{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:start;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-b);background:rgba(61,123,255,.12);font-size:.95rem}
+.rf-open b{display:block;font-weight:800}.rf-open small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.rf-open>span:last-child{font-size:1.6rem;line-height:1;color:var(--muted)}
+[dir=rtl] .rf-open>span:last-child{transform:scaleX(-1)}

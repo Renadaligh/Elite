@@ -5,8 +5,9 @@ import { createPortal } from 'react-dom';
 import type { Tournament } from '../data/tournaments';
 import { useI18n } from '../i18n/I18nProvider';
 import { CloseIcon } from './icons';
+import { FormFields, NO_FORM, missingQ, type Answers, type RegFormData } from './RegForm';
 
-type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId';
+type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'requiredQ';
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
@@ -23,6 +24,14 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
   const [platoId, setPlatoId] = useState('');
   const [ids, setIds] = useState<string[]>([]);
   const [hp, setHp] = useState(''); // honeypot: real users never fill it
+  const [form, setForm] = useState<RegFormData>(NO_FORM); // the organiser's own questions, when there are any
+  const [answers, setAnswers] = useState<Answers>({});
+  const [badQ, setBadQ] = useState('');
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/tournaments/${encodeURIComponent(x.id)}/form`).then(async (r) => (r.ok ? ((await r.json()) as RegFormData) : NO_FORM)).then((f) => { if (live && f && Array.isArray(f.qs)) setForm(f); }).catch(() => undefined);
+    return () => { live = false; };
+  }, [x.id]);
   const first = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,26 +49,29 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
     const id = team ? (ids[0] ?? '') : platoId.trim();
     const members = team ? ids.slice(1).join(', ') : '';
     if (!id || (team && !members.trim())) { setState('required'); return; }
+    const miss = missingQ(form.qs, answers);
+    if (miss) { setBadQ(miss); setState('requiredQ'); return; }
+    setBadQ('');
     if (!okId(id) || (team && !okIds(members))) { setState('badId'); return; }
     if (team) { const all = [id, ...members.split(/[\n,،;]+/)].map(key).filter(Boolean); if (new Set(all).size !== all.length) { setState('dupMembers'); return; } }
     setState('sending');
     try {
       const res = await fetch('/api/registrations', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ tournamentId: x.id, tournamentName: x.name.en, mode: team ? 'team' : 'solo', platoId: id, teamName: '', members: members.trim(), lang, hp }),
+        body: JSON.stringify({ tournamentId: x.id, tournamentName: x.name.en, mode: team ? 'team' : 'solo', platoId: id, teamName: '', members: members.trim(), lang, hp, answers }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
-      setState(data.ok ? 'done' : data.error === 'duplicate' ? 'dup' : data.error === 'duplicate_team' ? 'dupTeam' : data.error === 'duplicate_members' ? 'dupMembers' : data.error === 'bad_id' ? 'badId' : 'error');
+      setState(data.ok ? 'done' : data.error === 'duplicate' ? 'dup' : data.error === 'duplicate_team' ? 'dupTeam' : data.error === 'duplicate_members' ? 'dupMembers' : data.error === 'bad_id' ? 'badId' : data.error === 'required_q' ? 'requiredQ' : 'error');
     } catch {
       setState('error');
     }
   }
 
-  const msg = state === 'required' ? t.regRequired : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'error' ? t.regErr : '';
+  const msg = state === 'requiredQ' ? (lang === 'ar' ? 'عبّئ الأسئلة المطلوبة.' : 'Fill in the required questions.') : state === 'required' ? t.regRequired : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'error' ? t.regErr : '';
 
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div role="dialog" aria-modal="true" aria-labelledby="reg-title" className="relative max-h-[88svh] w-full max-w-[30rem] overflow-y-auto rounded-3xl border p-6" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)' }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="reg-title" className="relative max-h-[88svh] w-full max-w-[30rem] overflow-y-auto rounded-3xl border p-6" style={{ background: 'var(--dialog)', borderColor: 'var(--glass-b)', ...(form.hue === null ? {} : { '--jn-ac': `hsl(${form.hue} 85% 52%)`, '--link-on': `hsl(${form.hue} 85% 60%)` } as React.CSSProperties) }}>
         {x.image && <img src={x.image} alt="" draggable={false} style={{ display: 'block', width: 'calc(100% + 3rem)', maxWidth: 'none', margin: '-1.5rem -1.5rem 1.25rem', aspectRatio: '16 / 9', objectFit: 'cover', objectPosition: x.imagePos || undefined, borderRadius: '1.5rem 1.5rem 0 0', background: 'var(--chip-bg)' }} />}
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
@@ -94,9 +106,10 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
                 <ChipInput inputRef={first} dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
               </div>
             )}
+            <FormFields qs={form.qs} value={answers} onChange={(a) => { setAnswers(a); setBadQ(''); }} bad={badQ} />
             <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} style={{ position: 'absolute', insetInlineStart: '-9999px', width: 1, height: 1, opacity: 0 }} />
             {msg && <p role="alert" className="text-[.9rem]" style={{ color: '#ff6b7a' }}>{msg}</p>}
-            <button type="submit" className="btn-primary self-start" disabled={state === 'sending'}>{state === 'sending' ? t.regSending : t.regSubmit}</button>
+            <button type="submit" className="btn-primary self-start" style={form.hue === null ? undefined : { background: 'var(--jn-ac)', boxShadow: '0 10px 28px color-mix(in srgb, var(--jn-ac) 50%, transparent)' }} disabled={state === 'sending'}>{state === 'sending' ? t.regSending : t.regSubmit}</button>
           </form>
         )}
       </div>

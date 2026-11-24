@@ -4,51 +4,19 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
+import { tintVars, useCoverHue } from '../data/regTheme';
+import { FormFields, missingQ, type Answers, type FormQ } from './RegForm';
 
-interface Info { showCount?: boolean; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; startsAt?: string; title: string; org: string; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
-type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full';
+interface Info { showCount?: boolean; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; startsAt?: string; title: string; org: string; form?: { hue: number | null; qs: FormQ[] }; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full' | 'requiredQ';
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
-/** Most prominent hue of the cover (30° bins, only vivid pixels). null = grey/white picture or unreadable: keep the site colours. */
-function useCoverHue(src?: string): number | null {
-  const [h, setH] = useState<number | null>(null);
-  useEffect(() => {
-    setH(null);
-    if (!src) return;
-    let live = true;
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const w = 48, hgt = Math.max(1, Math.round((48 * img.naturalHeight) / Math.max(1, img.naturalWidth)));
-        const cv = document.createElement('canvas'); cv.width = w; cv.height = hgt;
-        const cx = cv.getContext('2d'); if (!cx) return;
-        cx.drawImage(img, 0, 0, w, hgt);
-        const d = cx.getImageData(0, 0, w, hgt).data;
-        const bins = new Array<number>(12).fill(0), sum = new Array<number>(12).fill(0);
-        let vivid = 0;
-        for (let i = 0; i < d.length; i += 4) {
-          const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), v = mx, s = mx === 0 ? 0 : (mx - mn) / mx;
-          if (s < 0.35 || v < 0.25 || v > 0.97) continue;
-          const dl = mx - mn; let hu = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4; hu = (hu * 60 + 360) % 360;
-          const bi = Math.floor(((hu + 15) % 360) / 30); bins[bi]++; vivid++;
-          sum[bi] += hu > 180 && bi === 0 ? hu - 360 : hu;
-        }
-        if (vivid < d.length / 4 * 0.08) return;
-        let best = 0; for (let i = 1; i < 12; i++) if (bins[i] > bins[best]) best = i;
-        if (live) setH(Math.round((sum[best] / bins[best] + 360) % 360));
-      } catch { /* unreadable picture: default colours */ }
-    };
-    img.src = src;
-    return () => { live = false; };
-  }, [src]);
-  return h;
-}
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none transition-colors focus:border-[var(--link-on)]';
 const fieldStyle = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
 const X = {
-  ar: { closed: 'التسجيل مغلق.', full: 'اكتمل العدد، التسجيل مغلق.', gone: 'رابط التسجيل غير متاح.', by: 'تنظيم', starts: 'تاريخ بداية البطولة', another: 'تسجيل لاعب آخر', anotherTeam: 'تسجيل فريق آخر', count: 'المسجّلون', closes: 'يُغلق التسجيل', open: 'التسجيل مفتوح' },
-  en: { closed: 'Registration is closed.', full: 'It is full, registration is closed.', gone: 'This registration link is not available.', by: 'By', starts: 'Tournament start date', another: 'Register another user', anotherTeam: 'Register another team', count: 'Registered', closes: 'Registration closes', open: 'Registration is open' },
+  ar: { closed: 'التسجيل مغلق.', full: 'اكتمل العدد، التسجيل مغلق.', gone: 'رابط التسجيل غير متاح.', by: 'تنظيم', starts: 'تاريخ بداية البطولة', another: 'تسجيل لاعب آخر', anotherTeam: 'تسجيل فريق آخر', count: 'المسجّلون', closes: 'يُغلق التسجيل', open: 'التسجيل مفتوح', reqQ: 'عبّئ الأسئلة المطلوبة.' },
+  en: { closed: 'Registration is closed.', full: 'It is full, registration is closed.', gone: 'This registration link is not available.', by: 'By', starts: 'Tournament start date', another: 'Register another user', anotherTeam: 'Register another team', count: 'Registered', closes: 'Registration closes', open: 'Registration is open', reqQ: 'Fill in the required questions.' },
 };
 
 /** Standalone registration page of a bracket (#/join/<id>): same form as the site's, shows only the count and the status. */
@@ -63,6 +31,8 @@ export default function JoinPage({ id }: { id: string }) {
   const [platoId, setPlatoId] = useState('');
   const [ids, setIds] = useState<string[]>([]);
   const [hp, setHp] = useState('');
+  const [answers, setAnswers] = useState<Answers>({});
+  const [badQ, setBadQ] = useState('');
 
   useEffect(() => {
     let live = true;
@@ -77,10 +47,10 @@ export default function JoinPage({ id }: { id: string }) {
     return () => { live = false; window.clearInterval(t); document.removeEventListener('visibilitychange', refresh); };
   }, [id]);
 
-  const hue = useCoverHue(info && info !== 'gone' ? info.cover : undefined);
-  const tint = hue === null ? undefined : (theme === 'dark'
-    ? { '--bg': `hsl(${hue} 55% 8%)`, '--bg2': `hsl(${hue} 60% 14%)`, '--glass': `hsl(${hue} 35% 13%)`, '--glass-b': `hsla(${hue} 40% 60% / .26)`, '--muted': `hsl(${hue} 22% 72%)`, '--jn-ac': `hsl(${hue} 90% 55%)` }
-    : { '--bg': `hsl(${hue} 80% 93%)`, '--bg2': `hsl(${hue} 90% 86%)`, '--glass': '#fff', '--glass-b': `hsla(${hue} 45% 30% / .2)`, '--muted': `hsl(${hue} 22% 36%)`, '--jn-ac': `hsl(${hue} 88% 46%)` }) as React.CSSProperties;
+  const coverHue = useCoverHue(info && info !== 'gone' ? info.cover : undefined);
+  const chosen = info && info !== 'gone' ? info.form?.hue : null; // a colour the organiser picked wins over the picture's
+  const hue = typeof chosen === 'number' ? chosen : coverHue;
+  const tint = hue === null ? undefined : tintVars(hue, theme);
   const team = info !== null && info !== 'gone' && info.mode === 'team';
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -88,17 +58,21 @@ export default function JoinPage({ id }: { id: string }) {
     const pid = team ? (ids[0] ?? '') : platoId.trim();
     const members = team ? ids.slice(1).join(', ') : '';
     if (!pid || (team && !members.trim())) { setState('required'); return; }
+    const qs = info !== null && info !== 'gone' ? info.form?.qs ?? [] : [];
+    const miss = missingQ(qs, answers);
+    if (miss) { setBadQ(miss); setState('requiredQ'); return; }
+    setBadQ('');
     if (!okId(pid) || (team && !okIds(members))) { setState('badId'); return; }
     if (team) { const all = [pid, ...members.split(/[\n,،;]+/)].map(key).filter(Boolean); if (new Set(all).size !== all.length) { setState('dupMembers'); return; } }
     setState('sending');
     try {
-      const res = await fetch(`/api/join/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platoId: pid, teamName: '', members: members.trim(), hp }) });
+      const res = await fetch(`/api/join/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platoId: pid, teamName: '', members: members.trim(), hp, answers }) });
       const d = (await res.json()) as { ok?: boolean; error?: string };
       if (d.ok || d.error === 'full' || d.error === 'closed') fetch(`/api/join/${encodeURIComponent(id)}`).then(async (r) => { if (r.ok) setInfo((await r.json()) as Info); }).catch(() => undefined); // count / state right after sending
-      setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'bad_id' ? 'badId' : d.error === 'required' ? 'required' : 'error');
+      setState(d.ok ? 'done' : d.error === 'duplicate' ? 'dup' : d.error === 'duplicate_team' ? 'dupTeam' : d.error === 'duplicate_members' ? 'dupMembers' : d.error === 'closed' ? 'closed' : d.error === 'full' ? 'full' : d.error === 'bad_id' ? 'badId' : d.error === 'required' ? 'required' : d.error === 'required_q' ? 'requiredQ' : 'error');
     } catch { setState('error'); }
   }
-  const msg = state === 'required' ? (team ? t.regRequiredTeam : t.regRequired) : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
+  const msg = state === 'requiredQ' ? x.reqQ : state === 'required' ? (team ? t.regRequiredTeam : t.regRequired) : state === 'badId' ? t.regBadId : state === 'dup' ? t.regDup : state === 'dupTeam' ? t.regDupTeam : state === 'dupMembers' ? t.regDupMembers : state === 'closed' ? x.closed : state === 'full' ? x.full : state === 'error' ? t.regErr : '';
   const closedNow = info && info !== 'gone' ? (info.reason || (state === 'closed' ? 'closed' : state === 'full' ? 'full' : '')) : '';
   const when = info && info !== 'gone' && info.closesAt > Date.now() ? new Date(info.closesAt).toLocaleString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
@@ -132,7 +106,7 @@ export default function JoinPage({ id }: { id: string }) {
                     <p className="mt-2" style={{ color: 'var(--muted)' }}>{t.regDoneSub}</p>
                   </>
                 )}
-                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId('');  setIds([]); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
+                <button type="button" className="mt-6 inline-flex h-11 items-center justify-center rounded-full border px-6 text-[.95rem] font-bold" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)', color: 'var(--text)' }} onClick={() => { setPlatoId('');  setIds([]); setAnswers({}); setBadQ(''); setState('idle'); }}>{team ? x.anotherTeam : x.another}</button>
               </div>
             ) : closedNow ? null : (
               <form onSubmit={submit} className="mt-4 flex flex-col gap-4" noValidate>
@@ -146,6 +120,7 @@ export default function JoinPage({ id }: { id: string }) {
                   <ChipInput dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
                 </div>
               )}
+                <FormFields qs={info.form?.qs ?? []} value={answers} onChange={(a) => { setAnswers(a); setBadQ(''); }} bad={badQ} />
                 <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={hp} onChange={(e) => setHp(e.target.value)} style={{ position: 'absolute', insetInlineStart: '-9999px', width: 1, height: 1, opacity: 0 }} />
                 {msg && <p role="alert" className="text-[.9rem]" style={{ color: '#ff6b7a' }}>{msg}</p>}
                 <button type="submit" className="btn-primary self-start" disabled={state === 'sending'}>{state === 'sending' ? t.regSending : t.regSubmit}</button>

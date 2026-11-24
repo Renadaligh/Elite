@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import Fold from './Fold';
 import { RegistrantsPanel, autoAddNew, regName, type RegRow } from './AddPlayers';
 import { nameKey } from '../data/bracket';
+import type { FormQ } from './RegForm';
 
 /**
  * ONE list of everybody who registered for this bracket, whichever way they came (the standalone registration link or the tournament published on the site).
@@ -11,8 +12,9 @@ import { nameKey } from '../data/bracket';
 export default function RegistrantsCard({ onReorder, id, lang, players, onAdd, onUnadd, onUnaddAll, auto, autoOn, onAuto, bench }: { onReorder?: (from: string, to: string) => void; id: string; lang: 'ar' | 'en'; players: string[]; onAdd: (names: string[]) => void; onUnadd?: (name: string, keep?: boolean) => void; onUnaddAll?: (keep: string[]) => void; auto?: boolean; autoOn?: boolean; onAuto?: (on: boolean) => void; bench?: string[] }) {
   const [join, setJoin] = useState<RegRow[]>([]);
   const [site, setSite] = useState<RegRow[]>([]);
+  const [qs, setQs] = useState<FormQ[]>([]);
   const load = useCallback(() => {
-    api<{ signups?: RegRow[] }>(`/brackets/${id}/join`).then((r) => setJoin((r.signups ?? []).map((x) => ({ ...x, src: 'join' as const })))).catch(() => undefined);
+    api<{ signups?: RegRow[]; form?: { qs?: FormQ[] } }>(`/brackets/${id}/join`).then((r) => { setQs(r.form?.qs ?? []); setJoin((r.signups ?? []).map((x) => ({ ...x, src: 'join' as const }))); }).catch(() => undefined);
     api<RegRow[]>(`/brackets/${id}/regs`).then((r) => setSite((Array.isArray(r) ? r : []).map((x) => ({ ...x, src: 'site' as const })))).catch(() => undefined);
   }, [id]);
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function RegistrantsCard({ onReorder, id, lang, players, onAdd, o
   };
   return (
     <Fold title={`${lang === 'ar' ? 'المسجّلون' : 'Registered'} · ${count}`}>
-      <RegistrantsPanel onReorder={onReorder} lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
+      <RegistrantsPanel qs={qs} onReorder={onReorder} lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} />
     </Fold>
   );
 }

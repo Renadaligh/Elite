@@ -6,11 +6,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
 import Fold from './Fold';
 import type { RegRow } from './AddPlayers';
+import RegFormEditor from './RegFormEditor';
+import { NO_FORM, type RegFormData } from './RegForm';
 
-interface Cfg { titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; cover?: string; startsAt?: string; enabled: boolean; mode: 'solo' | 'team'; cap: number; closesAt: number; closed: boolean; reason: '' | 'closed' | 'full'; count: number; signups: RegRow[] }
+interface Cfg { form?: RegFormData; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; cover?: string; startsAt?: string; enabled: boolean; mode: 'solo' | 'team'; cap: number; closesAt: number; closed: boolean; reason: '' | 'closed' | 'full'; count: number; signups: RegRow[] }
 const T = {
-  ar: { titleEnL: 'عنوان البطولة بالإنجليزي (اختياري)، يظهر لمن يتصفح بالإنجليزي. العنوان العربي هو اسم البطولة.', titleEnPh: 'Tournament title', descL: 'وصف صفحة التسجيل (اختياري)', descPh: 'مثال: القوانين، الجائزة، طريقة اللعب…', doneL: 'رسالة بعد التسجيل (اختياري)', doneHint: 'تظهر للاعب مباشرة بعد تسجيله. إن تركتها فارغة تظهر الرسالة الافتراضية «أنت الآن في الحلبة».', title: 'رابط التسجيل', desc: 'صفحة تسجيل فقط، تنسخ رابطها وتنشره بنفسك. من يسجّل تصلك بياناته هنا، ولا يرى أحد الأسماء أو القرعة.', on: 'تفعيل رابط التسجيل', link: 'الرابط', copy: 'نسخ', copied: 'تم النسخ', solo: 'فردي', team: 'فرق', mode: 'نوع التسجيل', cap: 'الحد الأقصى للمسجلين (اختياري)', capPh: 'بدون حد', auto: 'إغلاق تلقائي في وقت محدد', now: 'إغلاق التسجيل الآن', reopen: 'إعادة فتح التسجيل', open: 'مفتوح', closed: 'مغلق', full: 'مكتمل', count: 'المسجّلون', fail: 'تعذّر الحفظ.', migrate: 'نفّذ أوامر SQL الخاصة برابط التسجيل في D1 أولاً.', saveT: 'حفظ', start: 'تاريخ بداية البطولة', cover: 'صورة البطولة (اختياري)', coverSize: 'ارفع صورة بقياس 1280 × 720 بكسل (نسبة 16:9)، بصيغة PNG أو JPG أو WebP وحجم أقصى 3MB. نفس الصورة تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع إذا نشرتها، وأي قياس آخر يُقصّ من الأطراف.', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (حتى 3MB: PNG أو JPG أو WebP).' },
-  en: { titleEnL: 'Tournament title in English (optional), shown to English visitors. The Arabic title is the bracket name.', titleEnPh: 'Tournament title', descL: 'Registration page description (optional)', descPh: 'e.g. rules, prize, how it is played…', doneL: 'Message after registering (optional)', doneHint: 'Shown to the player right after they register. If you leave it empty the default message ("You are in the arena now") is shown.', title: 'Registration link', desc: 'A registration-only page: copy its link and share it yourself. Sign-ups arrive here; nobody sees the names or the bracket.', on: 'Enable the registration link', link: 'Link', copy: 'Copy', copied: 'Copied', solo: 'Solo', team: 'Teams', mode: 'Registration type', cap: 'Maximum registrants (optional)', capPh: 'No limit', auto: 'Close automatically at a set time', now: 'Close registration now', reopen: 'Reopen registration', open: 'Open', closed: 'Closed', full: 'Full', count: 'Registered', fail: 'Could not save.', migrate: 'Run the registration-link SQL in D1 first.', saveT: 'Save', start: 'Tournament start date', cover: 'Tournament picture (optional)', coverSize: 'Upload a 1280 × 720 px picture (16:9), PNG, JPG or WebP, up to 3MB. The same picture shows on the registration page and on the tournament card on the site if you publish it; any other size is cropped at the edges.', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).' },
+  ar: { titleEnL: 'عنوان البطولة بالإنجليزي (اختياري)، يظهر لمن يتصفح بالإنجليزي. العنوان العربي هو اسم البطولة.', titleEnPh: 'Tournament title', descL: 'وصف صفحة التسجيل (اختياري)', descPh: 'مثال: القوانين، الجائزة، طريقة اللعب…', doneL: 'رسالة بعد التسجيل (اختياري)', doneHint: 'تظهر للاعب مباشرة بعد تسجيله. إن تركتها فارغة تظهر الرسالة الافتراضية «أنت الآن في الحلبة».', design: 'تصميم صفحة التسجيل', designNote: 'الصورة والوصف واللون والأسئلة، مع معاينة كما يشوفها اللاعب.', locked: 'رابط التسجيل مفعّل. تقدر تغلق التسجيل في أي وقت، لكن الرابط يبقى.', title: 'رابط التسجيل', desc: 'صفحة تسجيل فقط، تنسخ رابطها وتنشره بنفسك. من يسجّل تصلك بياناته هنا، ولا يرى أحد الأسماء أو القرعة.', on: 'تفعيل رابط التسجيل', link: 'الرابط', copy: 'نسخ', copied: 'تم النسخ', solo: 'فردي', team: 'فرق', mode: 'نوع التسجيل', cap: 'الحد الأقصى للمسجلين (اختياري)', capPh: 'بدون حد', auto: 'إغلاق تلقائي في وقت محدد', now: 'إغلاق التسجيل الآن', reopen: 'إعادة فتح التسجيل', open: 'مفتوح', closed: 'مغلق', full: 'مكتمل', count: 'المسجّلون', fail: 'تعذّر الحفظ.', migrate: 'نفّذ أوامر SQL الخاصة برابط التسجيل في D1 أولاً.', saveT: 'حفظ', start: 'تاريخ بداية البطولة', cover: 'صورة البطولة (اختياري)', coverSize: 'ارفع صورة بقياس 1280 × 720 بكسل (نسبة 16:9)، بصيغة PNG أو JPG أو WebP وحجم أقصى 3MB. نفس الصورة تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع إذا نشرتها، وأي قياس آخر يُقصّ من الأطراف.', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (حتى 3MB: PNG أو JPG أو WebP).' },
+  en: { titleEnL: 'Tournament title in English (optional), shown to English visitors. The Arabic title is the bracket name.', titleEnPh: 'Tournament title', descL: 'Registration page description (optional)', descPh: 'e.g. rules, prize, how it is played…', doneL: 'Message after registering (optional)', doneHint: 'Shown to the player right after they register. If you leave it empty the default message ("You are in the arena now") is shown.', design: 'Design the registration page', designNote: 'Picture, description, colour and questions, with a preview of what players see.', locked: 'The registration link is on. You can close registration any time, but the link stays.', title: 'Registration link', desc: 'A registration-only page: copy its link and share it yourself. Sign-ups arrive here; nobody sees the names or the bracket.', on: 'Enable the registration link', link: 'Link', copy: 'Copy', copied: 'Copied', solo: 'Solo', team: 'Teams', mode: 'Registration type', cap: 'Maximum registrants (optional)', capPh: 'No limit', auto: 'Close automatically at a set time', now: 'Close registration now', reopen: 'Reopen registration', open: 'Open', closed: 'Closed', full: 'Full', count: 'Registered', fail: 'Could not save.', migrate: 'Run the registration-link SQL in D1 first.', saveT: 'Save', start: 'Tournament start date', cover: 'Tournament picture (optional)', coverSize: 'Upload a 1280 × 720 px picture (16:9), PNG, JPG or WebP, up to 3MB. The same picture shows on the registration page and on the tournament card on the site if you publish it; any other size is cropped at the edges.', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).' },
 };
 /** Closing time offered when the link is switched on: the tournament start if it is still ahead, otherwise two hours from now. */
 const defaultClose = (startsAt?: string) => { const t = Date.parse(startsAt ?? ''); return t > Date.now() + 60_000 ? t : nextHalfHour(); };
@@ -22,7 +24,7 @@ const fromLocal = (v: string) => { const t = new Date(v).getTime(); return Numbe
 
 /** Organiser panel for the registration link (#/join/<id>): on/off, solo/team, cap, auto/manual close, and the people who signed up. */
 /** `admin` = a tournament run by the site admins: its settings go through the admin API (password/session key `k`) instead of the organiser's account. */
-export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showCount, onShowCount, onCover }: { id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void; admin?: { k: string }; showCount?: boolean; onShowCount?: (on: boolean) => void; /** told the current picture address (so the "Tournament info" card shows the same one) */ onCover?: (url: string) => void }) {
+export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showCount, onShowCount, onCover, title: pageTitle = '', org = '' }: { title?: string; org?: string; id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void; admin?: { k: string }; showCount?: boolean; onShowCount?: (on: boolean) => void; /** told the current picture address (so the "Tournament info" card shows the same one) */ onCover?: (url: string) => void }) {
   const t = T[lang];
   const path = admin ? `/tournaments/${id}/join` : `/brackets/${id}/join`;
   const akey = admin ? { key: admin.k } : {};
@@ -33,8 +35,11 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
   const [when, setWhen] = useState('');
   const [desc, setDesc] = useState('');
   const [doneMsg, setDoneMsg] = useState('');
+  const [form, setForm] = useState<RegFormData>(NO_FORM);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
     const load = useCallback(async () => {
-    try { const d = await api<Cfg>(path, akey); setC(d); onCover?.(d.cover ?? ''); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
+    try { const d = await api<Cfg>(path, akey); setC(d); onCover?.(d.cover ?? ''); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setForm(d.form ?? NO_FORM); setMsg(''); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }, [path, t.fail, t.migrate]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [load]);
@@ -56,20 +61,30 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
   const line = 'rounded-xl border bg-transparent px-3 py-2 text-[.9rem] outline-none focus:border-[#3d7bff]';
   const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
   const status = !c ? '' : c.reason === 'full' ? t.full : c.reason === 'closed' ? t.closed : t.open;
+  if (editing && c) {
+    return (
+      <RegFormEditor lang={lang} title={pageTitle} org={org} mode={c.mode} cover={c.cover ?? ''} desc={desc} onDesc={setDesc} form={form} onForm={setForm} busy={saving} hideDesc={!!admin}
+        onCover={(f) => { if (f) void pickCover(f); else void put({ cover: '' }); }}
+        onClose={() => { setSaving(true); void put({ ...(admin ? {} : { description: desc.trim() }), form }).then(() => { setSaving(false); setEditing(false); }); }} />
+    );
+  }
   return (
     <Fold title={t.title} note={t.desc}>
       {!c ? (msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>) : (
         <div className="grid gap-3">
-          <div className="st-shh"><div><span>{t.on}</span></div>
-            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && !c.startsAt && !admin ? { enabled: true, startsAt: new Date(nextHalfHour()).toISOString() } : { enabled: !c.enabled })}><i /></button></div>
-            <div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
+          {c.enabled && !admin
+            ? <div className="st-shh"><div><span>✓ {t.on}</span><small>{t.locked}</small></div></div>
+            : <div className="st-shh"><div><span>{t.on}</span></div>
+              <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && !c.startsAt && !admin ? { enabled: true, startsAt: new Date(nextHalfHour()).toISOString() } : { enabled: !c.enabled })}><i /></button></div>}
+          <button type="button" className="rf-open" onClick={() => setEditing(true)}><span><b>{t.design}</b><small>{t.designNote}</small></span><span aria-hidden>›</span></button>
+            {admin && (<div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
               <div className="flex flex-wrap items-center gap-3">
                 {c.cover ? <img src={c.cover} alt="" className="aspect-video w-44 max-w-full rounded-lg object-cover" /> : <span className="flex aspect-video w-44 max-w-full items-center justify-center rounded-lg text-[.72rem]" style={{ background: 'var(--chip-bg)' }}>1280 × 720</span>}
                 <label className="cl-btn on cursor-pointer">{c.cover ? t.change : t.upload}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" onChange={(e) => { void pickCover(e.target.files?.[0]); e.target.value = ''; }} /></label>
                 {c.cover && <button type="button" className="cl-btn" style={{ color: '#ff7a8a' }} onClick={() => put({ cover: '' })}>{t.rmImg}</button>}
               </div>
               <small>{t.coverSize}</small>
-            </div>
+            </div>)}
           <div className="st-shh"><div><span>{lang === 'ar' ? 'إضافة المسجلين للشجرة تلقائيًا' : 'Automatically add registrants to bracket'}</span><small>{lang === 'ar' ? 'يمكنك إيقافها وإضافة المسجلين يدويًا من القائمة.' : 'Turn off to add registrants manually from the list.'}</small></div>
             <button type="button" role="switch" aria-checked={autoOn} aria-label={lang === 'ar' ? 'الإضافة التلقائية للشجرة' : 'Automatic bracket entry'} className={`st-sw ${autoOn ? 'on' : ''}`} onClick={() => onAuto(!autoOn)}><i /></button></div>
           {c.enabled && (
@@ -79,9 +94,6 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
                 <span className="text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.mode}</span>
                 {(['solo', 'team'] as const).map((m) => <button key={m} type="button" role="radio" aria-checked={c.mode === m} className={`br-chip ${c.mode === m ? 'on' : ''}`} onClick={() => put({ mode: m })}>{m === 'solo' ? t.solo : t.team}</button>)}
               </div>}
-              {!admin && (<label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.descL}
-                  <textarea dir="auto" className={`${line} min-h-[5rem] resize-y`} style={bd} maxLength={600} placeholder={t.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (desc.trim() !== (c.description ?? '')) void put({ description: desc.trim() }); }} />
-                </label>)}
               {!admin && (<label className="grid gap-1 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.doneL}
                   <textarea dir="auto" className={`${line} min-h-[4.5rem] resize-y`} style={bd} maxLength={400} value={doneMsg} onChange={(e) => setDoneMsg(e.target.value)} onBlur={() => { if (doneMsg.trim() !== (c.doneMsg ?? '')) void put({ doneMsg: doneMsg.trim() }); }} />
                   <small>{t.doneHint}</small>
