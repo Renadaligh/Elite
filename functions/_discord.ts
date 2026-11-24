@@ -20,7 +20,8 @@ export async function discord(env: Env, request: Request, embed: { title: string
   try { await fetch(hook, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); } catch { /* ignore */ } finally { clearTimeout(t); }
 }
 
-const fmtDate = (iso: string) => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return ''; } };
+/** Discord shows <t:…:f> in each reader's own time zone and language, so the date and time need no fixed zone. */
+const fmtDate = (iso: string) => { const t = Date.parse(iso); return Number.isNaN(t) ? '' : `<t:${Math.floor(t / 1000)}:f>`; };
 
 export const announceNews = (env: Env, request: Request, id: string, v: { title_ar: string; summary_ar: string; image: string }) =>
   discord(env, request, { title: `📰 ${v.title_ar}`, description: v.summary_ar, path: '/news', image: v.image });

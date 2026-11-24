@@ -1,5 +1,7 @@
 # Cloudflare Pages: the page itself and the images that change are always re-checked, so a new deploy reaches everyone.
-# Hashed build files (/assets) never change under the same name, so they stay cached for a year.
+# Build files (/assets) are cached for an hour and then re-checked (cheap 304). They are NOT cached for a year on purpose:
+# if a file is asked for while it does not exist (a rollback, an old open tab), Pages answers with the home page under
+# the file's name, and a long cache would keep that wrong answer for everyone. One hour limits the damage and it heals by itself.
 /
   Cache-Control: no-cache
 /index.html
@@ -13,7 +15,7 @@
 /brand/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=3600, must-revalidate
 /.well-known/discord
   Content-Type: text/plain; charset=utf-8
   Cache-Control: no-cache

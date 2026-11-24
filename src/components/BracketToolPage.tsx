@@ -176,6 +176,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   /** "New tournament": the whole settings form (name, organiser, format, game, start, seats, type, prize, picture), then the empty tree opens and is saved at once. */
   function create() {
     if (!title.trim()) { setMsg(tx.needName); return; }
+    if (!newInfo.gameId) { setMsg(lang === 'ar' ? 'اختر اللعبة' : 'Choose a game'); return; }
     if (!newInfo.startsAt) { setMsg(lang === 'ar' ? 'حدد تاريخ ووقت البداية' : 'Choose the start date and time'); return; }
     justMade.current = true;
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined;

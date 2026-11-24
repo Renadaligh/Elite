@@ -3,6 +3,7 @@ import type { BFormat, BInfo } from '../data/bracket';
 import { useGames } from '../hooks/useGames';
 import FormatOpts, { type FmtState } from './FormatOpts';
 import StartPicker from './StartPicker';
+import GameSelect from './GameSelect';
 
 /** Every tournament setting in one form: used when a tournament is created and on the "Tournament info" page. */
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
@@ -46,7 +47,7 @@ export default function InfoFields(p: InfoFieldsProps) {
     <div className="grid gap-3.5">
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.name} <span style={{ color: '#ff6b7a' }}>*</span><input className={inp} style={bd} maxLength={60} value={p.title} placeholder={L.namePh} onChange={(e) => p.onTitle(e.target.value)} /></label>
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.org}<input className={inp} style={bd} maxLength={60} value={p.org} placeholder={L.orgPh} onChange={(e) => p.onOrg(e.target.value.slice(0, 60))} /></label>
-      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.fmt}
+      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.fmt} <span style={{ color: '#ff6b7a' }}>*</span>
         <select className={`${inp} sel`} style={sel} value={p.fmt} onChange={(e) => p.onFmt(e.target.value as BFormat)}>{(['single', 'double', 'rr', 'swiss', 'groups', 'ffa'] as BFormat[]).map((f) => <option key={f} value={f}>{p.fmtLabels[f]}</option>)}</select></label>
       <FormatOpts fmt={p.fmt} value={p.lo} onChange={p.onLo} lang={lang} inpCls={inp} style={sel} border={{ borderColor: 'var(--glass-b)' }} players={p.players} />
       {p.third && p.fmt === 'single' && <label className="flex items-center gap-2.5 text-[.9rem]" style={p.third.disabled ? { opacity: .55 } : undefined}><input type="checkbox" className="h-4 w-4" disabled={p.third.disabled} checked={p.third.on} onChange={(e) => p.third?.set(e.target.checked)} />{L.third}</label>}
@@ -56,10 +57,10 @@ export default function InfoFields(p: InfoFieldsProps) {
           <select className={`${inp} sel`} style={sel} value={Math.min(p.placeOpt.to, placeMax)} onChange={(e) => p.placeOpt?.setTo(+e.target.value)}>{Array.from({ length: placeMax - 2 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>{ar ? `المركز ${n}` : `${n}${n === 3 ? 'rd' : 'th'} place`}</option>)}</select></label>}
       </div>}
       {p.apply && <div><button type="button" className="btn-primary" onClick={p.apply.run}>{p.apply.label}</button></div>}
-      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.game}
-        <select className={`${inp} sel`} style={sel} value={info.gameId ?? ''} onChange={(e) => p.onInfo({ gameId: e.target.value })}><option value="">{L.pick}</option>{games.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></label>
-      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.start} <span style={{ color: '#ff6b7a' }}>*</span>
-        <StartPicker lang={lang} inpCls={inp} selCls={inp} style={bd} value={toLocal(info.startsAt)} onChange={(v) => p.onInfo({ startsAt: fromLocal(v) })} /></label>
+      <div className={lbl} style={{ color: 'var(--muted)' }}>{L.game} <span style={{ color: '#ff6b7a' }}>*</span>
+        <GameSelect value={info.gameId ?? ''} onChange={(id) => p.onInfo({ gameId: id })} games={games} lang={lang} inpCls={inp} style={bd} /></div>
+      <div className={lbl} style={{ color: 'var(--muted)' }}>{L.start} <span style={{ color: '#ff6b7a' }}>*</span>
+        <StartPicker lang={lang} inpCls={inp} style={bd} required value={toLocal(info.startsAt)} onChange={(v) => p.onInfo({ startsAt: fromLocal(v) })} /></div>
       <div className={lbl} style={{ color: 'var(--muted)' }}>{L.seats}
         <div className="flex items-center gap-3" style={{ minHeight: 42 }}>
           <button type="button" role="switch" aria-checked={total > 0} aria-label={L.seats} className={`st-sw ${total > 0 ? 'on' : ''}`} onClick={() => p.onInfo({ total: total > 0 ? 0 : 16 })}><i /></button>
