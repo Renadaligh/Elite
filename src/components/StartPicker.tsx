@@ -25,7 +25,7 @@ export default function StartPicker({ value, onChange, lang, inpCls, selCls, sty
   const sc = `${(selCls ?? inpCls).replace(/\bdt-in\b/, '')} sel dt-in`;
   const odd = !SLOTS.includes(slot); // a time saved earlier that is not on the half-hour grid is kept as is
   return (
-    <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,.85fr)] gap-2">
+    <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,.85fr)_minmax(0,1fr)] gap-2">
       <input type="date" dir="ltr" required={required} className={`${inpCls} dt-in`} style={style} value={d0 ?? ''} onChange={(e) => onChange(e.target.value ? `${e.target.value}T${time}` : '')} />
       <select dir="ltr" aria-label={ar ? 'الوقت' : 'Time'} className={sc} style={style} value={slot} onChange={(e) => set(join(e.target.value, per))}>
         {odd && <option value={slot}>{slot}</option>}

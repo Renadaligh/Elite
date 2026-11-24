@@ -26,11 +26,9 @@ export interface InfoFieldsProps {
   /** "3rd place match" tick (single elimination only) */
   third?: { on: boolean; disabled: boolean; set: (on: boolean) => void };
   /** "placement matches" tick (single and double elimination) */
-  placeOpt?: { on: boolean; disabled: boolean; set: (on: boolean) => void };
+  placeOpt?: { on: boolean; disabled: boolean; set: (on: boolean) => void; /** lowest place decided (3 … 16) */ to: number; setTo: (n: number) => void };
   /** the "apply format" button (an existing tournament); a new one has no button here */
   apply?: { label: string; run: () => void };
-  /** show the red hint under an empty prize */
-  needPrize?: boolean;
   after?: ReactNode;
 }
 
@@ -39,22 +37,28 @@ export default function InfoFields(p: InfoFieldsProps) {
   const ar = lang === 'ar';
   const games = useGames();
   const total = info.total ?? 0;
+  /** the deepest place the bracket can decide: the bracket size (a power of two, at least 8), never more than 16 */
+  const placeMax = p.players > 0 ? Math.max(4, Math.min(16, 2 ** Math.ceil(Math.log2(Math.max(p.players, 8))))) : 16;
   const L = ar
-    ? { name: 'اسم البطولة', namePh: 'مثلاً: كأس خادم الأصدقاء', org: 'اسم المنظم / المجموعة (اختياري)', orgPh: 'مثلاً: خادم الأصدقاء', fmt: 'النظام', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ ووقت بداية البطولة', seats: 'عدد المقاعد', unlimited: 'مفتوح بدون حد', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة', prizePh: 'مثلاً: 500 ريال', prizeNeed: 'الجائزة مطلوبة', cover: 'صورة البطولة', up: 'رفع صورة', chg: 'تغيير الصورة', rm: 'حذف الصورة', coverNote: 'ارفع صورة بقياس 1280 × 720 (16:9)، PNG أو JPG أو WebP. تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع.', third: 'مباراة المركز الثالث' }
-    : { name: 'Tournament name', namePh: 'e.g. Friends Server Cup', org: 'Organizer / group name (optional)', orgPh: 'e.g. Friends server', fmt: 'Format', game: 'Game', pick: 'Choose a game', start: 'Tournament start date and time', seats: 'Seats', unlimited: 'Open, no limit', mode: 'Registration type', solo: 'Solo', team: 'Team', prize: 'Prize', prizePh: 'e.g. $100', prizeNeed: 'The prize is required', cover: 'Tournament picture', up: 'Upload picture', chg: 'Change picture', rm: 'Remove picture', coverNote: 'Upload a 1280 × 720 picture (16:9), PNG, JPG or WebP. It shows on the registration page and on the tournament card on the site.', third: '3rd place match' };
+    ? { name: 'اسم البطولة', namePh: 'مثلاً: كأس خادم الأصدقاء', org: 'اسم المنظم / المجموعة (اختياري)', orgPh: 'مثلاً: خادم الأصدقاء', fmt: 'النظام', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ ووقت بداية البطولة', seats: 'عدد المقاعد', unlimited: 'مفتوح بدون حد', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة', prizePh: '', cover: 'صورة البطولة (اختياري)', up: 'رفع صورة', chg: 'تغيير الصورة', rm: 'حذف الصورة', coverNote: 'ارفع صورة بقياس 1280 × 720 (16:9)، PNG أو JPG أو WebP. تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع.', third: 'مباراة المركز الثالث' }
+    : { name: 'Tournament name', namePh: 'e.g. Friends Server Cup', org: 'Organizer / group name (optional)', orgPh: 'e.g. Friends server', fmt: 'Format', game: 'Game', pick: 'Choose a game', start: 'Tournament start date and time', seats: 'Seats', unlimited: 'Open, no limit', mode: 'Registration type', solo: 'Solo', team: 'Team', prize: 'Prize', prizePh: '', cover: 'Tournament picture (optional)', up: 'Upload picture', chg: 'Change picture', rm: 'Remove picture', coverNote: 'Upload a 1280 × 720 picture (16:9), PNG, JPG or WebP. It shows on the registration page and on the tournament card on the site.', third: '3rd place match' };
   return (
     <div className="grid gap-3.5">
-      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.name}<input className={inp} style={bd} maxLength={60} value={p.title} placeholder={L.namePh} onChange={(e) => p.onTitle(e.target.value)} /></label>
+      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.name} <span style={{ color: '#ff6b7a' }}>*</span><input className={inp} style={bd} maxLength={60} value={p.title} placeholder={L.namePh} onChange={(e) => p.onTitle(e.target.value)} /></label>
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.org}<input className={inp} style={bd} maxLength={60} value={p.org} placeholder={L.orgPh} onChange={(e) => p.onOrg(e.target.value.slice(0, 60))} /></label>
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.fmt}
         <select className={`${inp} sel`} style={sel} value={p.fmt} onChange={(e) => p.onFmt(e.target.value as BFormat)}>{(['single', 'double', 'rr', 'swiss', 'groups', 'ffa'] as BFormat[]).map((f) => <option key={f} value={f}>{p.fmtLabels[f]}</option>)}</select></label>
       <FormatOpts fmt={p.fmt} value={p.lo} onChange={p.onLo} lang={lang} inpCls={inp} style={sel} border={{ borderColor: 'var(--glass-b)' }} players={p.players} />
       {p.third && p.fmt === 'single' && <label className="flex items-center gap-2.5 text-[.9rem]" style={p.third.disabled ? { opacity: .55 } : undefined}><input type="checkbox" className="h-4 w-4" disabled={p.third.disabled} checked={p.third.on} onChange={(e) => p.third?.set(e.target.checked)} />{L.third}</label>}
-      {p.placeOpt && (p.fmt === 'single' || p.fmt === 'double') && <label className="flex items-center gap-2.5 text-[.9rem]" style={p.placeOpt.disabled ? { opacity: .55 } : undefined}><input type="checkbox" className="h-4 w-4" disabled={p.placeOpt.disabled} checked={p.placeOpt.on} onChange={(e) => p.placeOpt?.set(e.target.checked)} />{ar ? 'مباريات تحديد المراكز (حتى المركز 16)' : 'Placement matches (down to 16th)'}</label>}
+      {p.placeOpt && (p.fmt === 'single' || p.fmt === 'double') && <div className="grid gap-2.5">
+        <label className="flex items-center gap-2.5 text-[.9rem]" style={p.placeOpt.disabled ? { opacity: .55 } : undefined}><input type="checkbox" className="h-4 w-4" disabled={p.placeOpt.disabled} checked={p.placeOpt.on} onChange={(e) => p.placeOpt?.set(e.target.checked)} />{ar ? 'مباريات تحديد المراكز' : 'Placement matches'}</label>
+        {p.placeOpt.on && <label className={lbl} style={{ color: 'var(--muted)' }}>{ar ? 'تحديد المراكز حتى' : 'Decide the places down to'}
+          <select className={`${inp} sel`} style={sel} value={Math.min(p.placeOpt.to, placeMax)} onChange={(e) => p.placeOpt?.setTo(+e.target.value)}>{Array.from({ length: placeMax - 2 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>{ar ? `المركز ${n}` : `${n}${n === 3 ? 'rd' : 'th'} place`}</option>)}</select></label>}
+      </div>}
       {p.apply && <div><button type="button" className="btn-primary" onClick={p.apply.run}>{p.apply.label}</button></div>}
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.game}
         <select className={`${inp} sel`} style={sel} value={info.gameId ?? ''} onChange={(e) => p.onInfo({ gameId: e.target.value })}><option value="">{L.pick}</option>{games.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></label>
-      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.start}
+      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.start} <span style={{ color: '#ff6b7a' }}>*</span>
         <StartPicker lang={lang} inpCls={inp} selCls={inp} style={bd} value={toLocal(info.startsAt)} onChange={(v) => p.onInfo({ startsAt: fromLocal(v) })} /></label>
       <div className={lbl} style={{ color: 'var(--muted)' }}>{L.seats}
         <div className="flex items-center gap-3" style={{ minHeight: 42 }}>
@@ -67,8 +71,7 @@ export default function InfoFields(p: InfoFieldsProps) {
           {(['solo', 'team'] as const).map((m) => <button key={m} type="button" role="radio" aria-checked={(info.mode ?? 'solo') === m} className={`br-chip rect ${(info.mode ?? 'solo') === m ? 'on' : ''}`} onClick={() => p.onInfo({ mode: m })}>{m === 'solo' ? L.solo : L.team}</button>)}
         </div>
       </div>
-      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.prize} <span style={{ color: '#ff6b7a' }}>*</span><input className={inp} style={bd} maxLength={80} value={info.prize ?? ''} placeholder={L.prizePh} onChange={(e) => p.onInfo({ prize: e.target.value })} />
-        {p.needPrize && !(info.prize ?? '').trim() && <small style={{ color: '#ff6b7a' }}>{L.prizeNeed}</small>}</label>
+      <label className={lbl} style={{ color: 'var(--muted)' }}>{L.prize}<input className={inp} style={bd} maxLength={80} value={info.prize ?? ''} placeholder={L.prizePh} onChange={(e) => p.onInfo({ prize: e.target.value })} /></label>
       <div className={lbl} style={{ color: 'var(--muted)' }}>{L.cover}
         <div className="flex flex-wrap items-center gap-3">
           {p.cover ? <img src={p.cover} alt="" className="aspect-video w-44 max-w-full rounded-lg object-cover" /> : <span className="flex aspect-video w-44 max-w-full items-center justify-center rounded-lg text-[.72rem]" style={{ background: 'var(--chip-bg)' }}>1280 × 720</span>}

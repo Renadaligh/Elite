@@ -32,7 +32,7 @@ export interface Knockout { format: 'single' | 'double'; seed: number[]; matches
 export interface BInfo { gameId?: string; prize?: string; startsAt?: string; total?: number; mode?: 'solo' | 'team'; /** false = the registration page does not show how many registered */ showCount?: false }
 /** Double elimination: how the grand final is played. 'two' = a second match F-2 when the losers-bracket finalist wins the first; 'one' = a single match; 'none' = no grand final (the winners-bracket champion wins). Absent = 'one' (brackets made before the option). */
 export type GrandFinal = 'two' | 'one' | 'none';
-export interface Bracket { info?: BInfo; /** all places are decided with placement matches (up to 16th) */ place?: true; gf?: GrandFinal; /** single elimination: a match for 3rd place is played (Challonge-style option). */ third?: true; titleEn?: string; /** Names the organiser added by hand and took out of the bracket again: they stay in the registrants list (with +). */ bench?: string[]; /** false = registrants are NOT added to the bracket automatically (the organiser adds them with +). */ auto?: false; /** Organising group (optional, shown on the bracket, the image and the registration page). */ org?: string; /** Winner chosen by the organiser (player index); overrides the one worked out from the results. */ champ?: number; opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[] }
+export interface Bracket { info?: BInfo; /** all places are decided with placement matches (up to 16th) */ place?: true; /** with `place`: the lowest place that is decided (3 … 16); missing = 16 */ placeTo?: number; gf?: GrandFinal; /** single elimination: a match for 3rd place is played (Challonge-style option). */ third?: true; titleEn?: string; /** Names the organiser added by hand and took out of the bracket again: they stay in the registrants list (with +). */ bench?: string[]; /** false = registrants are NOT added to the bracket automatically (the organiser adds them with +). */ auto?: false; /** Organising group (optional, shown on the bracket, the image and the registration page). */ org?: string; /** Winner chosen by the organiser (player index); overrides the one worked out from the results. */ champ?: number; opts?: LeagueOpts; /** groups: player indexes per group */ groups?: number[][]; ko?: Knockout; /** ffa: fs[round][player] = score */ fs?: string[][]; format: BFormat; players: string[]; matches: BMatch[] }
 
 /** number = player index · 'bye' = empty seat · null = not decided yet. */
 export type Who = number | 'bye' | null;
@@ -143,11 +143,11 @@ export function canPlace(br: Bracket): boolean {
   if (br.format !== 'single' && br.format !== 'double') return false;
   return pow2(br.players.length) >= 8 && br.matches.some((m) => m.br === 'W');
 }
-function placeMatches(br: Bracket): BMatch[] {
+function placeMatches(br: Bracket, limit: number): BMatch[] {
   const out: BMatch[] = [];
   const classify = (slots: Slot[], start: number, col: number, stage: number, g: string, sec: 'W' | 'L') => {
     const n = slots.length;
-    if (n < 2 || n % 2) return;
+    if (n < 2 || n % 2 || start > limit) return;
     const ws: Slot[] = [], ls: Slot[] = [];
     for (let i = 0; i < n / 2; i++) {
       const id = `P${g}.${start}.${n}.${i + 1}`;
@@ -162,34 +162,39 @@ function placeMatches(br: Bracket): BMatch[] {
     const k = L.winners.length, size = 2 ** k;
     for (let r = 1; r < k - 1; r++) { // the round before the final is the 3rd-place match
       const n = size / 2 ** r, start = n + 1;
-      if (start + n - 1 > MAX_PLACE) continue;
+      if (start > limit) continue;
       classify(L.winners[r - 1].map((m) => ({ l: m.id })), start, r, 0, `W${r}`, 'W');
     }
   } else {
     let start = 3;
     for (let r = L.losers.length; r >= 1; r--) {
       const ms = L.losers[r - 1], n = ms.length;
-      if (n >= 2 && start + n - 1 <= MAX_PLACE) classify(ms.map((m) => ({ l: m.id })), start, r, 0, `L${r}`, 'L');
+      if (n >= 2 && start <= limit) classify(ms.map((m) => ({ l: m.id })), start, r, 0, `L${r}`, 'L');
       start += n;
     }
   }
   return out;
 }
-export function setPlace(br: Bracket, on: boolean): Bracket {
+export const clampPlace = (n: unknown) => Math.max(3, Math.min(MAX_PLACE, Math.round(Number(n)) || MAX_PLACE));
+/** Placement matches on or off. `to` = the lowest place to decide (3 … 16, default: the bracket's own choice, else 16). Results of placement matches that stay are kept. */
+export function setPlace(br: Bracket, on: boolean, to?: number): Bracket {
   const rest = br.matches.filter((m) => m.br !== 'P');
-  const { place: _p, ...bare } = br; void _p;
+  const old = new Map(br.matches.filter((m) => m.br === 'P').map((m) => [m.id, m] as const));
+  const { place: _p, placeTo: _q, ...bare } = br; void _p; void _q;
   if (!on) return { ...bare, matches: rest };
   if (!canPlace(br)) return br;
+  const lim = clampPlace(to ?? br.placeTo);
   let b: Bracket = { ...bare, matches: rest };
   if (b.format === 'single' && !b.third) b = setThird(b, true);
-  return { ...b, place: true, matches: [...b.matches, ...placeMatches(b)] };
+  const fresh = placeMatches(b, lim).map((m) => { const o = old.get(m.id); return o ? { ...m, ...(o.sa !== undefined ? { sa: o.sa } : {}), ...(o.sb !== undefined ? { sb: o.sb } : {}), ...(o.win ? { win: o.win } : {}) } : m; });
+  return { ...b, place: true, ...(lim < MAX_PLACE ? { placeTo: lim } : {}), matches: [...b.matches, ...fresh] };
 }
 
 function redraw(br: Bracket, players: string[]): Bracket {
   const keep = br.opts ? { win: br.opts.win, draw: br.opts.draw, loss: br.opts.loss, double: br.opts.double, koFormat: br.opts.koFormat, low: br.opts.low, ...(br.format === 'ffa' ? { rounds: br.opts.rounds } : {}) } : undefined;
   const out = players.length < 2 ? { ...draftBracket(br.format, players, keep), ...(br.gf ? { gf: br.gf } : {}) } : generate(br.format, players, keep, br.gf ?? 'one');
   const thirded = br.third && br.format === 'single' ? setThird(out, true) : out;
-  const redrawn = br.place ? { ...setPlace(thirded, true), place: true as const } : thirded;
+  const redrawn = br.place ? { ...setPlace(thirded, true, br.placeTo), place: true as const } : thirded;
   return { ...redrawn, ...(br.org ? { org: br.org } : {}), ...(br.bench?.length ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}), ...(br.titleEn ? { titleEn: br.titleEn } : {}), ...(br.info ? { info: br.info } : {}) };
 }
 

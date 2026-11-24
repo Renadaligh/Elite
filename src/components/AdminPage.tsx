@@ -726,7 +726,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
     const nb0 = setOrg(buildBracket(fmt, list, opts, { ...lo, place: !!br.place }), br.org ?? '');
     const nb1 = br.third && fmt === 'single' && canThird(nb0) ? setThird(nb0, true) : nb0;
-    const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true), place: true as const } : nb1;
+    const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true, lo.placeTo), place: true as const } : nb1;
     upd({ ...nb, ...(br.bench ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) });
   }
   async function saveInfo(next?: Adm<Tournament>) {
@@ -878,7 +878,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                 <Field label={x('نظام القرعة')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option><option value="rr">{x('دوري (كل لاعب ضد الكل)')}</option><option value="swiss">{x('سويسري')}</option><option value="groups">{x('مجموعات ثم إقصائيات')}</option><option value="ffa">{x('لوحة صدارة (الكل ضد الكل)')}</option></select></Field>
                 <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={bd} border={bd} players={br.players.length} />
                 {br.format === 'single' && <label className="flex items-center gap-2.5 text-[.9rem]" style={canThird(br) && !br.place ? undefined : { opacity: .55 }}><input type="checkbox" className="h-4 w-4" disabled={!canThird(br) || !!br.place} checked={!!br.third} onChange={(e) => upd(setThird(br, e.target.checked))} />{x('مباراة المركز الثالث')}</label>}
-                {(br.format === 'single' || br.format === 'double') && <label className="flex items-center gap-2.5 text-[.9rem]" style={canPlace(br) || br.place ? undefined : { opacity: .55 }}><input type="checkbox" className="h-4 w-4" disabled={!canPlace(br) && !br.place} checked={!!br.place} onChange={(e) => { setLo({ ...lo, place: e.target.checked }); upd(e.target.checked ? { ...setPlace(br, true), place: true as const } : setPlace(br, false)); }} />{x('مباريات تحديد المراكز (حتى المركز 16)')}</label>}
+                {(br.format === 'single' || br.format === 'double') && <label className="flex items-center gap-2.5 text-[.9rem]" style={canPlace(br) || br.place ? undefined : { opacity: .55 }}><input type="checkbox" className="h-4 w-4" disabled={!canPlace(br) && !br.place} checked={!!br.place} onChange={(e) => { setLo({ ...lo, place: e.target.checked }); upd(e.target.checked ? { ...setPlace(br, true, lo.placeTo), place: true as const } : setPlace(br, false)); }} />{x('مباريات تحديد المراكز')}</label>}
+                {br.place && (br.format === 'single' || br.format === 'double') && (() => { const mx = Math.max(4, Math.min(16, 2 ** Math.ceil(Math.log2(Math.max(br.players.length, 8))))); return <Field label={x('تحديد المراكز حتى')}><select className={selCls} style={bd} value={Math.min(br.placeTo ?? 16, mx)} onChange={(e) => { const n = +e.target.value; setLo({ ...lo, placeTo: n }); upd({ ...setPlace(br, true, n), place: true as const }); }}>{Array.from({ length: mx - 2 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>{lang === 'en' ? `${n}${n === 3 ? 'rd' : 'th'} place` : `المركز ${n}`}</option>)}</select></Field>; })()}
                 <div><button type="button" className={btnG} style={bd} onClick={applyFmt}>{x('تطبيق النظام')}</button></div>
               </div>
             </div>

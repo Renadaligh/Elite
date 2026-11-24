@@ -46,7 +46,7 @@ const extraOf = (o: Record<string, unknown>) => ({
   ...(Array.isArray(o.bench) && o.bench.length ? { bench: o.bench.slice(0, 2000).map((p) => txt(p, 40).trim()).filter(Boolean) } : {}),
   ...(o.auto === false ? { auto: false } : {}),
   ...(o.third === true ? { third: true } : {}),
-  ...(o.place === true ? { place: true } : {}),
+  ...(o.place === true ? { place: true, ...(Number.isInteger(o.placeTo) && (o.placeTo as number) >= 3 && (o.placeTo as number) < 16 ? { placeTo: o.placeTo } : {}) } : {}),
   ...(o.gf === 'two' || o.gf === 'one' || o.gf === 'none' ? { gf: o.gf } : {}),
   ...infoOf(o.info),
   ...(txt(o.titleEn, 80).trim() ? { titleEn: txt(o.titleEn, 80).trim() } : {}),

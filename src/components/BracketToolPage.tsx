@@ -11,6 +11,7 @@ import PublishToggle from './PublishToggle';
 import InfoFields, { defaultStart } from './InfoFields';
 import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
+import NewRegOpts, { regInit, defaultClose, type RegOpts } from './NewRegOpts';
 import EditorsPanel from './EditorsPanel';
 import Fold, { FlatFold } from './Fold';
 import type { BInfo } from '../data/bracket';
@@ -133,6 +134,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const tab = tabProp ?? tabS;
   const setTab = onTab ?? setTabS;
   const [ownerAv, setOwnerAv] = useState('');
+  const [reg, setReg] = useState<RegOpts>(regInit); // registration link options chosen on the "new tournament" form
   const [newInfo, setNewInfo] = useState<BInfo>(() => ({ startsAt: defaultStart(), total: 0, mode: 'solo' })); // the form of a tournament being created
   const [newCover, setNewCover] = useState<File | null>(null);
   const [newCoverUrl, setNewCoverUrl] = useState('');
@@ -171,15 +173,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
   const displayTitle = (lang === 'en' && titleEn.trim() ? titleEn.trim() : shownTitle);
 
-  const [needPrize, setNeedPrize] = useState(false);
   /** "New tournament": the whole settings form (name, organiser, format, game, start, seats, type, prize, picture), then the empty tree opens and is saved at once. */
   function create() {
     if (!title.trim()) { setMsg(tx.needName); return; }
-    if (!(newInfo.prize ?? '').trim()) { setNeedPrize(true); setMsg(lang === 'ar' ? 'الجائزة مطلوبة' : 'The prize is required'); return; }
     if (!newInfo.startsAt) { setMsg(lang === 'ar' ? 'حدد تاريخ ووقت البداية' : 'Choose the start date and time'); return; }
     justMade.current = true;
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined;
-    edit({ ...setOrg(buildBracket(fmt, [], opts, lo), org), info: newInfo });
+    edit({ ...setOrg(buildBracket(fmt, [], opts, lo), org), info: reg.on && !reg.showCount ? { ...newInfo, showCount: false } : newInfo, ...(reg.on && !reg.auto ? { auto: false as const } : {}) });
   }
   const fmtLabels = { single: tx.single, double: tx.double, rr: tx.rr, swiss: tx.swiss, groups: tx.groups, ffa: tx.ffa } as Record<BFormat, string>;
   /** Details edits are not "steps" for Undo: they change the bracket quietly (and autosave). */
@@ -245,7 +245,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, list.length) : undefined;
     const nb0 = setOrg(buildBracket(fmt, list, opts, { ...lo, place: lo.place && !!br.place }), br.org ?? '');
     const nb1 = br.third && fmt === 'single' && canThird(nb0) ? setThird(nb0, true) : nb0;
-    const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true), place: true as const } : nb1;
+    const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true, lo.placeTo), place: true as const } : nb1;
     edit({ ...nb, ...(br.info ? { info: br.info } : {}), ...(br.bench ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) });
   }
   const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
@@ -297,7 +297,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
       else {
         const r = await api<{ id: string }>('/brackets', { method: 'POST', body });
         const inf = br.info;
-        if (inf) { try { await api(`/brackets/${r.id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}) }) }); } catch { /* the details are also kept inside the bracket */ } }
+        if (inf) { try { await api(`/brackets/${r.id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}), ...(reg.on ? { enabled: true, closesAt: reg.autoClose ? (reg.closeAt || defaultClose(inf.startsAt)) : 0, description: reg.desc.trim(), doneMsg: reg.done.trim() } : {}) }) }); } catch { /* the details are also kept inside the bracket */ } }
         if (newCover) { try { await uploadCover(r.id, newCover); } catch { /* can be added later from Tournament info */ } }
         const bad: { h: string; c: string }[] = [];
         for (const h of draftEd) { try { await api(`/brackets/${r.id}/editors`, { method: 'POST', body: JSON.stringify({ handle: h }) }); } catch (e) { bad.push({ h, c: (e as Error & { detail?: string }).detail ?? '' }); } }
@@ -353,8 +353,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
           <div className="st-nf grid gap-4 rounded-2xl border p-5" style={card}>
             <b className="text-[1.1rem]">{tx.info}</b>
             <InfoFields lang={L2} title={title} onTitle={setTitle} org={org} onOrg={setOrgName} fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={0} fmtLabels={fmtLabels}
-              placeOpt={{ on: lo.place, disabled: false, set: (on) => setLo({ ...lo, place: on }) }}
-              info={newInfo} onInfo={(pt) => setNewInfo((o) => ({ ...o, ...pt }))} cover={newCoverUrl} onCover={(f) => void pickCover(f)} needPrize={needPrize} />
+              placeOpt={{ on: lo.place, disabled: false, set: (on) => setLo({ ...lo, place: on }), to: lo.placeTo, setTo: (n) => setLo({ ...lo, placeTo: n }) }}
+              info={newInfo} onInfo={(pt) => setNewInfo((o) => ({ ...o, ...pt }))} cover={newCoverUrl} onCover={(f) => void pickCover(f)}
+              after={<NewRegOpts lang={L2} v={reg} onChange={(pt) => setReg((o) => ({ ...o, ...pt }))} startsAt={newInfo.startsAt} />} />
             <div><button type="button" className="btn-primary" onClick={create}>{tx.create}</button></div>
             {msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>}
           </div>
@@ -407,9 +408,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
               <InfoFields lang={L2} title={title} onTitle={(v) => { ver.current += 1; setTitle(v); setDirty(true); }}
                 org={br.org ?? ''} onOrg={(v) => { const { org: _o, ...rest } = br; void _o; patchBr(v ? { ...rest, org: v } : rest); }}
                 fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={br.players.length} fmtLabels={fmtLabels}
-                info={br.info ?? {}} onInfo={setInfo} cover={cover} onCover={(f) => void pickCover(f)} coverBusy={coverBusy} needPrize
+                info={br.info ?? {}} onInfo={setInfo} cover={cover} onCover={(f) => void pickCover(f)} coverBusy={coverBusy}
                 third={br.format === 'single' ? { on: !!br.third, disabled: !canThird(br) || !!br.place, set: (on) => edit(setThird(br, on)) } : undefined}
-                placeOpt={br.format === 'single' || br.format === 'double' ? { on: !!br.place, disabled: !canPlace(br) && !br.place, set: (on) => { setLo({ ...lo, place: on }); edit(on ? { ...setPlace(br, true), place: true as const } : setPlace(br, false)); } } : undefined}
+                placeOpt={br.format === 'single' || br.format === 'double' ? { on: !!br.place, disabled: !canPlace(br) && !br.place, set: (on) => { setLo({ ...lo, place: on }); edit(on ? { ...setPlace(br, true, lo.placeTo), place: true as const } : setPlace(br, false)); }, to: br.placeTo ?? 16, setTo: (n) => { setLo({ ...lo, placeTo: n }); edit({ ...setPlace(br, true, n), place: true as const }); } } : undefined}
                 apply={{ label: tx.apply, run: applyFmt }} />
             </div>
           )}

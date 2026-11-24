@@ -1498,8 +1498,8 @@ body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select:
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:ease-in-out}
 
 /* start picker: compact selects (time + AM/PM) sharing one row with the date */
-select.dt-in.sel { padding-inline: .7rem 1.9rem; background-position: right .6rem center; background-size: .7rem; }
-[dir='rtl'] select.dt-in.sel { background-position: left .6rem center; }
+select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5rem center; background-size: .65rem; }
+[dir='rtl'] select.dt-in.sel { background-position: left .5rem center; }
 
 /* add-players bubbles: rectangular, not pills */
 .br-chips.rect .br-chip{border-radius:.7rem;padding:8px 16px}
