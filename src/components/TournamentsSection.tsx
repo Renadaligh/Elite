@@ -1,4 +1,3 @@
-import { viewPath } from '../hooks/nav';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import RegisterDialog from './RegisterDialog';
 import { getGame } from '../data/games';
@@ -19,7 +18,7 @@ const ST_BG: Record<TournamentStatus, string> = { live: '#ef4565', upcoming: '#1
 /** Published community brackets open the fast public SVG view; admin-created brackets keep their tournament page. */
 function bracketViewHref(x: Tournament): string {
   const id = x.community?.bracketId;
-  return id ? viewPath(id) : `/tournaments/${encodeURIComponent(x.id)}`;
+  return id ? `/v/${encodeURIComponent(id.slice(0, 6))}` : `/tournaments/${encodeURIComponent(x.id)}`;
 }
 
 function StatusPill({ s }: { s: TournamentStatus }) {

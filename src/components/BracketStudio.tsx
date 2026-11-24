@@ -1,4 +1,4 @@
-import { siteUrl, noProto, viewPath } from '../hooks/nav';
+import { siteUrl, noProto } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useRef, useState } from 'react';
 import { downloadBlob } from '../data/bracketImage';
@@ -247,7 +247,7 @@ function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
     } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
   }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}${viewPath(r.id)}`)); say(s.copied); } catch { say(noProto(`${base()}${viewPath(r.id)}`)); } }
+  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); say(s.copied); } catch { say(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -440,7 +440,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           {editing ? (
             <>
               <a href="/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
-              <Editor key={id} id={id} tx={tx} auth={auth} tab={tab} onTab={setTab} onTabs={setTabs} onForeign={() => { window.location.assign(siteUrl(viewPath(id))); }} />
+              <Editor key={id} id={id} tx={tx} auth={auth} tab={tab} onTab={setTab} onTabs={setTabs} onForeign={() => { window.location.assign(siteUrl(`/v/${encodeURIComponent(id.slice(0, 6))}`)); }} />
             </>
           ) : (
             <>
@@ -459,7 +459,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
 /** Handoff for old hash links and clients still running an earlier bundle. */
 export function PublicView({ id }: { id: string }) {
   const { lang } = useI18n();
-  const url = siteUrl(viewPath(id));
+  const url = siteUrl(`/v/${encodeURIComponent(id.slice(0, 6))}`);
   useEffect(() => {
     if (window.location.href !== url) window.location.replace(url);
   }, [url]);

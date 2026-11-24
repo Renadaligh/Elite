@@ -17,13 +17,6 @@ export function go(to: string, replace = false): void {
   window.dispatchEvent(new Event('plato:nav'));
 }
 
-/** A bracket's short code: its id when it is 6–8 hex characters (site tournaments have longer names and keep the old /v/ and /j/ links). */
-export const isCode = (id: string) => /^[a-f0-9]{6,8}$/i.test(id);
-/** Public tree: /<code>v (old form /v/<first 6>). */
-export const viewPath = (id: string, exact = false) => (isCode(id) ? `/${id.toLowerCase()}v` : `/v/${encodeURIComponent(exact ? id : id.slice(0, 6))}`);
-/** Registration page: /<code> (old form /j/<id>). */
-export const joinPath = (id: string) => (isCode(id) ? `/${id.toLowerCase()}` : `/j/${encodeURIComponent(id)}`);
-
 /** Full address of an app path, e.g. https://plato-ar.com/j/ab12cd34. */
 export const siteUrl = (p: string) => `${window.location.origin}${BASE}${p}`;
 

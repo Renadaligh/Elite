@@ -98,8 +98,7 @@ const copy = document.getElementById('copy-link');
 copy?.addEventListener('click', async (event) => {
   event.preventDefault();
   event.stopPropagation();
-  const sid = document.body.dataset.shortId || '';
-  const link = location.origin + (/^[a-f0-9]{6,8}$/i.test(sid) ? '/' + sid + 'v' : '/v/' + sid);
+  const link = location.origin + '/v/' + document.body.dataset.shortId;
   let copied = false;
   try {
     if (navigator.clipboard?.writeText) {
@@ -458,7 +457,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
     else if (!row.row) status = 404;
     else {
       title = (lang === 'en' ? ((JSON.parse(row.row.data) as Bracket).titleEn?.trim() || row.row.title) : row.row.title) || title;
-      shortId = /^[a-f0-9]{6,8}$/i.test(row.row.id) ? row.row.id : row.row.id.slice(0, 6);
+      shortId = row.row.id.slice(0, 6);
       svg = await snapshot(request, row.row, lang, title, waitUntil);
     }
   } catch (error) {

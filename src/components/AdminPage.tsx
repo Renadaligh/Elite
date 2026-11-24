@@ -13,7 +13,7 @@ import { clearSectionNav, setSectionNav, useSectionNav } from '../data/sectionNa
 import BracketActions from './BracketActions';
 import { AddPlayerBar, RegistrantsPanel, autoAddNew, commitAutoAdds, regName, type RegRow } from './AddPlayers';
 import JoinPanel from './JoinPanel';
-import { siteUrl, noProto, viewPath, joinPath } from '../hooks/nav';
+import { siteUrl, noProto } from '../hooks/nav';
 import Fold, { FlatFold } from './Fold';
 import WinnerCard from './WinnerCard';
 import { useBracketHistory } from '../hooks/useBracketHistory';
@@ -863,7 +863,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                 </div>
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={tf.name[lang] || tf.name.ar || tf.name.en} url={siteUrl(viewPath(t0.id))} exportId={t0.id} exportTheme={document.documentElement.dataset.hero === 'day' ? 'light' : 'dark'} beforeExport={dirty ? () => save(true) : undefined} onShuffle={() => { if (hasResults(br) && !window.confirm(x('خلط الأماكن يمسح النتائج الحالية (ويمكنك التراجع). متأكد؟'))) return; upd(reshuffle(br)); }} />
+                  <BracketActions undo={{ onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo }} bracket={br} title={tf.name[lang] || tf.name.ar || tf.name.en} url={siteUrl(`/v/${t0.id.slice(0, 6)}`)} exportId={t0.id} exportTheme={document.documentElement.dataset.hero === 'day' ? 'light' : 'dark'} beforeExport={dirty ? () => save(true) : undefined} onShuffle={() => { if (hasResults(br) && !window.confirm(x('خلط الأماكن يمسح النتائج الحالية (ويمكنك التراجع). متأكد؟'))) return; upd(reshuffle(br)); }} />
                 </div>
                 <div className="st-stage"><div className="st-brcard rounded-2xl border p-3" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div></div>
               </>
@@ -886,7 +886,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             {sec === 'join' && (
               <FlatFold.Provider value>
             <RegDescription id={t0.id} k={k} />
-            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
+            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} />
               </FlatFold.Provider>
             )}
             {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
@@ -969,7 +969,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <a className={btnG} style={bd} href={siteUrl(viewPath(r.community ? r.community.bracketId : r.id, true))} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
+                <a className={btnG} style={bd} href={siteUrl(`/v/${r.community ? r.community.bracketId : r.id}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
                 {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => setBrT(r)}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>
