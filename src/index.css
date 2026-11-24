@@ -1573,7 +1573,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261125; }
+:root { --build: 20261127; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
@@ -1600,3 +1600,10 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 .gs-list{max-height:13rem;overflow-y:auto;display:grid;gap:2px;align-content:start}
 .gs-list button{height:2.5rem;text-align:start;padding:0 .8rem}
 .gs-none{margin:0;padding:.8rem;font-size:.85rem;color:var(--muted)}
+
+/* section / fold arrows: a clear round button instead of a bare caret */
+.st-chev{display:inline-grid;place-items:center;width:26px;height:26px;flex:none;color:var(--text)}
+.st-chev svg{width:24px;height:24px;stroke-width:3}
+/* publish switch at the bottom of the tournament card */
+.hc-foot{border-top:1px solid var(--glass-b);padding:12px 16px 14px}
+.hc-foot .pb-box{border:0!important;background:transparent!important;padding:0!important;margin:0!important;box-shadow:none!important}

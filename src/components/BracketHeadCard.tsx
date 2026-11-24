@@ -1,15 +1,16 @@
 import { podium, type Bracket } from '../data/bracket';
+import type { ReactNode } from 'react';
 import { useGames } from '../hooks/useGames';
 
 /** Card above the tree: who organises it, the name, players / format / game / start, and the podium (1st, 2nd, 3rd) once it is known. */
-export default function BracketHeadCard({ bracket, title, ownerName, avatar, formatLabel, lang }: { bracket: Bracket; title: string; ownerName: string; avatar?: string; formatLabel: string; lang: 'ar' | 'en' }) {
+export default function BracketHeadCard({ bracket, title, ownerName, avatar, formatLabel, lang, foot }: { bracket: Bracket; title: string; ownerName: string; avatar?: string; formatLabel: string; lang: 'ar' | 'en'; /** shown at the bottom of the card (the publish switch) */ foot?: ReactNode }) {
   const ar = lang === 'ar';
   const games = useGames();
   const info = bracket.info ?? {};
   const game = info.gameId ? games.find((g) => g.id === info.gameId)?.name[lang] ?? '' : '';
   const start = info.startsAt && !Number.isNaN(Date.parse(info.startsAt)) ? new Date(info.startsAt).toLocaleString(ar ? 'ar-SA-u-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '';
   const who = (bracket.org || ownerName || '').trim();
-  const row = (k: string, v: string) => (v ? <><dt>{k}</dt><dd dir="auto">{v}</dd></> : null);
+  const row = (k: string, v: string, dir: 'auto' | 'rtl' | 'ltr' = 'auto') => (v ? <><dt>{k}</dt><dd dir={dir}>{v}</dd></> : null);
   return (
     <section className="hc" aria-label={title}>
       <div className="hc-org">
@@ -18,12 +19,13 @@ export default function BracketHeadCard({ bracket, title, ownerName, avatar, for
       </div>
       <h2 className="hc-t" dir="auto">{title}</h2>
       <dl className="hc-dl">
-        {row(ar ? 'اللاعبون' : 'Players', String(bracket.players.length))}
+        {row(ar ? 'اللاعبون' : 'Players', String(bracket.players.length), ar ? 'rtl' : 'ltr')}
         {row(ar ? 'النظام' : 'Format', formatLabel)}
         {row(ar ? 'اللعبة' : 'Game', game)}
         {row(ar ? 'التاريخ' : 'Start', start)}
       </dl>
       <PodiumRow bracket={bracket} lang={lang} />
+      {foot ? <div className="hc-foot">{foot}</div> : null}
     </section>
   );
 }

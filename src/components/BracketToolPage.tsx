@@ -365,7 +365,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
         <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4 ${!editable && readOnly ? 'pv-body' : ''}`}>
           {tabsDef.length > 0 && (
             <div className="st-secsel">
-              <button type="button" className="st-secbtn" aria-haspopup="listbox" aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{tabsDef.find((t) => t.k === tab)?.label}</span><span aria-hidden>{secOpen ? '▴' : '▾'}</span></button>
+              <button type="button" className="st-secbtn" aria-haspopup="listbox" aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{tabsDef.find((t) => t.k === tab)?.label}</span><span className="st-chev" aria-hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: secOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}><path d="m6 9 6 6 6-6" /></svg></span></button>
               {secOpen && <>
                 <button type="button" className="st-secbd" aria-label={lang === 'ar' ? 'إغلاق القائمة' : 'Close menu'} onClick={() => setSecOpen(false)} />
                 <div className="st-secmenu" role="listbox">{tabsDef.map((t) => <button key={t.k} type="button" role="option" aria-selected={tab === t.k} className={tab === t.k ? 'on' : ''} onClick={() => { setTab(t.k); setSecOpen(false); }}>{t.label}</button>)}</div>
@@ -376,10 +376,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             <>
               {editable ? (
                 <div className="hc-grid">
-                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} />
+                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} /> : undefined} />
                   <Fold title={ar ? 'إضافة لاعبين' : 'Add players'} style={card}>
                     <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />
-                    {isOwner && id && <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} />}
                   </Fold>
                 </div>
               ) : (

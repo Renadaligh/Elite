@@ -5,8 +5,8 @@ import type { BInfo } from '../data/bracket';
 /** Last thing on the tree page: one switch that sends the tournament to the site (or takes it off). Yellow = waiting for review, green = live, red = rejected with the reason. */
 interface Listing { name: string; published: boolean; review?: 'pending' | 'approved' | 'rejected'; reviewNote?: string }
 const T = {
-  ar: { title: 'نشر البطولة في الموقع', sub: 'تظهر في قسم البطولات بعد موافقة الفريق.', pending: 'بانتظار المراجعة: نراجع بطولتك وسنخبرك عند الموافقة. تقدر توقفها في أي وقت.', ok: 'منشورة في الموقع. تقدر توقفها بالمفتاح وتختفي من الموقع.', rej: 'تم رفض النشر', why: 'السبب', again: 'عدّل المطلوب في «معلومات البطولة» ثم شغّل المفتاح لإعادة الإرسال.', needName: 'اكتب اسم البطولة أولاً', needInfo: 'أكمل «معلومات البطولة» أولاً: الجائزة وتاريخ البداية مطلوبان.', fail: 'تعذّر التنفيذ، حاول مرة أخرى.', migrate: 'يجب تشغيل أوامر قاعدة البيانات الجديدة (schema.sql) أولاً.', limit: 'وصلت الحد الأعلى للبطولات المنشورة (10).' },
-  en: { title: 'Publish the tournament on the site', sub: 'It shows in the Tournaments section after the team approves it.', pending: 'Waiting for review: we are checking your tournament and will let you know. You can stop it any time.', ok: 'Live on the site. Turn the switch off and it disappears from the site.', rej: 'Publishing was rejected', why: 'Reason', again: 'Fix what was asked in “Tournament info”, then turn the switch on to resubmit.', needName: 'Enter the tournament name first', needInfo: 'Complete “Tournament info” first: the prize and the start date are required.', fail: 'Could not do that, try again.', migrate: 'Run the new database statements (schema.sql) first.', limit: 'You reached the limit of published tournaments (10).' },
+  ar: { title: 'نشر البطولة في الموقع', sub: 'تظهر في قسم البطولات بعد موافقة الفريق.', pending: 'بانتظار المراجعة: نراجع بطولتك وسنخبرك عند الموافقة. تقدر توقفها في أي وقت.', ok: 'منشورة في الموقع. تقدر توقفها بالمفتاح وتختفي من الموقع.', rej: 'تم رفض النشر', why: 'السبب', again: 'عدّل المطلوب في «معلومات البطولة» ثم شغّل المفتاح لإعادة الإرسال.', needName: 'اكتب اسم البطولة أولاً', needInfo: 'أكمل «معلومات البطولة» أولاً: تاريخ البداية مطلوب.', fail: 'تعذّر التنفيذ، حاول مرة أخرى.', migrate: 'يجب تشغيل أوامر قاعدة البيانات الجديدة (schema.sql) أولاً.', limit: 'وصلت الحد الأعلى للبطولات المنشورة (10).' },
+  en: { title: 'Publish the tournament on the site', sub: 'It shows in the Tournaments section after the team approves it.', pending: 'Waiting for review: we are checking your tournament and will let you know. You can stop it any time.', ok: 'Live on the site. Turn the switch off and it disappears from the site.', rej: 'Publishing was rejected', why: 'Reason', again: 'Fix what was asked in “Tournament info”, then turn the switch on to resubmit.', needName: 'Enter the tournament name first', needInfo: 'Complete “Tournament info” first: the start date is required.', fail: 'Could not do that, try again.', migrate: 'Run the new database statements (schema.sql) first.', limit: 'You reached the limit of published tournaments (10).' },
 };
 export default function PublishToggle({ id, lang, name, info, cover }: { id: string; lang: 'ar' | 'en'; name: string; info: BInfo | undefined; cover?: string }) {
   const t = T[lang];
@@ -29,7 +29,7 @@ export default function PublishToggle({ id, lang, name, info, cover }: { id: str
     if (busy) return;
     if (on) { void send(false); return; }
     if (!name.trim()) { setMsg(t.needName); return; }
-    if (!info?.prize?.trim() || !info.startsAt) { setMsg(t.needInfo); return; }
+    if (!info?.startsAt) { setMsg(t.needInfo); return; }
     void send(true);
   };
   // details changed while it is published: keep the site copy in step (a new name sends an approved one back to review, like before)
