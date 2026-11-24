@@ -180,7 +180,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
     if (!newInfo.startsAt) { setMsg(lang === 'ar' ? 'حدد تاريخ ووقت البداية' : 'Choose the start date and time'); return; }
     justMade.current = true;
     const opts = hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined;
-    edit({ ...setOrg(buildBracket(fmt, [], opts, lo), org), info: reg.on && !reg.showCount ? { ...newInfo, showCount: false } : newInfo, ...(reg.on && !reg.auto ? { auto: false as const } : {}) });
+    edit({ ...setOrg(buildBracket(fmt, [], opts, lo), org), info: reg.on && reg.showCount ? newInfo : { ...newInfo, showCount: false }, ...(reg.on && reg.auto ? {} : { auto: false as const }) });
   }
   const fmtLabels = { single: tx.single, double: tx.double, rr: tx.rr, swiss: tx.swiss, groups: tx.groups, ffa: tx.ffa } as Record<BFormat, string>;
   /** Details edits are not "steps" for Undo: they change the bracket quietly (and autosave). */

@@ -4,6 +4,7 @@ import { useGames } from '../hooks/useGames';
 import FormatOpts, { type FmtState } from './FormatOpts';
 import StartPicker from './StartPicker';
 import GameSelect from './GameSelect';
+import { nextHalfHour } from '../data/slot';
 
 /** Every tournament setting in one form: used when a tournament is created and on the "Tournament info" page. */
 const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
@@ -13,8 +14,8 @@ const lbl = 'grid gap-1.5 text-[.85rem]';
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const toLocal = (iso?: string) => { const d = new Date(iso ?? ''); return !iso || Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const fromLocal = (v: string) => { const d = new Date(v); return v && !Number.isNaN(d.getTime()) ? d.toISOString() : ''; };
-/** Default start offered for a new tournament: the next half hour, two hours ahead. */
-export const defaultStart = () => { const t = Date.now() + 2 * 3600_000; return new Date(Math.ceil(t / 1800_000) * 1800_000).toISOString(); };
+/** Default start offered for a new tournament: the nearest half hour from now (8:15 → 8:30). */
+export const defaultStart = () => new Date(nextHalfHour()).toISOString();
 
 export interface InfoFieldsProps {
   lang: 'ar' | 'en';

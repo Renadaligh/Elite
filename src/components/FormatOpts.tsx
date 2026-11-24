@@ -2,9 +2,9 @@ import { draftBracket, generate, setPlace, type BFormat, type Bracket, type Gran
 
 /** Settings shown under the format select for the non-elimination formats (shared by the dashboard and the public tool). */
 export interface FmtState { win: string; draw: string; loss: string; rounds: string; double: boolean; groups: string; adv: string; ko: 'single' | 'double'; low: boolean; gf: GrandFinal; place: boolean; placeTo: number }
-export const fmtInit = (): FmtState => ({ win: '1', draw: '0.5', loss: '0', rounds: '', double: false, groups: '', adv: '', ko: 'single', low: false, gf: 'two', place: false, placeTo: 16 });
+export const fmtInit = (): FmtState => ({ win: '1', draw: '0.5', loss: '0', rounds: '', double: false, groups: '', adv: '', ko: 'single', low: false, gf: 'two', place: false, placeTo: 3 });
 /** The settings form filled from an existing bracket (so the info card shows what the bracket really uses). */
-export const loOf = (b: Bracket): FmtState => { const o = b.opts; const s0 = { ...fmtInit(), gf: b.gf ?? 'one', place: !!b.place, placeTo: b.placeTo ?? 16 }; if (!o) return s0; return { ...s0, win: String(o.win), draw: String(o.draw), loss: String(o.loss), rounds: o.rounds ? String(o.rounds) : '', double: !!o.double, groups: o.groups ? String(o.groups) : '', adv: o.adv ? String(o.adv) : '', ko: o.koFormat === 'double' ? 'double' : 'single', low: !!o.low }; };
+export const loOf = (b: Bracket): FmtState => { const o = b.opts; const s0 = { ...fmtInit(), gf: b.gf ?? 'one', place: !!b.place, placeTo: b.place ? (b.placeTo ?? 16) : 3 }; if (!o) return s0; return { ...s0, win: String(o.win), draw: String(o.draw), loss: String(o.loss), rounds: o.rounds ? String(o.rounds) : '', double: !!o.double, groups: o.groups ? String(o.groups) : '', adv: o.adv ? String(o.adv) : '', ko: o.koFormat === 'double' ? 'double' : 'single', low: !!o.low }; };
 /** Builds a bracket the way the settings say: the grand-final rule (double elimination) and the placement matches (single / double). Players < 2 gives an empty draft that remembers the choices. */
 export function buildBracket(f: BFormat, list: string[], opts: Partial<LeagueOpts> | undefined, s: FmtState): Bracket {
   const gf = f === 'double' ? s.gf : undefined;

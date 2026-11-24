@@ -1,12 +1,13 @@
 import StartPicker from './StartPicker';
+import { nextHalfHour } from '../data/slot';
 
 /** "New tournament" form: switch for the registration link. When it is on, the link's options appear; they are sent with the first save of the tournament (see BracketToolPage). */
 export interface RegOpts { on: boolean; desc: string; done: string; showCount: boolean; auto: boolean; autoClose: boolean; closeAt: number }
-export const regInit = (): RegOpts => ({ on: false, desc: '', done: '', showCount: true, auto: true, autoClose: true, closeAt: 0 });
+/** every extra switch starts off */
+export const regInit = (): RegOpts => ({ on: false, desc: '', done: '', showCount: false, auto: false, autoClose: false, closeAt: 0 });
 
-const TWO_HOURS = 2 * 3600_000;
-/** Closing time offered by default: the tournament start if it is still ahead, otherwise two hours from now (same rule as the registration link card). */
-export const defaultClose = (startsAt?: string) => { const t = Date.parse(startsAt ?? ''); return t > Date.now() + 60_000 ? t : Date.now() + TWO_HOURS; };
+/** Closing time offered when auto-close is switched on: the tournament start if it is still ahead, otherwise the nearest half hour. */
+export const defaultClose = (startsAt?: string) => { const t = Date.parse(startsAt ?? ''); return t > Date.now() + 60_000 ? t : nextHalfHour(); };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const toLocal = (ms: number) => { if (!(ms > 0)) return ''; const d = new Date(ms); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const fromLocal = (v: string) => { const t = new Date(v).getTime(); return Number.isNaN(t) ? 0 : t; };

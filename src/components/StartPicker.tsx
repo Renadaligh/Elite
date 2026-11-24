@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { nextHalfHourHm } from '../data/slot';
 
 /** Start date + time in one popup (Challonge style): a month calendar and a list of times every 30 minutes (12:00 ص … 11:30 م).
  *  value / onChange use the local "YYYY-MM-DDTHH:mm" form of <input type="datetime-local">, so every caller keeps working. The list opens in the page flow (no floating layer to be clipped). */
@@ -24,7 +25,7 @@ export default function StartPicker({ value, onChange, lang, inpCls, style, requ
   const picked = d0 ? parseDay(d0) : null;
   const now = new Date();
   const today = dayKey(now.getFullYear(), now.getMonth(), now.getDate());
-  const [kept, setKept] = useState('21:00'); // remembered while no date is chosen yet
+  const [kept, setKept] = useState(() => nextHalfHourHm()); // remembered while no date is chosen yet: the nearest half hour from now
   const time = t0 || kept;
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<[number, number]>(() => (picked ? [picked[0], picked[1]] : [now.getFullYear(), now.getMonth()]));

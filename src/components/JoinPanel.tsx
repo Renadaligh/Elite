@@ -1,20 +1,19 @@
 import { noProto } from '../hooks/nav';
 import StartPicker from './StartPicker';
+import { nextHalfHour } from '../data/slot';
 import { shrinkImage } from '../data/shrinkImage';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../services/api';
 import Fold from './Fold';
 import type { RegRow } from './AddPlayers';
 
-/** First time the registration link is switched on it closes by itself two hours later (the organiser can change the time or the date, or turn it off). */
-const TWO_HOURS = 2 * 3600_000;
 interface Cfg { titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; cover?: string; startsAt?: string; enabled: boolean; mode: 'solo' | 'team'; cap: number; closesAt: number; closed: boolean; reason: '' | 'closed' | 'full'; count: number; signups: RegRow[] }
 const T = {
   ar: { titleEnL: 'عنوان البطولة بالإنجليزي (اختياري)، يظهر لمن يتصفح بالإنجليزي. العنوان العربي هو اسم البطولة.', titleEnPh: 'Tournament title', descL: 'وصف صفحة التسجيل (اختياري)', descPh: 'مثال: القوانين، الجائزة، طريقة اللعب…', doneL: 'رسالة بعد التسجيل (اختياري)', doneHint: 'تظهر للاعب مباشرة بعد تسجيله. إن تركتها فارغة تظهر الرسالة الافتراضية «أنت الآن في الحلبة».', title: 'رابط التسجيل', desc: 'صفحة تسجيل فقط، تنسخ رابطها وتنشره بنفسك. من يسجّل تصلك بياناته هنا، ولا يرى أحد الأسماء أو القرعة.', on: 'تفعيل رابط التسجيل', link: 'الرابط', copy: 'نسخ', copied: 'تم النسخ', solo: 'فردي', team: 'فرق', mode: 'نوع التسجيل', cap: 'الحد الأقصى للمسجلين (اختياري)', capPh: 'بدون حد', auto: 'إغلاق تلقائي في وقت محدد', now: 'إغلاق التسجيل الآن', reopen: 'إعادة فتح التسجيل', open: 'مفتوح', closed: 'مغلق', full: 'مكتمل', count: 'المسجّلون', fail: 'تعذّر الحفظ.', migrate: 'نفّذ أوامر SQL الخاصة برابط التسجيل في D1 أولاً.', saveT: 'حفظ', start: 'تاريخ بداية البطولة', cover: 'صورة البطولة (اختياري)', coverSize: 'ارفع صورة بقياس 1280 × 720 بكسل (نسبة 16:9)، بصيغة PNG أو JPG أو WebP وحجم أقصى 3MB. نفس الصورة تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع إذا نشرتها، وأي قياس آخر يُقصّ من الأطراف.', upload: 'رفع صورة', change: 'تغيير الصورة', rmImg: 'حذف الصورة', imgFail: 'تعذّر رفع الصورة (حتى 3MB: PNG أو JPG أو WebP).' },
   en: { titleEnL: 'Tournament title in English (optional), shown to English visitors. The Arabic title is the bracket name.', titleEnPh: 'Tournament title', descL: 'Registration page description (optional)', descPh: 'e.g. rules, prize, how it is played…', doneL: 'Message after registering (optional)', doneHint: 'Shown to the player right after they register. If you leave it empty the default message ("You are in the arena now") is shown.', title: 'Registration link', desc: 'A registration-only page: copy its link and share it yourself. Sign-ups arrive here; nobody sees the names or the bracket.', on: 'Enable the registration link', link: 'Link', copy: 'Copy', copied: 'Copied', solo: 'Solo', team: 'Teams', mode: 'Registration type', cap: 'Maximum registrants (optional)', capPh: 'No limit', auto: 'Close automatically at a set time', now: 'Close registration now', reopen: 'Reopen registration', open: 'Open', closed: 'Closed', full: 'Full', count: 'Registered', fail: 'Could not save.', migrate: 'Run the registration-link SQL in D1 first.', saveT: 'Save', start: 'Tournament start date', cover: 'Tournament picture (optional)', coverSize: 'Upload a 1280 × 720 px picture (16:9), PNG, JPG or WebP, up to 3MB. The same picture shows on the registration page and on the tournament card on the site if you publish it; any other size is cropped at the edges.', upload: 'Upload picture', change: 'Change picture', rmImg: 'Remove picture', imgFail: 'Could not upload the picture (up to 3MB: PNG, JPG or WebP).' },
 };
 /** Closing time offered when the link is switched on: the tournament start if it is still ahead, otherwise two hours from now. */
-const defaultClose = (startsAt?: string) => { const t = Date.parse(startsAt ?? ''); return t > Date.now() + 60_000 ? t : Date.now() + TWO_HOURS; };
+const defaultClose = (startsAt?: string) => { const t = Date.parse(startsAt ?? ''); return t > Date.now() + 60_000 ? t : nextHalfHour(); };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 /** epoch ms ↔ <input type=datetime-local>, in the organiser's own time zone */
 const toLocal = (ms: number) => { if (!(ms > 0)) return ''; const d = new Date(ms); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
@@ -62,7 +61,7 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
       {!c ? (msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>) : (
         <div className="grid gap-3">
           <div className="st-shh"><div><span>{t.on}</span></div>
-            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && c.closesAt === 0 ? { enabled: true, closesAt: defaultClose(c.startsAt), ...(c.startsAt || admin ? {} : { startsAt: new Date(Date.now() + TWO_HOURS).toISOString() }) } : { enabled: !c.enabled })}><i /></button></div>
+            <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && !c.startsAt && !admin ? { enabled: true, startsAt: new Date(nextHalfHour()).toISOString() } : { enabled: !c.enabled })}><i /></button></div>
             <div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
               <div className="flex flex-wrap items-center gap-3">
                 {c.cover ? <img src={c.cover} alt="" className="aspect-video w-44 max-w-full rounded-lg object-cover" /> : <span className="flex aspect-video w-44 max-w-full items-center justify-center rounded-lg text-[.72rem]" style={{ background: 'var(--chip-bg)' }}>1280 × 720</span>}
@@ -97,7 +96,7 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
                 <button type="button" role="switch" aria-checked={showCount !== false} aria-label={lang === 'ar' ? 'إظهار عدد المسجلين' : 'Show registrants count'} className={`st-sw ${showCount !== false ? 'on' : ''}`} onClick={() => onShowCount(showCount === false)}><i /></button></div>}
               <div className="grid gap-1.5">
                 <div className="st-shh"><div><span>{t.auto}</span></div>
-                  <button type="button" role="switch" aria-checked={c.closesAt > 0} aria-label={t.auto} className={`st-sw ${c.closesAt > 0 ? 'on' : ''}`} onClick={() => put({ closesAt: c.closesAt > 0 ? 0 : Date.now() + TWO_HOURS })}><i /></button></div>
+                  <button type="button" role="switch" aria-checked={c.closesAt > 0} aria-label={t.auto} className={`st-sw ${c.closesAt > 0 ? 'on' : ''}`} onClick={() => put({ closesAt: c.closesAt > 0 ? 0 : defaultClose(c.startsAt) })}><i /></button></div>
                 {c.closesAt > 0 && <StartPicker lang={lang} inpCls={line} style={bd} required value={toLocal(c.closesAt)} onChange={(v) => { const t = fromLocal(v); if (t > 0) void put({ closesAt: t }); }} />}
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
