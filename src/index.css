@@ -1571,7 +1571,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261203; }
+:root { --build: 20261204; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
@@ -1638,6 +1638,8 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
   .hc-grid > .st-share { display: flex; flex-direction: column; }
   .hc-grid > .st-share > .grid { flex: 1; display: flex; flex-direction: column; }
   .hc-grid > .st-share .pb-box { margin-top: auto; }
+  .hc-grid > .hc { display: flex; flex-direction: column; }
+  .hc-grid > .hc > .hc-pod:not(.bare) { flex: 1; align-content: center; padding-block: 18px; }
 }
 
 .cp{display:grid;gap:10px;max-width:20rem}

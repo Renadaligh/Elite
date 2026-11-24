@@ -65,25 +65,30 @@ export function hexOfHue(h: number): string {
 
 /** Up to `max` distinct vivid hues of a picture, most common first (pure function over RGBA pixels, so it can be tested without a canvas).
  *  Hues closer than `gap` degrees count as one colour; a hue must cover at least `min` of the vivid pixels to be offered. */
-export function hueClusters(d: ArrayLike<number>, max = 5, gap = 28, min = 0.03): number[] {
+export function hueClusters(d: ArrayLike<number>, max = 5, gap = 28, min = 0.03, want = 3): number[] {
   const N = 36; // 10° bins
-  const cnt = new Array<number>(N).fill(0), vivid = { n: 0 };
-  for (let i = 0; i + 3 < d.length; i += 4) {
-    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), s = mx === 0 ? 0 : (mx - mn) / mx;
-    if (s < 0.35 || mx < 0.25 || mx > 0.97) continue;
-    const dl = mx - mn; let hu = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4; hu = (hu * 60 + 360) % 360;
-    cnt[Math.floor(hu / 10) % N]++; vivid.n++;
-  }
-  if (!vivid.n) return [];
-  // smooth over the neighbouring bins so one colour is not split in two
-  const sm = cnt.map((_, i) => cnt[(i + N - 1) % N] + cnt[i] * 2 + cnt[(i + 1) % N]);
-  const order = sm.map((v, i) => [v, i] as const).sort((a, b) => b[0] - a[0]);
   const out: number[] = [];
-  for (const [v, i] of order) {
-    if (v / 4 < vivid.n * min) break;
-    const h = i * 10 + 5;
-    if (out.every((o) => { const df = Math.abs(o - h) % 360; return Math.min(df, 360 - df) >= gap; })) out.push(h);
-    if (out.length >= max) break;
+  // strict pass first (vivid pixels only); pastel or dull pictures give too few, so softer passes add more of the picture's own hues
+  const passes: [number, number, number, number, number][] = [[0.35, 0.25, 0.97, min, gap], [0.16, 0.2, 1, 0.012, 20], [0.08, 0.15, 1, 0.004, 16]];
+  for (const [sMin, vMin, vMax, share, gp] of passes) {
+    if (out.length >= want && sMin < 0.35) break;
+    const cnt = new Array<number>(N).fill(0); let n = 0;
+    for (let i = 0; i + 3 < d.length; i += 4) {
+      const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), s = mx === 0 ? 0 : (mx - mn) / mx;
+      if (s < sMin || mx < vMin || mx > vMax) continue;
+      const dl = mx - mn; let hu = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4; hu = (hu * 60 + 360) % 360;
+      cnt[Math.floor(hu / 10) % N]++; n++;
+    }
+    if (!n) continue;
+    // smooth over the neighbouring bins so one colour is not split in two
+    const sm = cnt.map((_, i) => cnt[(i + N - 1) % N] + cnt[i] * 2 + cnt[(i + 1) % N]);
+    const order = sm.map((v, i) => [v, i] as const).sort((a, b) => b[0] - a[0]);
+    for (const [v, i] of order) {
+      if (v / 4 < n * share) break;
+      const h = i * 10 + 5;
+      if (out.every((o) => { const df = Math.abs(o - h) % 360; return Math.min(df, 360 - df) >= gp; })) out.push(h);
+      if (out.length >= max) return out;
+    }
   }
   return out;
 }
@@ -109,6 +114,10 @@ export function useCoverPalette(src: string | undefined, first: number | null): 
     return () => { live = false; };
   }, [src]);
   if (first === null) return [];
-  const gapOk = (h: number) => { const df = Math.abs(first - h) % 360; return Math.min(df, 360 - df) >= 28; };
-  return [first, ...pal.filter(gapOk)].slice(0, 5);
+  const far = (list: number[], h: number, g: number) => list.every((o) => { const df = Math.abs(o - h) % 360; return Math.min(df, 360 - df) >= g; });
+  const out = [first];
+  for (const h of pal) if (far(out, h, 20)) out.push(h);
+  // a picture with a single colour: neighbouring and opposite shades of it, so there are always at least three to choose from
+  for (const off of [35, 180, 325, 90]) { if (out.length >= 3) break; const h = (first + off) % 360; if (far(out, h, 20)) out.push(h); }
+  return out.slice(0, 5);
 }
