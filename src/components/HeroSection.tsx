@@ -22,11 +22,13 @@ export default function HeroSection() {
 
   return (
     <section id="top" ref={heroRef} className="relative isolate flex min-h-[100svh] flex-col overflow-hidden" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="hero-vt absolute inset-0">
       <ArtLayers />
       {/* soft top shade keeps the glass header readable over the bright footage */}
       <div className="hero-topshade pointer-events-none absolute inset-0" />
       {/* readability shades: a bottom fade on phones (copy sits under the artwork), a side fade on desktop (copy sits in the artwork's empty left) */}
       <div className="hero-shade pointer-events-none absolute inset-0" />
+      </div>
       <div className="hero-wrap relative z-10 flex flex-1 flex-col items-center justify-end px-[clamp(1.1rem,5vw,5rem)] pb-[calc(max(4.4rem,8vh)_+_(100lvh_-_100svh))] pt-28 md:justify-center md:px-[clamp(2.5rem,6.3vw,7rem)] md:pb-[8vh] md:pt-[10vh]">
         <HeroContent />
       </div>
