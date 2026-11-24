@@ -23,7 +23,7 @@ const fromLocal = (v: string) => { const t = new Date(v).getTime(); return Numbe
 
 /** Organiser panel for the registration link (#/join/<id>): on/off, solo/team, cap, auto/manual close, and the people who signed up. */
 /** `admin` = a tournament run by the site admins: its settings go through the admin API (password/session key `k`) instead of the organiser's account. */
-export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showCount, onShowCount }: { id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void; admin?: { k: string }; showCount?: boolean; onShowCount?: (on: boolean) => void }) {
+export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showCount, onShowCount, onCover }: { id: string; lang: 'ar' | 'en'; link: string; autoOn: boolean; onAuto: (on: boolean) => void; admin?: { k: string }; showCount?: boolean; onShowCount?: (on: boolean) => void; /** told the current picture address (so the "Tournament info" card shows the same one) */ onCover?: (url: string) => void }) {
   const t = T[lang];
   const path = admin ? `/tournaments/${id}/join` : `/brackets/${id}/join`;
   const akey = admin ? { key: admin.k } : {};
@@ -35,7 +35,7 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
   const [desc, setDesc] = useState('');
   const [doneMsg, setDoneMsg] = useState('');
     const load = useCallback(async () => {
-    try { const d = await api<Cfg>(path, akey); setC(d); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
+    try { const d = await api<Cfg>(path, akey); setC(d); onCover?.(d.cover ?? ''); setCap(d.cap ? String(d.cap) : ''); setWhen(toLocal(d.closesAt)); setDesc(d.description ?? ''); setDoneMsg(d.doneMsg ?? ''); setMsg(''); }
     catch (e) { setMsg((e as Error & { detail?: string }).detail === 'migrate' ? t.migrate : t.fail); }
   }, [path, t.fail, t.migrate]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [load]);
@@ -63,14 +63,14 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
         <div className="grid gap-3">
           <div className="st-shh"><div><span>{t.on}</span></div>
             <button type="button" role="switch" aria-checked={c.enabled} aria-label={t.on} className={`st-sw ${c.enabled ? 'on' : ''}`} onClick={() => put(!c.enabled && c.closesAt === 0 ? { enabled: true, closesAt: defaultClose(c.startsAt), ...(c.startsAt || admin ? {} : { startsAt: new Date(Date.now() + TWO_HOURS).toISOString() }) } : { enabled: !c.enabled })}><i /></button></div>
-            {admin && <div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
+            <div className="grid gap-1.5 text-[.85rem]" style={{ color: 'var(--muted)' }}>{t.cover}
               <div className="flex flex-wrap items-center gap-3">
                 {c.cover ? <img src={c.cover} alt="" className="aspect-video w-44 max-w-full rounded-lg object-cover" /> : <span className="flex aspect-video w-44 max-w-full items-center justify-center rounded-lg text-[.72rem]" style={{ background: 'var(--chip-bg)' }}>1280 × 720</span>}
                 <label className="cl-btn on cursor-pointer">{c.cover ? t.change : t.upload}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" onChange={(e) => { void pickCover(e.target.files?.[0]); e.target.value = ''; }} /></label>
                 {c.cover && <button type="button" className="cl-btn" style={{ color: '#ff7a8a' }} onClick={() => put({ cover: '' })}>{t.rmImg}</button>}
               </div>
               <small>{t.coverSize}</small>
-            </div>}
+            </div>
           <div className="st-shh"><div><span>{lang === 'ar' ? 'إضافة المسجلين للشجرة تلقائيًا' : 'Automatically add registrants to bracket'}</span><small>{lang === 'ar' ? 'يمكنك إيقافها وإضافة المسجلين يدويًا من القائمة.' : 'Turn off to add registrants manually from the list.'}</small></div>
             <button type="button" role="switch" aria-checked={autoOn} aria-label={lang === 'ar' ? 'الإضافة التلقائية للشجرة' : 'Automatic bracket entry'} className={`st-sw ${autoOn ? 'on' : ''}`} onClick={() => onAuto(!autoOn)}><i /></button></div>
           {c.enabled && (
@@ -98,7 +98,7 @@ export default function JoinPanel({ id, lang, link, autoOn, onAuto, admin, showC
               <div className="grid gap-1.5">
                 <div className="st-shh"><div><span>{t.auto}</span></div>
                   <button type="button" role="switch" aria-checked={c.closesAt > 0} aria-label={t.auto} className={`st-sw ${c.closesAt > 0 ? 'on' : ''}`} onClick={() => put({ closesAt: c.closesAt > 0 ? 0 : Date.now() + TWO_HOURS })}><i /></button></div>
-                {c.closesAt > 0 && <input type="datetime-local" className={line} style={bd} dir="ltr" value={when} onChange={(e) => setWhen(e.target.value)} onBlur={() => { const v = fromLocal(when); if (v > 0) void put({ closesAt: v }); }} />}
+                {c.closesAt > 0 && <StartPicker lang={lang} inpCls={line} style={bd} required value={toLocal(c.closesAt)} onChange={(v) => { const t = fromLocal(v); if (t > 0) void put({ closesAt: t }); }} />}
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className="text-[.9rem] font-bold">{status} · {t.count}: {c.count}{c.cap > 0 ? ` / ${c.cap}` : ''}</span>

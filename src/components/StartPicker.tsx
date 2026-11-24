@@ -57,7 +57,8 @@ export default function StartPicker({ value, onChange, lang, inpCls, style, requ
   let zone = ''; try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch { /* ignore */ }
   const gmt = `GMT${off >= 0 ? '+' : '-'}${pad2(Math.floor(ab / 60))}:${pad2(ab % 60)}${zone ? ` ${zone}` : ''}`;
   const shown = picked ? `${dayKey(picked[0], picked[1], picked[2]).replace(/-/g, '/')} · ${label(time, ar)}` : '';
-  const arrow = (prev: boolean) => (prev === ar ? '›' : '‹');
+  /** month arrows: in Arabic (right to left) "previous" is on the right and points right */
+  const arrow = (prev: boolean) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={prev === ar ? 'm9 5 7 7-7 7' : 'm15 5-7 7 7 7'} /></svg>;
 
   return (
     <div ref={box} className="dtp">
