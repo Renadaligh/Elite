@@ -1,10 +1,5 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": [
-    "/assets/*", "/art/*", "/brand/*", "/games/*",
-    "/index.html", "/sw.js", "/manifest.webmanifest", "/robots.txt", "/favicon*", "/.well-known/*",
-    "/news", "/news/*", "/admin", "/admin/*", "/bracket", "/bracket/*",
-    "/tournaments", "/tournaments/*", "/t/*", "/j/*", "/join/*"
-  ]
+  "exclude": ["/assets/*", "/art/*", "/brand/*", "/games/*", "/manifest.webmanifest", "/robots.txt", "/sw.js", "/favicon.ico", "/favicon.svg", "/apple-touch-icon.png", "/icon-*"]
 }

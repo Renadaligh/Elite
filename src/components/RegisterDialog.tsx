@@ -97,12 +97,12 @@ export default function RegisterDialog({ x, onClose }: { x: Tournament; onClose:
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
             {!team && (
-              <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regPlatoId}
+              <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{(form?.idl?.trim() || t.regPlatoId)} <span style={{ color: '#ff6b7a' }}>*</span>
                 <input ref={first} dir="ltr" className={field} style={fieldStyle} value={platoId} maxLength={MAX.id} onChange={(e) => setPlatoId(e.target.value)} autoComplete="off" />
               </label>
             )}
             {team && (
-              <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamIds}
+              <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{(form?.idl?.trim() || t.regTeamIds)} <span style={{ color: '#ff6b7a' }}>*</span>
                 <ChipInput inputRef={first} dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
               </div>
             )}

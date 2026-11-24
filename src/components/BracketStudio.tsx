@@ -7,6 +7,7 @@ import type { Bracket } from '../data/bracket';
 import { useAuth, type Providers } from '../hooks/useAuth';
 import EmailLogin from './EmailLogin';
 import { useI18n } from '../i18n/I18nProvider';
+import { viewPath } from '../data/links';
 import { api } from '../services/api';
 import BrandLockup from './BrandLockup';
 import { Editor, TXT, type EditorTab, type TabDef } from './BracketToolPage';
@@ -247,7 +248,7 @@ function Mine({ s, lang, theme }: { s: St; lang: 'ar' | 'en'; theme: Theme }) {
     } catch (e) { say((e as Error & { detail?: string }).detail === 'limit' ? s.limitMsg : s.fail); }
   }
   async function del(r: Row) { if (!window.confirm(s.delAsk)) return; await api(`/brackets/${r.id}`, { method: 'DELETE' }).catch(() => undefined); load(); }
-  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); say(s.copied); } catch { say(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); } }
+  async function copy(r: Row) { try { await navigator.clipboard.writeText(noProto(`${base()}${viewPath(r.id)}`)); say(s.copied); } catch { say(noProto(`${base()}/v/${r.id.slice(0, 6)}`)); } }
   const cnt = (k: string) => rows?.filter((r) => r.status === k).length ?? '–';
   return (
     <>
@@ -440,7 +441,7 @@ function Studio({ id, auth, s, theme, setTheme }: { id?: string; auth: ReturnTyp
           {editing ? (
             <>
               <a href="/bracket" className="st-crumb">{dir === 'rtl' ? '→' : '←'} {s.backList}</a>
-              <Editor key={id} id={id} tx={tx} auth={auth} tab={tab} onTab={setTab} onTabs={setTabs} onForeign={() => { window.location.assign(siteUrl(`/v/${encodeURIComponent(id.slice(0, 6))}`)); }} />
+              <Editor key={id} id={id} tx={tx} auth={auth} tab={tab} onTab={setTab} onTabs={setTabs} onForeign={() => { window.location.assign(siteUrl(viewPath(id))); }} />
             </>
           ) : (
             <>

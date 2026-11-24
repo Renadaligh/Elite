@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
+import { joinPath, viewPath } from '../data/links';
 import { api } from '../services/api';
 import BracketActions from './BracketActions';
 import BracketHeadCard, { PodiumRow } from './BracketHeadCard';
@@ -173,7 +174,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
   });
-  const url = id ? `${base()}/v/${id.slice(0, 6)}` : `${base()}/bracket`;
+  const url = id ? `${base()}${viewPath(id)}` : `${base()}/bracket`;
   const shownTitle = title.trim() || (lang === 'ar' ? 'بطولة' : 'Bracket');
   const displayTitle = (lang === 'en' && titleEn.trim() ? titleEn.trim() : shownTitle);
 
@@ -346,7 +347,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
   if (state === 'missing') return <p className="text-lg">{tx.notFound}</p>;
   if (state === 'private') return <p className="text-lg">{tx.private}</p>;
-  const viewUrl = id ? `${base()}/v/${id.slice(0, 6)}` : `${base()}/bracket`;
+  const viewUrl = id ? `${base()}${viewPath(id)}` : `${base()}/bracket`;
 
   const ar = lang !== 'en';
   const L2 = lang === 'en' ? 'en' : 'ar';
@@ -424,7 +425,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             </div>
           )}
           {editable && id && tab === 'editors' && auth.user && flat(<EditorsPanel id={id} lang={L2} userId={auth.user.id} style={card} />)}
-          {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}/j/${id}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
+          {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}${joinPath(id)}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
           {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
         </div>
       )}

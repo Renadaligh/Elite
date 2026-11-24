@@ -11,6 +11,7 @@ function parse(): Route {
   const p = appPath();
   const seg = p.split('/').filter(Boolean);
   const id = seg[1] ? decodeURIComponent(seg[1]) : undefined;
+  if (seg.length === 1 && /^[0-9a-f]{8}$/i.test(seg[0])) return { page: 'join', id: seg[0].toLowerCase(), key: `join:${seg[0].toLowerCase()}` }; // short registration link
   switch (seg[0]) {
     case 'admin': return { page: 'admin', key: 'admin' };
     case 'news': return { page: 'news', key: 'news' };
@@ -31,7 +32,7 @@ function onClick(e: MouseEvent) {
   if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
   const raw = a.getAttribute('href') ?? '';
   // These routes are served directly by Cloudflare Pages Functions.
-  if (/^\/api(?:[/?#]|$)/.test(raw) || /^\/(?:v|view)\//.test(raw)) return;
+  if (/^\/api(?:[/?#]|$)/.test(raw) || /^\/(?:v|view)\//.test(raw) || /^\/[0-9a-f]{8}v\/?(?:[?#]|$)/i.test(raw)) return;
   if (raw.startsWith('/') && !raw.startsWith('//')) { e.preventDefault(); go(raw); }
   else if (raw.startsWith('#') && raw.length > 1) { e.preventDefault(); goSection(raw.slice(1)); }
 }

@@ -69,7 +69,7 @@ export async function joinExtra(env: Ctx['env'], id: string): Promise<{ cover: s
  * Two NEW tables, created the first time an organiser saves a form (CREATE TABLE IF NOT EXISTS), so no manual migration and no existing table changes.
  * Reads never create anything and fall back to "no questions", so the registration page keeps working exactly as before when the tables are missing. */
 export interface FormQ { id: string; t: string; k: 'short' | 'para' | 'choice' | 'multi'; r: boolean; o: string[] }
-export interface RegForm { hue: number | null; qs: FormQ[] }
+export interface RegForm { hue: number | null; qs: FormQ[]; idl?: string }
 export const NO_FORM: RegForm = { hue: null, qs: [] };
 const MAX_Q = 20, MAX_OPT = 20;
 const clip = (v: unknown, n: number) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
@@ -77,7 +77,7 @@ const clip = (v: unknown, n: number) => (typeof v === 'string' ? v.replace(/\s+/
 /** Keeps only what we know, with limits. null = not an object at all. */
 export function cleanForm(raw: unknown): RegForm | null {
   if (!raw || typeof raw !== 'object') return null;
-  const x = raw as { hue?: unknown; qs?: unknown };
+  const x = raw as { hue?: unknown; qs?: unknown; idl?: unknown };
   const hue = typeof x.hue === 'number' && Number.isFinite(x.hue) ? ((Math.round(x.hue) % 360) + 360) % 360 : null;
   const qs: FormQ[] = [];
   const seen = new Set<string>();
@@ -92,7 +92,8 @@ export function cleanForm(raw: unknown): RegForm | null {
     if ((k === 'choice' || k === 'multi') && opts.length < 2) continue;
     qs.push({ id, t, k, r: o.r === true, o: opts });
   }
-  return { hue, qs };
+  const idl = clip(x.idl, 60);
+  return idl ? { hue, qs, idl } : { hue, qs };
 }
 
 async function ensureForm(env: Ctx['env']): Promise<void> {

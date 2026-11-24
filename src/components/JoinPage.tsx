@@ -5,9 +5,9 @@ import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import { S, ThemeBtn, type Theme } from './BracketStudio';
 import { tintVars, useCoverHue } from '../data/regTheme';
-import { FormFields, missingQ, type Answers, type FormQ } from './RegForm';
+import { FormFields, missingQ, type Answers, type FormQ, type RegFormData } from './RegForm';
 
-interface Info { showCount?: boolean; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; startsAt?: string; title: string; org: string; form?: { hue: number | null; qs: FormQ[] }; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+interface Info { showCount?: boolean; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; startsAt?: string; title: string; org: string; form?: RegFormData; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full' | 'requiredQ';
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
@@ -111,12 +111,12 @@ export default function JoinPage({ id }: { id: string }) {
             ) : closedNow ? null : (
               <form onSubmit={submit} className="mt-4 flex flex-col gap-4" noValidate>
               {!team && (
-                <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regPlatoId}
+                <label className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{(info.form?.idl?.trim() || t.regPlatoId)} <span style={{ color: '#ff6b7a' }}>*</span>
                   <input dir="ltr" className={field} style={fieldStyle} value={platoId} maxLength={80} onChange={(e) => setPlatoId(e.target.value)} autoComplete="off" />
                 </label>
               )}
               {team && (
-                <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{t.regTeamIds}
+                <div className="flex flex-col gap-1.5 text-[.9rem] font-semibold">{(info.form?.idl?.trim() || t.regTeamIds)} <span style={{ color: '#ff6b7a' }}>*</span>
                   <ChipInput dir="ltr" className={`${field} focus-within:border-[var(--link-on)]`} style={fieldStyle} value={ids} onChange={setIds} maxLen={40} maxChips={20} placeholder={t.regIdsPh} ariaLabel={t.regTeamIds} bad={(c) => !okId(c)} />
                 </div>
               )}

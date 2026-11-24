@@ -22,6 +22,7 @@ import Fold, { FlatFold } from './Fold';
 import WinnerCard from './WinnerCard';
 import { useBracketHistory } from '../hooks/useBracketHistory';
 import { useI18n } from '../i18n/I18nProvider';
+import { joinPath, viewPath } from '../data/links';
 import { api } from '../services/api';
 import { ArrowIcon, TrophyIcon } from './icons';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -1005,7 +1006,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             {sec === 'join' && (
               <FlatFold.Provider value>
             <RegDescription id={t0.id} k={k} />
-            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(`/j/${t0.id}`)} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
+            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
               </FlatFold.Provider>
             )}
             {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
@@ -1090,7 +1091,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
-                <a className={btnG} style={bd} href={siteUrl(`/v/${r.community ? r.community.bracketId : r.id}`)} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
+                <a className={btnG} style={bd} href={siteUrl(viewPath(r.community ? r.community.bracketId : r.id))} target="_blank" rel="noopener noreferrer">{x('فتح القرعة')}</a>
                 {can('tournaments', 'edit') && (<button className={btnG} style={bd} title={x('تعديل')} aria-label={x('تعديل')} onClick={() => setBrT(r)}><PenI className="h-4 w-4" /></button>)}
                 {can('tournaments', 'delete') && (<button className={btnG} style={{ ...bd, color: '#ff6b7a' }} title={x('حذف')} aria-label={x('حذف')} onClick={() => del(r.id)}><TrashI className="h-4 w-4" /></button>)}
               </div>

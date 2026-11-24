@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 /** The organiser's own questions of a registration page: what a player fills in (FormFields) and the organiser's editor for them (QuestionsEditor). */
 export type QKind = 'short' | 'para' | 'choice' | 'multi';
 export interface FormQ { id: string; t: string; k: QKind; r: boolean; o: string[] }
-export interface RegFormData { hue: number | null; qs: FormQ[] }
+export interface RegFormData { hue: number | null; qs: FormQ[]; /** the organiser's own wording of the fixed ID field (the field itself stays); empty = the default wording */ idl?: string }
 export type Answers = Record<string, string | string[]>;
 export const NO_FORM: RegFormData = { hue: null, qs: [] };
 export const MAX_Q = 20;
@@ -22,8 +22,8 @@ export function missingQ(qs: FormQ[], a: Answers): string {
 }
 
 const T = {
-  ar: { short: 'نص قصير', para: 'فقرة', choice: 'اختيار واحد', multi: 'عدة اختيارات', title: 'عنوان السؤال', req: 'مطلوب', del: 'حذف', up: 'أعلى', down: 'أسفل', addOpt: 'إضافة خيار', opt: 'خيار', add: 'إضافة سؤال', ans1: 'إجابة قصيرة', ansN: 'إجابة طويلة', hide: 'لن يظهر للاعبين: يحتاج عنوانًا', hideOpt: 'لن يظهر للاعبين: يحتاج خيارين على الأقل', max: 'وصلت الحد الأقصى للأسئلة.', rmOpt: 'حذف الخيار', kind: 'نوع السؤال' },
-  en: { short: 'Short text', para: 'Paragraph', choice: 'Single choice', multi: 'Multiple choice', title: 'Question title', req: 'Required', del: 'Delete', up: 'Up', down: 'Down', addOpt: 'Add option', opt: 'Option', add: 'Add question', ans1: 'Short answer', ansN: 'Long answer', hide: 'Players will not see it: it needs a title', hideOpt: 'Players will not see it: it needs at least two options', max: 'You reached the maximum number of questions.', rmOpt: 'Remove option', kind: 'Question type' },
+  ar: { short: 'إجابة قصيرة', para: 'فقرة', choice: 'اختيار واحد', multi: 'اختيار من متعدد', title: 'عنوان السؤال', req: 'مطلوب', del: 'حذف', up: 'أعلى', down: 'أسفل', addOpt: 'إضافة خيار', opt: 'خيار', add: 'إضافة سؤال', ans1: 'إجابة قصيرة', ansN: 'إجابة طويلة', hide: 'لن يظهر للاعبين: يحتاج عنوانًا', hideOpt: 'لن يظهر للاعبين: يحتاج خيارين على الأقل', max: 'وصلت الحد الأقصى للأسئلة.', rmOpt: 'حذف الخيار', kind: 'نوع السؤال' },
+  en: { short: 'Short answer', para: 'Paragraph', choice: 'Single choice', multi: 'Multiple choice', title: 'Question title', req: 'Required', del: 'Delete', up: 'Up', down: 'Down', addOpt: 'Add option', opt: 'Option', add: 'Add question', ans1: 'Short answer', ansN: 'Long answer', hide: 'Players will not see it: it needs a title', hideOpt: 'Players will not see it: it needs at least two options', max: 'You reached the maximum number of questions.', rmOpt: 'Remove option', kind: 'Question type' },
 };
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none transition-colors focus:border-[var(--jn-ac,#3d7bff)]';
 const fieldStyle = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
