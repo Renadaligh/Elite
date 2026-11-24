@@ -33,6 +33,8 @@ export interface InfoFieldsProps {
   /** the "apply format" button (an existing tournament); a new one has no button here */
   apply?: { label: string; run: () => void };
   after?: ReactNode;
+  /** two columns on wide screens (the create page); the narrow info tab keeps one */
+  wide?: boolean;
 }
 
 export default function InfoFields(p: InfoFieldsProps) {
@@ -46,7 +48,8 @@ export default function InfoFields(p: InfoFieldsProps) {
     ? { name: 'اسم البطولة', namePh: 'مثلاً: كأس خادم الأصدقاء', org: 'اسم المنظم / المجموعة (اختياري)', orgPh: 'مثلاً: خادم الأصدقاء', fmt: 'النظام', game: 'اللعبة', pick: 'اختر لعبة', start: 'تاريخ ووقت بداية البطولة', seats: 'عدد المقاعد', unlimited: 'مفتوح بدون حد', mode: 'نوع التسجيل', solo: 'فردي', team: 'فريق', prize: 'الجائزة', prizePh: '', cover: 'صورة البطولة (اختياري)', up: 'رفع صورة', chg: 'تغيير الصورة', rm: 'حذف الصورة', coverNote: 'ارفع صورة بقياس 1280 × 720 (16:9)، PNG أو JPG أو WebP. تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع.', third: 'مباراة المركز الثالث' }
     : { name: 'Tournament name', namePh: 'e.g. Friends Server Cup', org: 'Organizer / group name (optional)', orgPh: 'e.g. Friends server', fmt: 'Format', game: 'Game', pick: 'Choose a game', start: 'Tournament start date and time', seats: 'Seats', unlimited: 'Open, no limit', mode: 'Registration type', solo: 'Solo', team: 'Team', prize: 'Prize', prizePh: '', cover: 'Tournament picture (optional)', up: 'Upload picture', chg: 'Change picture', rm: 'Remove picture', coverNote: 'Upload a 1280 × 720 picture (16:9), PNG, JPG or WebP. It shows on the registration page and on the tournament card on the site.', third: '3rd place match' };
   return (
-    <div className="grid gap-3.5">
+    <div className={`grid gap-3.5 ${p.wide ? 'if-wide' : ''}`}>
+     <div className="grid min-w-0 content-start gap-3.5">
       <label className={lbl} style={{ color: 'var(--muted)' }}><span>{L.name} <span style={{ color: '#ff6b7a' }}>*</span></span><input className={inp} style={bd} maxLength={60} value={p.title} placeholder={L.namePh} onChange={(e) => p.onTitle(e.target.value)} /></label>
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.org}<input className={inp} style={bd} maxLength={60} value={p.org} placeholder={L.orgPh} onChange={(e) => p.onOrg(e.target.value.slice(0, 60))} /></label>
       <label className={lbl} style={{ color: 'var(--muted)' }}><span>{L.fmt} <span style={{ color: '#ff6b7a' }}>*</span></span>
@@ -59,6 +62,8 @@ export default function InfoFields(p: InfoFieldsProps) {
           <select className={`${inp} sel`} style={sel} value={Math.min(p.placeOpt.to, placeMax)} onChange={(e) => p.placeOpt?.setTo(+e.target.value)}>{Array.from({ length: placeMax - 2 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>{ar ? `المركز ${n}` : `${n}${n === 3 ? 'rd' : 'th'} place`}</option>)}</select></label>}
       </div>}
       {p.apply && <div><button type="button" className="btn-primary" onClick={p.apply.run}>{p.apply.label}</button></div>}
+     </div>
+     <div className="grid min-w-0 content-start gap-3.5">
       <div className={lbl} style={{ color: 'var(--muted)' }}><span>{L.game} <span style={{ color: '#ff6b7a' }}>*</span></span>
         <GameSelect value={info.gameId ?? ''} onChange={(id) => p.onInfo({ gameId: id })} games={games} lang={lang} inpCls={inp} style={bd} /></div>
       <div className={lbl} style={{ color: 'var(--muted)' }}><span>{L.start} <span style={{ color: '#ff6b7a' }}>*</span></span>
@@ -75,7 +80,8 @@ export default function InfoFields(p: InfoFieldsProps) {
         </div>
       </div>
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.prize}<input className={inp} style={bd} maxLength={80} value={info.prize ?? ''} placeholder={L.prizePh} onChange={(e) => p.onInfo({ prize: e.target.value })} /></label>
-      {p.after}
+     </div>
+      {p.after && <div className="if-full min-w-0">{p.after}</div>}
     </div>
   );
 }

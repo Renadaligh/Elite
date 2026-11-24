@@ -13,6 +13,7 @@ import RegistrantsCard from './RegistrantsCard';
 import JoinPanel from './JoinPanel';
 import NewRegOpts, { regInit, defaultClose, type RegOpts } from './NewRegOpts';
 import RegFormEditor from './RegFormEditor';
+import { useMedia } from '../hooks/useMedia';
 import EditorsPanel from './EditorsPanel';
 import Fold, { FlatFold } from './Fold';
 import type { BInfo } from '../data/bracket';
@@ -138,6 +139,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const [reg, setReg] = useState<RegOpts>(regInit); // registration link options chosen on the "new tournament" form
   const [newInfo, setNewInfo] = useState<BInfo>(() => ({ startsAt: defaultStart(), total: 0, mode: 'solo' })); // the form of a tournament being created
   const [newCover, setNewCover] = useState<File | null>(null);
+  const wide = useMedia('(min-width:1024px)'); // two-column layout: the publish switch sits with "Add players" (on a phone it sits in the tournament card)
   const [designing, setDesigning] = useState(false); // the registration page designer is open (new tournament form)
   const [newCoverUrl, setNewCoverUrl] = useState('');
   const [cover, setCover] = useState(''); // picture of a saved tournament (kept with its registration link)
@@ -357,7 +359,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
         ) : (
           <div className="st-nf grid gap-4 rounded-2xl border p-5" style={card}>
             <b className="text-[1.1rem]">{tx.info}</b>
-            <InfoFields lang={L2} title={title} onTitle={setTitle} org={org} onOrg={setOrgName} fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={0} fmtLabels={fmtLabels}
+            <InfoFields wide lang={L2} title={title} onTitle={setTitle} org={org} onOrg={setOrgName} fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={0} fmtLabels={fmtLabels}
               placeOpt={{ on: lo.place, disabled: false, set: (on) => setLo({ ...lo, place: on }), to: lo.placeTo, setTo: (n) => setLo({ ...lo, placeTo: n }) }}
               info={newInfo} onInfo={(pt) => setNewInfo((o) => ({ ...o, ...pt }))} cover={newCoverUrl} onCover={(f) => void pickCover(f)}
               after={<NewRegOpts lang={L2} v={reg} onChange={(pt) => setReg((o) => ({ ...o, ...pt }))} startsAt={newInfo.startsAt} onDesign={() => setDesigning(true)} />} />
@@ -380,10 +382,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             <>
               {editable ? (
                 <div className="hc-grid">
-                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} /> : undefined} />
-                  <Fold title={ar ? 'إضافة لاعبين' : 'Add players'} style={card}>
-                    <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />
-                  </Fold>
+                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={!wide && isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} /> : undefined} />
+                  <FlatFold.Provider value={wide}>{/* wide screens: the card is always open and as tall as the tournament card */}
+                    <Fold title={ar ? 'إضافة لاعبين' : 'Add players'} style={card} defaultOpen>
+                      <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />
+                      {wide && isOwner && id && <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} />}
+                    </Fold>
+                  </FlatFold.Provider>
                 </div>
               ) : (
                 <div className={`flex flex-wrap items-center justify-between gap-2 ${readOnly ? 'pv-pad' : ''}`}>

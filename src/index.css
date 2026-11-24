@@ -549,12 +549,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 .st-avbig{width:4.5rem;height:4.5rem;border-radius:50%;background:var(--s-card2,#222);display:grid;place-items:center;font-weight:800;font-size:1.6rem;overflow:hidden;flex:none}
 .st-avbig img{width:100%;height:100%;object-fit:cover}
 
-.st-nf{max-width:34rem}
+.st-nf{max-width:100%}
+.if-full{grid-column:1/-1}
 @media (min-width:900px){
-  .st-nf{max-width:62rem;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);column-gap:1.75rem;align-items:start}
-  .st-nf>*{grid-column:1}
-  .st-nf>.st-nf-p{grid-column:2;grid-row:1/span 6;height:100%;grid-template-rows:auto 1fr}
-  .st-nf>.st-nf-p textarea{height:100%;min-height:20rem;resize:vertical}
+  .if-wide{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:2rem;row-gap:1.1rem;align-items:start}
 }
 
 .st-avrow{margin:-4px 0 14px;gap:.5rem}
@@ -1573,7 +1571,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261129; }
+:root { --build: 20261203; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
@@ -1633,3 +1631,24 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 .rf-open b{display:block;font-weight:800}.rf-open small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
 .rf-open>span:last-child{font-size:1.6rem;line-height:1;color:var(--muted)}
 [dir=rtl] .rf-open>span:last-child{transform:scaleX(-1)}
+
+/* wide screens: "Add players" is as tall as the tournament card next to it, the publish switch at its bottom */
+@media (min-width: 1024px) {
+  .hc-grid { align-items: stretch; }
+  .hc-grid > .st-share { display: flex; flex-direction: column; }
+  .hc-grid > .st-share > .grid { flex: 1; display: flex; flex-direction: column; }
+  .hc-grid > .st-share .pb-box { margin-top: auto; }
+}
+
+.cp{display:grid;gap:10px;max-width:20rem}
+.cp-sq{position:relative;height:9.5rem;border-radius:10px;cursor:crosshair;touch-action:none;border:1px solid var(--glass-b)}
+.cp-sq i{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4);transform:translate(-50%,-50%);pointer-events:none}
+.cp-row{display:flex;align-items:center;gap:12px}
+.cp-eye{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--glass-b);background:transparent;color:var(--text);cursor:pointer;flex:none}
+.cp-dot{width:34px;height:34px;border-radius:50%;flex:none;border:1px solid var(--glass-b)}
+.cp-hue{flex:1;min-width:0;height:12px;border-radius:99px;appearance:none;-webkit-appearance:none;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);outline:none}
+.cp-hue::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #1d6bff;cursor:pointer}
+.cp-hue::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #1d6bff;cursor:pointer}
+.cp-hex{display:flex;align-items:center;gap:10px;font-size:.78rem;font-weight:700;color:var(--muted)}
+.cp-hex input{flex:1;min-width:0;border:1px solid var(--glass-b);border-radius:10px;background:transparent;color:var(--text);padding:7px 10px;font:600 .9rem ui-monospace,monospace;text-transform:uppercase;outline:none}
+.cp-hex input:focus{border-color:#3d7bff}

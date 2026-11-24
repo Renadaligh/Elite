@@ -4,10 +4,14 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket, type BInfo } from '../data/bracket';
 import BracketView from './BracketView';
 import FormatOpts, { buildBracket, fmtInit, hasOpts, loOf, toOpts } from './FormatOpts';
 import StartPicker from './StartPicker';
+import InfoFields, { defaultStart } from './InfoFields';
+import NewRegOpts, { regInit, defaultClose, type RegOpts } from './NewRegOpts';
+import RegFormEditor from './RegFormEditor';
+import { useMedia } from '../hooks/useMedia';
 import BracketHeadCard from './BracketHeadCard';
 import { clearSectionNav, setSectionNav, useSectionNav } from '../data/sectionNav';
 import BracketActions from './BracketActions';
@@ -35,6 +39,7 @@ const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
 const EN: Record<string, string> = {
+  'إعدادات الأدمن': 'Admin settings', 'رجوع إلى البطولات': 'Back to tournaments', 'اسم البطولة بالإنجليزي': 'Tournament name in English', 'الجائزة بالإنجليزي': 'Prize in English', 'نص النظام (عربي)': 'Format text (Arabic)', 'نص النظام (إنجليزي)': 'Format text (English)', 'تم إنشاء البطولة، لكن تعذّر حفظ بعض الإعدادات. راجعها داخل البطولة': 'Tournament created, but some settings could not be saved. Check them inside the tournament', 'اختر اللعبة': 'Choose a game', 'حدد تاريخ ووقت البداية': 'Choose the start date and time', 'جاري الإنشاء…': 'Creating…', 'إنشاء البطولة': 'Create tournament',
   'توجد أسماء مكررة، عدّلها أولاً': 'Some names are repeated, fix them first', 'هذا الاسم مستخدم عند لاعب آخر': 'This name is already used by another player',
   'الوضع الداكن': 'Dark mode', 'الوضع الفاتح': 'Light mode',
  'لمحة عن اللعبة': 'About the game', 'فقرة': 'Paragraph', 'عنوان الفقرة (اختياري)': 'Paragraph title (optional)', 'عنوان للفقرة (اختياري)': 'Add a title (optional)', 'اكتب نص الفقرة هنا…': 'Write the paragraph here…', 'إضافة فقرة': 'Add paragraph', 'الصور': 'Images', 'رفع صور': 'Upload images', 'من الجهاز': 'From device', 'الفيديوهات': 'Videos', 'رفع فيديو': 'Upload video', 'عنوان (اختياري)': 'Title (optional)', 'إضافة رابط': 'Add link', 'الحد الأقصى للفيديو المرفوع 50 ميجا. للفيديوهات الأطول استخدم رابط يوتيوب.': 'Uploaded videos are limited to 50 MB. For longer videos use a YouTube link.', 'الفيديو أكبر من 50 ميجا. استخدم رابط يوتيوب.': 'The video is larger than 50 MB. Use a YouTube link.', 'الصيغ المدعومة: MP4 و WebM': 'Supported formats: MP4 and WebM', 'فشل رفع الفيديو': 'Video upload failed', 'تم رفع الفيديو بنجاح': 'Video uploaded', 'رابط يوتيوب غير صحيح': 'Invalid YouTube link', 'عربي': 'Arabic', 'تحسين الصور القديمة': 'Optimize old images', 'يصغّر صور PNG وJPG الثقيلة التي رُفعت سابقاً (تبقى بالرابط نفسه، وتُحفظ نسخة من الأصل). هذا يسرّع الموقع كثيراً.': 'Shrinks heavy PNG/JPG pictures uploaded earlier (same address; a copy of the original is kept). This makes the site much faster.', 'تعذّر فحص الصور': 'Could not scan the images', 'انتهى تصغير الصور': 'Images shrunk', 'عدد الصور': 'Images', 'الحجم الكلي': 'Total size', 'صور ثقيلة': 'Heavy images', 'وفّرنا': 'Saved', 'تعذّر': 'Failed', 'جارٍ الفحص…': 'Scanning…', 'فحص الصور': 'Scan images', 'جارٍ التصغير… لا تغلق الصفحة': 'Shrinking… keep this page open', 'تصغير الصور الثقيلة': 'Shrink heavy images', 
@@ -676,6 +681,119 @@ function TournamentFields({ f, setF, k, nameOnly, hidePublish }: { f: Adm<Tourna
   );
 }
 
+
+const FMT_AR: Record<BFormat, string> = { single: 'خروج المغلوب (فردي)', double: 'خروج مزدوج', rr: 'دوري (كل لاعب ضد الكل)', swiss: 'سويسري', groups: 'مجموعات ثم إقصائيات', ffa: 'لوحة صدارة (الكل ضد الكل)' };
+const FMT_EN: Record<BFormat, string> = { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin', swiss: 'Swiss', groups: 'Groups then knockout', ffa: 'Leaderboard (free-for-all)' };
+
+/** "New tournament" of the dashboard: the very same form as the organisers' tool (details, format, places, registration link + its designer), plus the admin-only settings in their own block. */
+function AdminNewTournament({ k, onClose, onAuthFail, onMade }: { k: string; onClose: () => void; onAuthFail: () => void; onMade: (t: Adm<Tournament>) => void }) {
+  const { lang, x } = useX();
+  const L2: 'ar' | 'en' = lang === 'en' ? 'en' : 'ar';
+  const toast = useToast();
+  const wide = useMedia('(min-width:1100px)');
+  const [title, setTitle] = useState('');
+  const [org, setOrgName] = useState('');
+  const [fmt, setFmt] = useState<BFormat>('single');
+  const [lo, setLo] = useState(fmtInit());
+  const [info, setInfo] = useState<BInfo>({ startsAt: defaultStart(), total: 0, mode: 'solo' });
+  const [reg, setReg] = useState<RegOpts>(regInit);
+  const [designing, setDesigning] = useState(false);
+  const [ex, setEx] = useState<{ nameEn: string; prizeEn: string; tier: 'regular' | 'major'; filled: number; image: string; imagePos: string; published: boolean; fAr: string | null; fEn: string | null }>({ nameEn: '', prizeEn: '', tier: 'regular', filled: 0, image: '', imagePos: '', published: false, fAr: null, fEn: null });
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const fmtLabels = L2 === 'en' ? FMT_EN : FMT_AR;
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  async function pickCover(f: File | null) {
+    if (!f) { setEx((o) => ({ ...o, image: '', imagePos: '' })); return; }
+    try {
+      const fd = new FormData(); fd.append('file', await shrinkImage(f, 1280), 'image');
+      const res = await fetch('/api/upload', { method: 'POST', headers: { authorization: `Bearer ${k}` }, body: fd });
+      if (!res.ok) throw new Error(String(res.status));
+      const j = (await res.json()) as { url: string };
+      setEx((o) => ({ ...o, image: j.url }));
+    } catch { toast.err(x('تعذّر تنفيذ العملية')); }
+  }
+
+  async function create() {
+    if (!title.trim()) { setMsg(x('اكتب اسم البطولة أولاً')); return; }
+    if (!info.gameId) { setMsg(x('اختر اللعبة')); return; }
+    if (!info.startsAt) { setMsg(x('حدد تاريخ ووقت البداية')); return; }
+    setBusy(true); setMsg('');
+    const total = info.total ?? 0;
+    const body: Adm<Tournament> = {
+      ...emptyT(), gameId: info.gameId, name: { ar: title.trim(), en: ex.nameEn.trim() },
+      format: { ar: ex.fAr ?? FMT_AR[fmt], en: ex.fEn ?? FMT_EN[fmt] }, prize: { ar: (info.prize ?? '').trim(), en: ex.prizeEn.trim() },
+      startsAt: info.startsAt ?? '', slots: { filled: Math.max(0, ex.filled), total }, mode: info.mode ?? 'solo', tier: ex.tier,
+      image: ex.image, ...(ex.imagePos ? { imagePos: ex.imagePos } : {}), published: ex.published,
+    };
+    let made: { id?: string } | undefined;
+    try { made = await api<{ id?: string }>('/tournaments', { method: 'POST', body: JSON.stringify(body), key: k }); }
+    catch (err) { setBusy(false); if ((err as Error).message === '401') onAuthFail(); else setMsg(why(err, x('تحقق من الاسم وتاريخ البداية'))); return; }
+    const id = made?.id;
+    if (!id) { setBusy(false); onClose(); return; }
+    let partial = false;
+    // the empty bracket with the chosen format and places, exactly as the organisers' tool builds it
+    try {
+      const opts = hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined;
+      const bracket: Bracket = { ...setOrg(buildBracket(fmt, [], opts, lo), org), info: reg.on && reg.showCount ? info : { ...info, showCount: false }, ...(reg.on && reg.auto ? {} : { auto: false as const }) };
+      await api(`/tournaments/${id}/bracket`, { method: 'PUT', body: JSON.stringify({ bracket, streamUrl: '', streamLive: false }), key: k });
+    } catch { partial = true; }
+    // the registration link (switch, auto-close, questions)
+    if (reg.on) {
+      try {
+        await api(`/tournaments/${id}/join`, { method: 'PUT', key: k, body: JSON.stringify({ enabled: true, mode: info.mode ?? 'solo', cap: Math.min(1000, total), startsAt: info.startsAt, closesAt: reg.autoClose ? (reg.closeAt || defaultClose(info.startsAt)) : 0, form: reg.form, ...(ex.image ? { cover: ex.image } : {}), ...(reg.done.trim() ? { doneMsg: reg.done.trim() } : {}) }) });
+      } catch { partial = true; }
+    }
+    try {
+      const list = await api<Adm<Tournament>[]>('/tournaments', { key: k });
+      const row = list.find((q) => q.id === id);
+      if (partial) toast.err(x('تم إنشاء البطولة، لكن تعذّر حفظ بعض الإعدادات. راجعها داخل البطولة')); else toast.ok(x('تمت الإضافة بنجاح'));
+      setBusy(false);
+      if (row) { onMade(row); return; }
+    } catch { /* fall through */ }
+    setBusy(false); onClose();
+  }
+
+  const back = <button type="button" className={btnG} style={bd} onClick={onClose}>{x('رجوع إلى البطولات')}</button>;
+  if (designing) {
+    return (
+      <div className="grid gap-3">
+        <RegFormEditor lang={L2} title={title} org={org} mode={info.mode ?? 'solo'} cover={ex.image} onCover={(f) => void pickCover(f)} desc="" onDesc={() => undefined} hideDesc form={reg.form} onForm={(form) => setReg((o) => ({ ...o, form }))} onClose={() => setDesigning(false)} />
+      </div>
+    );
+  }
+  const extras = (
+    <div className="grid gap-4 rounded-xl border p-3.5" style={bd}>
+      <b className="text-[.95rem]">{x('إعدادات الأدمن')}</b>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={x('اسم البطولة بالإنجليزي')}><input dir="ltr" className={inp} style={bd} value={ex.nameEn} onChange={(e) => setEx({ ...ex, nameEn: e.target.value })} /></Field>
+        <Field label={x('الجائزة بالإنجليزي')}><input dir="ltr" className={inp} style={bd} value={ex.prizeEn} onChange={(e) => setEx({ ...ex, prizeEn: e.target.value })} /></Field>
+        <Field label={x('نص النظام (عربي)')}><input className={inp} style={bd} value={ex.fAr ?? FMT_AR[fmt]} onChange={(e) => setEx({ ...ex, fAr: e.target.value })} /></Field>
+        <Field label={x('نص النظام (إنجليزي)')}><input dir="ltr" className={inp} style={bd} value={ex.fEn ?? FMT_EN[fmt]} onChange={(e) => setEx({ ...ex, fEn: e.target.value })} /></Field>
+        <Field label={x('الفئة')}><select className={sel} style={bd} value={ex.tier} onChange={(e) => setEx({ ...ex, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</option></select></Field>
+        <Field label={x('المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)')}><input type="number" min={0} className={inp} style={bd} value={ex.filled} onChange={(e) => setEx({ ...ex, filled: Math.max(0, Number(e.target.value) || 0) })} /></Field>
+      </div>
+      <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={ex.image} onChange={(v) => setEx((o) => ({ ...o, image: v }))} />
+      {ex.image && <FocusPicker src={ex.image} pos={ex.imagePos} onChange={(p) => setEx((o) => ({ ...o, imagePos: p }))} />}
+      <PublishToggle on={ex.published} onChange={(v) => setEx((o) => ({ ...o, published: v }))} />
+    </div>
+  );
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-center gap-3">{back}<h2 className="text-[1.15rem] font-extrabold">{x('بطولة جديدة')}</h2></div>
+      <div className="grid gap-4 rounded-2xl border p-5" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
+        <InfoFields wide={wide} lang={L2} title={title} onTitle={setTitle} org={org} onOrg={setOrgName} fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={0} fmtLabels={fmtLabels}
+          placeOpt={{ on: lo.place, disabled: false, set: (on) => setLo({ ...lo, place: on }), to: lo.placeTo, setTo: (n) => setLo({ ...lo, placeTo: n }) }}
+          info={info} onInfo={(pt) => setInfo((o) => ({ ...o, ...pt }))}
+          after={<div className="grid gap-4"><NewRegOpts lang={L2} v={reg} onChange={(pt) => setReg((o) => ({ ...o, ...pt }))} startsAt={info.startsAt} onDesign={() => setDesigning(true)} />{extras}</div>} />
+        <div><button type="button" className={btnP} style={gradBtn} disabled={busy} onClick={() => { void create(); }}>{busy ? x('جاري الإنشاء…') : x('إنشاء البطولة')}</button></div>
+        {msg && <p role="status" className="text-[.85rem]" style={{ color: '#ffb02e' }}>{msg}</p>}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Bracket + live stream (per tournament) ---------- */
 function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournament>; k: string; onClose: () => void; onAuthFail: () => void; onSaved: () => void }) {
   const { lang, x } = useX();
@@ -912,6 +1030,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   const [rows, setRows] = useState<Adm<Tournament>[]>([]);
   const [f, setF] = useState<Adm<Tournament> | null>(null);
   const [brT, setBrT] = useState<Adm<Tournament> | null>(null);
+  const [creating, setCreating] = useState(false);
   const toast = useToast();
   const load = useCallback(() => { api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setRows).catch(() => toast.err(x('تعذّر تحميل البطولات'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
@@ -945,10 +1064,11 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   const pendingN = rows.filter((r) => r.community?.review === 'pending').length;
 
   // the bracket opens as its own page (like the organisers' tool), not as a pop-up
+  if (creating) return <AdminNewTournament k={k} onClose={() => { setCreating(false); load(); }} onAuthFail={onAuthFail} onMade={(t) => { setCreating(false); setRows((r) => [t, ...r.filter((q) => q.id !== t.id)]); setBrT(t); }} />;
   if (brT) return <BracketAdmin key={brT.id} t0={brT} k={k} onClose={() => setBrT(null)} onAuthFail={onAuthFail} onSaved={load} />;
   return (
     <div>
-      <PageHead refresh={load} title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => { setF({ ...emptyT(), startsAt: new Date(Date.now() + 2 * 36e5).toISOString(), published: false }); }}>{x('+ بطولة جديدة')}</button> : undefined} />
+      <PageHead refresh={load} title={`${x('البطولات')} (${rows.length})`} sub={x('أضف وعدّل البطولات وعدد المقاعد')} action={can('tournaments', 'add') ? <button className={btnP} style={gradBtn} onClick={() => setCreating(true)}>{x('+ بطولة جديدة')}</button> : undefined} />
       <div className="mb-3 flex flex-wrap gap-2">
         {(['all', 'site', 'users'] as const).map((k) => (
           <button key={k} type="button" aria-pressed={src === k} onClick={() => setSrc(k)} className="rounded-full border px-4 py-1.5 text-[.85rem] font-semibold transition" style={src === k ? { ...gradBtn, color: '#fff', borderColor: 'transparent' } : { borderColor: 'var(--glass-b)', color: 'var(--muted)' }}>{k === 'all' ? x('الكل') : k === 'site' ? x('بطولات Plato AR') : x('بطولات المستخدمين')} ({srcN(k)})</button>

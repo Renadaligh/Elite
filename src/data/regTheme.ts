@@ -62,3 +62,53 @@ export function hexOfHue(h: number): string {
   const f = (n: number) => { const k = (n + h / 30) % 12; return Math.round(255 * (l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1))).toString(16).padStart(2, '0'); };
   return `#${f(0)}${f(8)}${f(4)}`;
 }
+
+/** Up to `max` distinct vivid hues of a picture, most common first (pure function over RGBA pixels, so it can be tested without a canvas).
+ *  Hues closer than `gap` degrees count as one colour; a hue must cover at least `min` of the vivid pixels to be offered. */
+export function hueClusters(d: ArrayLike<number>, max = 5, gap = 28, min = 0.03): number[] {
+  const N = 36; // 10° bins
+  const cnt = new Array<number>(N).fill(0), vivid = { n: 0 };
+  for (let i = 0; i + 3 < d.length; i += 4) {
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), s = mx === 0 ? 0 : (mx - mn) / mx;
+    if (s < 0.35 || mx < 0.25 || mx > 0.97) continue;
+    const dl = mx - mn; let hu = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4; hu = (hu * 60 + 360) % 360;
+    cnt[Math.floor(hu / 10) % N]++; vivid.n++;
+  }
+  if (!vivid.n) return [];
+  // smooth over the neighbouring bins so one colour is not split in two
+  const sm = cnt.map((_, i) => cnt[(i + N - 1) % N] + cnt[i] * 2 + cnt[(i + 1) % N]);
+  const order = sm.map((v, i) => [v, i] as const).sort((a, b) => b[0] - a[0]);
+  const out: number[] = [];
+  for (const [v, i] of order) {
+    if (v / 4 < vivid.n * min) break;
+    const h = i * 10 + 5;
+    if (out.every((o) => { const df = Math.abs(o - h) % 360; return Math.min(df, 360 - df) >= gap; })) out.push(h);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/** The picture's own colours for the colour picker: the most prominent hue first (the one the page uses by default), then the other main hues. */
+export function useCoverPalette(src: string | undefined, first: number | null): number[] {
+  const [pal, setPal] = useState<number[]>([]);
+  useEffect(() => {
+    setPal([]);
+    if (!src) return undefined;
+    let live = true;
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const w = 64, hgt = Math.max(1, Math.round((64 * img.naturalHeight) / Math.max(1, img.naturalWidth)));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = hgt;
+        const cx = cv.getContext('2d'); if (!cx) return;
+        cx.drawImage(img, 0, 0, w, hgt);
+        if (live) setPal(hueClusters(cx.getImageData(0, 0, w, hgt).data, 6));
+      } catch { /* unreadable picture: no extra colours */ }
+    };
+    img.src = src;
+    return () => { live = false; };
+  }, [src]);
+  if (first === null) return [];
+  const gapOk = (h: number) => { const df = Math.abs(first - h) % 360; return Math.min(df, 360 - df) >= 28; };
+  return [first, ...pal.filter(gapOk)].slice(0, 5);
+}

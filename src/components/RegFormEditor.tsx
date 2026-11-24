@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { PRESET_HUES, hexOfHue, hueOfHex, plainVars, tintVars, useCoverHue } from '../data/regTheme';
+import ColourPicker from './ColourPicker';
+import { plainVars, tintVars, useCoverHue, useCoverPalette } from '../data/regTheme';
 import { FormFields, QuestionsEditor, type Answers, type RegFormData } from './RegForm';
 
 /** Designer of the registration page. The organiser edits the page itself (picture, description, colour, questions) in the site's own look,
  *  and can switch to "what the player sees". Fully controlled: the parent keeps the values and decides when they are saved. */
 const T = {
-  ar: { edit: 'تحرير', prev: 'معاينة', dark: 'غامق', light: 'فاتح', done: 'تم', colour: 'لون الصفحة', auto: 'من الصورة', autoNo: 'تلقائي', pick: 'لون آخر', reset: 'رجوع للتلقائي', up: 'رفع صورة', chg: 'تغيير الصورة', rm: 'حذف الصورة', picNote: 'صورة بقياس 1280 × 720 (16:9). تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع، ومنها يُؤخذ لون الصفحة.', desc: 'وصف صفحة التسجيل (اختياري): القوانين، الجائزة، طريقة اللعب…', by: 'تنظيم', fixedSolo: 'معرّف بلاتو', fixedTeam: 'معرّفات اللاعبين', fixedNote: 'حقل ثابت يظهر دائمًا، والأسئلة تُضاف تحته.', qs: 'أسئلة إضافية', submit: 'تسجيل', demo: 'هذه معاينة فقط: لا يُرسل شي ولا يُسجَّل أحد.', editNote: 'أنت تحرر الصفحة. اللاعب يشوفها بدون أدوات التحرير.', prevNote: 'هكذا يشوفها اللاعب.', open: 'التسجيل مفتوح', noTitle: 'اسم البطولة' },
-  en: { edit: 'Edit', prev: 'Preview', dark: 'Dark', light: 'Light', done: 'Done', colour: 'Page colour', auto: 'From picture', autoNo: 'Automatic', pick: 'Other colour', reset: 'Back to automatic', up: 'Upload picture', chg: 'Change picture', rm: 'Remove picture', picNote: 'A 1280 × 720 (16:9) picture. It shows on the registration page and on the tournament card on the site, and the page colour is taken from it.', desc: 'Registration page description (optional): rules, prize, how it is played…', by: 'By', fixedSolo: 'Plato ID', fixedTeam: 'Players’ IDs', fixedNote: 'A fixed field that always shows. Your questions are added under it.', qs: 'Extra questions', submit: 'Register', demo: 'Preview only: nothing is sent and nobody is registered.', editNote: 'You are editing the page. Players see it without the editing tools.', prevNote: 'This is what players see.', open: 'Registration is open', noTitle: 'Tournament name' },
+  ar: { edit: 'تحرير', prev: 'معاينة', dark: 'غامق', light: 'فاتح', done: 'تم', colour: 'لون الصفحة', auto: 'من الصورة', fromPic: 'ألوان مأخوذة من صورة البطولة. الأول هو الأبرز وهو الاختيار التلقائي.', noPic: 'ارفع صورة لتظهر ألوانها هنا، أو اختر لونًا بنفسك.', autoNo: 'تلقائي', pick: 'لون آخر', reset: 'رجوع للتلقائي', up: 'رفع صورة', chg: 'تغيير الصورة', rm: 'حذف الصورة', picNote: 'صورة بقياس 1280 × 720 (16:9). تظهر في صفحة التسجيل وفي بطاقة البطولة بالموقع، ومنها يُؤخذ لون الصفحة.', desc: 'وصف صفحة التسجيل (اختياري): القوانين، الجائزة، طريقة اللعب…', by: 'تنظيم', fixedSolo: 'معرّف بلاتو', fixedTeam: 'معرّفات اللاعبين', fixedNote: 'حقل ثابت يظهر دائمًا، والأسئلة تُضاف تحته.', qs: 'أسئلة إضافية', submit: 'تسجيل', demo: 'هذه معاينة فقط: لا يُرسل شي ولا يُسجَّل أحد.', editNote: 'أنت تحرر الصفحة. اللاعب يشوفها بدون أدوات التحرير.', prevNote: 'هكذا يشوفها اللاعب.', open: 'التسجيل مفتوح', noTitle: 'اسم البطولة' },
+  en: { edit: 'Edit', prev: 'Preview', dark: 'Dark', light: 'Light', done: 'Done', colour: 'Page colour', auto: 'From picture', fromPic: 'Colours taken from the tournament picture. The first is the most prominent and the automatic choice.', noPic: 'Upload a picture to get its colours here, or pick a colour yourself.', autoNo: 'Automatic', pick: 'Other colour', reset: 'Back to automatic', up: 'Upload picture', chg: 'Change picture', rm: 'Remove picture', picNote: 'A 1280 × 720 (16:9) picture. It shows on the registration page and on the tournament card on the site, and the page colour is taken from it.', desc: 'Registration page description (optional): rules, prize, how it is played…', by: 'By', fixedSolo: 'Plato ID', fixedTeam: 'Players’ IDs', fixedNote: 'A fixed field that always shows. Your questions are added under it.', qs: 'Extra questions', submit: 'Register', demo: 'Preview only: nothing is sent and nobody is registered.', editNote: 'You are editing the page. Players see it without the editing tools.', prevNote: 'This is what players see.', open: 'Registration is open', noTitle: 'Tournament name' },
 };
 const seg = (on: boolean) => `rf-seg${on ? ' on' : ''}`;
 const field = 'w-full rounded-xl border bg-transparent px-4 py-3 text-[.95rem] outline-none';
@@ -28,6 +29,7 @@ export default function RegFormEditor({ lang, title, org, mode, cover, onCover, 
   const [demo, setDemo] = useState(false);
   const coverHue = useCoverHue(cover || undefined);
   const hue = form.hue ?? coverHue;
+  const palette = useCoverPalette(cover || undefined, coverHue); // the picture's own colours, the most prominent first
   const vars = { ...(hue === null ? plainVars(theme) : tintVars(hue, theme)), '--text': theme === 'dark' ? '#f4f7ff' : '#2b2160' } as React.CSSProperties;
   const editing = view === 'edit';
   const swatch = (h: number, on: boolean, label: string, onClick: () => void) => (
@@ -50,14 +52,11 @@ export default function RegFormEditor({ lang, title, org, mode, cover, onCover, 
         <div className="rf-colour">
           <span className="rf-lbl">{t.colour}</span>
           <div className="flex flex-wrap items-center gap-2.5">
-            {coverHue !== null && swatch(coverHue, form.hue === null, t.auto, () => onForm({ ...form, hue: null }))}
-            {PRESET_HUES.map((h) => swatch(h, form.hue === h, `${h}`, () => onForm({ ...form, hue: h })))}
-            <label className="rf-pick" title={t.pick}>
-              <input type="color" aria-label={t.pick} value={hexOfHue(hue ?? 215)} onChange={(e) => { const h = hueOfHex(e.target.value); if (h !== null) onForm({ ...form, hue: h }); }} />
-            </label>
+            {palette.map((h, i) => (i === 0 ? swatch(h, form.hue === null, t.auto, () => onForm({ ...form, hue: null })) : swatch(h, form.hue === h, `${h}`, () => onForm({ ...form, hue: h }))))}
             {form.hue !== null && <button type="button" className="rf-link" onClick={() => onForm({ ...form, hue: null })}>{t.reset}</button>}
           </div>
-          {coverHue !== null && <small className="rf-note">{t.auto}: {form.hue === null ? '✓' : ''}</small>}
+          <ColourPicker hue={hue ?? 215} onHue={(h) => onForm({ ...form, hue: h })} label={t.pick} />
+          {palette.length > 0 && <small className="rf-note">{t.fromPic}</small>}
         </div>
       )}
       <p className="rf-note">{editing ? t.editNote : t.prevNote}</p>

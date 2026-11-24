@@ -43,7 +43,7 @@ export function AddPlayerBar({ lang, onAdd, existing = [] }: { lang: 'ar' | 'en'
   const t = T[lang];
   /** Drops names already in the bracket (and repeats inside the batch); returns how many were skipped. */
   const fresh = (names: string[]) => { const have = new Set(existing.map(nameKey)); const out: string[] = []; for (const n of names) { const k = nameKey(n); if (k && !have.has(k)) { have.add(k); out.push(n); } } return { out, skipped: names.length - out.length }; };
-  const [mode, setMode] = useState<'' | 'one' | 'list' | 'file'>('');
+  const [mode, setMode] = useState<'' | 'one' | 'list' | 'file'>('list'); // the paste-a-list box is open from the start and stays open
   const [chips, setChips] = useState<string[]>([]);
   const [txt, setTxt] = useState('');
   const [msg, setMsg] = useState('');
@@ -55,7 +55,7 @@ export function AddPlayerBar({ lang, onAdd, existing = [] }: { lang: 'ar' | 'en'
     try { const names = await readNames(f); if (!names.length) { setMsg(t.fileNone); } else { const f = fresh(names); if (!f.out.length) setMsg(t.dup1); else { onAdd(f.out); setMsg(`+${f.out.length}${f.skipped ? ` · ${t.skip(f.skipped)}` : ''}`); } } } catch { setMsg(t.fileBad); }
     if (file.current) file.current.value = '';
   };
-  const tab = (k: typeof mode, label: string) => <button key={k} type="button" className={`br-chip ${mode === k ? 'on' : ''}`} aria-pressed={mode === k} onClick={() => { setMode(mode === k ? '' : k); setMsg(''); }}>{label}</button>;
+  const tab = (k: typeof mode, label: string) => <button key={k} type="button" className={`br-chip ${mode === k ? 'on' : ''}`} aria-pressed={mode === k} onClick={() => { setMode(k); setMsg(''); }}>{label}</button>;
   const bd = { borderColor: 'var(--glass-b)', color: 'var(--text)' };
   return (
     <div className="grid gap-2.5">
