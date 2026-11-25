@@ -40,7 +40,7 @@ function Row({ typing, hit, seed, name, state, score, win, lose, onClick, onScor
       {seed !== undefined && <span className="br-seed" aria-hidden="true">{seed}</span>}
       {grip && <span className="br-grip" data-grip={slot} aria-hidden="true">⠿</span>}
       {editing && onRename ? (
-        <input className="br-rn" autoFocus dir="auto" maxLength={40} defaultValue={name} aria-label={name}
+        <input className="br-rn" autoFocus dir="auto" maxLength={80} defaultValue={name} aria-label={name}
           onFocus={(e) => e.currentTarget.select()}
           onBlur={(e) => { onRename(e.currentTarget.value); setEditing(false); }}
           onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); else if (e.key === 'Escape') { e.currentTarget.value = name; e.currentTarget.blur(); } }} />

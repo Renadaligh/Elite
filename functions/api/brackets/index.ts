@@ -28,11 +28,12 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   if (!data) return json({ error: 'invalid' }, 400);
   const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM user_brackets WHERE user_id = ?').bind(u.id).first<{ n: number }>();
   if ((n?.n ?? 0) >= MAX_PER_USER) return json({ error: 'limit' }, 400);
-  // Six hex characters create compact public links; ensure the prefix is not used by an older longer ID.
+  // Eight hex characters give the short public links (/<id> to register, /<id>v to view). The id must not be the start of an older longer id, and its first six characters
+  // must not be an older six-character id (the old /v/<6> links look ids up by that prefix).
   const now = new Date().toISOString();
   for (let i = 0; i < 8; i++) {
-    const id = hex(3);
-    const prefixTaken = await env.DB.prepare('SELECT id FROM user_brackets WHERE id LIKE ? LIMIT 1').bind(id + '%').first<{ id: string }>();
+    const id = hex(4);
+    const prefixTaken = await env.DB.prepare('SELECT id FROM user_brackets WHERE id LIKE ? OR id = ? LIMIT 1').bind(id + '%', id.slice(0, 6)).first<{ id: string }>();
     if (prefixTaken) continue;
     try {
       await env.DB.prepare('INSERT INTO user_brackets (id, user_id, title, data, created_at, updated_at) VALUES (?,?,?,?,?,?)').bind(id, u.id, str(b.title, 60) || 'Bracket', JSON.stringify(data), now, now).run();

@@ -1,6 +1,6 @@
 import { guard } from '../../../_admin';
 import { sameOrigin } from '../../../_auth';
-import { answersMap, cleanForm, deleteAnswers, joinCount, joinDescPair, joinForm, packDesc, joinDoneMsgPair, joinTitleEn, joinExtra, joinReason, joinRow, saveForm } from '../../../_join';
+import { answersMap, cleanForm, deleteAnswers, namesMap, withNames, joinCount, joinDescPair, joinForm, packDesc, joinDoneMsgPair, joinTitleEn, joinExtra, joinReason, joinRow, saveForm } from '../../../_join';
 import { body, json, type Ctx } from '../../../_lib';
 import { dataId } from '../../../_tid';
 
@@ -18,7 +18,7 @@ export const onRequestGet = async (ctx: Ctx) => {
   try { signups = (await ctx.env.DB.prepare('SELECT id, mode, plato_id, team_name, members, created_at FROM bracket_signups WHERE bracket_id = ? ORDER BY id ASC LIMIT 5000').bind(did).all()).results ?? []; } catch { return json({ error: 'migrate' }, 500); }
   const count = signups.length;
   const ans = await answersMap(ctx.env, did, 'j');
-  signups = (signups as { id: number }[]).map((s) => (ans[s.id] ? { ...s, answers: ans[s.id] } : s));
+  signups = withNames((signups as { id: number }[]).map((s) => (ans[s.id] ? { ...s, answers: ans[s.id] } : s)), await namesMap(ctx.env, did, 'j'));
   const ex = await joinExtra(ctx.env, did);
   return json({ form: await joinForm(ctx.env, did), titleEn: await joinTitleEn(ctx.env, did), ...(await (async () => { const d = await joinDescPair(ctx.env, did); return { description: d.ar, descriptionEn: d.en }; })()), ...(await (async () => { const d = await joinDoneMsgPair(ctx.env, did); return { doneMsg: d.ar, doneMsgEn: d.en }; })()), cover: ex.cover, startsAt: ex.startsAt, enabled: !!r?.enabled, mode: r?.mode === 'team' ? 'team' : 'solo', cap: r?.cap ?? 0, closesAt: r?.closes_at ?? 0, closed: !!r?.closed, reason: r ? joinReason(r, count) : '', count, signups });
 };

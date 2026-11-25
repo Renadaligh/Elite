@@ -1,4 +1,4 @@
-import type { Ctx } from './_lib';
+import { str, validId, validIds, type Ctx } from './_lib';
 
 /** Registration link of a bracket (#/join/<id>): settings live in `bracket_join`, the sign-ups in `bracket_signups`. */
 export interface JoinRow { bracket_id: string; user_id: string; enabled: number; mode: string; cap: number; closes_at: number; closed: number }
@@ -160,8 +160,138 @@ export async function deleteAnswers(env: Ctx['env'], src: AnsSrc, signupId: numb
   await env.DB.prepare('DELETE FROM bracket_answers WHERE src = ? AND signup_id = ?').bind(src, signupId).run().catch(() => undefined);
 }
 
+/* ---- the display name of a registrant, changed by the organiser / admin. It lives in the registrant's own row (column `rname` of registrations / bracket_signups,
+ *      added by itself the first time one is renamed); the registered Plato ID / team name is never touched. ---- */
+export const cleanName = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, 80) : '');
+const nk = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+const tableOf = (src: AnsSrc) => (src === 'r' ? 'registrations' : 'bracket_signups');
+const scopeCol = (src: AnsSrc) => (src === 'r' ? 'tournament_id' : 'bracket_id');
+
+async function ensureNameCol(env: Ctx['env'], src: AnsSrc): Promise<void> {
+  try { await env.DB.prepare(`SELECT rname FROM ${tableOf(src)} LIMIT 1`).first(); }
+  catch { await env.DB.prepare(`ALTER TABLE ${tableOf(src)} ADD COLUMN rname TEXT NOT NULL DEFAULT ''`).run(); }
+}
+
+/** row id → display name, for the lists. `scope` = the bracket id (link sign-ups) or the tournament id (site registrations); null = every row. Empty when nobody was ever renamed. */
+export async function namesMap(env: Ctx['env'], scope: string | null, src: AnsSrc): Promise<Record<number, string>> {
+  const out: Record<number, string> = {};
+  try {
+    const q = scope === null
+      ? env.DB.prepare(`SELECT id, rname FROM ${tableOf(src)} WHERE rname <> '' LIMIT 20000`)
+      : env.DB.prepare(`SELECT id, rname FROM ${tableOf(src)} WHERE ${scopeCol(src)} = ? AND rname <> '' LIMIT 5000`).bind(scope);
+    for (const r of (await q.all<{ id: number; rname: string }>()).results ?? []) out[r.id] = r.rname;
+  } catch { /* column not added yet: nobody was renamed */ }
+  return out;
+}
+export const withNames = <T extends { id: number }>(rows: T[], names: Record<number, string>): (T & { rname?: string })[] => rows.map((r) => (names[r.id] ? { ...r, rname: names[r.id] } : r));
+
+async function putName(env: Ctx['env'], src: AnsSrc, id: number, scope: string, name: string): Promise<void> {
+  await ensureNameCol(env, src);
+  await env.DB.prepare(`UPDATE ${tableOf(src)} SET rname = ? WHERE id = ? AND ${scopeCol(src)} = ?`).bind(name, id, scope).run();
+}
+
+/** Renames one registrant for good: the new name becomes the registered one (the Plato ID of a solo player, the team name of a team), the old one is gone, and every answer
+ *  the person gave in the form stays. Body: { name, src: 'j'|'r', rid } for a row in the list, or { name, from } for "the registrant now shown as <from>" (a name changed in the bracket itself).
+ *  `bracketId` holds the registration-link sign-ups, `regTid` the site-form registrations. */
+type SRow = { id: number; mode: string; plato_id: string; team_name: string; members?: string; rname?: string };
+export async function applyRename(env: Ctx['env'], bracketId: string, regTid: string, b: Record<string, unknown>): Promise<{ ok: boolean; status: number; error?: string }> {
+  const name = cleanName(b.name);
+  try {
+    const none = { results: [] as SRow[] };
+    const sj = ((await env.DB.prepare('SELECT id, mode, plato_id, team_name, members FROM bracket_signups WHERE bracket_id = ? LIMIT 5000').bind(bracketId).all<SRow>().catch(() => none)).results ?? []);
+    const sr = ((await env.DB.prepare('SELECT id, mode, plato_id, team_name, members FROM registrations WHERE tournament_id = ? LIMIT 5000').bind(regTid).all<SRow>().catch(() => none)).results ?? []);
+    const jn = await namesMap(env, bracketId, 'j'), rn = await namesMap(env, regTid, 'r');
+    const shown = (r: SRow, own?: string) => nk(own || (r.mode === 'team' ? r.team_name : r.plato_id));
+    let src: AnsSrc | '' = '', row: SRow | undefined, scope = '';
+    if (b.rid !== undefined) {
+      src = b.src === 'r' ? 'r' : b.src === 'j' ? 'j' : '';
+      const rid = Number(b.rid);
+      if (!src || !Number.isInteger(rid)) return { ok: false, status: 400, error: 'invalid' };
+      scope = src === 'j' ? bracketId : regTid;
+      row = (src === 'j' ? sj : sr).find((r) => r.id === rid);
+      if (!row) return { ok: false, status: 404, error: 'not_found' };
+    } else {
+      const from = nk(cleanName(b.from));
+      if (!from || !name) return { ok: true, status: 200 }; // nothing to match
+      row = sj.find((r) => shown(r, jn[r.id]) === from);
+      if (row) { src = 'j'; scope = bracketId; }
+      else { row = sr.find((r) => shown(r, rn[r.id]) === from); if (row) { src = 'r'; scope = regTid; } }
+      if (!row || !src) return { ok: true, status: 200 };
+    }
+    const nm = str(b.name, 80).replace(/\s+/g, ' ');
+    if (!nm) return { ok: false, status: 400, error: 'required' };
+    const me = row, mySrc = src;
+    const key = (v: string) => v.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+    const isMe = (x: { r: SRow & { members?: string }; s: string }) => x.s === mySrc && x.r.id === me.id;
+    const rows = [...sj.map((r) => ({ r, s: 'j' })), ...sr.map((r) => ({ r, s: 'r' }))] as { r: SRow & { members?: string }; s: string }[];
+    if (me.mode === 'team') {
+      // a team is its list of IDs (shown as "a | b | c"): the typed name is read back as that list, with the registration form's rules
+      const ids = nm.split(/[|\n,،;]+/).map((v) => v.trim()).filter(Boolean);
+      if (ids.length < 2) return { ok: false, status: 400, error: 'required' };
+      if (!ids.every(validId)) return { ok: false, status: 400, error: 'bad_id' };
+      if (new Set(ids.map(key)).size !== ids.length) return { ok: false, status: 400, error: 'duplicate_members' };
+      for (const x of rows) {
+        if (isMe(x)) continue;
+        const theirs = [x.r.plato_id, ...(x.r.members ?? '').split(/[\n,،;]+/)].map(key);
+        if (ids.some((i) => theirs.includes(key(i)))) return { ok: false, status: 409, error: 'duplicate' };
+      }
+      const tn = ids.join(' | ').slice(0, 80);
+      await env.DB.prepare(`UPDATE ${tableOf(src)} SET plato_id = ?, team_name = ?, members = ? WHERE id = ? AND ${scopeCol(src)} = ?`).bind(ids[0], tn, ids.slice(1).join(', '), me.id, scope).run();
+      await env.DB.prepare(`UPDATE ${tableOf(src)} SET rname = '' WHERE id = ?`).bind(me.id).run().catch(() => undefined);
+      return { ok: true, status: 200 };
+    } else {
+      // a solo player: the name IS the Plato ID, so it follows the ID rule, and nobody else (captain or member included) may hold it
+      if (!validId(nm)) return { ok: false, status: 400, error: 'bad_id' };
+      for (const x of rows) {
+        if (isMe(x)) continue;
+        if (key(x.r.plato_id) === key(nm) || (x.r.members ?? '').split(/[\n,،;]+/).map(key).includes(key(nm))) return { ok: false, status: 409, error: 'duplicate' };
+      }
+    }
+    await env.DB.prepare(`UPDATE ${tableOf(src)} SET ${me.mode === 'team' ? 'team_name' : 'plato_id'} = ? WHERE id = ? AND ${scopeCol(src)} = ?`).bind(nm, me.id, scope).run();
+    await env.DB.prepare(`UPDATE ${tableOf(src)} SET rname = '' WHERE id = ?`).bind(me.id).run().catch(() => undefined); // an older display name is now the real one
+    return { ok: true, status: 200 };
+  } catch { return { ok: false, status: 500, error: 'migrate' }; }
+}
+
 /** Answers written out with the question titles: [{q:'Level', a:'Pro'}], in the organiser's question order (for lists and exports that have no form at hand). */
 export function qaPairs(form: RegForm, answers: Answers | undefined): { q: string; a: string }[] {
   if (!answers) return [];
   return form.qs.filter((q) => answers[q.id] !== undefined).map((q) => ({ q: q.t, a: [answers[q.id]].flat().join('، ') }));
+}
+
+/** Replaces the person behind a registration with somebody else, cleanly: the new ID (or team) goes into the same row, the old ID, members, display name and answers are dropped.
+ *  Body: { op: 'replace', src: 'j'|'r', rid, platoId, teamName?, members? }. The checks are the ones of a new registration, minus the row being replaced. */
+export async function applyReplace(env: Ctx['env'], bracketId: string, regTid: string, b: Record<string, unknown>): Promise<{ ok: boolean; status: number; error?: string; name?: string }> {
+  const src = b.src === 'r' ? 'r' : b.src === 'j' ? 'j' : '';
+  const rid = Number(b.rid);
+  if (!src || !Number.isInteger(rid)) return { ok: false, status: 400, error: 'invalid' };
+  const keep = b.op === 'edit'; // edit: the same registration with other IDs (answers stay); replace: somebody else (answers go). Both follow the registration form's rules exactly
+  const scope = src === 'j' ? bracketId : regTid;
+  const key = (v: string) => v.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+  const idsOf = (v: string) => v.split(/[\n,،;]+/).map(key).filter(Boolean);
+  try {
+    const row = await env.DB.prepare(`SELECT id, mode FROM ${tableOf(src)} WHERE id = ? AND ${scopeCol(src)} = ?`).bind(rid, scope).first<{ id: number; mode: string }>();
+    if (!row) return { ok: false, status: 404, error: 'not_found' };
+    const team = row.mode === 'team';
+    const plato = str(b.platoId, 80), members = team ? str(b.members, 600) : '';
+    let teamName = team ? str(b.teamName, 80) : '';
+    if (!plato || (team && !members)) return { ok: false, status: 400, error: 'required' };
+    if (!validId(plato) || (team && !validIds(members))) return { ok: false, status: 400, error: 'bad_id' };
+    if (team && !teamName) teamName = [plato, ...members.split(/[\n,]+/).map((m) => m.trim()).filter(Boolean)].join(' | ').slice(0, 80);
+    const mine = [key(plato), ...(team ? idsOf(members) : [])];
+    if (new Set(mine).size !== mine.length) return { ok: false, status: 400, error: 'duplicate_members' };
+    // everybody else already registered here (site form + registration link), except the row being replaced
+    const others = [
+      ...((await env.DB.prepare('SELECT id, mode, plato_id, team_name, members FROM registrations WHERE tournament_id = ? LIMIT 5000').bind(regTid).all<{ id: number; mode: string; plato_id: string; team_name: string; members: string }>().catch(() => ({ results: [] }))).results ?? []).filter((r) => !(src === 'r' && r.id === rid)),
+      ...((await env.DB.prepare('SELECT id, mode, plato_id, team_name, members FROM bracket_signups WHERE bracket_id = ? LIMIT 5000').bind(bracketId).all<{ id: number; mode: string; plato_id: string; team_name: string; members: string }>().catch(() => ({ results: [] }))).results ?? []).filter((r) => !(src === 'j' && r.id === rid)),
+    ];
+    const used = new Set<string>();
+    for (const r of others) { used.add(key(r.plato_id)); idsOf(r.members ?? '').forEach((m) => used.add(m)); }
+    if (team && others.some((r) => r.mode === 'team' && key(r.team_name) === key(teamName))) return { ok: false, status: 409, error: 'duplicate_team' };
+    if (mine.some((m) => used.has(m))) return { ok: false, status: 409, error: 'duplicate' };
+    await env.DB.prepare(`UPDATE ${tableOf(src)} SET plato_id = ?, team_name = ?, members = ? WHERE id = ? AND ${scopeCol(src)} = ?`).bind(plato, teamName, members, rid, scope).run();
+    await env.DB.prepare(`UPDATE ${tableOf(src)} SET rname = '' WHERE id = ?`).bind(rid).run().catch(() => undefined); // only when a display name was ever added
+    if (!keep) await deleteAnswers(env, src, rid);
+    return { ok: true, status: 200, name: team ? teamName : plato };
+  } catch { return { ok: false, status: 500, error: 'migrate' }; }
 }

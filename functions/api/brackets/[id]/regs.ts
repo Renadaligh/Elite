@@ -1,6 +1,6 @@
 import { currentUser, sameOrigin } from '../../../_auth';
 import { denied, json, type Ctx } from '../../../_lib';
-import { answersMap, deleteAnswers } from '../../../_join';
+import { answersMap, deleteAnswers, namesMap, withNames } from '../../../_join';
 
 /** The people who registered through the site for a community tournament: only its owner sees them. */
 async function owns(ctx: Ctx, uid: string) {
@@ -13,7 +13,8 @@ export const onRequestGet = async (ctx: Ctx) => {
   if (!(await owns(ctx, u.id))) return json({ error: 'not_found' }, 404);
   const { results } = await ctx.env.DB.prepare('SELECT id, mode, plato_id, team_name, members, created_at FROM registrations WHERE tournament_id = ? ORDER BY id ASC').bind(`u-${ctx.params.id}`).all<{ id: number }>();
   const ans = await answersMap(ctx.env, ctx.params.id, 'r');
-  return json((results ?? []).map((r) => (ans[r.id] ? { ...r, answers: ans[r.id] } : r)));
+  const nm = await namesMap(ctx.env, `u-${ctx.params.id}`, 'r');
+  return json(withNames((results ?? []).map((r) => (ans[r.id] ? { ...r, answers: ans[r.id] } : r)), nm));
 };
 
 export const onRequestDelete = async (ctx: Ctx) => {

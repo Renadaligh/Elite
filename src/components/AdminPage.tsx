@@ -29,7 +29,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
-type Reg = { qa?: { q: string; a: string }[]; id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
+type Reg = { rname?: string; qa?: { q: string; a: string }[]; id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
 type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins' | 'log';
 type Perms = Partial<Record<'news' | 'tournaments' | 'games' | 'regs', string[]>>;
 type Me = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; recovery?: boolean };
@@ -40,6 +40,7 @@ const BASE = import.meta.env.BASE_URL;
 const TAG_AR: Record<NewsTag, string> = { update: 'تحديث', tournament: 'بطولة', community: 'مجتمع', event: 'فعالية' };
 
 const EN: Record<string, string> = {
+  'تعذّر حفظ الاسم': 'Could not save the name',
   'إعدادات الأدمن': 'Admin settings', 'رجوع إلى البطولات': 'Back to tournaments', 'اسم البطولة بالإنجليزي': 'Tournament name in English', 'الجائزة بالإنجليزي': 'Prize in English', 'نص النظام (عربي)': 'Format text (Arabic)', 'نص النظام (إنجليزي)': 'Format text (English)', 'تم إنشاء البطولة، لكن تعذّر حفظ بعض الإعدادات. راجعها داخل البطولة': 'Tournament created, but some settings could not be saved. Check them inside the tournament', 'اختر اللعبة': 'Choose a game', 'حدد تاريخ ووقت البداية': 'Choose the start date and time', 'جاري الإنشاء…': 'Creating…', 'إنشاء البطولة': 'Create tournament',
   'توجد أسماء مكررة، عدّلها أولاً': 'Some names are repeated, fix them first', 'هذا الاسم مستخدم عند لاعب آخر': 'This name is already used by another player',
   'الوضع الداكن': 'Dark mode', 'الوضع الفاتح': 'Light mode',
@@ -867,13 +868,53 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     } catch (err) { if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تحقق من الاسم وتاريخ البداية'))); }
     setInfoBusy(false);
   }
-  const rename = (i: number, v: string) => { if (!br) return; if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) }); };
+  const rename = async (i: number, v: string) => {
+    if (!br) return;
+    if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; }
+    const old = br.players[i], nv = v.slice(0, 80);
+    // the same person in the registrants list gets the new name too (site tournaments only: a community tournament's list belongs to its organiser); the registration form's rules apply first
+    if (!t0.community && old && nameKey(old) !== nameKey(nv) && nv.trim()) {
+      try { await api(`/tournaments/${t0.id}/regname`, { method: 'PUT', key: k, body: JSON.stringify({ from: old, name: nv }) }); loadRegsRef.current(); }
+      catch (e) {
+        const d = (e as Error & { detail?: string }).detail ?? '';
+        const msg: Record<string, string> = { bad_id: x('اكتب المعرّف بالإنجليزي (حروف وأرقام و _ فقط)'), duplicate: x('هذا المعرّف مسجّل بالفعل في البطولة'), duplicate_members: x('معرّف مكرر في الفريق'), required: x('الفريق يحتاج معرّفين على الأقل، افصل بينهم بـ |') };
+        if (msg[d]) { toast.err(msg[d]); return; }
+      }
+    }
+    upd({ ...br, players: br.players.map((p, j) => (j === i ? nv : p)) });
+  };
+  const loadRegsRef = useRef<() => void>(() => undefined);
+  /** a person renamed in the registrants list: the same name inside the bracket (and the "out of the bracket" list) changes too */
+  function renameByName(from: string, to: string) {
+    if (!br) return;
+    const kk = nameKey(from), i = br.players.findIndex((p) => nameKey(p) === kk), inBench = !!br.bench?.some((b) => nameKey(b) === kk);
+    if (i < 0 && !inBench) return;
+    upd({ ...br, ...(i >= 0 ? { players: br.players.map((p, j) => (j === i ? to.slice(0, 80) : p)) } : {}), ...(inBench ? { bench: (br.bench ?? []).map((b) => (nameKey(b) === kk ? to.slice(0, 80) : b)) } : {}) });
+  }
+  async function replaceReg(r: RegRow, v: { platoId: string; teamName: string; members: string; keep?: boolean }): Promise<string | void> {
+    const old = regName(r);
+    try {
+      const res = await api<{ name?: string }>(`/tournaments/${t0.id}/regname`, { method: 'PUT', key: k, body: JSON.stringify({ op: v.keep ? 'edit' : 'replace', src: r.src === 'join' ? 'j' : 'r', rid: r.id, ...v }) });
+      renameByName(old, res.name || v.teamName || v.platoId);
+      loadRegsRef.current();
+    } catch (e) { return (e as Error & { detail?: string }).detail ?? 'fail'; }
+  }
+  async function renameReg(r: RegRow, name: string): Promise<string | void> {
+    const old = regName(r);
+    if (r.src !== 'manual') {
+      try { await api(`/tournaments/${t0.id}/regname`, { method: 'PUT', key: k, body: JSON.stringify({ src: r.src === 'join' ? 'j' : 'r', rid: r.id, name }) }); }
+      catch (e) { const d = (e as Error & { detail?: string }).detail ?? ''; return d === 'bad_id' ? x('اكتب المعرّف بالإنجليزي (حروف وأرقام و _ فقط)') : d === 'duplicate_members' ? x('معرّف مكرر في الفريق') : d.startsWith('duplicate') ? x('هذا المعرّف مسجّل بالفعل في البطولة') : x('تعذّر حفظ الاسم'); }
+    }
+    renameByName(old, name);
+    loadRegsRef.current();
+  }
   const [regs, setRegs] = useState<Reg[]>([]);
   const [jr, setJr] = useState<RegRow[]>([]); // people who signed up through the registration link
   const loadRegs = useCallback(() => {
     api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined);
     api<{ signups?: RegRow[] }>(`/tournaments/${t0.id}/join`, { key: k }).then((r) => setJr((r.signups ?? []).map((q) => ({ ...q, src: 'join' as const })))).catch(() => undefined);
   }, [k, t0.id]);
+  loadRegsRef.current = loadRegs;
   useEffect(() => { loadRegs(); const t = window.setInterval(() => { if (document.visibilityState === 'visible') loadRegs(); }, 30000); return () => window.clearInterval(t); }, [loadRegs]);
   // new registrants go straight into the bracket (same as the organiser tool)
   const autoOn = !!br && br.auto !== false && !hasResults(br);
@@ -940,7 +981,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           const count = allRegs.length + (br?.players ?? []).filter((p) => !have.has(nameKey(p))).length + (br?.bench ?? []).filter((p) => !have.has(nameKey(p))).length;
           return (
             <Fold title={`${x('المسجّلون')} · ${count}`}>
-              <RegistrantsPanel onReorder={br && br.format !== 'ffa' && br.format !== 'groups' ? reorderPlayers : undefined} lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
+              <RegistrantsPanel onReorder={br && br.format !== 'ffa' && br.format !== 'groups' ? reorderPlayers : undefined} lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onRename={t0.community ? undefined : renameReg} onReplace={t0.community ? undefined : replaceReg} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
             </Fold>
           );
         })();
@@ -1005,8 +1046,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             )}
             {sec === 'join' && (
               <FlatFold.Provider value>
-            <RegDescription id={t0.id} k={k} />
-            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
+            {!tf.community && <RegDescription id={t0.id} k={k} />}
+            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} readOnly={!!tf.community} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
               </FlatFold.Provider>
             )}
             {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}

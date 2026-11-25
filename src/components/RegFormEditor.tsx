@@ -20,8 +20,10 @@ export interface RegFormEditorProps {
   onClose: () => void; busy?: boolean;
   /** the description is edited somewhere else (site tournaments run by the admins): shown as it is, not editable here */
   hideDesc?: boolean;
+  /** a look only (an admin viewing someone else's registration page): no editing tools, no changes */
+  readOnly?: boolean;
 }
-export default function RegFormEditor({ lang, title, org, mode, cover, onCover, desc, onDesc, form, onForm, onClose, busy, hideDesc }: RegFormEditorProps) {
+export default function RegFormEditor({ lang, title, org, mode, cover, onCover, desc, onDesc, form, onForm, onClose, busy, hideDesc, readOnly }: RegFormEditorProps) {
   const t = T[lang];
   const [view, setView] = useState<'edit' | 'prev'>('edit');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -31,7 +33,7 @@ export default function RegFormEditor({ lang, title, org, mode, cover, onCover, 
   const hue = form.hue ?? coverHue;
   const palette = useCoverPalette(cover || undefined, coverHue); // the picture's own colours, the most prominent first
   const vars = { ...(hue === null ? plainVars(theme) : tintVars(hue, theme)), '--text': theme === 'dark' ? '#f4f7ff' : '#2b2160' } as React.CSSProperties;
-  const editing = view === 'edit';
+  const editing = view === 'edit' && !readOnly;
   const swatch = (h: number, on: boolean, label: string, onClick: () => void) => (
     <button key={label + h} type="button" aria-label={label} aria-pressed={on} onClick={onClick} className="rf-sw" style={{ background: `hsl(${h} 85% 52%)`, outline: on ? '2px solid var(--text-c, currentColor)' : 'none' }} />
   );
@@ -39,7 +41,7 @@ export default function RegFormEditor({ lang, title, org, mode, cover, onCover, 
     <div className="rf" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="rf-bar">
         <div className="rf-segs" role="group">
-          <button type="button" className={seg(editing)} aria-pressed={editing} onClick={() => setView('edit')}>{t.edit}</button>
+          {!readOnly && <button type="button" className={seg(editing)} aria-pressed={editing} onClick={() => setView('edit')}>{t.edit}</button>}
           <button type="button" className={seg(!editing)} aria-pressed={!editing} onClick={() => { setView('prev'); setDemo(false); }}>{t.prev}</button>
         </div>
         <div className="rf-segs" role="group">

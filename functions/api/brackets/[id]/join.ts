@@ -1,5 +1,5 @@
 import { currentUser, sameOrigin } from '../../../_auth';
-import { answersMap, cleanForm, deleteAnswers, joinCount, joinDesc, joinDoneMsg, joinForm, joinTitleEn, joinExtra, joinReason, joinRow, saveForm } from '../../../_join';
+import { answersMap, cleanForm, deleteAnswers, namesMap, withNames, joinCount, joinDesc, joinDoneMsg, joinForm, joinTitleEn, joinExtra, joinReason, joinRow, saveForm } from '../../../_join';
 import { body, denied, json, type Ctx } from '../../../_lib';
 
 async function mine(ctx: Ctx, uid: string) {
@@ -16,7 +16,7 @@ export const onRequestGet = async (ctx: Ctx) => {
   try { signups = (await ctx.env.DB.prepare('SELECT id, mode, plato_id, team_name, members, created_at FROM bracket_signups WHERE bracket_id = ? ORDER BY id ASC LIMIT 5000').bind(ctx.params.id).all()).results ?? []; } catch { return json({ error: 'migrate' }, 500); }
   const count = signups.length;
   const ans = await answersMap(ctx.env, ctx.params.id);
-  signups = (signups as { id: number }[]).map((s) => (ans[s.id] ? { ...s, answers: ans[s.id] } : s));
+  signups = withNames((signups as { id: number }[]).map((s) => (ans[s.id] ? { ...s, answers: ans[s.id] } : s)), await namesMap(ctx.env, ctx.params.id, 'j'));
   const ex = await joinExtra(ctx.env, ctx.params.id);
   return json({ form: await joinForm(ctx.env, ctx.params.id), titleEn: await joinTitleEn(ctx.env, ctx.params.id), description: await joinDesc(ctx.env, ctx.params.id), doneMsg: await joinDoneMsg(ctx.env, ctx.params.id), cover: ex.cover, startsAt: ex.startsAt, enabled: !!r?.enabled, mode: r?.mode === 'team' ? 'team' : 'solo', cap: r?.cap ?? 0, closesAt: r?.closes_at ?? 0, closed: !!r?.closed, reason: r ? joinReason(r, count) : '', count, signups });
 };

@@ -501,6 +501,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
   };
   const html = `<!doctype html><html lang="${lang}" dir="${dir}"><head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Plato AR | Community Tournaments">
     <link rel="icon" type="image/png" href="/brand/favicon-v2.png">
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon-v2.png">
     <title>${escape(title)} · Plato AR</title><style>${styles}</style>

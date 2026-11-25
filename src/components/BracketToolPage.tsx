@@ -238,7 +238,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   }, [joinKey, id, mine, isOwner]);
   const tabsDef: TabDef[] = id && mine ? [
     { k: 'tree', label: lang === 'ar' ? 'الشجرة' : 'Bracket' }, { k: 'info', label: tx.info }, { k: 'editors', label: lang === 'ar' ? 'إضافة منظم' : 'Add organizer' },
-    ...(isOwner ? [{ k: 'join' as const, label: lang === 'ar' ? 'رابط التسجيل' : 'Registration link' }, { k: 'regs' as const, label: lang === 'ar' ? 'المسجلون' : 'Registrants' }] : []),
+    ...(isOwner ? [{ k: 'join' as const, label: lang === 'ar' ? 'رابط التسجيل' : 'Registration link' }, { k: 'regs' as const, label: lang === 'ar' ? 'المسجلون' : 'Participants' }] : []),
   ] : [];
   const tabsKey = tabsDef.map((t) => `${t.k}:${t.label}`).join('|');
   useEffect(() => { onTabs?.(tabsDef); return () => onTabs?.([]); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [tabsKey]);
@@ -254,7 +254,27 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
     const nb = br.place && (fmt === 'single' || fmt === 'double') && list.length >= 2 ? { ...setPlace(nb1, true, lo.placeTo), place: true as const } : nb1;
     edit({ ...nb, ...(br.info ? { info: br.info } : {}), ...(br.bench ? { bench: br.bench } : {}), ...(br.auto === false ? { auto: false as const } : {}) });
   }
-  const rename = (i: number, v: string) => br && edit({ ...br, players: br.players.map((p, j) => (j === i ? v.slice(0, 40) : p)) });
+  const rename = async (i: number, v: string) => {
+    if (!br) return;
+    const old = br.players[i], nv = v.slice(0, 80);
+    // a registered player: the server applies the registration form's rules first (English ID, not taken, team name not taken); if it says no, the name stays as it was
+    if (id && mine && isOwner && old && nameKey(old) !== nameKey(nv) && nv.trim()) {
+      try { await api(`/brackets/${id}/regname`, { method: 'PUT', body: JSON.stringify({ from: old, name: nv }) }); window.dispatchEvent(new Event('elite-regs-refresh')); }
+      catch (e) {
+        const d = (e as Error & { detail?: string }).detail ?? '';
+        const msg = ({ bad_id: lang === 'ar' ? 'اكتب المعرّف بالإنجليزي (حروف وأرقام و _ فقط)' : 'Write the ID in English (letters, numbers and _ only)', duplicate: lang === 'ar' ? 'هذا المعرّف مسجّل بالفعل في البطولة' : 'This ID is already registered in this tournament', duplicate_members: lang === 'ar' ? 'معرّف مكرر في الفريق' : 'An ID is repeated in the team', required: lang === 'ar' ? 'الفريق يحتاج معرّفين على الأقل، افصل بينهم بـ |' : 'A team needs at least two IDs, separate them with |' } as Record<string, string>)[d];
+        if (msg) { window.alert(msg); return; }
+      }
+    }
+    edit({ ...br, players: br.players.map((p, j) => (j === i ? nv : p)) });
+  };
+  /** a person renamed in the registrants list: the same name inside the bracket (and the "out of the bracket" list) changes too */
+  const renameByName = (from: string, to: string) => {
+    if (!br) return;
+    const k = nameKey(from), i = br.players.findIndex((p) => nameKey(p) === k), inBench = !!br.bench?.some((b) => nameKey(b) === k);
+    if (i < 0 && !inBench) return;
+    edit({ ...br, ...(i >= 0 ? { players: br.players.map((p, j) => (j === i ? to.slice(0, 80) : p)) } : {}), ...(inBench ? { bench: (br.bench ?? []).map((b) => (nameKey(b) === k ? to.slice(0, 80) : b)) } : {}) });
+  };
   function addToBracket(add: string[]) {
     if (!br) return;
     const have = new Set(br.players.map((p) => p.trim().toLowerCase()));
@@ -426,7 +446,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
           )}
           {editable && id && tab === 'editors' && auth.user && flat(<EditorsPanel id={id} lang={L2} userId={auth.user.id} style={card} />)}
           {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}${joinPath(id)}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
-          {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
+          {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onRenamePlayer={renameByName} onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
         </div>
       )}
       {login && <LoginModal tx={tx} providers={auth.providers} r="tool" onClose={() => setLogin(false)} />}

@@ -1,6 +1,6 @@
 import { validId, validIds, body, json, str, type Ctx } from '../../_lib';
 import { guard } from '../../_admin';
-import { checkAnswers, joinForm, qaPairs, saveAnswers, type RegForm } from '../../_join';
+import { checkAnswers, joinForm, namesMap, qaPairs, saveAnswers, withNames, type RegForm } from '../../_join';
 import { dataId } from '../../_tid';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -56,13 +56,14 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
     const { results: a } = await env.DB.prepare("SELECT signup_id, answers FROM bracket_answers WHERE src = 'r' LIMIT 20000").all<{ signup_id: number; answers: string }>();
     for (const r of a ?? []) { try { byId[r.signup_id] = JSON.parse(r.answers); } catch { /* skip */ } }
   } catch { /* no table yet */ }
-  if (!Object.keys(byId).length) return json(results);
+  const nm = await namesMap(env, null, 'r');
+  if (!Object.keys(byId).length) return json(withNames(results ?? [], nm));
   const forms = new Map<string, RegForm>();
   const out = [];
   for (const r of results ?? []) {
-    if (!byId[r.id]) { out.push(r); continue; }
+    if (!byId[r.id]) { out.push(nm[r.id] ? { ...r, rname: nm[r.id] } : r); continue; }
     if (!forms.has(r.tournament_id)) forms.set(r.tournament_id, await joinForm(env, await dataId(env, r.tournament_id)));
-    out.push({ ...r, qa: qaPairs(forms.get(r.tournament_id) as RegForm, byId[r.id]) });
+    out.push({ ...r, ...(nm[r.id] ? { rname: nm[r.id] } : {}), qa: qaPairs(forms.get(r.tournament_id) as RegForm, byId[r.id]) });
   }
   return json(out);
 };
