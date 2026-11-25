@@ -58,7 +58,7 @@ export default function RegistrantsCard({ onRenamePlayer, onReorder, id, lang, p
     } catch (e) { return (e as Error & { detail?: string }).detail ?? 'fail'; }
   };
   return (
-    <Fold title={`${lang === 'ar' ? 'المسجّلون' : 'Registered'} · ${count}`}>
+    <Fold title={`${lang === 'ar' ? 'إدارة المسجلين' : 'Manage participants'} · ${count}`}>
       <RegistrantsPanel qs={qs} onReorder={onReorder} lang={lang} regs={all} players={players} onAdd={onAdd} onUnadd={onUnadd} onUnaddAll={onUnaddAll} bench={bench} autoOn={autoOn} onAuto={onAuto} onRefresh={load} onDelete={del} onRename={rename} onReplace={replace} />
     </Fold>
   );

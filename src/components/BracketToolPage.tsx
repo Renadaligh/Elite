@@ -1,7 +1,7 @@
 import { siteUrl, noProto } from '../hooks/nav';
 import { go as navTo } from '../hooks/nav';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { seatOrder, reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
+import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, resolve, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, type BFormat, type BMatch, type Bracket } from '../data/bracket';
 import { useAuth, type AuthUser, type Providers } from '../hooks/useAuth';
 import { useI18n } from '../i18n/I18nProvider';
 import { joinPath, viewPath } from '../data/links';
@@ -446,7 +446,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
           )}
           {editable && id && tab === 'editors' && auth.user && flat(<EditorsPanel id={id} lang={L2} userId={auth.user.id} style={card} />)}
           {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}${joinPath(id)}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
-          {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onRenamePlayer={renameByName} onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br ? seatOrder(br) : []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
+          {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onRenamePlayer={renameByName} onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
         </div>
       )}
       {login && <LoginModal tx={tx} providers={auth.providers} r="tool" onClose={() => setLogin(false)} />}

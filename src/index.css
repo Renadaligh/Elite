@@ -1546,6 +1546,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 .st-nav-back{margin-bottom:6px;font-size:.85rem}
 @media(min-width:1024px){.st-app .st-tabs{display:none}}
 .hc-pod.bare{border-top:0;margin-top:6px}
+@media(pointer:coarse){.reg-dr{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
 .reg-grip{flex:none;cursor:grab;touch-action:none;user-select:none;padding:4px 6px;margin-inline-start:-4px;color:var(--muted);font-size:1.1rem;line-height:1;border-radius:8px}.reg-grip:active{cursor:grabbing;background:var(--chip-bg)}
 
 .hc-grid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);align-items:start}
@@ -1575,7 +1576,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261211; }
+:root { --build: 20261214; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
