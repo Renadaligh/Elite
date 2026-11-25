@@ -1576,7 +1576,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261216; }
+:root { --build: 20261217; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
@@ -1662,11 +1662,3 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 
 /* hero: on phones with a floating browser bar the page also runs under the bar; cover that area too (no dark strip under the picture) */
 @supports (height:100lvh){section#top{min-height:100lvh}}
-
-/* language switch on phones with a floating browser bar: the page-wide snapshot stops at the small screen height, which cut the picture's bottom for the length of the fade.
-   The picture, the copy and the header are captured as their own layers (the picture at its full height) and fade the same way as before. */
-/* iPhone Safari draws the cross-fade only over the visible screen (the part under the floating bar was cut): the overlay is made as tall as the full screen, so the picture's bottom is drawn too */
-@supports (height:100lvh){::view-transition{inset:0 0 auto 0;height:100lvh;overflow:visible}}
-.hero-vt{view-transition-name:hero-art}
-section#top>.hero-wrap{view-transition-name:hero-copy}
-.hdr{view-transition-name:site-hdr}
