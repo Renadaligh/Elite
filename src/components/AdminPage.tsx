@@ -4,7 +4,7 @@ import { GENRE_KEYS, emptyDetails, fullDetails, genreLabel, isVideoFile, mergeGa
 import { useGames } from '../hooks/useGames';
 import type { NewsItem, NewsTag } from '../data/news';
 import { statusOf, type Tournament } from '../data/tournaments';
-import { reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket, type BInfo } from '../data/bracket';
+import { seatOrder, reshuffle, canPlace, setPlace, canThird, setThird, MAX_PLAYERS, MAX_RR, isLeague, champion, setOrg, generate, addPlayers, removePlayer, setBench, setAuto, nameKey, draftBracket, hasResults, isDraft, shuffled, swapSeats, swapPlayers, renamePlayer, dupNames, hasName, resolve, type BFormat, type BMatch, type Bracket, type BInfo } from '../data/bracket';
 import BracketView from './BracketView';
 import FormatOpts, { buildBracket, fmtInit, hasOpts, loOf, toOpts } from './FormatOpts';
 import StartPicker from './StartPicker';
@@ -981,7 +981,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
           const count = allRegs.length + (br?.players ?? []).filter((p) => !have.has(nameKey(p))).length + (br?.bench ?? []).filter((p) => !have.has(nameKey(p))).length;
           return (
             <Fold title={`${x('المسجّلون')} · ${count}`}>
-              <RegistrantsPanel onReorder={br && br.format !== 'ffa' && br.format !== 'groups' ? reorderPlayers : undefined} lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br?.players ?? []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onRename={t0.community ? undefined : renameReg} onReplace={t0.community ? undefined : replaceReg} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
+              <RegistrantsPanel onReorder={br && br.format !== 'ffa' && br.format !== 'groups' ? reorderPlayers : undefined} lang={lang === 'en' ? 'en' : 'ar'} regs={allRegs} players={br ? seatOrder(br) : []} onAdd={addToBracket} onUnadd={br ? removeFromBracket : undefined} onUnaddAll={br ? removeAllFromBracket : undefined} bench={br?.bench} autoOn={br ? br.auto !== false : true} onAuto={br ? (on) => upd(setAuto(br, on)) : undefined} onRefresh={loadRegs} onRename={t0.community ? undefined : renameReg} onReplace={t0.community ? undefined : replaceReg} onDelete={(r) => { void api(r.src === 'join' ? `/tournaments/${t0.id}/join?rid=${r.id}` : `/registrations/${r.id}`, { method: 'DELETE', key: k }).then(loadRegs).catch(() => undefined); }} />
             </Fold>
           );
         })();

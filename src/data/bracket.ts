@@ -290,6 +290,16 @@ export function swapSeats(br: Bracket, x: SeatRef, y: SeatRef): Bracket | null {
 }
 
 
+/** The players in the order they sit in the tree, top to bottom (the list next to the tree shows them in this order, so a swap is visible there too). Players not in any match keep their own order at the end. */
+export function seatOrder(br: Bracket): string[] {
+  const out: string[] = [], seen = new Set<number>();
+  for (const m of [...br.matches].sort((x, y) => x.round - y.round)) {
+    for (const s of [m.a, m.b]) if ('p' in s && !seen.has(s.p) && br.players[s.p] !== undefined) { seen.add(s.p); out.push(br.players[s.p]); }
+  }
+  br.players.forEach((p, i) => { if (!seen.has(i)) out.push(p); });
+  return out;
+}
+
 /** Swaps two players' places. Knockouts with no results yet: the two seats trade places in the tree. Otherwise (after results, or other formats) the order of the list changes and the bracket is redrawn, which clears the results: ask first. */
 /** Random re-seating: the same players, a new random draw (results are cleared; only call after the user agreed). */
 export function reshuffle(br: Bracket): Bracket { return redraw(br, shuffled(br.players)); }

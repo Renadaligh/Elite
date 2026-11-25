@@ -1501,6 +1501,10 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 
 /* add-players bubbles: rectangular, not pills */
 .br-chips.rect .br-chip{border-radius:.7rem;padding:8px 16px}
+/* the add-players tabs never get cut at the screen edge: they share the row and wrap when the words do not fit */
+.br-chips.rect{overflow:visible;flex-wrap:wrap}
+.br-chips.rect .br-chip{flex:1 1 auto;text-align:center;white-space:nowrap}
+@media(max-width:480px){.br-chips.rect .br-chip{padding:8px 10px;font-size:.88rem}}
 
 /* phone dashboard header: no account name/photo and no round buttons; sign-out and back-to-site live in the menu */
 @media(max-width:1023px){
@@ -1571,7 +1575,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261209; }
+:root { --build: 20261211; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}
