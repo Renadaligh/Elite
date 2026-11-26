@@ -60,6 +60,19 @@ export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> 
   return '';
 }
 
+/** The number of registered people the registration page shows: everybody, not only those who used this link. A tournament run by the site admins: the counter of its card on the site (link + site form + what the admin typed);
+ *  an organiser's bracket: link sign-ups + sign-ups through the site's own form. Never lower than the link's own count. */
+export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number): Promise<number> {
+  try {
+    const t = await env.DB.prepare('SELECT filled FROM tournaments WHERE id = ?').bind(id).first<{ filled: number }>();
+    if (t) return Math.max(viaLink, Number(t.filled) || 0);
+  } catch { /* table missing */ }
+  try {
+    const n = (await env.DB.prepare('SELECT COUNT(*) AS n FROM registrations WHERE tournament_id = ?').bind(`u-${id}`).first<{ n: number }>())?.n ?? 0;
+    return viaLink + n;
+  } catch { return viaLink; }
+}
+
 /** Cover picture + start date of the registration page. Separate query so the page keeps working before the two columns are added (see schema.sql). */
 export async function joinExtra(env: Ctx['env'], id: string): Promise<{ cover: string; startsAt: string }> {
   try { const r = await env.DB.prepare('SELECT cover, starts_at FROM bracket_join WHERE bracket_id = ?').bind(id).first<{ cover: string; starts_at: string }>(); return { cover: r?.cover ?? '', startsAt: r?.starts_at ?? '' }; } catch { return { cover: '', startsAt: '' }; }
