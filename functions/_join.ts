@@ -60,9 +60,12 @@ export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> 
   return '';
 }
 
-/** The number of registered people the registration page shows: everybody, not only those who used this link. A tournament run by the site admins: the counter of its card on the site (link + site form + what the admin typed);
- *  an organiser's bracket: link sign-ups + sign-ups through the site's own form. Never lower than the link's own count. */
-export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number): Promise<number> {
+/** The number of registered people the registration page shows: the players in the tournament's bracket (the total the tree itself shows), so the link and the site say the same number.
+ *  No bracket data to read: a site tournament's own counter on the site, or link + site-form sign-ups. */
+export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number, bracketData?: string): Promise<number> {
+  if (bracketData) {
+    try { const p = (JSON.parse(bracketData) as { players?: unknown }).players; if (Array.isArray(p)) return p.length; } catch { /* unreadable data: use the counters */ }
+  }
   try {
     const t = await env.DB.prepare('SELECT filled FROM tournaments WHERE id = ?').bind(id).first<{ filled: number }>();
     if (t) return Math.max(viaLink, Number(t.filled) || 0);
