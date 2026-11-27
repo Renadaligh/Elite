@@ -83,8 +83,8 @@ export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   );
 }
 
-/** The picture of a tournament card: its own; an organiser's (community) tournament without one takes the game's picture of the site. */
-const cardImage = (x: Tournament, gameImage?: string) => x.image || (x.id.startsWith('u-') ? gameImage || '' : '');
+/** The picture of a tournament card: its own; a tournament without one (site or organiser's) takes the game's picture of the site. */
+const cardImage = (x: Tournament, gameImage?: string) => x.image || gameImage || '';
 
 function MajorBadge() {
   const { lang } = useI18n();
@@ -101,7 +101,7 @@ function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: bo
   const src = cardImage(x, g?.image);
   return (
     <div className="tc-im" style={src ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {src && <RetryImg src={src} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.image ? x.imagePos || undefined : '50% 22%' }} />}
+      {src && <RetryImg src={src} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.image ? x.imagePos || undefined : '50% 50%' }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</div>
     </div>
   );
