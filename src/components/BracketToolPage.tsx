@@ -123,6 +123,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const [owner, setOwner] = useState('');
   const [mine, setMine] = useState(!id);
   const [isOwner, setIsOwner] = useState(true); // false = co-editor added by the owner
+  const [perms, setPerms] = useState<string[]>([]); // what a co-editor may do: tree, info, join, regs (the owner may do all; sending it to the site is the owner's only)
+  const [site, setSite] = useState(false); // a site tournament the member was added to: no co-editors card, no publishing
+  const can = (k: string) => isOwner || perms.includes(k);
   const [state, setState] = useState<'load' | 'ok' | 'missing' | 'private'>(id ? 'load' : 'ok');
   const share = true; // the view link is always on
   const [copied, setCopied] = useState('');
@@ -148,8 +151,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
 
   useEffect(() => {
     if (!id) return;
-    api<{ title: string; bracket: Bracket | null; owner: string; ownerAvatar?: string; mine: boolean; isOwner?: boolean; share: boolean }>(`/brackets/${id}`)
-      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setTitleEn(r.bracket.titleEn ?? ''); setFmt(r.bracket.format); setLo(loOf(r.bracket)); setBr(r.bracket); setOwner(r.owner); setOwnerAv(r.ownerAvatar ?? ''); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setState('ok'); })
+    api<{ title: string; bracket: Bracket | null; owner: string; ownerAvatar?: string; mine: boolean; isOwner?: boolean; perms?: string[]; share: boolean; site?: boolean }>(`/brackets/${id}`)
+      .then((r) => { if (!r.mine && onForeign) { onForeign(); return; } if (!r.bracket) { setState('missing'); return; } setTitle(r.title); setTitleEn(r.bracket.titleEn ?? ''); setFmt(r.bracket.format); setLo(loOf(r.bracket)); setBr(r.bracket); setOwner(r.owner); setOwnerAv(r.ownerAvatar ?? ''); setMine(r.mine && !readOnly); setIsOwner(r.isOwner !== false); setPerms(r.perms ?? ['tree', 'info']); setSite(!!r.site); setState('ok'); })
       .catch((e: Error & { detail?: string }) => setState(e.detail === 'private' ? 'private' : 'missing'));
   }, [id, auth.user?.id]);
 
@@ -210,9 +213,9 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   }
   // picture of a saved tournament
   useEffect(() => {
-    if (!id || !mine || !isOwner) return;
+    if (!id || !mine || !(isOwner || perms.includes('info') || perms.includes('join'))) return;
     api<{ cover?: string }>(`/brackets/${id}/join`).then((d) => setCover(d.cover ?? '')).catch(() => undefined);
-  }, [id, mine, isOwner]);
+  }, [id, mine, isOwner, perms]);
   // a tournament made before the details card existed: take them from its published copy (if any), once
   const seeded = useRef(false);
   useEffect(() => {
@@ -228,17 +231,18 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const joinKey = br?.info ? `${br.info.mode ?? 'solo'}|${br.info.total ?? 0}|${br.info.startsAt ?? ''}` : '';
   const joinSent = useRef('');
   useEffect(() => {
-    if (!id || !mine || !isOwner || !joinKey) return undefined;
+    if (!id || !mine || !(isOwner || perms.includes('info') || perms.includes('join')) || !joinKey) return undefined;
     if (joinSent.current === '') { joinSent.current = joinKey; return undefined; }
     if (joinSent.current === joinKey) return undefined;
     const inf = br?.info; if (!inf) return undefined;
     const h = window.setTimeout(() => { joinSent.current = joinKey; void api(`/brackets/${id}/join`, { method: 'PUT', body: JSON.stringify({ mode: inf.mode ?? 'solo', cap: Math.min(1000, inf.total ?? 0), ...(inf.startsAt ? { startsAt: inf.startsAt } : {}) }) }).catch(() => undefined); }, 1000);
     return () => window.clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [joinKey, id, mine, isOwner]);
+  }, [joinKey, id, mine, isOwner, perms]);
   const tabsDef: TabDef[] = id && mine ? [
-    { k: 'tree', label: lang === 'ar' ? 'الشجرة' : 'Bracket' }, { k: 'info', label: tx.info }, { k: 'editors', label: lang === 'ar' ? 'إضافة منظم' : 'Add organizer' },
-    ...(isOwner ? [{ k: 'join' as const, label: lang === 'ar' ? 'رابط التسجيل' : 'Registration link' }, { k: 'regs' as const, label: lang === 'ar' ? 'المسجلون' : 'Participants' }] : []),
+    { k: 'tree', label: lang === 'ar' ? 'الشجرة' : 'Bracket' }, ...(can('info') ? [{ k: 'info' as const, label: tx.info }] : []), ...(site ? [] : [{ k: 'editors' as const, label: lang === 'ar' ? 'إضافة منظم' : 'Add organizer' }]),
+    ...(can('join') ? [{ k: 'join' as const, label: lang === 'ar' ? 'رابط التسجيل' : 'Registration link' }] : []),
+    ...(can('regs') ? [{ k: 'regs' as const, label: lang === 'ar' ? 'المسجلون' : 'Participants' }] : []),
   ] : [];
   const tabsKey = tabsDef.map((t) => `${t.k}:${t.label}`).join('|');
   useEffect(() => { onTabs?.(tabsDef); return () => onTabs?.([]); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [tabsKey]);
@@ -258,7 +262,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
     if (!br) return;
     const old = br.players[i], nv = v.slice(0, 80);
     // a registered player: the server applies the registration form's rules first (English ID, not taken, team name not taken); if it says no, the name stays as it was
-    if (id && mine && isOwner && old && nameKey(old) !== nameKey(nv) && nv.trim()) {
+    if (id && mine && can('regs') && old && nameKey(old) !== nameKey(nv) && nv.trim()) {
       try { await api(`/brackets/${id}/regname`, { method: 'PUT', body: JSON.stringify({ from: old, name: nv }) }); window.dispatchEvent(new Event('elite-regs-refresh')); }
       catch (e) {
         const d = (e as Error & { detail?: string }).detail ?? '';
@@ -362,6 +366,7 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
   const R = br ? resolve(br) : null;
   const champ = br ? champion(br) : null;
   const editable = mine;
+  const canTree = mine && can('tree'); // may change results / players / format; without it the tree is only shown
   const sheetView = !editable && !!readOnly && !!br && !isDraft(br) ; // public view link: the whole bracket on one white sheet
 
   if (state === 'load') return <p style={{ color: 'var(--muted)' }}>…</p>;
@@ -403,13 +408,13 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             <>
               {editable ? (
                 <div className="hc-grid">
-                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={!wide && isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} /> : undefined} />
-                  <FlatFold.Provider value={wide}>{/* wide screens: the card is always open and as tall as the tournament card */}
+                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={(!wide || !canTree) && isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} /> : undefined} />
+                  {canTree && <FlatFold.Provider value={wide}>{/* wide screens: the card is always open and as tall as the tournament card */}
                     <Fold title={ar ? 'إضافة لاعبين' : 'Add players'} style={card} defaultOpen>
                       <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />
                       {wide && isOwner && id && <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} />}
                     </Fold>
-                  </FlatFold.Provider>
+                  </FlatFold.Provider>}
                 </div>
               ) : (
                 <div className={`flex flex-wrap items-center justify-between gap-2 ${readOnly ? 'pv-pad' : ''}`}>
@@ -422,22 +427,22 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
               )}
               <div className={`flex flex-wrap items-center justify-between gap-2 ${!editable && readOnly ? 'pv-pad' : ''}`}>
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <BracketActions undo={editable ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} exportId={id} exportTheme={typeof document !== 'undefined' && (document.querySelector('[data-st]')?.getAttribute('data-st') === 'light' || (!document.querySelector('[data-st]') && document.documentElement.dataset.hero === 'day')) ? 'light' : 'dark'} beforeExport={dirty && editable ? save : undefined} onShuffle={editable ? () => { if (hasResults(br) && !window.confirm(lang === 'ar' ? 'خلط الأماكن يمسح النتائج الحالية (ويمكنك التراجع). متأكد؟' : 'Shuffling clears the current results (you can undo). Sure?')) return; edit(reshuffle(br)); } : undefined} />
+                  <BracketActions undo={canTree ? { onUndo: doUndo, onRedo: doRedo, canUndo: hist.canUndo, canRedo: hist.canRedo } : undefined} linkOk={!editable || (!!id && share)} bracket={br} title={displayTitle} url={editable && id ? viewUrl : url} exportId={id} exportTheme={typeof document !== 'undefined' && (document.querySelector('[data-st]')?.getAttribute('data-st') === 'light' || (!document.querySelector('[data-st]') && document.documentElement.dataset.hero === 'day')) ? 'light' : 'dark'} beforeExport={dirty && editable ? save : undefined} onShuffle={canTree ? () => { if (hasResults(br) && !window.confirm(lang === 'ar' ? 'خلط الأماكن يمسح النتائج الحالية (ويمكنك التراجع). متأكد؟' : 'Shuffling clears the current results (you can undo). Sure?')) return; edit(reshuffle(br)); } : undefined} />
                 </div>
               </div>
               {(msg || dirty) && <p role="status" className="text-[.85rem]" style={{ color: msg === tx.saved ? '#27c27a' : '#ffb02e' }}>{msg || tx.unsaved}</p>}
-              {editable && br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hintL}</p>}
+              {canTree && br && (isLeague(br) || br.format === 'groups' || br.format === 'ffa') && <p className="text-[.9rem]" style={{ color: 'var(--muted)' }}>{tx.hintL}</p>}
               <div className="st-stage">
-                {sheetView ? <><BracketSheetAny bracket={br} title={displayTitle} lang={lang === 'en' ? 'en' : 'ar'} /><PodiumRow bracket={br} lang={lang === 'en' ? 'en' : 'ar'} bare /></> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={editable ? edit : undefined} canRename onChange={editable ? edit : undefined} onRename={editable ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={editable && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
+                {sheetView ? <><BracketSheetAny bracket={br} title={displayTitle} lang={lang === 'en' ? 'en' : 'ar'} /><PodiumRow bracket={br} lang={lang === 'en' ? 'en' : 'ar'} bare /></> : <div className="st-brcard rounded-2xl border p-3" style={card}><BracketView bracket={br} onApply={canTree ? edit : undefined} canRename onChange={canTree ? edit : undefined} onRename={canTree ? (i, v) => { if (hasName(br, v, i)) { setMsg(tx.dupName); return; } edit(renamePlayer(br, i, v)); } : undefined} onSwap={canTree && (br.format === 'single' || br.format === 'double') ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) edit(nb); } : undefined} pub={!!readOnly && !editable} /></div>}
               </div>
             </>
           )}
-          {editable && id && tab === 'info' && flat(
+          {editable && id && can('info') && tab === 'info' && flat(
             <div className="grid gap-3 rounded-2xl border p-4" style={card}>
               <b className="text-[1.05rem]">{tx.info}</b>
               <InfoFields lang={L2} title={title} onTitle={(v) => { ver.current += 1; setTitle(v); setDirty(true); }}
                 org={br.org ?? ''} onOrg={(v) => { const { org: _o, ...rest } = br; void _o; patchBr(v ? { ...rest, org: v } : rest); }}
-                fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={br.players.length} fmtLabels={fmtLabels}
+                fmt={fmt} onFmt={setFmt} lo={lo} onLo={setLo} players={br.players.length} fmtLabels={fmtLabels} noFormat={!canTree}
                 info={br.info ?? {}} onInfo={setInfo} cover={cover} onCover={(f) => void pickCover(f)} coverBusy={coverBusy}
                 third={br.format === 'single' ? { on: !!br.third, disabled: !canThird(br) || !!br.place, set: (on) => edit(setThird(br, on)) } : undefined}
                 placeOpt={br.format === 'single' || br.format === 'double' ? { on: !!br.place, disabled: !canPlace(br) && !br.place, set: (on) => { setLo({ ...lo, place: on }); edit(on ? { ...setPlace(br, true, lo.placeTo), place: true as const } : setPlace(br, false)); }, to: br.placeTo ?? 16, setTo: (n) => { setLo({ ...lo, placeTo: n }); edit({ ...setPlace(br, true, n), place: true as const }); } } : undefined}
@@ -445,8 +450,8 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             </div>
           )}
           {editable && id && tab === 'editors' && auth.user && flat(<EditorsPanel id={id} lang={L2} userId={auth.user.id} style={card} />)}
-          {editable && isOwner && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}${joinPath(id)}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
-          {editable && isOwner && id && tab === 'regs' && flat(<RegistrantsCard onRenamePlayer={renameByName} onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
+          {editable && can('join') && id && tab === 'join' && flat(<JoinPanel id={id} lang={L2} link={`${base()}${joinPath(id)}`} autoOn={br.auto !== false} onAuto={(on) => edit(setAuto(br, on))} showCount={br.info?.showCount} onShowCount={(on) => setInfo({ showCount: on ? undefined : false })} onCover={setCover} title={title} org={org} />)}
+          {editable && can('regs') && id && tab === 'regs' && flat(<RegistrantsCard onRenamePlayer={renameByName} onReorder={br.format === 'ffa' || br.format === 'groups' ? undefined : reorderPlayers} id={id} lang={lang === 'en' ? 'en' : 'ar'} players={br?.players ?? []} onAdd={addToBracket} onUnadd={removeFromBracket} onUnaddAll={removeAllFromBracket} bench={br?.bench} autoOn={br?.auto !== false} onAuto={undefined} auto={!!br && (br.auto !== false) && !hasResults(br)} />)}
         </div>
       )}
       {login && <LoginModal tx={tx} providers={auth.providers} r="tool" onClose={() => setLogin(false)} />}

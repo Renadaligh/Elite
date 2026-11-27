@@ -4,11 +4,11 @@ import { body, json, jsonPublic, newId, num, safeUrl, str, type Ctx } from '../.
 import { logAdmin } from '../../_audit';
 import { guard, seesAll } from '../../_admin';
 
-type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number ; owner_id?: string; bracket_id?: string; review?: string; review_note?: string };
+export type Row = { id: string; game_id: string; name_en: string; name_ar: string; format_en: string; format_ar: string; prize_en: string; prize_ar: string; starts_at: string; ends_at: string; filled: number; total: number; mode: string; tier?: string; register_url: string; image: string; winner_en: string; winner_ar: string; winner_members?: string; image_pos?: string; bracket?: string; stream_url?: string; stream_live?: number; published: number ; owner_id?: string; bracket_id?: string; review?: string; review_note?: string };
 /** The bracket is stored as JSON text; bad/empty text just means "no bracket". */
 const bracketOf = (s?: string) => { try { return s ? JSON.parse(s) : undefined; } catch { return undefined; } };
 type UB = { data: string; share: number; live: number; stream_url: string; organizer: string };
-const out = (r: Row, admin = false, ub?: UB) => ({
+export const out = (r: Row, admin = false, ub?: UB) => ({
   id: r.id, gameId: r.game_id, name: { en: r.name_en, ar: r.name_ar }, format: { en: r.format_en, ar: r.format_ar }, prize: { en: r.prize_en, ar: r.prize_ar },
   startsAt: r.starts_at, endsAt: r.winner_en || r.winner_ar ? r.ends_at : '', slots: { filled: r.filled, total: r.total }, mode: r.mode === 'team' ? 'team' : 'solo', tier: r.tier === 'major' ? 'major' : 'regular',
   registerUrl: r.register_url || undefined, image: r.image || undefined, imagePos: r.image_pos || undefined,

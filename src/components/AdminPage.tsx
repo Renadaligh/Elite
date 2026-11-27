@@ -30,7 +30,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
 type Reg = { rname?: string; qa?: { q: string; a: string }[]; id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
-type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins' | 'members' | 'log';
+type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins' | 'log';
 type Perms = Partial<Record<'news' | 'tournaments' | 'games' | 'regs', string[]>>;
 type Me = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; recovery?: boolean };
 
@@ -186,8 +186,8 @@ const XI = (p: IP) => <svg {...ic} strokeWidth={2.2} {...p}><path d="M6 6l12 12M
 
 const ShieldI = (p: IP) => <svg {...ic} {...p}><path d="M12 3.5 5 6v5.5c0 4.2 2.8 7.4 7 9 4.2-1.6 7-4.8 7-9V6l-7-2.5Z" /><path d="M9 12l2.2 2.2L15 10.5" /></svg>;
 const PadI = (p: IP) => <svg {...ic} {...p}><rect x="3" y="7" width="18" height="11" rx="4" /><path d="M8 10.5v4M6 12.5h4M15.5 11.5h.01M17.5 13.5h.01" /></svg>;
-const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI, admins: ShieldI, members: UsersI, log: GridI };
-const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات', admins: 'الإداريين', members: 'الأعضاء', log: 'سجل النشاط' };
+const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI, admins: ShieldI, log: GridI };
+const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات', admins: 'الإداريين', log: 'سجل النشاط' };
 
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
@@ -415,7 +415,7 @@ function Bars({ data, color = '#3d7bff' }: { data: { day: string; n: number }[];
     </div>
   );
 }
-function OverviewTab({ k, go, owner }: { k: string; go: (t: Tab) => void; owner?: boolean }) {
+function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const can = useCan();
   const { x } = useX();
   const [news, setNews] = useState<Adm<NewsItem>[]>([]);
@@ -440,7 +440,7 @@ function OverviewTab({ k, go, owner }: { k: string; go: (t: Tab) => void; owner?
   const tc = st?.tours ?? { live, upcoming, completed: done, fromBrackets: 0 };
   const stats = [
     { icon: EyeI, label: x('الزيارات'), value: vis.length ? vis[vis.length - 1].visits : 0, note: `${x('آخر 7 أيام')}: ${sum(vis.slice(-7), 'visits')} · ${x('مشاهدات الصفحات')}: ${sum(vis.slice(-7), 'views')}`, tab: 'overview' as Tab },
-    { icon: UsersI, label: x('إجمالي حسابات الموقع'), value: st?.usersTotal ?? '—', note: x('الحسابات المسجلة في الموقع'), tab: (owner ? 'members' : 'overview') as Tab },
+    { icon: UsersI, label: x('إجمالي حسابات الموقع'), value: st?.usersTotal ?? '—', note: x('الحسابات المسجلة في الموقع'), tab: 'overview' as Tab },
     { icon: CupI, label: x('إجمالي البطولات'), value: tc.live + tc.upcoming + tc.completed, note: `${tc.live} ${x('مباشرة')} · ${tc.upcoming} ${x('قادمة')} · ${tc.completed} ${x('منتهية')}`, tab: 'tournaments' as Tab },
     ...(can('regs', 'view') ? [{ icon: UsersI, label: x('المسجلون في كل البطولات'), value: st?.regs?.total ?? regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab }] : []),
     { icon: NewsI, label: x('أخبار منشورة'), value: news.filter((n) => n.published !== false).length, note: `${x('من أصل')} ${news.length}`, tab: 'news' as Tab },
@@ -639,7 +639,7 @@ function PublishToggle({ on, onChange, busy }: { on: boolean; onChange: (v: bool
 }
 
 /** The tournament's own fields (name, game, prize, date, seats, image, winner, publish). nameOnly = the first step of "new tournament": just the name. */
-function TournamentFields({ f, setF, k, nameOnly, hidePublish }: { f: Adm<Tournament>; setF: (t: Adm<Tournament>) => void; k: string; nameOnly?: boolean; hidePublish?: boolean }) {
+function TournamentFields({ f, setF, k, nameOnly, hidePublish, onImage }: { f: Adm<Tournament>; setF: (t: Adm<Tournament>) => void; k: string; nameOnly?: boolean; hidePublish?: boolean; onImage?: (url: string) => void }) {
   const { lang, x } = useX();
   const GAMES = useGames();
   const pair = (name: 'name' | 'format' | 'prize', label: string, en: string, ph = '') => (
@@ -674,7 +674,7 @@ function TournamentFields({ f, setF, k, nameOnly, hidePublish }: { f: Adm<Tourna
               </Field>
               <Field label={x('المسجّلين حالياً (يزيد تلقائياً مع كل تسجيل)')}><input type="number" min={0} className={inp} style={bd} value={f.slots.filled} onChange={(e) => setF({ ...f, slots: { ...f.slots, filled: Number(e.target.value) } })} /></Field>
             </div>
-            <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={f.image ?? ''} onChange={(v) => setF({ ...f, image: v })} />
+            <ImageField k={k} label={x('رابط الصورة (اختياري)')} value={f.image ?? ''} onChange={(v) => { if (onImage) onImage(v); else setF({ ...f, image: v }); }} />
             {f.image && <FocusPicker src={f.image} pos={f.imagePos ?? ''} onChange={(p) => setF({ ...f, imagePos: p })} />}
             {!hidePublish && <PublishToggle on={f.published !== false} onChange={(v) => setF({ ...f, published: v })} />}
         </>
@@ -1031,7 +1031,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             {sec === 'info' && (
             <div className="grid gap-3 rounded-2xl border p-4" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
               <b className="text-[1.05rem]">{x('معلومات البطولة')}</b>
-              <TournamentFields f={tf} setF={setTf} k={k} hidePublish />
+              <TournamentFields f={tf} setF={setTf} k={k} hidePublish onImage={(v) => { const n = { ...tf, image: v, imagePos: '' }; setTf(n); void saveInfo(n); }} />
               <div><button type="button" className={btnP} style={gradBtn} disabled={infoBusy} onClick={() => { void saveInfo(); }}>{x('حفظ معلومات البطولة')}</button></div>
               <div className="grid gap-3 border-t pt-4" style={bd}>
                 <b>{x('نظام القرعة')}</b>
@@ -1047,7 +1047,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
             {sec === 'join' && (
               <FlatFold.Provider value>
             {!tf.community && <RegDescription id={t0.id} k={k} />}
-            <JoinPanel id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} readOnly={!!tf.community} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
+            <JoinPanel onCover={(u, pos) => setTf((o) => ((o.image ?? '') === u ? o : { ...o, image: u, imagePos: pos ?? '' }))} id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} readOnly={!!tf.community} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
               </FlatFold.Provider>
             )}
             {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
@@ -1828,7 +1828,7 @@ const LOG_ACTION: Record<string, string> = {
   'news.add': 'إضافة خبر', 'news.edit': 'تعديل خبر', 'news.delete': 'حذف خبر',
   'tournaments.add': 'إضافة بطولة', 'tournaments.edit': 'تعديل بطولة', 'tournaments.delete': 'حذف بطولة', 'tournaments.bracket': 'تعديل شجرة/بث',
   'games.add': 'إضافة لعبة', 'games.edit': 'تعديل لعبة', 'games.delete': 'حذف لعبة', 'games.order': 'ترتيب/حذف ألعاب',
-  'regs.delete': 'حذف تسجيل', 'members.view': 'عرض قائمة الأعضاء',
+  'regs.delete': 'حذف تسجيل',
 };
 Object.assign(EN, {"سجل النشاط": "Activity log", "سجل دائم لا يمكن تعديله أو حذفه. يعرض من فعل ماذا ومتى": "A permanent log that cannot be edited or deleted. Shows who did what and when", "كل الإداريين": "All admins", "كل الأحداث": "All events", "من": "From", "إلى": "To", "تحميل المزيد": "Load more", "لا توجد سجلات": "No entries", "جدول السجل غير موجود في قاعدة البيانات. شغّل أمر الإنشاء من ADMIN-SETUP.md": "The log table is missing from the database. Run the create statement from ADMIN-SETUP.md", "تعذّر تحميل السجل": "Could not load the log", "المشرف": "Admin", "الوقت": "Time", "الحدث": "Event", "الهدف": "Target", "التفاصيل": "Details", "تسجيل دخول": "Sign-in", "دخول بمفتاح الاسترجاع": "Recovery-key sign-in", "محاولة دخول فاشلة": "Failed sign-in", "محاولة على حساب مقفل": "Attempt on a locked account", "قفل الحساب بعد محاولات فاشلة": "Account locked after failed attempts", "تغيير كلمة المرور": "Password changed", "إنشاء حساب مشرف": "Admin account created", "تعديل صلاحيات": "Permissions changed", "إيقاف حساب": "Account disabled", "تفعيل حساب": "Account enabled", "فتح حساب مقفل": "Account unlocked", "كلمة مرور مؤقتة جديدة": "New temporary password", "إضافة خبر": "News added", "تعديل خبر": "News edited", "حذف خبر": "News deleted", "إضافة بطولة": "Tournament added", "تعديل بطولة": "Tournament edited", "حذف بطولة": "Tournament deleted", "تعديل شجرة/بث": "Bracket/stream edited", "إضافة لعبة": "Game added", "تعديل لعبة": "Game edited", "حذف لعبة": "Game deleted", "ترتيب/حذف ألعاب": "Games order/removal", "حذف تسجيل": "Registration deleted"});
 
@@ -1901,64 +1901,6 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
         </table>
       </div>
       {more && <button type="button" onClick={() => load(true)} className="h-10 rounded-xl border border-white/20 px-4 font-bold">{x('تحميل المزيد')}</button>}
-    </div>
-  );
-}
-
-type MemberRow = { id: string; handle: string; name: string; provider: string; createdAt: string; brackets: number };
-const PROVIDER_NAME: Record<string, string> = { discord: 'Discord', google: 'Google', email: 'الإيميل' };
-Object.assign(EN, { 'الأعضاء': 'Members', 'الحسابات التي أنشأها الزوار في الموقع. للعرض فقط، ولا يظهر الإيميل': 'Accounts visitors made on the site. View only; emails are not shown', 'ابحث باليوزر أو الاسم': 'Search by username or name', 'اليوزر': 'Username', 'الاسم': 'Name', 'طريقة الدخول': 'Sign-in', 'تاريخ التسجيل': 'Joined', 'بطولاته': 'Brackets', 'لا يوجد أعضاء': 'No members', 'تعذّر تحميل الأعضاء': 'Could not load the members', 'الإيميل': 'Email', 'إجمالي الأعضاء': 'Total members', 'تعذّر قراءة جدول الأعضاء': 'Could not read the members table', 'عرض قائمة الأعضاء': 'Viewed the members list' });
-
-/** Owner-only, read-only list of the members who made an account on the site: username, name, how they sign in, when they joined and how many brackets they made. No email is shown (the server never sends it) and there is no edit or delete control. */
-function MembersTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
-  const { x, lang } = useX();
-  const toast = useToast();
-  const [rows, setRows] = useState<MemberRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [more, setMore] = useState(false);
-  const [missing, setMissing] = useState(false);
-  const [q, setQ] = useState('');
-  const [busy, setBusy] = useState(false);
-  const seq = useRef(0);
-  const load = useCallback((append: boolean, text: string, offset: number) => {
-    const mine = ++seq.current; // an older answer (typing fast) never replaces a newer one
-    setBusy(true);
-    api<{ total: number; more: boolean; rows: MemberRow[]; missing?: boolean }>(`/admin/members?q=${encodeURIComponent(text)}&offset=${offset}`, { key: k })
-      .then((r) => { if (mine !== seq.current) return; setRows((p) => (append ? [...p, ...r.rows] : r.rows)); setTotal(r.total); setMore(r.more); setMissing(!!r.missing); })
-      .catch((e: Error) => { if (mine !== seq.current) return; if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل الأعضاء')); })
-      .finally(() => { if (mine === seq.current) setBusy(false); });
-  }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { const h = window.setTimeout(() => load(false, q.trim(), 0), q ? 350 : 0); return () => window.clearTimeout(h); }, [q, load]);
-  const when = (iso: string) => { const t = Date.parse(iso); return Number.isNaN(t) ? '—' : new Date(t).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-SA-u-ca-gregory-nu-latn', { dateStyle: 'medium' }); };
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[.95rem] opacity-70">{x('الحسابات التي أنشأها الزوار في الموقع. للعرض فقط، ولا يظهر الإيميل')}</p>
-        <RefreshBtn onClick={() => load(false, q.trim(), 0)} />
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <input className={`${inp} max-w-[22rem]`} style={bd} dir="auto" value={q} maxLength={40} placeholder={x('ابحث باليوزر أو الاسم')} aria-label={x('ابحث باليوزر أو الاسم')} onChange={(e) => setQ(e.target.value)} />
-        <span className="text-[.9rem] font-bold opacity-80">{x('إجمالي الأعضاء')}: {total}</span>
-      </div>
-      {missing && <p className="rounded-xl border border-[#ffc93c]/40 bg-[#ffc93c]/10 p-3 text-[.9rem]">{x('تعذّر قراءة جدول الأعضاء')}</p>}
-      <div className="overflow-x-auto rounded-2xl border border-white/10">
-        <table className="w-full min-w-[34rem] text-start text-[.88rem]">
-          <thead className="bg-white/[.06] text-[.8rem] opacity-80"><tr>{['اليوزر', 'الاسم', 'طريقة الدخول', 'تاريخ التسجيل', 'بطولاته'].map((h) => <th key={h} className="px-3 py-2 text-start font-bold">{x(h)}</th>)}</tr></thead>
-          <tbody>
-            {rows.map((m) => (
-              <tr key={m.id} className="border-t border-white/10 align-middle">
-                <td className="px-3 py-2"><b dir="ltr">{m.handle ? `@${m.handle}` : '—'}</b></td>
-                <td className="px-3 py-2"><span dir="auto" className="inline-block">{m.name || '—'}</span></td>
-                <td className="px-3 py-2">{PROVIDER_NAME[m.provider] ? x(PROVIDER_NAME[m.provider]) : m.provider}</td>
-                <td className="whitespace-nowrap px-3 py-2 opacity-80">{when(m.createdAt)}</td>
-                <td className="px-3 py-2">{m.brackets}</td>
-              </tr>
-            ))}
-            {!rows.length && !busy && <tr><td colSpan={5} className="px-3 py-8 text-center opacity-60">{x('لا يوجد أعضاء')}</td></tr>}
-          </tbody>
-        </table>
-      </div>
-      {more && <button type="button" disabled={busy} onClick={() => load(true, q.trim(), rows.length)} className="h-10 rounded-xl border border-white/20 px-4 font-bold">{x('تحميل المزيد')}</button>}
     </div>
   );
 }
@@ -2176,7 +2118,7 @@ function AdminInner() {
   if (!key || !me) return <Login onDone={onLogin} />;
   if (me.mustChange) return <ForceChange k={key} me={me} onLogout={logout} onDone={() => { const n = { ...me, mustChange: false, recovery: false }; saveMe(n); setMe(n); }} />;
 
-  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || ((id === 'admins' || id === 'log' || id === 'members') ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
+  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || ((id === 'admins' || id === 'log') ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
   return (
     <ToastHost><PermCtx.Provider value={can}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
@@ -2257,12 +2199,11 @@ function AdminInner() {
         )}
         <main className="mx-auto max-w-[68rem] px-4 py-6 sm:px-8 sm:py-8">
           <div key={tab} className="admin-page">
-          {tab === 'overview' && <OverviewTab k={key} go={pick} owner={me.role === 'owner'} />}
+          {tab === 'overview' && <OverviewTab k={key} go={pick} />}
           {tab === 'news' && <NewsTab k={key} onAuthFail={logout} />}
           {tab === 'tournaments' && <TournamentsTab k={key} onAuthFail={logout} />}
           {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
-          {tab === 'members' && me.role === 'owner' && <MembersTab k={key} onAuthFail={logout} />}
           {tab === 'admins' && me.role === 'owner' && <AdminsTab k={key} onAuthFail={logout} meName={me.username} />}
           {tab === 'log' && me.role === 'owner' && <LogTab k={key} onAuthFail={logout} />}
           </div>

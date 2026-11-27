@@ -83,6 +83,9 @@ export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   );
 }
 
+/** The picture of a tournament card: its own; an organiser's (community) tournament without one takes the game's picture of the site. */
+const cardImage = (x: Tournament, gameImage?: string) => x.image || (x.id.startsWith('u-') ? gameImage || '' : '');
+
 function MajorBadge() {
   const { lang } = useI18n();
   return <span className="major-badge"><svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="currentColor"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8Z" /></svg>{lang === 'ar' ? 'بطولة كبرى' : 'Major'}</span>;
@@ -95,9 +98,10 @@ function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: bo
   useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
+  const src = cardImage(x, g?.image);
   return (
-    <div className="tc-im" style={x.image ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {x.image && <RetryImg src={x.image} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
+    <div className="tc-im" style={src ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
+      {src && <RetryImg src={src} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.image ? x.imagePos || undefined : '50% 22%' }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</div>
     </div>
   );
@@ -157,7 +161,7 @@ export function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; 
   const showCd = s === 'upcoming';
   const showBr = (s === 'live' || s === 'completed') && !!x.bracket;
   return (
-    <article className={`tc ${x.image ? 'tc-pic' : ''} `}>
+    <article className={`tc ${cardImage(x, g?.image) ? 'tc-pic' : ''} `}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}

@@ -1,16 +1,16 @@
+import { allows, bracketAccess } from '../../../_access';
 import { currentUser, sameOrigin } from '../../../_auth';
 import { sniff } from '../../../_img';
 import { denied, json, type Ctx } from '../../../_lib';
 
 const MAX = 3 * 1024 * 1024;
 
-/** POST (owner of the bracket, signed in): the cover picture of their community tournament, multipart "file" → stored in R2, returns { url }. The picture goes live only after the team approves the tournament. */
+/** POST (owner of the bracket, or a co-editor with the info / link permission; signed in): the cover picture of their community tournament, multipart "file" → stored in R2, returns { url }. The picture goes live only after the team approves the tournament. */
 export const onRequestPost = async ({ request, env, params }: Ctx) => {
   if (!sameOrigin(request)) return json({ error: 'forbidden' }, 403);
   const u = await currentUser(request, env);
   if (!u) return denied();
-  const mine = await env.DB.prepare('SELECT 1 AS x FROM user_brackets WHERE id = ? AND user_id = ?').bind(params.id, u.id).first().catch(() => null);
-  if (!mine) return json({ error: 'not_found' }, 404);
+  if (!allows(await bracketAccess(env, params.id, u.id), 'info', 'join')) return json({ error: 'not_found' }, 404);
   if (!env.IMAGES) return json({ error: 'storage-not-configured' }, 500);
   let file: unknown;
   try { file = (await request.formData()).get('file'); } catch { return json({ error: 'invalid' }, 400); }

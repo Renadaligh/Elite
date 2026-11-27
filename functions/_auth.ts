@@ -33,13 +33,15 @@ export async function currentUser(req: Request, env: Env): Promise<User | null> 
 }
 
 export const validHandle = (h: string) => /^[a-z0-9_]{3,20}$/.test(h);
-/** Every member gets a unique username (a–z, 0–9, _) the first time we need it; they can change it in their account. */
+/** Every member gets a unique username (a–z, 0–9, _) the first time we need it; they can change it in their account. Made from the display name, except for Google members (random). */
 export async function ensureHandle(env: Env, u: User): Promise<string> {
   if (u.handle) return u.handle;
   try {
-    const base = (u.name.normalize('NFKD').replace(/[^\x00-\x7f]/g, '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 14)) || 'user';
+    // a member who signed in with Google has a real name: his username is random (user_ + 8 characters), never made from it
+    const rand = u.provider === 'google';
+    const base = rand ? 'user' : (u.name.normalize('NFKD').replace(/[^\x00-\x7f]/g, '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 14)) || 'user';
     for (let i = 0; i < 8; i++) {
-      const h = (base.length >= 3 ? base : base + '_' + hex(2)) + (i ? hex(2) : '');
+      const h = rand ? 'user_' + hex(4) : (base.length >= 3 ? base : base + '_' + hex(2)) + (i ? hex(2) : '');
       const hit = await env.DB.prepare('SELECT 1 AS x FROM users WHERE handle = ?').bind(h).first();
       if (!hit) { await env.DB.prepare("UPDATE users SET handle = ? WHERE id = ? AND handle = ''").bind(h, u.id).run(); return h; }
     }

@@ -84,10 +84,19 @@ CREATE TABLE IF NOT EXISTS user_brackets (
 --   ALTER TABLE user_brackets ADD COLUMN stream_url TEXT NOT NULL DEFAULT '';
 -- Co-editors of a bracket (the owner adds people by their username):
 CREATE TABLE IF NOT EXISTS bracket_editors (
-  bracket_id TEXT NOT NULL, user_id TEXT NOT NULL, added_at TEXT NOT NULL,
+  bracket_id TEXT NOT NULL, user_id TEXT NOT NULL, added_at TEXT NOT NULL, perms TEXT NOT NULL DEFAULT '',
   PRIMARY KEY (bracket_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS bracket_editors_user ON bracket_editors (user_id);
+-- What each co-editor may do (existing databases: run once). Empty = the old permissions (tree + tournament info), so nobody loses anything:
+--   ALTER TABLE bracket_editors ADD COLUMN perms TEXT NOT NULL DEFAULT '';
+-- Shared editing of a SITE tournament (the owner of the dashboard adds people, up to 10 per tournament): kind 'admin' = who is an admin username,
+-- kind 'user' = who is a member's id (he opens it in the organisers' tool). perms = JSON list from: tree, info (admins only), join, regs. Existing databases: run once.
+CREATE TABLE IF NOT EXISTS tournament_editors (
+  tournament_id TEXT NOT NULL, kind TEXT NOT NULL, who TEXT NOT NULL, perms TEXT NOT NULL DEFAULT '', added_by TEXT NOT NULL DEFAULT '', added_at TEXT NOT NULL,
+  PRIMARY KEY (tournament_id, kind, who)
+);
+CREATE INDEX IF NOT EXISTS tournament_editors_who ON tournament_editors (kind, who);
 -- Usernames (existing databases: run once):  ALTER TABLE users ADD COLUMN handle TEXT NOT NULL DEFAULT '';
 -- Email sign-in links (one-time, 15 minutes):
 CREATE TABLE IF NOT EXISTS login_links (

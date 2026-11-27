@@ -3,22 +3,39 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { api } from '../services/api';
 import Fold from './Fold';
 
-type Person = { id: string; name: string; handle: string; avatar: string };
+type Person = { id: string; name: string; handle: string; avatar: string; perms?: string[] };
+const KEYS = ['tree', 'info', 'join', 'regs'] as const;
+const LEGACY = ['tree', 'info'];
 type Data = { isOwner: boolean; max: number; editors: Person[] };
 const T = {
   ar: {
     title: 'إضافة منظم', sub: 'أضف عضواً مسجّلاً باسم المستخدم الخاص به ليعدّل معك على هذه البطولة.', ph: 'اسم مستخدم العضو (مثال: abdullah_9)', add: 'إضافة',
     none: 'لم يُضاف أحد بعد.', remove: 'إزالة', leave: 'ترك التحرير', asEditor: 'أنت محرر مشارك في هذه القرعة.', empty: 'اكتب اسم المستخدم.',
-    err: { bad_handle: 'اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'لم يتم العثور على عضو بهذا الاسم.', self: 'هذا اسم المستخدم الخاص بك.', limit: 'وصلت الحد الأقصى للمحررين.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'لم تتم العملية، حاول مرة أخرى.' },
-    notAdded: 'لم يُضَف هؤلاء محررين:', mine: 'اسم المستخدم', warn: 'من تضيفه بإمكانه تغيير النتائج واللاعبين. المنظم وحده يدير الرابط والتسجيل والنشر والحذف.',
+    err: { bad_handle: 'اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط.', no_user: 'لم يتم العثور على عضو بهذا الاسم.', self: 'هذا اسم المستخدم الخاص بك.', limit: 'وصلت الحد الأقصى للمحررين.', no_perms: 'اختر صلاحية واحدة على الأقل.', migrate: 'الميزة تحتاج تحديث قاعدة البيانات (جمل SQL).', fail: 'لم تتم العملية، حاول مرة أخرى.' },
+    notAdded: 'لم يُضَف هؤلاء محررين:', mine: 'اسم المستخدم', warn: 'المنظم المضاف يقدر يسوي فقط ما تعطيه من صلاحيات. صاحب البطولة وحده يحذفها وينشرها في الموقع ويضيف المنظمين ويزيلهم.',
+    permsT: 'الصلاحيات', keys: { tree: 'الشجرة (النتائج واللاعبون)', info: 'معلومات البطولة', join: 'رابط التسجيل', regs: 'المسجلون وإجاباتهم' },
   },
   en: {
     title: 'Add organizer', sub: 'Add a registered member by username so they can edit this bracket with you. It shows in their “My brackets” and they can update results.', ph: 'Username (e.g. abdullah_9)', add: 'Add',
     none: 'Nobody added yet.', remove: 'Remove', leave: 'Leave', asEditor: 'You are a co-editor of this bracket.', empty: 'Enter a username.',
-    err: { bad_handle: 'Invalid username: English letters, digits and _ only.', no_user: 'No member with that username.', self: 'That is your own username.', limit: 'Co-editor limit reached.', migrate: 'This feature needs the database update (SQL statements).', fail: 'Something went wrong, try again.' },
-    notAdded: 'These could not be added as co-editors:', mine: 'Your username', warn: 'Co-editors can change results and players. Only the organizer manages the link, registration, publishing and deletion.',
+    err: { bad_handle: 'Invalid username: English letters, digits and _ only.', no_user: 'No member with that username.', self: 'That is your own username.', limit: 'Co-editor limit reached.', no_perms: 'Pick at least one permission.', migrate: 'This feature needs the database update (SQL statements).', fail: 'Something went wrong, try again.' },
+    notAdded: 'These could not be added as co-editors:', mine: 'Your username', warn: 'An added organizer can only do what you allow. Only the tournament owner deletes it, publishes it on the site, and adds or removes organizers.',
+    permsT: 'Permissions', keys: { tree: 'Bracket (results & players)', info: 'Tournament info', join: 'Registration link', regs: 'Participants & their answers' },
   },
 } as const;
+
+/** The permission check boxes (the owner ticks what a co-editor may do). */
+function PermBoxes({ value, labels, onChange, disabled }: { value: string[]; labels: Record<string, string>; onChange: (v: string[]) => void; disabled?: boolean }) {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+      {KEYS.map((k) => (
+        <label key={k} className="inline-flex cursor-pointer items-center gap-1.5 text-[.85rem] font-semibold">
+          <input type="checkbox" className="h-4 w-4" disabled={disabled} checked={value.includes(k)} onChange={() => onChange(value.includes(k) ? value.filter((v) => v !== k) : KEYS.filter((v) => v === k || value.includes(v)))} />{labels[k]}
+        </label>
+      ))}
+    </div>
+  );
+}
 
 /** Owner: add / remove co-editors by username. A co-editor sees the list and can leave. */
 export default function EditorsPanel({ id, lang, userId, style }: { id: string; lang: 'ar' | 'en'; userId: string; style?: CSSProperties }) {
@@ -27,6 +44,7 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
   const [h, setH] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
+  const [sel, setSel] = useState<string[]>(LEGACY); // permissions of the person about to be added
   const [fails, setFails] = useState<string[]>([]);
   useEffect(() => {
     try {
@@ -44,7 +62,13 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
     const v = h.trim().replace(/^@/, '');
     if (!v) { setMsg(x.empty); return; }
     setBusy(true); setMsg('');
-    try { await api(`/brackets/${id}/editors`, { method: 'POST', body: JSON.stringify({ handle: v }) }); setH(''); await load(); } catch (e) { fail(e); }
+    try { await api(`/brackets/${id}/editors`, { method: 'POST', body: JSON.stringify({ handle: v, perms: sel }) }); setH(''); await load(); } catch (e) { fail(e); }
+    setBusy(false);
+  }
+  async function setPerms(uid: string, next: string[]) {
+    if (!next.length) { setMsg(x.err.no_perms); return; }
+    setBusy(true); setMsg('');
+    try { await api(`/brackets/${id}/editors`, { method: 'PUT', body: JSON.stringify({ userId: uid, perms: next }) }); await load(); } catch (e) { fail(e); }
     setBusy(false);
   }
   async function del(uid: string) {
@@ -64,17 +88,26 @@ export default function EditorsPanel({ id, lang, userId, style }: { id: string; 
           <button type="button" disabled={busy} onClick={add}>{x.add}</button>
         </div>
       )}
+      {owner && <div className="grid gap-1.5" style={{ marginTop: '.6rem' }}><b className="text-[.85rem]">{x.permsT}</b><PermBoxes value={sel} labels={x.keys} onChange={setSel} /></div>}
       {msg && <p className="st-shn" role="status" style={{ color: '#ff8a80' }}>{msg}</p>}
       <ul className="grid gap-2" style={{ marginTop: '.7rem' }}>
-        {d.editors.map((p) => (
-          <li key={p.id} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2" style={{ borderColor: 'var(--glass-b)' }}>
-            <span className="flex min-w-0 items-center gap-2">
-              {p.avatar ? <img src={p.avatar} alt="" className="h-7 w-7 rounded-full object-cover" /> : <i className="h-7 w-7 rounded-full" style={{ background: 'var(--glass-b)' }} />}
-              <span className="min-w-0 truncate"><b>{p.name}</b> <small dir="ltr" style={{ color: 'var(--muted)' }}>@{p.handle}</small></span>
-            </span>
-            {(owner || p.id === userId) && <button type="button" disabled={busy} className="text-[.85rem] font-semibold underline" onClick={() => del(p.id)}>{owner ? x.remove : x.leave}</button>}
-          </li>
-        ))}
+        {d.editors.map((p) => {
+          const pm = p.perms ?? LEGACY;
+          return (
+            <li key={p.id} className="grid gap-2 rounded-xl border px-3 py-2" style={{ borderColor: 'var(--glass-b)' }}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2">
+                  {p.avatar ? <img src={p.avatar} alt="" className="h-7 w-7 rounded-full object-cover" /> : <i className="h-7 w-7 rounded-full" style={{ background: 'var(--glass-b)' }} />}
+                  <span className="min-w-0 truncate"><b>{p.name}</b> <small dir="ltr" style={{ color: 'var(--muted)' }}>@{p.handle}</small></span>
+                </span>
+                {(owner || p.id === userId) && <button type="button" disabled={busy} className="text-[.85rem] font-semibold underline" onClick={() => del(p.id)}>{owner ? x.remove : x.leave}</button>}
+              </div>
+              {owner
+                ? <PermBoxes value={pm} labels={x.keys} disabled={busy} onChange={(v) => void setPerms(p.id, v)} />
+                : <small style={{ color: 'var(--muted)' }}>{x.permsT}: {KEYS.filter((k) => pm.includes(k)).map((k) => x.keys[k]).join(' · ')}</small>}
+            </li>
+          );
+        })}
         {!d.editors.length && <li className="st-shn">{x.none}</li>}
       </ul>
       {owner && <p className="st-shn" style={{ marginTop: '.6rem' }}>{x.warn}</p>}

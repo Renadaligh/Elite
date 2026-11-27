@@ -1576,7 +1576,7 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 @media (prefers-reduced-motion: reduce) { .br-caret { animation: none; } }
 
 /* new file name for the stylesheet (the old one may be stuck in the CDN / browser cache) */
-:root { --build: 20261217; }
+:root { --build: 20261221; }
 
 /* start picker (calendar + times) and game search */
 .dtp{display:grid;gap:0;min-width:0}

@@ -60,9 +60,21 @@ export async function joinTitleEn(env: Ctx['env'], id: string): Promise<string> 
   return '';
 }
 
-/** The number of registered people the registration page shows: everybody, not only those who used this link. A tournament run by the site admins: the counter of its card on the site (link + site form + what the admin typed);
- *  an organiser's bracket: link sign-ups + sign-ups through the site's own form. Never lower than the link's own count. */
-export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number): Promise<number> {
+/** A tournament run by the site admins has ONE picture, ONE start date: the ones of its info card. The registration page and the dashboard's registration panel show those (nothing is entered twice).
+ *  null = not a site tournament (a bracket of the tool, or the table is missing): the registration link keeps its own picture and date. */
+export async function siteLook(env: Ctx['env'], id: string): Promise<{ image: string; pos: string; startsAt: string } | null> {
+  try {
+    const r = await env.DB.prepare('SELECT image, image_pos, starts_at FROM tournaments WHERE id = ?').bind(id).first<{ image: string; image_pos: string; starts_at: string }>();
+    return r ? { image: r.image ?? '', pos: /^\d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/.test(r.image_pos ?? '') ? r.image_pos : '', startsAt: r.starts_at ?? '' } : null;
+  } catch { return null; }
+}
+
+/** The number of registered people the registration page shows: the players in the tournament's bracket (the total the tree itself shows), so the link and the site say the same number.
+ *  No bracket data to read: a site tournament's own counter on the site, or link + site-form sign-ups. */
+export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number, bracketData?: string): Promise<number> {
+  if (bracketData) {
+    try { const p = (JSON.parse(bracketData) as { players?: unknown }).players; if (Array.isArray(p)) return p.length; } catch { /* unreadable data: use the counters */ }
+  }
   try {
     const t = await env.DB.prepare('SELECT filled FROM tournaments WHERE id = ?').bind(id).first<{ filled: number }>();
     if (t) return Math.max(viaLink, Number(t.filled) || 0);

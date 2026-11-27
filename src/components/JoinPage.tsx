@@ -7,7 +7,7 @@ import { S, ThemeBtn, type Theme } from './BracketStudio';
 import { tintVars, useCoverHue } from '../data/regTheme';
 import { FormFields, missingQ, type Answers, type FormQ, type RegFormData } from './RegForm';
 
-interface Info { showCount?: boolean; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; startsAt?: string; title: string; org: string; form?: RegFormData; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
+interface Info { showCount?: boolean; titleEn?: string; description?: string; descriptionEn?: string; doneMsg?: string; doneMsgEn?: string; cover?: string; coverPos?: string; startsAt?: string; title: string; org: string; form?: RegFormData; mode: 'solo' | 'team'; count: number; cap: number; closesAt: number; reason: '' | 'closed' | 'full' }
 type State = 'idle' | 'sending' | 'done' | 'error' | 'dup' | 'dupTeam' | 'dupMembers' | 'required' | 'badId' | 'closed' | 'full' | 'requiredQ';
 const okId = (s: string) => /^[A-Za-z0-9_]+$/.test(s);
 const okIds = (l: string) => l.split(/[\n,،;]+/).map((v) => v.trim()).filter(Boolean).every(okId);
@@ -85,7 +85,7 @@ export default function JoinPage({ id }: { id: string }) {
       <div className="jn-wrap">
         {info === null ? <p style={{ color: 'var(--muted)' }}>…</p> : info === 'gone' ? <p className="text-lg">{x.gone}</p> : (
           <div className="jn-card">
-            {info.cover && <img className="jn-cover" src={info.cover} alt="" draggable={false} />}
+            {info.cover && <img className="jn-cover" src={info.cover} alt="" draggable={false} style={info.coverPos ? { objectPosition: info.coverPos } : undefined} />}
             <h1 className="text-[1.6rem] font-extrabold" dir="auto">{lang === 'en' && info.titleEn ? info.titleEn : info.title}</h1>
             {info.org && <p className="mt-1 font-semibold" style={{ color: 'var(--muted)' }}>{x.by}: <span dir="auto" style={{ color: 'var(--text)' }}>{info.org}</span></p>}
             <p className="jn-stat">

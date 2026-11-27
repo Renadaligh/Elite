@@ -1,13 +1,16 @@
 import { body, json, safeUrl, type Ctx } from '../../../_lib';
-import { guard } from '../../../_admin';
+import { guardTournament } from '../../../_share';
 import { cleanBracket } from '../../../_bracket';
 import { logAdmin } from '../../../_audit';
 import { dataId } from '../../../_tid';
 
 /** Admin only. Body may hold any of: bracket (object, or null to remove it), streamUrl, streamLive. Only the given fields change. */
 export const onRequestPut = async ({ request, env, params }: Ctx) => {
-  const a = await guard(request, env, 'tournaments', 'edit'); if (a instanceof Response) return a;
+  const sc = await guardTournament(request, env, String(params.id), 'tree'); if (sc instanceof Response) return sc;
+  const a = sc.admin;
   const b = await body(request);
+  // An admin who was added to this tournament works on the tree only: the stream settings are not his
+  if (!sc.full) { delete b.streamUrl; delete b.streamLive; }
   // The champion of the bracket is the tournament's winner, and the tournament ends at that moment (an empty string = the final was undone: the winner is cleared and it is open again)
   if (typeof b.champion === 'string') {
     const w = b.champion.trim().slice(0, 80);

@@ -12,7 +12,13 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
   catch { results = (await env.DB.prepare('SELECT id, title, data, updated_at FROM user_brackets WHERE user_id = ? ORDER BY updated_at DESC').bind(u.id).all<R>()).results; } // share/live columns not added yet
   let shared: (R & { owner?: string })[] = [];
   try { shared = (await env.DB.prepare('SELECT b.id, b.title, b.data, b.updated_at, b.share, b.live, o.name AS owner FROM bracket_editors e JOIN user_brackets b ON b.id = e.bracket_id LEFT JOIN users o ON o.id = b.user_id WHERE e.user_id = ? ORDER BY b.updated_at DESC').bind(u.id).all<R & { owner?: string }>()).results; } catch { /* sharing not set up yet */ }
-  return json([...results.map((r) => ({ ...r, owner: '', shared: false })), ...shared.map((r) => ({ ...r, shared: true }))].map((r) => {
+  // site tournaments this member was added to as an organiser (they have a tree already)
+  let site: (R & { owner?: string })[] = [];
+  try {
+    const q = await env.DB.prepare("SELECT t.id, t.name_ar, t.name_en, t.bracket, t.starts_at FROM tournament_editors e JOIN tournaments t ON t.id = e.tournament_id WHERE e.kind = 'user' AND e.who = ? AND COALESCE(t.bracket_id, '') = '' AND COALESCE(t.bracket, '') <> '' ORDER BY t.starts_at DESC").bind(u.id).all<{ id: string; name_ar: string; name_en: string; bracket: string; starts_at: string }>();
+    site = q.results.map((t) => ({ id: t.id, title: t.name_ar || t.name_en, data: t.bracket, updated_at: t.starts_at, share: 1, live: 0, owner: 'Plato AR' }));
+  } catch { /* table not created yet */ }
+  return json([...results.map((r) => ({ ...r, owner: '', shared: false })), ...shared.map((r) => ({ ...r, shared: true })), ...site.map((r) => ({ ...r, shared: true }))].map((r) => {
     let format = 'single', players = 0, status = 'new', titleEn = '';
     try { const b = JSON.parse(r.data); format = b.format; players = b.players.length; status = bracketStatus(b); titleEn = typeof b.titleEn === 'string' ? b.titleEn : ''; } catch { /* keep defaults */ }
     return { id: r.id, title: r.title, titleEn, format, players, status, share: true, live: !!r.live, updatedAt: r.updated_at, shared: r.shared, owner: r.owner || '' };

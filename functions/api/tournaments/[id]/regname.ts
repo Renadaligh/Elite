@@ -1,4 +1,4 @@
-import { guard } from '../../../_admin';
+import { guardTournament } from '../../../_share';
 import { sameOrigin } from '../../../_auth';
 import { applyRename, applyReplace } from '../../../_join';
 import { body, json, type Ctx } from '../../../_lib';
@@ -7,7 +7,7 @@ import { dataId } from '../../../_tid';
 /** Admin: change the name a registrant of a SITE tournament is shown with. Community tournaments belong to their organiser: not here. */
 export const onRequestPut = async (ctx: Ctx) => {
   if (!sameOrigin(ctx.request)) return json({ error: 'forbidden' }, 403);
-  const u = await guard(ctx.request, ctx.env, 'tournaments', 'edit'); if (u instanceof Response) return u;
+  const u = await guardTournament(ctx.request, ctx.env, ctx.params.id, 'regs'); if (u instanceof Response) return u;
   if (ctx.params.id.startsWith('u-')) return json({ error: 'forbidden' }, 403);
   const ok = await ctx.env.DB.prepare('SELECT 1 AS x FROM tournaments WHERE id = ?').bind(ctx.params.id).first().catch(() => null);
   if (!ok) return json({ error: 'not_found' }, 404);

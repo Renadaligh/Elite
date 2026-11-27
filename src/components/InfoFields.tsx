@@ -35,6 +35,8 @@ export interface InfoFieldsProps {
   after?: ReactNode;
   /** two columns on wide screens (the create page); the narrow info tab keeps one */
   wide?: boolean;
+  /** a co-editor who may change the details but not the bracket: the format fields are hidden */
+  noFormat?: boolean;
 }
 
 export default function InfoFields(p: InfoFieldsProps) {
@@ -52,6 +54,7 @@ export default function InfoFields(p: InfoFieldsProps) {
      <div className="grid min-w-0 content-start gap-3.5">
       <label className={lbl} style={{ color: 'var(--muted)' }}><span>{L.name} <span style={{ color: '#ff6b7a' }}>*</span></span><input className={inp} style={bd} maxLength={60} value={p.title} placeholder={L.namePh} onChange={(e) => p.onTitle(e.target.value)} /></label>
       <label className={lbl} style={{ color: 'var(--muted)' }}>{L.org}<input className={inp} style={bd} maxLength={60} value={p.org} placeholder={L.orgPh} onChange={(e) => p.onOrg(e.target.value.slice(0, 60))} /></label>
+      {!p.noFormat && <>
       <label className={lbl} style={{ color: 'var(--muted)' }}><span>{L.fmt} <span style={{ color: '#ff6b7a' }}>*</span></span>
         <select className={`${inp} sel`} style={sel} value={p.fmt} onChange={(e) => p.onFmt(e.target.value as BFormat)}>{(['single', 'double', 'rr', 'swiss', 'groups', 'ffa'] as BFormat[]).map((f) => <option key={f} value={f}>{p.fmtLabels[f]}</option>)}</select></label>
       <FormatOpts fmt={p.fmt} value={p.lo} onChange={p.onLo} lang={lang} inpCls={inp} style={sel} border={{ borderColor: 'var(--glass-b)' }} players={p.players} />
@@ -62,6 +65,7 @@ export default function InfoFields(p: InfoFieldsProps) {
           <select className={`${inp} sel`} style={sel} value={Math.min(p.placeOpt.to, placeMax)} onChange={(e) => p.placeOpt?.setTo(+e.target.value)}>{Array.from({ length: placeMax - 2 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>{ar ? `المركز ${n}` : `${n}${n === 3 ? 'rd' : 'th'} place`}</option>)}</select></label>}
       </div>}
       {p.apply && <div><button type="button" className="btn-primary" onClick={p.apply.run}>{p.apply.label}</button></div>}
+      </>}
      </div>
      <div className="grid min-w-0 content-start gap-3.5">
       <div className={lbl} style={{ color: 'var(--muted)' }}><span>{L.game} <span style={{ color: '#ff6b7a' }}>*</span></span>

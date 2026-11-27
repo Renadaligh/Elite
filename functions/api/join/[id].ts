@@ -1,5 +1,5 @@
 import { validId, validIds, body, json, str, type Ctx } from '../../_lib';
-import { bracketOf, checkAnswers, joinCount, joinDescPair, joinDoneMsgPair, joinForm, joinTitleEn, joinExtra, joinShownCount, joinReason, joinRow, saveAnswers } from '../../_join';
+import { bracketOf, checkAnswers, joinCount, joinDescPair, joinDoneMsgPair, joinForm, joinTitleEn, joinExtra, joinShownCount, siteLook, joinReason, joinRow, saveAnswers } from '../../_join';
 
 const key = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
 const idsOf = (s: string) => s.split(/[\n,،;]+/).map(key).filter(Boolean);
@@ -13,9 +13,10 @@ export const onRequestGet = async ({ env, params }: Ctx) => {
   let org = '', showCount = true; try { const d = JSON.parse(row.data) as { org?: unknown; info?: { showCount?: unknown } }; if (typeof d.org === 'string') org = d.org.slice(0, 60); if (d.info?.showCount === false) showCount = false; } catch { /* corrupt row */ }
   const count = await joinCount(env, params.id);
   const ex = await joinExtra(env, params.id);
+  const look = await siteLook(env, params.id); // a site tournament: its picture and date come from its info card
   let startsAt = ex.startsAt;
   if (!startsAt) startsAt = (await env.DB.prepare('SELECT starts_at FROM tournaments WHERE id IN (?, ?) ORDER BY id DESC LIMIT 1').bind(`u-${params.id}`, params.id).first<{ starts_at: string }>().catch(() => null))?.starts_at ?? '';
-  return json({ form: await joinForm(env, params.id), titleEn: await joinTitleEn(env, params.id), ...(await (async () => { const d = await joinDescPair(env, params.id); return { description: d.ar, descriptionEn: d.en }; })()), ...(await (async () => { const d = await joinDoneMsgPair(env, params.id); return { doneMsg: d.ar, doneMsgEn: d.en }; })()), title: row.title, org, showCount, cover: ex.cover, startsAt, mode: r.mode === 'team' ? 'team' : 'solo', count: await joinShownCount(env, params.id, count), cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
+  return json({ form: await joinForm(env, params.id), titleEn: await joinTitleEn(env, params.id), ...(await (async () => { const d = await joinDescPair(env, params.id); return { description: d.ar, descriptionEn: d.en }; })()), ...(await (async () => { const d = await joinDoneMsgPair(env, params.id); return { doneMsg: d.ar, doneMsgEn: d.en }; })()), title: row.title, org, showCount, cover: look?.image || ex.cover, coverPos: look?.image ? look.pos : '', startsAt, mode: r.mode === 'team' ? 'team' : 'solo', count: await joinShownCount(env, params.id, count, row.data), cap: r.cap, closesAt: r.closes_at, reason: joinReason(r, count) });
 };
 
 export const onRequestPost = async ({ request, env, params }: Ctx) => {

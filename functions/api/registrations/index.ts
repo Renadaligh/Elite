@@ -47,17 +47,17 @@ export const onRequestPost = async ({ request, env }: Ctx) => {
   return json({ ok: true });
 };
 
-export const onRequestGet = async ({ request, env }: Ctx) => {
-  const a = await guard(request, env, 'regs', 'view'); if (a instanceof Response) return a;
-  const { results } = await env.DB.prepare("SELECT * FROM registrations WHERE tournament_id NOT LIKE 'u-%' ORDER BY id DESC").all<{ id: number; tournament_id: string }>();
+/** The site-form registrations with the answers to the organiser's questions: every site tournament's, or just one (`only`). Not checked here: the caller guards it. */
+export async function regRows(env: Ctx['env'], only?: string) {
+  const { results } = await (only ? env.DB.prepare('SELECT * FROM registrations WHERE tournament_id = ? ORDER BY id DESC').bind(only) : env.DB.prepare("SELECT * FROM registrations WHERE tournament_id NOT LIKE 'u-%' ORDER BY id DESC")).all<{ id: number; tournament_id: string }>();
   // answers to the organiser's own questions, written out with the question titles
   const byId: Record<number, Record<string, string | string[]>> = {};
   try {
     const { results: a } = await env.DB.prepare("SELECT signup_id, answers FROM bracket_answers WHERE src = 'r' LIMIT 20000").all<{ signup_id: number; answers: string }>();
     for (const r of a ?? []) { try { byId[r.signup_id] = JSON.parse(r.answers); } catch { /* skip */ } }
   } catch { /* no table yet */ }
-  const nm = await namesMap(env, null, 'r');
-  if (!Object.keys(byId).length) return json(withNames(results ?? [], nm));
+  const nm = await namesMap(env, only ?? null, 'r');
+  if (!Object.keys(byId).length) return withNames(results ?? [], nm);
   const forms = new Map<string, RegForm>();
   const out = [];
   for (const r of results ?? []) {
@@ -65,5 +65,10 @@ export const onRequestGet = async ({ request, env }: Ctx) => {
     if (!forms.has(r.tournament_id)) forms.set(r.tournament_id, await joinForm(env, await dataId(env, r.tournament_id)));
     out.push({ ...r, ...(nm[r.id] ? { rname: nm[r.id] } : {}), qa: qaPairs(forms.get(r.tournament_id) as RegForm, byId[r.id]) });
   }
-  return json(out);
+  return out;
+}
+
+export const onRequestGet = async ({ request, env }: Ctx) => {
+  const a = await guard(request, env, 'regs', 'view'); if (a instanceof Response) return a;
+  return json(await regRows(env));
 };

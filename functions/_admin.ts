@@ -1,4 +1,5 @@
 // Admin accounts: sessions, permissions, password hashing. Not a route: it exports no handlers.
+import { readEditorPerms } from './_access';
 import { hex, sha256 } from './_auth';
 import { denied, json, type Env } from './_lib';
 
@@ -96,7 +97,13 @@ export async function guardUpload(req: Request, env: Env): Promise<Admin | Respo
   if (!a) return denied();
   if (a.mustChange) return json({ error: 'must_change' }, 403);
   const ok = (['news', 'tournaments', 'games'] as Section[]).some((s) => can(a, s, 'add') || can(a, s, 'edit'));
-  return ok ? a : forbidden();
+  if (ok) return a;
+  // an admin who was added to a tournament with the details or the registration link may upload its picture
+  try {
+    const { results } = await env.DB.prepare("SELECT perms FROM tournament_editors WHERE kind = 'admin' AND who = ?").bind(a.username).all<{ perms: string }>();
+    if (results.some((r) => { const p = readEditorPerms(r.perms); return p.includes('info') || p.includes('join'); })) return a;
+  } catch { /* table not created yet */ }
+  return forbidden();
 }
 /** Same as guard but only reports whether an admin may see drafts of this section (used by public lists). */
 export async function seesAll(req: Request, env: Env, s: Section) {
