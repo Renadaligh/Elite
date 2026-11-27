@@ -11,10 +11,13 @@ import '@fontsource/tajawal/700.css';
 import '@fontsource/tajawal/800.css';
 import './index.css';
 import App from './App';
+import { isStaleFile, reloadOnce } from './lazyPage';
 
 class StartupBoundary extends React.Component<React.PropsWithChildren, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
+  // an old copy of the site that lost its files after an update: one automatic reload brings the new one
+  componentDidCatch(error: unknown) { if (isStaleFile(error)) reloadOnce(); }
 
   render() {
     if (!this.state.failed) return this.props.children;
