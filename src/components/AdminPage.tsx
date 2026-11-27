@@ -30,7 +30,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 /** Dashboard (#/admin): its own full-screen app (no site header/footer). Follows the site language (AR/EN) and theme. */
 type Adm<T> = T & { published?: boolean };
 type Reg = { rname?: string; qa?: { q: string; a: string }[]; id: number; tournament_id: string; tournament_name: string; mode: string; plato_id: string; team_name: string; members: string; lang: string; created_at: string };
-type Tab = 'overview' | 'news' | 'tournaments' | 'games' | 'regs' | 'admins' | 'log';
+type Tab = 'overview' | 'news' | 'tournaments' | 'shared' | 'games' | 'regs' | 'admins' | 'members' | 'log';
 type Perms = Partial<Record<'news' | 'tournaments' | 'games' | 'regs', string[]>>;
 type Me = { username: string; role: 'owner' | 'admin'; perms: Perms; mustChange: boolean; recovery?: boolean };
 
@@ -167,6 +167,9 @@ const getMe = (): Me | null => { try { const v = sessionStorage.getItem(ME); ret
 const saveMe = (m: Me) => { try { sessionStorage.setItem(ME, JSON.stringify(m)); } catch { /* ignore */ } };
 const PermCtx = createContext<(sec: string, act: string) => boolean>(() => false);
 const useCan = () => useContext(PermCtx);
+/** True for the dashboard's owner (the only one who adds editors to a tournament). */
+const OwnerCtx = createContext(false);
+const useOwner = () => useContext(OwnerCtx);
 
 /* ---------- Tiny inline icons ---------- */
 type IP = SVGProps<SVGSVGElement>;
@@ -186,8 +189,8 @@ const XI = (p: IP) => <svg {...ic} strokeWidth={2.2} {...p}><path d="M6 6l12 12M
 
 const ShieldI = (p: IP) => <svg {...ic} {...p}><path d="M12 3.5 5 6v5.5c0 4.2 2.8 7.4 7 9 4.2-1.6 7-4.8 7-9V6l-7-2.5Z" /><path d="M9 12l2.2 2.2L15 10.5" /></svg>;
 const PadI = (p: IP) => <svg {...ic} {...p}><rect x="3" y="7" width="18" height="11" rx="4" /><path d="M8 10.5v4M6 12.5h4M15.5 11.5h.01M17.5 13.5h.01" /></svg>;
-const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, games: PadI, regs: UsersI, admins: ShieldI, log: GridI };
-const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', games: 'الألعاب', regs: 'التسجيلات', admins: 'الإداريين', log: 'سجل النشاط' };
+const TAB_ICON: Record<Tab, (p: IP) => JSX.Element> = { overview: GridI, news: NewsI, tournaments: CupI, shared: CupI, games: PadI, regs: UsersI, admins: ShieldI, members: UsersI, log: GridI };
+const TAB_LABEL: Record<Tab, string> = { overview: 'نظرة عامة', news: 'الأخبار', tournaments: 'البطولات', shared: 'بطولات مشتركة معي', games: 'الألعاب', regs: 'التسجيلات', admins: 'الإداريين', members: 'الأعضاء', log: 'سجل النشاط' };
 
 /* ---------- Shared UI ---------- */
 const inp = 'w-full rounded-xl border bg-[var(--chip-bg)] px-3.5 py-2.5 text-[.92rem] outline-none transition-colors focus:border-[var(--link-on)]';
@@ -415,7 +418,7 @@ function Bars({ data, color = '#3d7bff' }: { data: { day: string; n: number }[];
     </div>
   );
 }
-function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
+function OverviewTab({ k, go, owner }: { k: string; go: (t: Tab) => void; owner?: boolean }) {
   const can = useCan();
   const { x } = useX();
   const [news, setNews] = useState<Adm<NewsItem>[]>([]);
@@ -440,7 +443,7 @@ function OverviewTab({ k, go }: { k: string; go: (t: Tab) => void }) {
   const tc = st?.tours ?? { live, upcoming, completed: done, fromBrackets: 0 };
   const stats = [
     { icon: EyeI, label: x('الزيارات'), value: vis.length ? vis[vis.length - 1].visits : 0, note: `${x('آخر 7 أيام')}: ${sum(vis.slice(-7), 'visits')} · ${x('مشاهدات الصفحات')}: ${sum(vis.slice(-7), 'views')}`, tab: 'overview' as Tab },
-    { icon: UsersI, label: x('إجمالي حسابات الموقع'), value: st?.usersTotal ?? '—', note: x('الحسابات المسجلة في الموقع'), tab: 'overview' as Tab },
+    { icon: UsersI, label: x('إجمالي حسابات الموقع'), value: st?.usersTotal ?? '—', note: x('الحسابات المسجلة في الموقع'), tab: (owner ? 'members' : 'overview') as Tab },
     { icon: CupI, label: x('إجمالي البطولات'), value: tc.live + tc.upcoming + tc.completed, note: `${tc.live} ${x('مباشرة')} · ${tc.upcoming} ${x('قادمة')} · ${tc.completed} ${x('منتهية')}`, tab: 'tournaments' as Tab },
     ...(can('regs', 'view') ? [{ icon: UsersI, label: x('المسجلون في كل البطولات'), value: st?.regs?.total ?? regs.length, note: `${day} · ${x('آخر 24 ساعة')}`, tab: 'regs' as Tab }] : []),
     { icon: NewsI, label: x('أخبار منشورة'), value: news.filter((n) => n.published !== false).length, note: `${x('من أصل')} ${news.length}`, tab: 'news' as Tab },
@@ -639,7 +642,7 @@ function PublishToggle({ on, onChange, busy }: { on: boolean; onChange: (v: bool
 }
 
 /** The tournament's own fields (name, game, prize, date, seats, image, winner, publish). nameOnly = the first step of "new tournament": just the name. */
-function TournamentFields({ f, setF, k, nameOnly, hidePublish, onImage }: { f: Adm<Tournament>; setF: (t: Adm<Tournament>) => void; k: string; nameOnly?: boolean; hidePublish?: boolean; onImage?: (url: string) => void }) {
+function TournamentFields({ f, setF, k, nameOnly, hidePublish, onImage, noTier }: { f: Adm<Tournament>; setF: (t: Adm<Tournament>) => void; k: string; nameOnly?: boolean; hidePublish?: boolean; onImage?: (url: string) => void; noTier?: boolean }) {
   const { lang, x } = useX();
   const GAMES = useGames();
   const pair = (name: 'name' | 'format' | 'prize', label: string, en: string, ph = '') => (
@@ -656,7 +659,7 @@ function TournamentFields({ f, setF, k, nameOnly, hidePublish, onImage }: { f: A
         <>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={x('اللعبة')}><select className={sel} style={bd} value={f.gameId || GAMES[0]?.id || ''} onChange={(e) => setF({ ...f, gameId: e.target.value })}>{GAMES.map((g) => <option key={g.id} value={g.id}>{g.name[lang]}</option>)}</select></Field>
-              <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</option></select></Field>
+              {!noTier && <Field label={x('الفئة')}><select className={sel} style={bd} value={f.tier ?? 'regular'} onChange={(e) => setF({ ...f, tier: e.target.value as 'major' | 'regular' })}><option value="regular">{x('عادية')}</option><option value="major">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</option></select></Field>}
               <Field label={x('النوع')}><select className={sel} style={bd} value={f.mode ?? 'solo'} onChange={(e) => setF({ ...f, mode: e.target.value as 'solo' | 'team' })}><option value="solo">{x('فردي (Plato ID)')}</option><option value="team">{x('فرق (اسم الفريق + القائد + الأعضاء)')}</option></select></Field>
             </div>
             {pair('format', x('النظام'), 'Format', x('فردي · أسرع لفة'))}
@@ -796,10 +799,136 @@ function AdminNewTournament({ k, onClose, onAuthFail, onMade }: { k: string; onC
   );
 }
 
+/* ---------- Shared editing of a tournament ---------- */
+type TEd = { kind: 'admin' | 'user'; id: string; label: string; perms: string[] };
+const T_KEYS = ['tree', 'info', 'join', 'regs'] as const;
+const T_LABEL: Record<string, string> = { tree: 'الشجرة (النتائج واللاعبون)', info: 'معلومات البطولة', join: 'رابط التسجيل', regs: 'المسجلون وإجاباتهم' };
+const T_ERR: Record<string, string> = {
+  bad_user: 'اسم المستخدم غير صالح', bad_handle: 'اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط', no_user: 'لم يتم العثور على حساب بهذا الاسم', owner: 'هذا هو المشرف الرئيسي وعنده كل الصلاحيات',
+  disabled: 'هذا الحساب موقوف', no_perms: 'اختر صلاحية واحدة على الأقل', limit: 'وصلت الحد الأقصى للمحررين (10)', no_bracket: 'هذه البطولة ما فيها قرعة بعد، أنشئ القرعة أولاً',
+  migrate: 'هذه الميزة تحتاج تحديث قاعدة البيانات (جدول tournament_editors في schema.sql)',
+};
+
+/** Owner only: who may work on this tournament besides the dashboard's admins, and what each may do. */
+function TournamentEditors({ id, k, onAuthFail }: { id: string; k: string; onAuthFail: () => void }) {
+  const { x } = useX();
+  const toast = useToast();
+  const [rows, setRows] = useState<TEd[] | null>(null);
+  const [max, setMax] = useState(10);
+  const [migrate, setMigrate] = useState(false);
+  const [kind, setKind] = useState<'admin' | 'user'>('admin');
+  const [name, setName] = useState('');
+  const [pm, setPm] = useState<string[]>(['tree', 'info']);
+  const [busy, setBusy] = useState(false);
+  const keysFor = (kd: 'admin' | 'user') => T_KEYS.filter((q) => kd === 'admin' || q !== 'info');
+  const load = useCallback(() => {
+    api<{ max: number; editors: TEd[] }>(`/tournaments/${id}/editors`, { key: k })
+      .then((r) => { setRows(r.editors); setMax(r.max); setMigrate(false); })
+      .catch((e: Error & { detail?: string }) => { if (e.message === '401') onAuthFail(); else { setRows([]); setMigrate(e.detail === 'migrate'); } });
+  }, [id, k]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [load]);
+  const fail = (e: unknown) => { const d = (e as Error & { detail?: string }).detail ?? ''; if ((e as Error).message === '401') onAuthFail(); else toast.err(T_ERR[d] ? x(T_ERR[d]) : why(e, x('تعذّر تنفيذ العملية'))); };
+  const toggle = (list: string[], key: string) => (list.includes(key) ? list.filter((q) => q !== key) : [...list, key]);
+  async function add() {
+    const v = name.trim().replace(/^@/, '').toLowerCase();
+    if (!v) { toast.err(x(kind === 'admin' ? 'اكتب اسم المستخدم (يوزر الأدمن)' : 'اكتب اسم المستخدم')); return; }
+    if (!pm.length) { toast.err(x(T_ERR.no_perms)); return; }
+    setBusy(true);
+    try { await api(`/tournaments/${id}/editors`, { method: 'POST', key: k, body: JSON.stringify({ kind, ...(kind === 'admin' ? { username: v } : { handle: v }), perms: pm }) }); setName(''); toast.ok(x('تمت الإضافة بنجاح')); load(); }
+    catch (e) { fail(e); }
+    setBusy(false);
+  }
+  async function setPerms(r: TEd, perms: string[]) {
+    if (!perms.length) { toast.err(x(T_ERR.no_perms)); return; }
+    setRows((o) => (o ?? []).map((q) => (q.kind === r.kind && q.id === r.id ? { ...q, perms } : q)));
+    try { await api(`/tournaments/${id}/editors`, { method: 'PUT', key: k, body: JSON.stringify({ kind: r.kind, id: r.id, perms }) }); } catch (e) { fail(e); load(); }
+  }
+  async function remove(r: TEd) {
+    if (!window.confirm(x('إزالة هذا المحرر من البطولة؟'))) return;
+    try { await api(`/tournaments/${id}/editors`, { method: 'DELETE', key: k, body: JSON.stringify({ kind: r.kind, id: r.id }) }); toast.ok(x('تم الحذف بنجاح')); load(); } catch (e) { fail(e); }
+  }
+  const boxes = (kd: 'admin' | 'user', value: string[], on: (v: string[]) => void) => (
+    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+      {keysFor(kd).map((q) => <label key={q} className="flex items-center gap-2 text-[.88rem]"><input type="checkbox" className="h-4 w-4" checked={value.includes(q)} onChange={() => on(toggle(value, q))} />{x(T_LABEL[q])}</label>)}
+    </div>
+  );
+  return (
+    <div className="grid gap-4 rounded-2xl border p-4" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
+      <div>
+        <b className="text-[1.05rem]">{x('المحررون')}</b>
+        <p className="mt-1 text-[.86rem]" style={{ color: 'var(--muted)' }}>{x('أضف أدمن آخر أو عضواً من الموقع ليعمل معك على هذه البطولة، وحدد له الصلاحيات بالـ check. النشر والحذف وإضافة المحررين لك وحدك.')}</p>
+      </div>
+      {migrate && <p role="alert" className="text-[.88rem]" style={{ color: '#ffb02e' }}>{x(T_ERR.migrate)}</p>}
+      {rows && rows.length === 0 && !migrate && <p className="text-[.88rem]" style={{ color: 'var(--muted)' }}>{x('لم يُضف أحد بعد.')}</p>}
+      <div className="grid gap-2.5">
+        {(rows ?? []).map((r) => (
+          <div key={`${r.kind}:${r.id}`} className="grid gap-2 rounded-xl border p-3" style={bd}>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={r.kind === 'admin' ? 'blue' : 'gray'}>{x(r.kind === 'admin' ? 'أدمن' : 'عضو')}</Badge>
+              <b dir="ltr" className="min-w-0 break-all">{r.label}</b>
+              <button type="button" className={`${btnG} ms-auto`} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { void remove(r); }}>{x('إزالة')}</button>
+            </div>
+            {boxes(r.kind, r.perms, (v) => { void setPerms(r, v); })}
+          </div>
+        ))}
+      </div>
+      {(rows?.length ?? 0) < max && (
+        <div className="grid gap-3 border-t pt-4" style={bd}>
+          <b>{x('إضافة محرر')}</b>
+          <div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+            <select aria-label={x('النوع')} className={sel} style={bd} value={kind} onChange={(e) => { const kd = e.target.value === 'user' ? 'user' : 'admin'; setKind(kd); setPm(kd === 'admin' ? ['tree', 'info'] : ['tree']); }}>
+              <option value="admin">{x('أدمن')}</option><option value="user">{x('عضو من الموقع')}</option>
+            </select>
+            <input dir="ltr" className={inp} style={bd} value={name} placeholder={kind === 'admin' ? 'admin_username' : '@username'} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void add(); } }} />
+          </div>
+          {boxes(kind, pm, setPm)}
+          {kind === 'user' && <p className="text-[.82rem]" style={{ color: 'var(--muted)' }}>{x('العضو يفتح البطولة من أداة المنظمين في الموقع (الشجرة ورابط التسجيل والمسجلون فقط). معلومات البطولة تبقى هنا.')}</p>}
+          <div><button type="button" className={btnP} style={gradBtn} disabled={busy} onClick={() => { void add(); }}>{x('إضافة')}</button></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The tournaments the owner added this admin to: opens the usual tournament screen with only what he was given. */
+type SharedT = Adm<Tournament> & { scope: string[] };
+function SharedTab({ k, rows, reload, onAuthFail }: { k: string; rows: SharedT[]; reload: () => void; onAuthFail: () => void }) {
+  const { lang, x } = useX();
+  const [open, setOpen] = useState<string | null>(null);
+  const cur = rows.find((r) => r.id === open);
+  if (cur) return <BracketAdmin key={cur.id} t0={cur} scope={cur.scope} k={k} onClose={() => setOpen(null)} onAuthFail={onAuthFail} onSaved={reload} />;
+  const now = Date.now();
+  return (
+    <div>
+      <PageHead refresh={reload} title={`${x('بطولات مشتركة معي')} (${rows.length})`} sub={x('بطولات أضافك المشرف الرئيسي للتحرير فيها')} />
+      <div className="flex flex-col gap-2.5">
+        {rows.length === 0 && <Card className="p-4 text-[.9rem]"><span style={{ color: 'var(--muted)' }}>{x('لم تُضف إلى أي بطولة بعد.')}</span></Card>}
+        {rows.map((r) => {
+          const st = statusOf(r, now);
+          return (
+            <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
+              <div className="w-full min-w-0 sm:w-auto sm:flex-1">
+                <div className="flex flex-wrap items-center gap-2"><b className="w-full break-words text-[1.02rem] leading-snug">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge></div>
+                <div className="mt-1.5 text-[.82rem]" style={{ color: 'var(--muted)' }}><time dateTime={r.startsAt}>{niceWhen(r.startsAt, lang)}</time></div>
+                <div className="mt-2 flex flex-wrap gap-1.5">{r.scope.map((q) => <Badge key={q} tone="gray">{x(T_LABEL[q] ?? q)}</Badge>)}</div>
+              </div>
+              <button type="button" className={btnP} style={gradBtn} onClick={() => setOpen(r.id)}>{x('فتح')}</button>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Bracket + live stream (per tournament) ---------- */
-function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournament>; k: string; onClose: () => void; onAuthFail: () => void; onSaved: () => void }) {
+/** `scope` = what an admin who was only added to this tournament may do (tree, info, join, regs); left out = an admin who may edit tournaments in general (everything). */
+function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved, scope }: { t0: Adm<Tournament>; k: string; onClose: () => void; onAuthFail: () => void; onSaved: () => void; scope?: string[] }) {
   const { lang, x } = useX();
   const toast = useToast();
+  const isOwner = useOwner();
+  const has = (p: string) => !scope || scope.includes(p);
+  const canTree = has('tree'), canInfo = has('info'), canJoin = has('join'), canRegs = has('regs');
   const [br, setBr] = useState<Bracket | null>(t0.bracket ?? null);
   const [dirty, setDirty] = useState(false);
   const [fmt, setFmt] = useState<BFormat>(t0.bracket?.format ?? 'single');
@@ -815,8 +944,8 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const fresh = useRef(false); // just created: saved at once, not after the usual short wait
   const typing = useRef(false); // the stream link is being typed: don't autosave half a link (use the save button)
   const hist = useBracketHistory<Bracket>();
-  const upd = (b: Bracket | null) => { if (br) hist.record(br); ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
-  const applyHist = (b: Bracket | undefined) => { if (!b) return; ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
+  const upd = (b: Bracket | null) => { if (!canTree) { toast.err(x('ليس لديك صلاحية لهذا الإجراء')); return; } if (br) hist.record(br); ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
+  const applyHist = (b: Bracket | undefined) => { if (!b || !canTree) return; ver.current += 1; typing.current = false; setBr(b); setDirty(true); };
   const doUndo = () => { if (br) applyHist(hist.undo(br)); };
   const doRedo = () => { if (br) applyHist(hist.redo(br)); };
   useEffect(() => {
@@ -834,6 +963,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   // a tournament with no tree yet opens straight on an empty one (players come from the registrants or by hand)
   useEffect(() => {
     if (br) return;
+    if (!canTree) { setBr(buildBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined, lo)); return; } // nothing to save: only shown
     fresh.current = true;
     upd(buildBracket(fmt, [], hasOpts(fmt) ? toOpts(fmt, lo, 0) : undefined, lo));
   }, [br === null]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -873,7 +1003,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; }
     const old = br.players[i], nv = v.slice(0, 80);
     // the same person in the registrants list gets the new name too (site tournaments only: a community tournament's list belongs to its organiser); the registration form's rules apply first
-    if (!t0.community && old && nameKey(old) !== nameKey(nv) && nv.trim()) {
+    if (!t0.community && canRegs && old && nameKey(old) !== nameKey(nv) && nv.trim()) {
       try { await api(`/tournaments/${t0.id}/regname`, { method: 'PUT', key: k, body: JSON.stringify({ from: old, name: nv }) }); loadRegsRef.current(); }
       catch (e) {
         const d = (e as Error & { detail?: string }).detail ?? '';
@@ -911,13 +1041,15 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
   const [regs, setRegs] = useState<Reg[]>([]);
   const [jr, setJr] = useState<RegRow[]>([]); // people who signed up through the registration link
   const loadRegs = useCallback(() => {
-    api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined);
-    api<{ signups?: RegRow[] }>(`/tournaments/${t0.id}/join`, { key: k }).then((r) => setJr((r.signups ?? []).map((q) => ({ ...q, src: 'join' as const })))).catch(() => undefined);
+    // an admin who was only added to this tournament reads its own list; the dashboard's list is for who may view registrations
+    if (!scope) api<Reg[]>('/registrations', { key: k }).then((r) => setRegs(r.filter((q) => q.tournament_id === t0.id))).catch(() => undefined);
+    else if (canRegs) api<Reg[]>(`/tournaments/${t0.id}/regs`, { key: k }).then(setRegs).catch(() => undefined);
+    if (canRegs) api<{ signups?: RegRow[] }>(`/tournaments/${t0.id}/join`, { key: k }).then((r) => setJr((r.signups ?? []).map((q) => ({ ...q, src: 'join' as const })))).catch(() => undefined);
   }, [k, t0.id]);
   loadRegsRef.current = loadRegs;
   useEffect(() => { loadRegs(); const t = window.setInterval(() => { if (document.visibilityState === 'visible') loadRegs(); }, 30000); return () => window.clearInterval(t); }, [loadRegs]);
   // new registrants go straight into the bracket (same as the organiser tool)
-  const autoOn = !!br && br.auto !== false && !hasResults(br);
+  const autoOn = canTree && !!br && br.auto !== false && !hasResults(br);
   useEffect(() => { if (autoOn) autoAddNew(t0.id, 'reg', regs, br?.players ?? [], addToBracket); }, [regs, autoOn]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (autoOn) autoAddNew(t0.id, 'join', jr, br?.players ?? [], addToBracket); }, [jr, autoOn]); // eslint-disable-line react-hooks/exhaustive-deps
   const allRegs: RegRow[] = [...jr, ...regs].sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? '')).filter((r, i, a) => a.findIndex((q) => nameKey(regName(q)) === nameKey(regName(r))) === i); // one line per name even if he came in twice (older sign-ups)
@@ -966,7 +1098,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
     } catch (err) { failed.current = sent; if ((err as Error).message === '401') onAuthFail(); else toast.err(why(err, x('تعذّر تنفيذ العملية'))); }
   }
   // a final that was decided before the winner sync existed: write the winner + end the tournament once when it is opened
-  useEffect(() => { if (br && champion(br) !== null && !t0.winner?.ar && !t0.winner?.en) void save(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (canTree && br && champion(br) !== null && !t0.winner?.ar && !t0.winner?.en) void save(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // changes save themselves ~1.5 s after the last edit
   useEffect(() => {
     if (!dirty || !br || typing.current || failed.current === ver.current) return undefined;
@@ -987,9 +1119,16 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
         })();
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const goBack = async () => { if (dirty && br) await save(true); onClose(); };
-  const [sec, setSec] = useState<'tree' | 'info' | 'join' | 'regs'>('tree');
+  type SecK = 'tree' | 'info' | 'join' | 'regs' | 'editors';
+  const secs: { k: SecK; label: string }[] = [
+    ...(canTree ? [{ k: 'tree' as const, label: x('الشجرة') }] : []),
+    ...(canInfo || canTree ? [{ k: 'info' as const, label: canInfo ? x('معلومات البطولة') : x('نظام القرعة') }] : []),
+    ...(canJoin ? [{ k: 'join' as const, label: x('رابط التسجيل') }] : []),
+    ...(canRegs ? [{ k: 'regs' as const, label: x('المسجّلون') }] : []),
+    ...(isOwner && !scope && !t0.community ? [{ k: 'editors' as const, label: x('المحررون') }] : []),
+  ];
+  const [sec, setSec] = useState<SecK>(secs[0]?.k ?? 'tree');
   const [secOpen, setSecOpen] = useState(false);
-  const secs = [{ k: 'tree', label: x('الشجرة') }, { k: 'info', label: x('معلومات البطولة') }, { k: 'join', label: x('رابط التسجيل') }, { k: 'regs', label: x('المسجّلون') }] as const;
   const backRef = useRef(goBack); backRef.current = goBack;
   useEffect(() => {
     if (!br) return undefined;
@@ -1012,13 +1151,13 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
               <button type="button" className="flex w-full items-center justify-between rounded-xl border px-3.5 py-3 text-start font-bold" style={{ ...bd, background: 'var(--glass)' }} aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{secs.find((q) => q.k === sec)?.label}</span><span aria-hidden>{secOpen ? '▴' : '▾'}</span></button>
               {secOpen && <><button type="button" className="fixed inset-0 z-[79]" aria-label={x('إغلاق')} onClick={() => setSecOpen(false)} /><div className="absolute inset-x-0 top-[calc(100%+6px)] z-[80] grid gap-0.5 rounded-2xl border p-1.5 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>{secs.map((q) => <button key={q.k} type="button" className="rounded-lg px-3 py-3 text-start font-bold" style={{ color: sec === q.k ? 'var(--text)' : 'var(--muted)', background: sec === q.k ? 'var(--chip-bg)' : undefined }} onClick={() => { setSec(q.k); setSecOpen(false); }}>{q.label}</button>)}</div></>}
             </div>
-            {sec === 'tree' && (
+            {sec === 'tree' && canTree && (
               <>
                 <div className="hc-grid">
                   <BracketHeadCard bracket={{ ...br, info: { ...(tf.gameId ? { gameId: tf.gameId } : {}), ...(tf.startsAt ? { startsAt: tf.startsAt } : {}) } }} title={tf.name[lang] || tf.name.ar || tf.name.en} ownerName="Plato AR" formatLabel={({ single: x('خروج المغلوب (فردي)'), double: x('خروج مزدوج'), rr: x('دوري (كل لاعب ضد الكل)'), swiss: x('سويسري'), groups: x('مجموعات ثم إقصائيات'), ffa: x('لوحة صدارة (الكل ضد الكل)') } as Record<BFormat, string>)[br.format]} lang={lang === 'en' ? 'en' : 'ar'} />
                   <Fold title={x('إضافة لاعبين')}>
                     <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
-                    <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} />
+                    {!scope && <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} />}
                   </Fold>
                 </div>
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
@@ -1028,12 +1167,14 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                 <div className="st-stage"><div className="st-brcard rounded-2xl border p-3" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}><BracketView bracket={br} onApply={upd} canRename onChange={upd} onRename={(i, v) => { if (hasName(br, v, i)) { toast.err(x('هذا الاسم مستخدم عند لاعب آخر')); return; } upd(renamePlayer(br, i, v)); }} onSwap={br.format === 'single' || br.format === 'double' ? (a, b) => { const nb = swapSeats(br, a, b); if (nb) upd(nb); } : undefined} /></div></div>
               </>
             )}
-            {sec === 'info' && (
+            {sec === 'info' && (canInfo || canTree) && (
             <div className="grid gap-3 rounded-2xl border p-4" style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }}>
+              {canInfo && <>
               <b className="text-[1.05rem]">{x('معلومات البطولة')}</b>
-              <TournamentFields f={tf} setF={setTf} k={k} hidePublish onImage={(v) => { const n = { ...tf, image: v, imagePos: '' }; setTf(n); void saveInfo(n); }} />
+              <TournamentFields f={tf} setF={setTf} k={k} hidePublish onImage={(v) => { const n = { ...tf, image: v, imagePos: '' }; setTf(n); void saveInfo(n); }} noTier={!!scope} />
               <div><button type="button" className={btnP} style={gradBtn} disabled={infoBusy} onClick={() => { void saveInfo(); }}>{x('حفظ معلومات البطولة')}</button></div>
-              <div className="grid gap-3 border-t pt-4" style={bd}>
+              </>}
+              {canTree && <div className="grid gap-3 border-t pt-4" style={canInfo ? bd : { ...bd, borderTopWidth: 0, paddingTop: 0 }}>
                 <b>{x('نظام القرعة')}</b>
                 <Field label={x('نظام القرعة')}><select className={selCls} style={bd} value={fmt} onChange={(e) => setFmt(e.target.value as BFormat)}><option value="single">{x('خروج المغلوب (فردي)')}</option><option value="double">{x('خروج مزدوج')}</option><option value="rr">{x('دوري (كل لاعب ضد الكل)')}</option><option value="swiss">{x('سويسري')}</option><option value="groups">{x('مجموعات ثم إقصائيات')}</option><option value="ffa">{x('لوحة صدارة (الكل ضد الكل)')}</option></select></Field>
                 <FormatOpts fmt={fmt} value={lo} onChange={setLo} lang={lang} inpCls={inp} style={bd} border={bd} players={br.players.length} />
@@ -1041,22 +1182,23 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved }: { t0: Adm<Tournam
                 {(br.format === 'single' || br.format === 'double') && <label className="flex items-center gap-2.5 text-[.9rem]" style={canPlace(br) || br.place ? undefined : { opacity: .55 }}><input type="checkbox" className="h-4 w-4" disabled={!canPlace(br) && !br.place} checked={!!br.place} onChange={(e) => { setLo({ ...lo, place: e.target.checked }); upd(e.target.checked ? { ...setPlace(br, true, lo.placeTo), place: true as const } : setPlace(br, false)); }} />{x('مباريات تحديد المراكز')}</label>}
                 {br.place && (br.format === 'single' || br.format === 'double') && (() => { const mx = Math.max(4, Math.min(16, 2 ** Math.ceil(Math.log2(Math.max(br.players.length, 8))))); return <Field label={x('تحديد المراكز حتى')}><select className={selCls} style={bd} value={Math.min(br.placeTo ?? 16, mx)} onChange={(e) => { const n = +e.target.value; setLo({ ...lo, placeTo: n }); upd({ ...setPlace(br, true, n), place: true as const }); }}>{Array.from({ length: mx - 2 }, (_, i) => i + 3).map((n) => <option key={n} value={n}>{lang === 'en' ? `${n}${n === 3 ? 'rd' : 'th'} place` : `المركز ${n}`}</option>)}</select></Field>; })()}
                 <div><button type="button" className={btnG} style={bd} onClick={applyFmt}>{x('تطبيق النظام')}</button></div>
-              </div>
+              </div>}
             </div>
             )}
-            {sec === 'join' && (
+            {sec === 'join' && canJoin && (
               <FlatFold.Provider value>
             {!tf.community && <RegDescription id={t0.id} k={k} />}
             <JoinPanel onCover={(u, pos) => setTf((o) => ((o.image ?? '') === u ? o : { ...o, image: u, imagePos: pos ?? '' }))} id={t0.id} lang={lang === 'en' ? 'en' : 'ar'} link={siteUrl(joinPath(t0.id))} autoOn={br.auto !== false} onAuto={(on) => upd(setAuto(br, on))} admin={{ k }} readOnly={!!tf.community} title={tf.name.ar || tf.name.en} org={tf.community?.organizer ?? ''} />
               </FlatFold.Provider>
             )}
-            {sec === 'regs' && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
+            {sec === 'regs' && canRegs && <FlatFold.Provider value>{regsBlock}</FlatFold.Provider>}
+            {sec === 'editors' && isOwner && !scope && <TournamentEditors id={t0.id} k={k} onAuthFail={onAuthFail} />}
           </div>
         )}
 
         <div className="flex flex-wrap items-center gap-3 border-t pt-4" style={bd}>
-          <button type="button" className={btnP} style={gradBtn} onClick={() => { void save(); }}>{x('حفظ القرعة')}</button>
-          {br && <button type="button" className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { if (window.confirm(x('حذف القرعة وإعادة البدء؟'))) { upd(null); } }}>{x('حذف القرعة')}</button>}
+          {canTree && <button type="button" className={btnP} style={gradBtn} onClick={() => { void save(); }}>{x('حفظ القرعة')}</button>}
+          {canTree && br && <button type="button" className={btnG} style={{ ...bd, color: '#ff6b7a' }} onClick={() => { if (window.confirm(x('حذف القرعة وإعادة البدء؟'))) { upd(null); } }}>{x('حذف القرعة')}</button>}
           <button type="button" className={btnG} style={bd} onClick={onClose}>{x('إلغاء')}</button>
           {dirty && <span className="text-[.82rem]" style={{ color: '#ffb02e' }}>{x('لم تُحفظ التعديلات بعد')}</span>}
         </div>
@@ -1828,7 +1970,7 @@ const LOG_ACTION: Record<string, string> = {
   'news.add': 'إضافة خبر', 'news.edit': 'تعديل خبر', 'news.delete': 'حذف خبر',
   'tournaments.add': 'إضافة بطولة', 'tournaments.edit': 'تعديل بطولة', 'tournaments.delete': 'حذف بطولة', 'tournaments.bracket': 'تعديل شجرة/بث',
   'games.add': 'إضافة لعبة', 'games.edit': 'تعديل لعبة', 'games.delete': 'حذف لعبة', 'games.order': 'ترتيب/حذف ألعاب',
-  'regs.delete': 'حذف تسجيل',
+  'regs.delete': 'حذف تسجيل', 'members.view': 'عرض قائمة الأعضاء', 'tournaments.editor.add': 'إضافة محرر لبطولة', 'tournaments.editor.perms': 'تعديل صلاحيات محرر بطولة', 'tournaments.editor.remove': 'إزالة محرر من بطولة',
 };
 Object.assign(EN, {"سجل النشاط": "Activity log", "سجل دائم لا يمكن تعديله أو حذفه. يعرض من فعل ماذا ومتى": "A permanent log that cannot be edited or deleted. Shows who did what and when", "كل الإداريين": "All admins", "كل الأحداث": "All events", "من": "From", "إلى": "To", "تحميل المزيد": "Load more", "لا توجد سجلات": "No entries", "جدول السجل غير موجود في قاعدة البيانات. شغّل أمر الإنشاء من ADMIN-SETUP.md": "The log table is missing from the database. Run the create statement from ADMIN-SETUP.md", "تعذّر تحميل السجل": "Could not load the log", "المشرف": "Admin", "الوقت": "Time", "الحدث": "Event", "الهدف": "Target", "التفاصيل": "Details", "تسجيل دخول": "Sign-in", "دخول بمفتاح الاسترجاع": "Recovery-key sign-in", "محاولة دخول فاشلة": "Failed sign-in", "محاولة على حساب مقفل": "Attempt on a locked account", "قفل الحساب بعد محاولات فاشلة": "Account locked after failed attempts", "تغيير كلمة المرور": "Password changed", "إنشاء حساب مشرف": "Admin account created", "تعديل صلاحيات": "Permissions changed", "إيقاف حساب": "Account disabled", "تفعيل حساب": "Account enabled", "فتح حساب مقفل": "Account unlocked", "كلمة مرور مؤقتة جديدة": "New temporary password", "إضافة خبر": "News added", "تعديل خبر": "News edited", "حذف خبر": "News deleted", "إضافة بطولة": "Tournament added", "تعديل بطولة": "Tournament edited", "حذف بطولة": "Tournament deleted", "تعديل شجرة/بث": "Bracket/stream edited", "إضافة لعبة": "Game added", "تعديل لعبة": "Game edited", "حذف لعبة": "Game deleted", "ترتيب/حذف ألعاب": "Games order/removal", "حذف تسجيل": "Registration deleted"});
 
@@ -1901,6 +2043,64 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
         </table>
       </div>
       {more && <button type="button" onClick={() => load(true)} className="h-10 rounded-xl border border-white/20 px-4 font-bold">{x('تحميل المزيد')}</button>}
+    </div>
+  );
+}
+
+type MemberRow = { id: string; handle: string; name: string; provider: string; createdAt: string; brackets: number };
+const PROVIDER_NAME: Record<string, string> = { discord: 'Discord', google: 'Google', email: 'الإيميل' };
+Object.assign(EN, { 'الأعضاء': 'Members', 'الحسابات التي أنشأها الزوار في الموقع. للعرض فقط، ولا يظهر الإيميل': 'Accounts visitors made on the site. View only; emails are not shown', 'ابحث باليوزر أو الاسم': 'Search by username or name', 'اليوزر': 'Username', 'الاسم': 'Name', 'طريقة الدخول': 'Sign-in', 'تاريخ التسجيل': 'Joined', 'بطولاته': 'Brackets', 'لا يوجد أعضاء': 'No members', 'تعذّر تحميل الأعضاء': 'Could not load the members', 'الإيميل': 'Email', 'إجمالي الأعضاء': 'Total members', 'تعذّر قراءة جدول الأعضاء': 'Could not read the members table', 'عرض قائمة الأعضاء': 'Viewed the members list' });
+
+/** Owner-only, read-only list of the members who made an account on the site: username, name, how they sign in, when they joined and how many brackets they made. No email is shown (the server never sends it) and there is no edit or delete control. */
+function MembersTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
+  const { x, lang } = useX();
+  const toast = useToast();
+  const [rows, setRows] = useState<MemberRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [more, setMore] = useState(false);
+  const [missing, setMissing] = useState(false);
+  const [q, setQ] = useState('');
+  const [busy, setBusy] = useState(false);
+  const seq = useRef(0);
+  const load = useCallback((append: boolean, text: string, offset: number) => {
+    const mine = ++seq.current; // an older answer (typing fast) never replaces a newer one
+    setBusy(true);
+    api<{ total: number; more: boolean; rows: MemberRow[]; missing?: boolean }>(`/admin/members?q=${encodeURIComponent(text)}&offset=${offset}`, { key: k })
+      .then((r) => { if (mine !== seq.current) return; setRows((p) => (append ? [...p, ...r.rows] : r.rows)); setTotal(r.total); setMore(r.more); setMissing(!!r.missing); })
+      .catch((e: Error) => { if (mine !== seq.current) return; if (e.message === '401') onAuthFail(); else toast.err(x('تعذّر تحميل الأعضاء')); })
+      .finally(() => { if (mine === seq.current) setBusy(false); });
+  }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const h = window.setTimeout(() => load(false, q.trim(), 0), q ? 350 : 0); return () => window.clearTimeout(h); }, [q, load]);
+  const when = (iso: string) => { const t = Date.parse(iso); return Number.isNaN(t) ? '—' : new Date(t).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-SA-u-ca-gregory-nu-latn', { dateStyle: 'medium' }); };
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[.95rem] opacity-70">{x('الحسابات التي أنشأها الزوار في الموقع. للعرض فقط، ولا يظهر الإيميل')}</p>
+        <RefreshBtn onClick={() => load(false, q.trim(), 0)} />
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <input className={`${inp} max-w-[22rem]`} style={bd} dir="auto" value={q} maxLength={40} placeholder={x('ابحث باليوزر أو الاسم')} aria-label={x('ابحث باليوزر أو الاسم')} onChange={(e) => setQ(e.target.value)} />
+        <span className="text-[.9rem] font-bold opacity-80">{x('إجمالي الأعضاء')}: {total}</span>
+      </div>
+      {missing && <p className="rounded-xl border border-[#ffc93c]/40 bg-[#ffc93c]/10 p-3 text-[.9rem]">{x('تعذّر قراءة جدول الأعضاء')}</p>}
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <table className="w-full min-w-[34rem] text-start text-[.88rem]">
+          <thead className="bg-white/[.06] text-[.8rem] opacity-80"><tr>{['اليوزر', 'الاسم', 'طريقة الدخول', 'تاريخ التسجيل', 'بطولاته'].map((h) => <th key={h} className="px-3 py-2 text-start font-bold">{x(h)}</th>)}</tr></thead>
+          <tbody>
+            {rows.map((m) => (
+              <tr key={m.id} className="border-t border-white/10 align-middle">
+                <td className="px-3 py-2"><b dir="ltr">{m.handle ? `@${m.handle}` : '—'}</b></td>
+                <td className="px-3 py-2"><span dir="auto" className="inline-block">{m.name || '—'}</span></td>
+                <td className="px-3 py-2">{PROVIDER_NAME[m.provider] ? x(PROVIDER_NAME[m.provider]) : m.provider}</td>
+                <td className="whitespace-nowrap px-3 py-2 opacity-80">{when(m.createdAt)}</td>
+                <td className="px-3 py-2">{m.brackets}</td>
+              </tr>
+            ))}
+            {!rows.length && !busy && <tr><td colSpan={5} className="px-3 py-8 text-center opacity-60">{x('لا يوجد أعضاء')}</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      {more && <button type="button" disabled={busy} onClick={() => load(true, q.trim(), rows.length)} className="h-10 rounded-xl border border-white/20 px-4 font-bold">{x('تحميل المزيد')}</button>}
     </div>
   );
 }
@@ -2113,14 +2313,26 @@ function AdminInner() {
   const can = useCallback((sec: string, act: string) => !!me && (me.role === 'owner' || !!(me.perms as Record<string, string[] | undefined>)[sec]?.includes(act)), [me]);
 
   const pending = usePending(key, !!key && !!me && (me.role === 'owner' || !!(me.perms as Record<string, string[] | undefined>).tournaments?.length));
+  const [shared, setShared] = useState<SharedT[]>([]);
+  const loadShared = useCallback(() => {
+    if (!key || !me || me.mustChange) return;
+    api<SharedT[]>('/admin/shared', { key }).then((r) => setShared(Array.isArray(r) ? r : [])).catch(() => setShared([]));
+  }, [key, me?.username, me?.mustChange]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(loadShared, [loadShared]);
+  const landed = useRef(false);
+  useEffect(() => { // an admin who only has shared tournaments lands on them
+    if (landed.current || !me || !shared.length) return;
+    landed.current = true;
+    if (me.role !== 'owner' && !Object.values(me.perms as Record<string, string[] | undefined>).some((a) => a?.length)) setTab('shared');
+  }, [shared.length, me?.username]); // eslint-disable-line react-hooks/exhaustive-deps
   const sn = useSectionNav(); // a hook: it must run before the early returns below (after sign-in the dashboard renders more hooks than the sign-in form did, and React stops with error #310)
 
   if (!key || !me) return <Login onDone={onLogin} />;
   if (me.mustChange) return <ForceChange k={key} me={me} onLogout={logout} onDone={() => { const n = { ...me, mustChange: false, recovery: false }; saveMe(n); setMe(n); }} />;
 
-  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || ((id === 'admins' || id === 'log') ? me.role === 'owner' : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
+  const tabs = (Object.keys(TAB_LABEL) as Tab[]).filter((id) => id === 'overview' || ((id === 'admins' || id === 'log' || id === 'members') ? me.role === 'owner' : id === 'shared' ? shared.length > 0 && !can('tournaments', 'edit') : id === 'regs' ? can('regs', 'view') : !!(me.perms as Record<string, string[] | undefined>)[id]?.length || me.role === 'owner'));
   return (
-    <ToastHost><PermCtx.Provider value={can}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+    <ToastHost><PermCtx.Provider value={can}><OwnerCtx.Provider value={me.role === 'owner'}><div className="min-h-[100svh] overflow-x-clip lg:grid lg:grid-cols-[16.5rem_1fr]" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <aside className="hidden flex-col self-start overflow-y-auto border-e p-5 lg:sticky lg:top-0 lg:flex lg:h-[100svh]" style={{ borderColor: 'var(--glass-b)', background: 'var(--glass)' }}>
         <div className="flex items-center gap-2.5 px-2 pb-6 pt-1">
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={gradBtn}><span aria-hidden="true" className="inline-block h-5 w-5 bg-current" style={ninja} /></span>
@@ -2199,11 +2411,13 @@ function AdminInner() {
         )}
         <main className="mx-auto max-w-[68rem] px-4 py-6 sm:px-8 sm:py-8">
           <div key={tab} className="admin-page">
-          {tab === 'overview' && <OverviewTab k={key} go={pick} />}
+          {tab === 'overview' && <OverviewTab k={key} go={pick} owner={me.role === 'owner'} />}
           {tab === 'news' && <NewsTab k={key} onAuthFail={logout} />}
           {tab === 'tournaments' && <TournamentsTab k={key} onAuthFail={logout} />}
+          {tab === 'shared' && <SharedTab k={key} rows={shared} reload={loadShared} onAuthFail={logout} />}
           {tab === 'games' && <GamesTab k={key} onAuthFail={logout} />}
           {tab === 'regs' && <RegsTab k={key} onAuthFail={logout} />}
+          {tab === 'members' && me.role === 'owner' && <MembersTab k={key} onAuthFail={logout} />}
           {tab === 'admins' && me.role === 'owner' && <AdminsTab k={key} onAuthFail={logout} meName={me.username} />}
           {tab === 'log' && me.role === 'owner' && <LogTab k={key} onAuthFail={logout} />}
           </div>
@@ -2212,7 +2426,7 @@ function AdminInner() {
       {pwOpen && <PwDrawer k={key} me={me} onClose={() => setPwOpen(false)} />}
       {bellOpen && <BellDrawer list={pending} onClose={() => setBellOpen(false)} go={() => pick('tournaments')} />}
       {mailOpen && <EmailDrawer k={key} onClose={() => setMailOpen(false)} />}
-    </div></PermCtx.Provider></ToastHost>
+    </div></OwnerCtx.Provider></PermCtx.Provider></ToastHost>
   );
 }
 
@@ -2224,4 +2438,5 @@ export default function AdminPage() {
 Object.assign(EN, {"الإشعارات": "Notifications", "لا توجد إشعارات جديدة": "No new notifications", "بطولة جديدة بانتظار المراجعة": "New tournament awaiting review", "البريد الإلكتروني للإشعارات": "Notification email", "تم حفظ البريد الإلكتروني": "Email saved", "البريد الإلكتروني غير صحيح": "That email looks wrong", "تعذّر الحفظ (تأكد من إضافة عمود البريد الإلكتروني في قاعدة البيانات)": "Could not save (make sure the email column was added to the database)", "يصلك على هذا البريد تنبيه عند إرسال بطولة جديدة للمراجعة. اختياري: اتركه فارغاً وسترى الإشعارات داخل لوحة الإدارة فقط (الجرس).": "You get an alert at this email when a new tournament is sent for review. Optional: leave it empty and you will see notifications inside the admin panel only (the bell).", "البريد الإلكتروني": "Email"});
 Object.assign(EN, {"معلومات البطولة": "Tournament info", "حفظ معلومات البطولة": "Save tournament info", "تطبيق النظام": "Apply format", "تغيير النظام يمسح النتائج الحالية. متأكد؟": "Changing the format clears the current results. Sure?", "اكتب اسم البطولة أولاً": "Enter the tournament name first", "إنشاء البطولة": "Create tournament"});
 Object.assign(EN, {"البطولة منشورة": "Tournament is published", "البطولة غير منشورة": "Tournament is not published", "تظهر الآن للزوار في الموقع. اضغط لإخفائها": "Visible to visitors on the site. Tap to hide it", "مخفية عن الزوار. اضغط لنشرها في الموقع": "Hidden from visitors. Tap to publish it on the site"});
+Object.assign(EN, {"بطولات مشتركة معي": "Shared with me", "بطولات أضافك المشرف الرئيسي للتحرير فيها": "Tournaments the main admin added you to edit", "لم تُضف إلى أي بطولة بعد.": "You have not been added to any tournament yet.", "فتح": "Open", "المحررون": "Editors", "نظام القرعة": "Bracket format", "لم يُضف أحد بعد.": "Nobody added yet.", "إضافة محرر": "Add an editor", "أدمن": "Admin", "عضو": "Member", "عضو من الموقع": "Site member", "إزالة": "Remove", "إزالة هذا المحرر من البطولة؟": "Remove this editor from the tournament?", "اكتب اسم المستخدم": "Enter the username", "اكتب اسم المستخدم (يوزر الأدمن)": "Enter the admin username", "أضف أدمن آخر أو عضواً من الموقع ليعمل معك على هذه البطولة، وحدد له الصلاحيات بالـ check. النشر والحذف وإضافة المحررين لك وحدك.": "Add another admin or a site member to work on this tournament with you, and tick what they may do. Publishing, deleting and adding editors stay with you.", "العضو يفتح البطولة من أداة المنظمين في الموقع (الشجرة ورابط التسجيل والمسجلون فقط). معلومات البطولة تبقى هنا.": "The member opens it from the organisers' tool on the site (bracket, registration link and registrants only). The tournament details stay here.", "الشجرة (النتائج واللاعبون)": "Bracket (results & players)", "المسجلون وإجاباتهم": "Registrants & their answers", "اسم المستخدم غير صالح": "Invalid username", "اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط": "Invalid username: English letters, digits and _ only", "لم يتم العثور على حساب بهذا الاسم": "No account with that username", "هذا هو المشرف الرئيسي وعنده كل الصلاحيات": "This is the main admin, who has every permission", "هذا الحساب موقوف": "This account is disabled", "اختر صلاحية واحدة على الأقل": "Pick at least one permission", "وصلت الحد الأقصى للمحررين (10)": "You reached the limit of 10 editors", "هذه البطولة ما فيها قرعة بعد، أنشئ القرعة أولاً": "This tournament has no bracket yet: create it first", "هذه الميزة تحتاج تحديث قاعدة البيانات (جدول tournament_editors في schema.sql)": "This feature needs the database update (the tournament_editors table in schema.sql)", "ليس لديك صلاحية لهذا الإجراء": "You do not have permission for this action", "إضافة محرر لبطولة": "Editor added to a tournament", "تعديل صلاحيات محرر بطولة": "Tournament editor permissions changed", "إزالة محرر من بطولة": "Editor removed from a tournament"});
 Object.assign(EN, {"الشجرة": "Bracket", "رابط التسجيل": "Registration link", "إضافة لاعبين": "Add players", "تغيير الأماكن بعد بدء المباريات يمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟": "Changing places after matches started clears the current results (Undo brings them back). Sure?"});
