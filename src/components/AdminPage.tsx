@@ -1905,11 +1905,11 @@ function LogTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   );
 }
 
-type MemberRow = { id: string; handle: string; name: string; avatar: string; provider: string; createdAt: string; brackets: number };
+type MemberRow = { id: string; handle: string; name: string; provider: string; createdAt: string; brackets: number };
 const PROVIDER_NAME: Record<string, string> = { discord: 'Discord', google: 'Google', email: 'الإيميل' };
 Object.assign(EN, { 'الأعضاء': 'Members', 'الحسابات التي أنشأها الزوار في الموقع. للعرض فقط، ولا يظهر الإيميل': 'Accounts visitors made on the site. View only; emails are not shown', 'ابحث باليوزر أو الاسم': 'Search by username or name', 'اليوزر': 'Username', 'الاسم': 'Name', 'طريقة الدخول': 'Sign-in', 'تاريخ التسجيل': 'Joined', 'بطولاته': 'Brackets', 'لا يوجد أعضاء': 'No members', 'تعذّر تحميل الأعضاء': 'Could not load the members', 'الإيميل': 'Email', 'إجمالي الأعضاء': 'Total members', 'تعذّر قراءة جدول الأعضاء': 'Could not read the members table', 'عرض قائمة الأعضاء': 'Viewed the members list' });
 
-/** Owner-only, read-only list of the members who made an account on the site: picture, username, name, how they sign in, when they joined and how many brackets they made. No email is shown (the server never sends it) and there is no edit or delete control. */
+/** Owner-only, read-only list of the members who made an account on the site: username, name, how they sign in, when they joined and how many brackets they made. No email is shown (the server never sends it) and there is no edit or delete control. */
 function MembersTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
   const { x, lang } = useX();
   const toast = useToast();
@@ -1947,14 +1947,7 @@ function MembersTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }) {
           <tbody>
             {rows.map((m) => (
               <tr key={m.id} className="border-t border-white/10 align-middle">
-                <td className="px-3 py-2">
-                  <span className="flex items-center gap-2.5">
-                    {m.avatar
-                      ? <img src={m.avatar} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-9 w-9 shrink-0 rounded-full object-cover" />
-                      : <i className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[.85rem] font-bold not-italic" style={{ background: 'var(--glass-b)' }}>{(m.handle || m.name || '?').slice(0, 1).toUpperCase()}</i>}
-                    <b dir="ltr">{m.handle ? `@${m.handle}` : '—'}</b>
-                  </span>
-                </td>
+                <td className="px-3 py-2"><b dir="ltr">{m.handle ? `@${m.handle}` : '—'}</b></td>
                 <td className="px-3 py-2"><span dir="auto" className="inline-block">{m.name || '—'}</span></td>
                 <td className="px-3 py-2">{PROVIDER_NAME[m.provider] ? x(PROVIDER_NAME[m.provider]) : m.provider}</td>
                 <td className="whitespace-nowrap px-3 py-2 opacity-80">{when(m.createdAt)}</td>
