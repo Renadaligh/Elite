@@ -59,7 +59,8 @@ function Facts({ x, s }: { x: Tournament; s: TournamentStatus }) {
   const { t, lang } = useI18n();
   const unlimited = x.slots.total <= 0;
   const full = !unlimited && x.slots.filled >= x.slots.total;
-  const seats = unlimited ? `${x.slots.filled} · ${t.tUnlimited}` : full ? t.tFull : `${x.slots.filled}/${x.slots.total}`;
+  // before it starts: only the seat limit (or "unlimited"), no registration numbers; once started the card shows the players of the bracket
+  const seats = unlimited ? t.tUnlimited : full ? t.tFull : String(x.slots.total);
   return (
     <dl className="tc-facts">
       <div><dt>{t.tPrize}</dt><dd title={x.prize[lang]}>{x.prize[lang] || "—"}</dd></div>
@@ -83,8 +84,8 @@ export function Register({ x, s }: { x: Tournament; s: TournamentStatus }) {
   );
 }
 
-/** The picture of a tournament card: its own; a tournament without one (site or organiser's) takes the game's picture of the site. */
-const cardImage = (x: Tournament, gameImage?: string) => x.image || gameImage || '';
+/** The picture of a tournament card: its own only (a tournament without one shows the plain gradient; community tournaments must have one to be published). */
+const cardImage = (x: Tournament) => x.image || '';
 
 function MajorBadge() {
   const { lang } = useI18n();
@@ -98,10 +99,10 @@ function Media({ x, s, eager }: { x: Tournament; s: TournamentStatus; eager?: bo
   useGames();
   const g = getGame(x.gameId);
   const c = g?.colors ?? ['#3d7bff', '#1a1f6a'];
-  const src = cardImage(x, g?.image);
+  const src = cardImage(x);
   return (
     <div className="tc-im" style={src ? undefined : { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` }}>
-      {src && <RetryImg src={src} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.image ? x.imagePos || undefined : '50% 50%' }} />}
+      {src && <RetryImg src={src} alt="" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async" className="tc-img" style={{ objectPosition: x.imagePos || undefined }} />}
       <div className="tc-chips"><StatusPill s={s} />{x.tier === 'major' && <MajorBadge />}</div>
     </div>
   );
@@ -161,7 +162,7 @@ export function TourCard({ x, s, eager }: { x: Tournament; s: TournamentStatus; 
   const showCd = s === 'upcoming';
   const showBr = (s === 'live' || s === 'completed') && !!x.bracket;
   return (
-    <article className={`tc ${cardImage(x, g?.image) ? 'tc-pic' : ''} `}>
+    <article className={`tc ${cardImage(x) ? 'tc-pic' : ''} `}>
       <Media x={x} s={s} eager={eager} />
       <div className="tc-body">
         {g && <span className="text-[.82rem] font-semibold" style={{ color: 'var(--muted)' }}>{g.name[lang]}</span>}

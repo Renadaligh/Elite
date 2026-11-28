@@ -408,11 +408,11 @@ export function Editor({ id, tx, auth, readOnly, onForeign, tab: tabProp, onTab,
             <>
               {editable ? (
                 <div className="hc-grid">
-                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={(!wide || !canTree) && isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} /> : undefined} />
+                  <BracketHeadCard bracket={br} title={shownTitle} ownerName={owner || auth.user?.handle || auth.user?.name || ''} avatar={ownerAv || auth.user?.avatar} formatLabel={fmtLabels[br.format]} lang={L2} foot={(!wide || !canTree) && isOwner && id ? <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} onPickCover={pickCover} /> : undefined} />
                   {canTree && <FlatFold.Provider value={wide}>{/* wide screens: the card is always open and as tall as the tournament card */}
                     <Fold title={ar ? 'إضافة لاعبين' : 'Add players'} style={card} defaultOpen>
                       <AddPlayerBar lang={lang} onAdd={addToBracket} existing={br?.players ?? []} />
-                      {wide && isOwner && id && <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} />}
+                      {wide && isOwner && id && <PublishToggle id={id} lang={L2} name={title} info={br.info} cover={cover} onPickCover={pickCover} />}
                     </Fold>
                   </FlatFold.Provider>}
                 </div>

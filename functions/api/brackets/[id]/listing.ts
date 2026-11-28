@@ -54,7 +54,9 @@ export const onRequestPut = async (ctx: Ctx) => {
   const [fe, fa] = FORMAT[fmt] ?? FORMAT.single;
   const id = `u-${b.id}`;
   try {
-    const old = await ctx.env.DB.prepare('SELECT filled, game_id, name_en, name_ar, prize_en, starts_at, review, image FROM tournaments WHERE id = ? AND owner_id = ?').bind(id, b.ownerId).first<{ filled: number; game_id: string; name_en: string; name_ar: string; prize_en: string; starts_at: string; review: string; image: string }>();
+    const old = await ctx.env.DB.prepare('SELECT filled, game_id, name_en, name_ar, prize_en, starts_at, review, image, published FROM tournaments WHERE id = ? AND owner_id = ?').bind(id, b.ownerId).first<{ filled: number; game_id: string; name_en: string; name_ar: string; prize_en: string; starts_at: string; review: string; image: string; published: number }>();
+    // asking for publication needs a picture (new request, or re-sending after a rejection / after it was turned off); one already live keeps working
+    if (pub && !image && (!old || !old.published || old.review === 'rejected')) return json({ error: 'image' }, 400);
     if (old) {
       // Only a new name or picture sends an approved one back to review. An edit of a rejected one is a resubmission.
       const changed = (old.name_ar || old.name_en) !== name || old.image !== image; // only a new name or picture goes back to review; game, prize, date, seats, etc. change freely
