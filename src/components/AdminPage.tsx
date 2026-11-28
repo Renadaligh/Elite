@@ -1272,7 +1272,8 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
         {pendingN > 0 && <Card className="p-3.5 text-[.9rem] font-bold"><span style={{ color: '#ffb02e' }}>{x('طلبات بطولات المستخدمين بانتظار مراجعتك')} ({pendingN})</span></Card>}
         {[...shown].sort((a, b) => Number(b.community?.review === 'pending') - Number(a.community?.review === 'pending')).map((r) => {
           const st = statusOf(r, now);
-          const pct = r.slots.total > 0 ? Math.min(100, (r.slots.filled / r.slots.total) * 100) : 0;
+          const cnt = r.bracket?.players?.length || r.slots.filled; // the players in the saved bracket (same number the site card shows); else the stored count
+          const pct = r.slots.total > 0 ? Math.min(100, (cnt / r.slots.total) * 100) : 0;
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="w-full min-w-0 sm:w-auto sm:flex-1">
@@ -1280,7 +1281,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
                 <div className="mt-1.5 text-[.82rem]" style={{ color: 'var(--muted)' }}><time dateTime={r.startsAt}>{niceWhen(r.startsAt, lang)}</time></div>
               </div>
               <div className="w-36">
-                <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.total > 0 ? `${r.slots.filled}/${r.slots.total}` : `${r.slots.filled} / ∞`}</span></div>
+                <div className="mb-1 flex justify-between text-[.76rem]" style={{ color: 'var(--muted)' }}><span>{x('المقاعد')}</span><span dir="ltr">{r.slots.total > 0 ? `${cnt}/${r.slots.total}` : `${cnt} / ∞`}</span></div>
                 <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--track)' }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg,#3d7bff,#5b5ff0)' }} /></div>
               </div>
               <div className="flex gap-2">
