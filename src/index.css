@@ -1662,3 +1662,10 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 
 /* hero: on phones with a floating browser bar the page also runs under the bar; cover that area too (no dark strip under the picture) */
 @supports (height:100lvh){section#top{min-height:100lvh}}
+
+/* ---- light mode of the organisers' tool and of the dashboard's tournament screen ---- */
+.st-app[data-st=light] { --bg: #f4eefc; --bg-rgb: 244, 238, 252; --text: #2b2160; --muted: #6d62a0; --glass: rgba(255,255,255,.92); --glass-b: rgba(43,33,96,.14); --dialog: #fff; --link-on: #4a5df0; --chip-bg: rgba(43,33,96,.06); --chip-b: rgba(43,33,96,.14); --track: rgba(43,33,96,.12); --shadow: rgba(43,33,96,.18); --skel-a: rgba(43,33,96,.05); --skel-b: rgba(43,33,96,.1); color-scheme: light; }
+:is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-org b { color: #c2570c; }
+:is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p1 { --c: #a87400; }
+:is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p2 { --c: #6f7a93; }
+:is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p3 { --c: #b0601a; }

@@ -1129,6 +1129,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved, scope }: { t0: Adm<
   ];
   const [sec, setSec] = useState<SecK>(secs[0]?.k ?? 'tree');
   const [secOpen, setSecOpen] = useState(false);
+  const adTheme = useContext(AdCtx).theme; // the bracket's own light/dark colours follow the dashboard's theme
   const wide = useMedia('(min-width:1024px)'); // the tool's layout: two columns on a wide screen, the publish switch moves into the tournament card on a phone
   const backRef = useRef(goBack); backRef.current = goBack;
   useEffect(() => {
@@ -1139,7 +1140,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved, scope }: { t0: Adm<
   }, [sec, lang, !!br]);
 
   return (
-    <div className="st-page st-wide">
+    <div className="st-page st-wide" data-st={adTheme}>
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <button type="button" className={btnG} style={bd} onClick={() => { void goBack(); }}>{lang === 'en' ? '← ' : '→ '}{x('البطولات')}</button>
         <h2 className="min-w-0 flex-1 truncate text-[1.3rem] font-extrabold">{tf.name[lang] || tf.name.ar || tf.name.en}</h2>
