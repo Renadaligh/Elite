@@ -1129,6 +1129,7 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved, scope }: { t0: Adm<
   ];
   const [sec, setSec] = useState<SecK>(secs[0]?.k ?? 'tree');
   const [secOpen, setSecOpen] = useState(false);
+  const wide = useMedia('(min-width:1024px)'); // the tool's layout: two columns on a wide screen, the publish switch moves into the tournament card on a phone
   const backRef = useRef(goBack); backRef.current = goBack;
   useEffect(() => {
     if (!br) return undefined;
@@ -1147,18 +1148,23 @@ function BracketAdmin({ t0, k, onClose, onAuthFail, onSaved, scope }: { t0: Adm<
       <div className="grid min-w-0 grid-cols-1 gap-6 [&>*]:min-w-0">
         {br && (
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 md:gap-4">
-            <div className="relative lg:hidden">
-              <button type="button" className="flex w-full items-center justify-between rounded-xl border px-3.5 py-3 text-start font-bold" style={{ ...bd, background: 'var(--glass)' }} aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{secs.find((q) => q.k === sec)?.label}</span><span aria-hidden>{secOpen ? '▴' : '▾'}</span></button>
-              {secOpen && <><button type="button" className="fixed inset-0 z-[79]" aria-label={x('إغلاق')} onClick={() => setSecOpen(false)} /><div className="absolute inset-x-0 top-[calc(100%+6px)] z-[80] grid gap-0.5 rounded-2xl border p-1.5 shadow-2xl" style={{ ...bd, background: 'var(--dialog)' }}>{secs.map((q) => <button key={q.k} type="button" className="rounded-lg px-3 py-3 text-start font-bold" style={{ color: sec === q.k ? 'var(--text)' : 'var(--muted)', background: sec === q.k ? 'var(--chip-bg)' : undefined }} onClick={() => { setSec(q.k); setSecOpen(false); }}>{q.label}</button>)}</div></>}
+            <div className="st-secsel lg:hidden">
+              <button type="button" className="st-secbtn" aria-haspopup="listbox" aria-expanded={secOpen} onClick={() => setSecOpen((o) => !o)}><span>{secs.find((q) => q.k === sec)?.label}</span><span className="st-chev" aria-hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: secOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}><path d="m6 9 6 6 6-6" /></svg></span></button>
+              {secOpen && <>
+                <button type="button" className="st-secbd" aria-label={x('إغلاق')} onClick={() => setSecOpen(false)} />
+                <div className="st-secmenu" role="listbox">{secs.map((q) => <button key={q.k} type="button" role="option" aria-selected={sec === q.k} className={sec === q.k ? 'on' : ''} onClick={() => { setSec(q.k); setSecOpen(false); }}>{q.label}</button>)}</div>
+              </>}
             </div>
             {sec === 'tree' && canTree && (
               <>
                 <div className="hc-grid">
-                  <BracketHeadCard bracket={{ ...br, info: { ...(tf.gameId ? { gameId: tf.gameId } : {}), ...(tf.startsAt ? { startsAt: tf.startsAt } : {}) } }} title={tf.name[lang] || tf.name.ar || tf.name.en} ownerName="Plato AR" formatLabel={({ single: x('خروج المغلوب (فردي)'), double: x('خروج مزدوج'), rr: x('دوري (كل لاعب ضد الكل)'), swiss: x('سويسري'), groups: x('مجموعات ثم إقصائيات'), ffa: x('لوحة صدارة (الكل ضد الكل)') } as Record<BFormat, string>)[br.format]} lang={lang === 'en' ? 'en' : 'ar'} />
-                  <Fold title={x('إضافة لاعبين')}>
+                  <BracketHeadCard bracket={{ ...br, info: { ...(tf.gameId ? { gameId: tf.gameId } : {}), ...(tf.startsAt ? { startsAt: tf.startsAt } : {}) } }} title={tf.name[lang] || tf.name.ar || tf.name.en} ownerName="Plato AR" formatLabel={({ single: x('خروج المغلوب (فردي)'), double: x('خروج مزدوج'), rr: x('دوري (كل لاعب ضد الكل)'), swiss: x('سويسري'), groups: x('مجموعات ثم إقصائيات'), ffa: x('لوحة صدارة (الكل ضد الكل)') } as Record<BFormat, string>)[br.format]} lang={lang === 'en' ? 'en' : 'ar'} foot={!wide && !scope ? <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} /> : undefined} />
+                  <FlatFold.Provider value={wide}>{/* wide screens: the card is always open and as tall as the tournament card, like the tool */}
+                  <Fold title={x('إضافة لاعبين')} style={{ background: 'var(--glass)', borderColor: 'var(--glass-b)' }} defaultOpen>
                     <AddPlayerBar lang={lang === 'en' ? 'en' : 'ar'} onAdd={addToBracket} existing={br?.players ?? []} />
-                    {!scope && <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} />}
+                    {wide && !scope && <PublishToggle on={tf.published !== false} busy={infoBusy} onChange={(v) => { const n = { ...tf, published: v }; setTf(n); void saveInfo(n); }} />}
                   </Fold>
+                  </FlatFold.Provider>
                 </div>
             <div className="flex flex-wrap items-center justify-between gap-3"><b>{isLeague(br) || br.format === 'groups' ? x('اكتب النتيجة في كل مباراة والترتيب يتحدث تلقائياً') : br.format === 'ffa' ? x('اكتب الأرقام في كل جولة والترتيب يتحدث تلقائياً') : x('اضغط على اسم الفائز في كل مباراة')}</b>{champ !== null && <Badge tone="green"><TrophyIcon className="me-1 inline h-3.5 w-3.5 align-[-2px]" />{br.players[champ]}</Badge>}</div>
                 <div className="flex flex-wrap items-center gap-2.5">

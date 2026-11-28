@@ -69,18 +69,10 @@ export async function siteLook(env: Ctx['env'], id: string): Promise<{ image: st
   } catch { return null; }
 }
 
-/** The number of registered people the registration page shows: the players in the tournament's bracket (the total the tree itself shows), so the link and the site say the same number.
- *  No bracket data to read: a site tournament's own counter on the site, or link + site-form sign-ups. */
-export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number, bracketData?: string): Promise<number> {
-  if (bracketData) {
-    try { const p = (JSON.parse(bracketData) as { players?: unknown }).players; if (Array.isArray(p)) return p.length; } catch { /* unreadable data: use the counters */ }
-  }
+/** The number of registered people the registration page shows: the people in the organiser's registrants list (sign-ups through the link + the site's own form), NOT the players in the tree. */
+export async function joinShownCount(env: Ctx['env'], id: string, viaLink: number, _bracketData?: string): Promise<number> {
   try {
-    const t = await env.DB.prepare('SELECT filled FROM tournaments WHERE id = ?').bind(id).first<{ filled: number }>();
-    if (t) return Math.max(viaLink, Number(t.filled) || 0);
-  } catch { /* table missing */ }
-  try {
-    const n = (await env.DB.prepare('SELECT COUNT(*) AS n FROM registrations WHERE tournament_id = ?').bind(`u-${id}`).first<{ n: number }>())?.n ?? 0;
+    const n = (await env.DB.prepare('SELECT COUNT(*) AS n FROM registrations WHERE tournament_id IN (?, ?)').bind(id, `u-${id}`).first<{ n: number }>())?.n ?? 0;
     return viaLink + n;
   } catch { return viaLink; }
 }
