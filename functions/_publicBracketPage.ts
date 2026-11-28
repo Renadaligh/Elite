@@ -574,7 +574,7 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       <button type="button" id="zoom-in" aria-label="${ar ? 'تكبير' : 'Zoom in'}">+</button>
       <span id="zoom-level">100%</span>
       <button type="button" id="zoom-out" aria-label="${ar ? 'تصغير' : 'Zoom out'}">−</button></nav>
-      <div class="pv-find" id="pv-find-box" hidden><input id="pv-find" type="search" dir="auto" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="${ar ? 'ابحث باسمك لتعرف مين خصمك' : 'Search your name to see your opponent'}" aria-label="${ar ? 'ابحث عن لاعب' : 'Find a player'}"><div id="pv-find-res" role="status" aria-live="polite"></div></div>
+      <div class="pv-find" id="pv-find-box" hidden><input id="pv-find" type="search" dir="auto" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="${ar ? 'ابحث باسمك لتعرف من خصمك' : 'Search your name to see your opponent'}" aria-label="${ar ? 'ابحث عن لاعب' : 'Find a player'}"><div id="pv-find-res" role="status" aria-live="polite"></div></div>
       <div class="sheet" tabindex="0" aria-label=""${ar ? 'نتائج البطولة' : 'Bracket results'}">${svg}</div>`
       : `<p>${message}</p>${status === 503 ? `<a class="retry" href="${url.pathname}">${ar ? 'إعادة المحاولة' : 'Try again'}</a>` : ''}`}
     </main><div id="page-toast" role="status" aria-live="polite" aria-atomic="true"></div><script nonce="${nonce}">document.getElementById('theme').setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'light'));${controls}</script><script nonce="${nonce}">${findScript}</script></body></html>`;

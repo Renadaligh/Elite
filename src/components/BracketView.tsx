@@ -33,10 +33,10 @@ function Typed({ text }: { text: string }) {
   return <span className="br-typed"><span className="br-typed-sz" aria-hidden>{text}</span><span className="br-typed-on">{chars.slice(0, n).join('')}{n < chars.length && <i className="br-caret" />}</span></span>;
 }
 
-function Row({ typing, hit, seed, name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename }: { typing?: boolean; hit?: boolean; seed?: number; crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
+function Row({ typing, hit, seed, name, state, score, win, lose, onClick, onScore, slot, grip, crown, onRename, seatKey }: { seatKey?: string; typing?: boolean; hit?: boolean; seed?: number; crown?: boolean; onRename?: (v: string) => void; name: string; state: 'bye' | 'tbd' | 'ok'; score?: string; win: boolean; lose: boolean; onClick?: () => void; onScore?: (v: string) => void; slot?: string; grip?: boolean }) {
   const [editing, setEditing] = useState(false);
   return (
-    <div className={`br-row ${hit ? 'is-hit' : ''} ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-drag={grip ? slot : undefined}>
+    <div className={`br-row ${hit ? 'is-hit' : ''} ${onClick ? 'can' : ''} ${win ? 'is-win' : ''} ${lose ? 'is-lose' : ''} ${state !== 'ok' ? 'is-empty' : ''}`} data-slot={slot} data-seat={seatKey} data-drag={grip ? slot : undefined}>
       {seed !== undefined && <span className="br-seed" aria-hidden="true">{seed}</span>}
       {grip && <span className="br-grip" data-grip={slot} aria-hidden="true">⠿</span>}
       {editing && onRename ? (
@@ -76,6 +76,30 @@ export default function BracketView(p: Props) {
 const TREE_W = 900; // px: the width a small bracket aims for on desktop
 function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, onApply, canRename }: Props) {
   const uid = useRef(`bv${Math.random().toString(36).slice(2)}`).current;
+  /** A picked winner glides from his seat into his seat in the next round (the same smooth move as a drag and drop). Only when both seats are on screen; never blocks the pick. */
+  const fly = (m: BMatch, side: 'a' | 'b') => {
+    try {
+      if (m.win === side || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return; // tapping the winner again = undo: no flight
+      const rootEl = document.querySelector<HTMLElement>(`[data-bv="${uid}"]`);
+      const src = rootEl?.querySelector<HTMLElement>(`.br-row[data-seat="${m.id}|${side}"]`);
+      const next = bracket.matches.find((x) => ('w' in x.a && x.a.w === m.id) || ('w' in x.b && x.b.w === m.id));
+      if (!rootEl || !src || !next) return;
+      const ns = 'w' in next.a && next.a.w === m.id ? 'a' : 'b';
+      const label = src.querySelector('.br-name')?.textContent ?? ''; const from = src.getBoundingClientRect();
+      if (!label || !from.width) return;
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        const dst = rootEl.querySelector<HTMLElement>(`.br-row[data-seat="${next.id}|${ns}"]`); if (!dst) return;
+        const to = dst.getBoundingClientRect(); if (!to.width) return;
+        const nm = dst.querySelector<HTMLElement>('.br-name'); if (nm) nm.style.visibility = 'hidden';
+        const g = document.createElement('div'); g.className = 'br-fly'; g.textContent = label; document.body.appendChild(g);
+        const st = (r: DOMRect) => ({ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+        const done = () => { g.remove(); if (nm) nm.style.visibility = ''; };
+        window.setTimeout(done, 900);
+        const an = g.animate([st(from), st(to)], { duration: 520, easing: 'cubic-bezier(.22,.9,.3,1)', fill: 'forwards' });
+        an.onfinish = done; an.oncancel = done;
+      }));
+    } catch { /* the animation is optional */ }
+  };
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
   const R = useMemo(() => resolve(bracket), [bracket]);
@@ -268,7 +292,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     return () => window.clearTimeout(t);
   }, [bracket]); // eslint-disable-line react-hooks/exhaustive-deps
   const swapRef = useRef(onSwap); swapRef.current = onSwap; const hasSwap = !!onSwap;
-  // Drag a first-round player onto another seat to swap the two: hold the player's row (mouse: just drag; touch: press and hold) or use the grip. Works with mouse and touch.
+  // Drag a first-round player onto another seat to swap the two: press and hold the player's row (mouse and touch) or use the grip; with the mouse a plain drag of the row works too. The whole row is lifted (the ghost has the row's size), not just the name.
   useEffect(() => {
     if (!hasSwap) return;
     const parse = (v: string | undefined): SeatRef | null => { if (!v) return null; const [id, side] = v.split('|'); return side === 'a' || side === 'b' ? { id, side } : null; };
@@ -291,6 +315,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
       from = ref; grabEl = el; pid = id; srcRow = row;
       try { el.setPointerCapture(id); } catch { /* ignore */ }
       ghost = document.createElement('div'); ghost.className = 'br-ghost'; ghost.textContent = row.querySelector('.br-name')?.textContent ?? '';
+      { const rr = row.getBoundingClientRect(); ghost.style.width = `${rr.width}px`; ghost.style.height = `${rr.height}px`; } // the whole row, not only the name's width
       ghost.style.left = `${x}px`; ghost.style.top = `${y}px`; document.body.appendChild(ghost); document.body.classList.add('br-dragging'); row.classList.add('is-dragging');
       if (touch) try { navigator.vibrate?.(12); } catch { /* ignore */ }
     };
@@ -304,7 +329,8 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
       if (grip) { e.preventDefault(); begin(ref, row, grip, e.pointerId, e.clientX, e.clientY, e.pointerType !== 'mouse'); return; }
       const touch = e.pointerType !== 'mouse';
       pend = { ref, row, x: e.clientX, y: e.clientY, id: e.pointerId, touch };
-      if (touch) pend.timer = window.setTimeout(() => { if (pend) { const q = pend; pend = null; begin(q.ref, q.row, q.row, q.id, q.x, q.y, true); } }, 280);
+      // press and hold (touch and mouse): after a short hold the whole row is lifted
+      pend.timer = window.setTimeout(() => { if (pend) { const q = pend; pend = null; begin(q.ref, q.row, q.row, q.id, q.x, q.y, q.touch); } }, 280);
     };
     const move = (e: PointerEvent) => {
       if (pend && !from) {
@@ -359,7 +385,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
     const isBye = r.a === 'bye' || r.b === 'bye';
     const can = (w: Who) => (!!onApply || !!onPick) && typeof w === 'number' && !isBye;
     // dashboard: one tap on a name = winner (tap the winner again to undo); the pencil still opens the full card
-    const pickW = (side: 'a' | 'b') => (onApply ? onApply(setWinner(bracket, m.id, m.win === side ? undefined : side)) : onPick!(m, side));
+    const pickW = (side: 'a' | 'b') => { fly(m, side); return onApply ? onApply(setWinner(bracket, m.id, m.win === side ? undefined : side)) : onPick!(m, side); };
     const seat = (side: 'a' | 'b') => {
       const none = { slot: undefined, grip: false }, v = m[side];
       if (!onSwap || m.win) return none;
@@ -380,15 +406,15 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
         {onApply && !isBye && typeof r.a === 'number' && typeof r.b === 'number' ? (
           <div className="br-mwrap">
             <div className="br-mrows">
-          <Row typing={typing.has(`${m.id}|a`)} hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row typing={typing.has(`${m.id}|b`)} hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|a`)} hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} seatKey={`${m.id}|a`} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|b`)} hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} seatKey={`${m.id}|b`} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
             </div>
             <button type="button" className="br-medit" aria-label={lang === 'ar' ? 'تعديل نتيجة المباراة' : 'Edit match result'} title={lang === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setOpen(m.id)}><PencilIcon className="br-pen" /></button>
           </div>
         ) : (
           <>
-          <Row typing={typing.has(`${m.id}|a`)} hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
-          <Row typing={typing.has(`${m.id}|b`)} hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|a`)} hit={typeof r.a === 'number' && hitP.has(r.a)} seed={typeof r.a === 'number' ? r.a + 1 : undefined} name={nm(r.a)} state={stateOf(r.a)} score={m.sa} win={!isBye && m.win === 'a'} lose={!isBye && m.win === 'b'} onClick={can(r.a) ? () => pickW('a') : undefined} onScore={sc ? (v) => onScore!(m, v, m.sb ?? '') : undefined} slot={sa.slot} seatKey={`${m.id}|a`} grip={sa.grip} crown={crowned('a')} onRename={!onApply && onRename && typeof r.a === 'number' ? (v) => onRename(r.a as number, v) : undefined} />
+          <Row typing={typing.has(`${m.id}|b`)} hit={typeof r.b === 'number' && hitP.has(r.b)} seed={typeof r.b === 'number' ? r.b + 1 : undefined} name={nm(r.b)} state={stateOf(r.b)} score={m.sb} win={!isBye && m.win === 'b'} lose={!isBye && m.win === 'a'} onClick={can(r.b) ? () => pickW('b') : undefined} onScore={sc ? (v) => onScore!(m, m.sa ?? '', v) : undefined} slot={sb.slot} seatKey={`${m.id}|b`} grip={sb.grip} crown={crowned('b')} onRename={!onApply && onRename && typeof r.b === 'number' ? (v) => onRename(r.b as number, v) : undefined} />
           </>
         )}
       </div>

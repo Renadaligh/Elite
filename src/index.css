@@ -976,7 +976,7 @@ html:root[data-ad='light'] .text-\[\#ff6b7a\] { color: #d02a40; }
 .br-grip { flex: none; display: grid; place-items: center; width: 1.1rem; margin-inline-start: -4px; color: var(--muted); font-size: 1rem; line-height: 1; cursor: grab; touch-action: none; user-select: none; opacity: .75; }
 .br-grip:hover { opacity: 1; color: #3d7bff; }
 .br-row.is-drop { background: rgba(61,123,255,.28) !important; outline: 2px dashed #3d7bff; outline-offset: -2px; }
-.br-ghost { position: fixed; z-index: 9999; transform: translate(-50%, -120%); padding: 6px 12px; border-radius: 10px; background: #3d7bff; color: #fff; font-weight: 700; font-size: .85rem; box-shadow: 0 10px 26px rgba(0,0,0,.4); pointer-events: none; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.br-ghost { box-sizing: border-box; display: flex; align-items: center; position: fixed; z-index: 9999; transform: translate(-50%, -120%); padding: 6px 12px; border-radius: 10px; background: #3d7bff; color: #fff; font-weight: 700; font-size: .85rem; box-shadow: 0 10px 26px rgba(0,0,0,.4); pointer-events: none; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 body.br-dragging, body.br-dragging * { cursor: grabbing !important; user-select: none !important; }
 
 /* compact desktop cards + closer connectors */
@@ -1669,3 +1669,6 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 :is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p1 { --c: #a87400; }
 :is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p2 { --c: #6f7a93; }
 :is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p3 { --c: #b0601a; }
+
+/* a picked winner gliding into the next round */
+.br-fly { position: fixed; z-index: 9998; pointer-events: none; box-sizing: border-box; display: flex; align-items: center; padding: 0 10px; border-radius: 8px; background: #3d7bff; color: #fff; font-weight: 700; font-size: .85rem; box-shadow: 0 8px 22px rgba(0,0,0,.35); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
