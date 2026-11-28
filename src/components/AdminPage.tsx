@@ -371,6 +371,9 @@ const niceWhen = (iso: string, lang: string) => { const d = new Date(iso); retur
 
 
 /** Review of a community tournament: approve, or reject with a reason the owner sees. */
+/** A user's tournament its organiser took off the site BEFORE we approved it: not shown to the team at all (after approval it stays, with a badge). */
+const hiddenByOrganizer = (t: Adm<Tournament>) => !!t.community && t.published === false && t.community.review !== 'approved';
+
 function ReviewBox({ k, r, can, onDone }: { k: string; r: Adm<Tournament>; can: boolean; onDone: () => void }) {
   const { x } = useX();
   const toast = useToast();
@@ -1223,7 +1226,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
   const [brT, setBrT] = useState<Adm<Tournament> | null>(null);
   const [creating, setCreating] = useState(false);
   const toast = useToast();
-  const load = useCallback(() => { api<Adm<Tournament>[]>('/tournaments', { key: k }).then(setRows).catch(() => toast.err(x('تعذّر تحميل البطولات'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const load = useCallback(() => { api<Adm<Tournament>[]>('/tournaments', { key: k }).then((r) => setRows(r.filter((t) => !hiddenByOrganizer(t)))).catch(() => toast.err(x('تعذّر تحميل البطولات'))); }, [k]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(load, [load]);
 
   async function save(e: FormEvent) {
@@ -1273,7 +1276,7 @@ function TournamentsTab({ k, onAuthFail }: { k: string; onAuthFail: () => void }
           return (
             <Card key={r.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div className="w-full min-w-0 sm:w-auto sm:flex-1">
-                <div className="flex flex-wrap items-center gap-2"><b className="w-full break-words text-[1.02rem] leading-snug">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('قرعة محفوظة')}</Badge>}{r.published === false && <Badge tone="gray">{x('مسودة')}</Badge>}</div>
+                <div className="flex flex-wrap items-center gap-2"><b className="w-full break-words text-[1.02rem] leading-snug">{r.name[lang] || r.name.ar || r.name.en}</b><Badge tone={ST_TONE[st]}>{x(ST_AR[st])}</Badge>{r.tier === 'major' && <Badge tone="blue">{lang === 'en' ? 'Major' : 'بطولة كبرى'}</Badge>}{r.community?.review === 'pending' && <Badge tone="amber">{x('قيد المراجعة')}</Badge>}{r.community?.review === 'rejected' && <Badge tone="red">{x('مرفوضة')}</Badge>}{r.bracket && st === 'completed' && <Badge tone="gray">{x('قرعة محفوظة')}</Badge>}{r.published === false && (r.community ? <Badge tone="amber">{x('ألغى المنظّم النشر')}</Badge> : <Badge tone="gray">{x('مسودة')}</Badge>)}</div>
                 <div className="mt-1.5 text-[.82rem]" style={{ color: 'var(--muted)' }}><time dateTime={r.startsAt}>{niceWhen(r.startsAt, lang)}</time></div>
               </div>
               <div className="w-36">
@@ -2262,7 +2265,7 @@ function usePending(k: string, on: boolean) {
   useEffect(() => {
     if (!on) return;
     let live = true;
-    const load = () => { if (document.visibilityState === 'hidden') return; api<Adm<Tournament>[]>('/tournaments', { key: k }).then((r) => { if (live) setList(r.filter((t) => t.community?.review === 'pending')); }).catch(() => undefined); };
+    const load = () => { if (document.visibilityState === 'hidden') return; api<Adm<Tournament>[]>('/tournaments', { key: k }).then((r) => { if (live) setList(r.filter((t) => t.community?.review === 'pending' && t.published !== false)); }).catch(() => undefined); };
     load();
     const id = window.setInterval(load, 60000);
     document.addEventListener('visibilitychange', load);
@@ -2446,4 +2449,4 @@ Object.assign(EN, {"الإشعارات": "Notifications", "لا توجد إشع�
 Object.assign(EN, {"معلومات البطولة": "Tournament info", "حفظ معلومات البطولة": "Save tournament info", "تطبيق النظام": "Apply format", "تغيير النظام يمسح النتائج الحالية. متأكد؟": "Changing the format clears the current results. Sure?", "اكتب اسم البطولة أولاً": "Enter the tournament name first", "إنشاء البطولة": "Create tournament"});
 Object.assign(EN, {"البطولة منشورة": "Tournament is published", "البطولة غير منشورة": "Tournament is not published", "تظهر الآن للزوار في الموقع. اضغط لإخفائها": "Visible to visitors on the site. Tap to hide it", "مخفية عن الزوار. اضغط لنشرها في الموقع": "Hidden from visitors. Tap to publish it on the site"});
 Object.assign(EN, {"بطولات مشتركة معي": "Shared with me", "بطولات أضافك المشرف الرئيسي للتحرير فيها": "Tournaments the main admin added you to edit", "لم تُضف إلى أي بطولة بعد.": "You have not been added to any tournament yet.", "فتح": "Open", "المحررون": "Editors", "نظام القرعة": "Bracket format", "لم يُضف أحد بعد.": "Nobody added yet.", "إضافة محرر": "Add an editor", "أدمن": "Admin", "عضو": "Member", "عضو من الموقع": "Site member", "إزالة": "Remove", "إزالة هذا المحرر من البطولة؟": "Remove this editor from the tournament?", "اكتب اسم المستخدم": "Enter the username", "اكتب اسم المستخدم (يوزر الأدمن)": "Enter the admin username", "أضف أدمن آخر أو عضواً من الموقع ليعمل معك على هذه البطولة، وحدد له الصلاحيات بالـ check. النشر والحذف وإضافة المحررين لك وحدك.": "Add another admin or a site member to work on this tournament with you, and tick what they may do. Publishing, deleting and adding editors stay with you.", "العضو يفتح البطولة من أداة المنظمين في الموقع (الشجرة ورابط التسجيل والمسجلون فقط). معلومات البطولة تبقى هنا.": "The member opens it from the organisers' tool on the site (bracket, registration link and registrants only). The tournament details stay here.", "الشجرة (النتائج واللاعبون)": "Bracket (results & players)", "المسجلون وإجاباتهم": "Registrants & their answers", "اسم المستخدم غير صالح": "Invalid username", "اسم المستخدم غير صالح: حروف إنجليزية وأرقام و _ فقط": "Invalid username: English letters, digits and _ only", "لم يتم العثور على حساب بهذا الاسم": "No account with that username", "هذا هو المشرف الرئيسي وعنده كل الصلاحيات": "This is the main admin, who has every permission", "هذا الحساب موقوف": "This account is disabled", "اختر صلاحية واحدة على الأقل": "Pick at least one permission", "وصلت الحد الأقصى للمحررين (10)": "You reached the limit of 10 editors", "هذه البطولة ما فيها قرعة بعد، أنشئ القرعة أولاً": "This tournament has no bracket yet: create it first", "هذه الميزة تحتاج تحديث قاعدة البيانات (جدول tournament_editors في schema.sql)": "This feature needs the database update (the tournament_editors table in schema.sql)", "ليس لديك صلاحية لهذا الإجراء": "You do not have permission for this action", "إضافة محرر لبطولة": "Editor added to a tournament", "تعديل صلاحيات محرر بطولة": "Tournament editor permissions changed", "إزالة محرر من بطولة": "Editor removed from a tournament"});
-Object.assign(EN, {"الشجرة": "Bracket", "رابط التسجيل": "Registration link", "إضافة لاعبين": "Add players", "تغيير الأماكن بعد بدء المباريات يمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟": "Changing places after matches started clears the current results (Undo brings them back). Sure?"});
+Object.assign(EN, {"الشجرة": "Bracket", "ألغى المنظّم النشر": "Organizer unpublished it", "رابط التسجيل": "Registration link", "إضافة لاعبين": "Add players", "تغيير الأماكن بعد بدء المباريات يمسح النتائج الحالية (ويمكنك التراجع). هل أنت متأكد؟": "Changing places after matches started clears the current results (Undo brings them back). Sure?"});
