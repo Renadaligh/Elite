@@ -52,7 +52,63 @@ h1{font-size:clamp(22px,5vw,36px);margin:0 0 6px;overflow-wrap:anywhere}h2{font-
 #zoom{display:inline-flex;align-items:center;gap:6px}#zoom button{min-width:39px;min-height:39px;padding:7px 12px}#zoom-level{min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
 .title-block h1{margin-bottom:4px}
 #page-toast{position:fixed;inset-inline-start:50%;bottom:clamp(24px,6vh,64px);transform:translateX(-50%) translateY(10px);z-index:1000;min-width:140px;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:#213b70;color:#fff;box-shadow:0 12px 36px rgba(0,0,0,.24);font-size:14px;font-weight:750;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}#page-toast[data-visible="true"]{opacity:1;transform:translateX(-50%) translateY(0)}
+.pv-find{display:grid;gap:8px;max-width:520px;margin:6px 0 4px}.pv-find input{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--toolbar);color:var(--fg);font:inherit;outline:none}.pv-find input:focus{border-color:#4a7dff}
+#pv-find-res{display:grid;gap:6px}#pv-find-res button,#pv-find-res p{margin:0;text-align:start;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-size:14px;line-height:1.5}#pv-find-res p{border-style:dashed;color:var(--mut)}#pv-find-res b{font-weight:800}
+.sr-hit .bs-row{fill:#8a6a12}.sr-hit .bs-row.win{fill:#8a6a12}:root[data-theme=light] .sr-hit .bs-row,:root[data-theme=light] .sr-hit .bs-row.win{fill:#ffe9a6}.sr-me .bs-row,.sr-me .bs-row.win{fill:#f0b429!important}:root[data-theme=light] .sr-me .bs-row,:root[data-theme=light] .sr-me .bs-row.win{fill:#ffc94a!important}.sr-me .bs-nm{fill:#1c1400!important;font-weight:800}
 @media (max-width: 720px){#zoom{display:none!important}header,main{padding-inline:14px}.bracket-champion{width:100%}.sheet{padding-bottom:12px}}
+`;
+
+const findScript = `
+try {
+  const sheet = document.querySelector('.sheet');
+  const box = document.getElementById('pv-find-box');
+  const input = document.getElementById('pv-find');
+  const out = document.getElementById('pv-find-res');
+  const ar = document.documentElement.lang === 'ar';
+  const norm = (v) => String(v || '').normalize('NFKC').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').split(' ').filter(Boolean).join(' ');
+  const names = sheet && box && input && out ? [...sheet.querySelectorAll('text.bs-nm')].filter((t) => t.closest('g[clip-path]') && t.textContent.trim() && !t.classList.contains('bye')) : [];
+  if (names.length) {
+    box.hidden = false;
+    const entries = names.map((t) => ({ t, key: norm(t.textContent), grp: t.closest('g[clip-path]') }));
+    const clear = () => { sheet.querySelectorAll('.sr-hit,.sr-me').forEach((e) => e.classList.remove('sr-hit', 'sr-me')); };
+    const opponent = (e) => {
+      const rows = [...e.grp.querySelectorAll('text.bs-nm')];
+      const other = rows.find((t) => t !== e.t);
+      if (!other) return '';
+      if (other.classList.contains('bye')) return ar ? 'يتأهل مباشرة (بدون خصم)' : 'advances directly (bye)';
+      return other.textContent.trim() || (ar ? 'ينتظر الفائز من مباراة سابقة' : 'waiting for the winner of an earlier match');
+    };
+    const numOf = (e) => { const n = e.grp.nextElementSibling; return n && n.classList.contains('bs-no') ? n.textContent.trim() : ''; };
+    const show = (e) => {
+      clear();
+      e.grp.classList.add('sr-hit');
+      const row = e.t.parentElement && e.t.parentElement.parentElement; if (row) row.classList.add('sr-me');
+      e.grp.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+    };
+    const render = () => {
+      const q = norm(input.value);
+      out.textContent = '';
+      clear();
+      if (q.length < 2) return;
+      // a player who already advanced appears in several matches: show only his latest one (the one that matters now)
+      const last = new Map(); entries.forEach((e) => { if (e.key.includes(q)) last.set(e.key, e); });
+      const found = [...last.values()].slice(0, 8);
+      if (!found.length) { const p = document.createElement('p'); p.textContent = ar ? 'ما لقينا هذا الاسم في القرعة' : 'No player with this name in the bracket'; out.appendChild(p); return; }
+      found.forEach((e, i) => {
+        const b = document.createElement('button'); b.type = 'button';
+        const me = document.createElement('b'); me.textContent = e.t.textContent.trim();
+        const n = numOf(e);
+        b.append(me, document.createTextNode((ar ? ' ضد ' : ' vs ') + opponent(e) + (n ? (ar ? ' · مباراة ' : ' · match ') + n : '')));
+        b.addEventListener('click', () => show(e));
+        out.appendChild(b);
+        if (i === 0 && found.length === 1) show(e);
+      });
+    };
+    let timer = 0;
+    input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(render, 150); });
+    input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); const b = out.querySelector('button'); if (b) b.click(); } });
+  }
+} catch (e) { /* the search is optional: the page works without it */ }
 `;
 
 const controls = `
@@ -518,9 +574,10 @@ export async function publicBracketPage({ request, env, params, waitUntil }: Ctx
       <button type="button" id="zoom-in" aria-label="${ar ? 'تكبير' : 'Zoom in'}">+</button>
       <span id="zoom-level">100%</span>
       <button type="button" id="zoom-out" aria-label="${ar ? 'تصغير' : 'Zoom out'}">−</button></nav>
-      <div class="sheet" tabindex="0" aria-label="${ar ? 'نتائج البطولة' : 'Bracket results'}">${svg}</div>`
+      <div class="pv-find" id="pv-find-box" hidden><input id="pv-find" type="search" dir="auto" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="${ar ? 'ابحث باسمك لتعرف مين خصمك' : 'Search your name to see your opponent'}" aria-label="${ar ? 'ابحث عن لاعب' : 'Find a player'}"><div id="pv-find-res" role="status" aria-live="polite"></div></div>
+      <div class="sheet" tabindex="0" aria-label=""${ar ? 'نتائج البطولة' : 'Bracket results'}">${svg}</div>`
       : `<p>${message}</p>${status === 503 ? `<a class="retry" href="${url.pathname}">${ar ? 'إعادة المحاولة' : 'Try again'}</a>` : ''}`}
-    </main><div id="page-toast" role="status" aria-live="polite" aria-atomic="true"></div><script nonce="${nonce}">document.getElementById('theme').setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'light'));${controls}</script></body></html>`;
+    </main><div id="page-toast" role="status" aria-live="polite" aria-atomic="true"></div><script nonce="${nonce}">document.getElementById('theme').setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'light'));${controls}</script><script nonce="${nonce}">${findScript}</script></body></html>`;
 
   const headers = new Headers({
     'content-type': 'text/html; charset=utf-8',
