@@ -1669,6 +1669,3 @@ select.dt-in.sel { padding-inline: .6rem 1.6rem; background-position: right .5re
 :is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p1 { --c: #a87400; }
 :is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p2 { --c: #6f7a93; }
 :is([data-st=light], :root[data-ad='light'], :root[data-hero='day']) .hc-pl.p3 { --c: #b0601a; }
-
-/* a picked winner gliding into the next round */
-.br-fly { position: fixed; z-index: 9998; pointer-events: none; box-sizing: border-box; display: flex; align-items: center; padding: 0 10px; border-radius: 8px; background: #3d7bff; color: #fff; font-weight: 700; font-size: .85rem; box-shadow: 0 8px 22px rgba(0,0,0,.35); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

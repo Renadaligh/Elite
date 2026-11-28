@@ -76,29 +76,16 @@ export default function BracketView(p: Props) {
 const TREE_W = 900; // px: the width a small bracket aims for on desktop
 function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, onApply, canRename }: Props) {
   const uid = useRef(`bv${Math.random().toString(36).slice(2)}`).current;
-  /** A picked winner glides from his seat into his seat in the next round (the same smooth move as a drag and drop). Only when both seats are on screen; never blocks the pick. */
+  /** A picked winner is written into his seat of the next round letter by letter (the same typing as a name dropped on a seat). Never blocks the pick. */
   const fly = (m: BMatch, side: 'a' | 'b') => {
     try {
-      if (m.win === side || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return; // tapping the winner again = undo: no flight
-      const rootEl = document.querySelector<HTMLElement>(`[data-bv="${uid}"]`);
-      const src = rootEl?.querySelector<HTMLElement>(`.br-row[data-seat="${m.id}|${side}"]`);
+      if (m.win === side || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return; // tapping the winner again = undo
       const next = bracket.matches.find((x) => ('w' in x.a && x.a.w === m.id) || ('w' in x.b && x.b.w === m.id));
-      if (!rootEl || !src || !next) return;
-      const ns = 'w' in next.a && next.a.w === m.id ? 'a' : 'b';
-      const label = src.querySelector('.br-name')?.textContent ?? ''; const from = src.getBoundingClientRect();
-      if (!label || !from.width) return;
-      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-        const dst = rootEl.querySelector<HTMLElement>(`.br-row[data-seat="${next.id}|${ns}"]`); if (!dst) return;
-        const to = dst.getBoundingClientRect(); if (!to.width) return;
-        const nm = dst.querySelector<HTMLElement>('.br-name'); if (nm) nm.style.visibility = 'hidden';
-        const g = document.createElement('div'); g.className = 'br-fly'; g.textContent = label; document.body.appendChild(g);
-        const st = (r: DOMRect) => ({ left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
-        const done = () => { g.remove(); if (nm) nm.style.visibility = ''; };
-        window.setTimeout(done, 900);
-        const an = g.animate([st(from), st(to)], { duration: 520, easing: 'cubic-bezier(.22,.9,.3,1)', fill: 'forwards' });
-        an.onfinish = done; an.oncancel = done;
-      }));
-    } catch { /* the animation is optional */ }
+      if (!next) return;
+      const key = `${next.id}|${'w' in next.a && next.a.w === m.id ? 'a' : 'b'}`;
+      setTyping((o) => new Set([...o, key]));
+      window.setTimeout(() => setTyping((o) => { if (!o.has(key)) return o; const n = new Set(o); n.delete(key); return n; }), 1600);
+    } catch { /* the typing is optional */ }
   };
   const { lang, dir } = useI18n();
   const rtl = dir === 'rtl';
