@@ -303,7 +303,7 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
       try { el.setPointerCapture(id); } catch { /* ignore */ }
       ghost = document.createElement('div'); ghost.className = 'br-ghost'; ghost.textContent = row.querySelector('.br-name')?.textContent ?? '';
       { const rr = row.getBoundingClientRect(); ghost.style.width = `${rr.width}px`; ghost.style.height = `${rr.height}px`; } // the whole row, not only the name's width
-      ghost.style.left = `${x}px`; ghost.style.top = `${y}px`; document.body.appendChild(ghost); document.body.classList.add('br-dragging'); row.classList.add('is-dragging');
+      ghost.style.left = `${x}px`; ghost.style.top = `${y}px`; if (!touch) ghost.style.transform = 'translate(-50%, -50%)'; /* mouse: the box sits on the pointer; touch: above the finger (css) */ document.body.appendChild(ghost); document.body.classList.add('br-dragging'); row.classList.add('is-dragging');
       if (touch) try { navigator.vibrate?.(12); } catch { /* ignore */ }
     };
     const down = (e: PointerEvent) => {
@@ -326,8 +326,17 @@ function TreeView({ bracket, onPick, selected, pub, onScore, onSwap, onRename, o
       }
       if (!from || !ghost) return;
       ghost.style.left = `${e.clientX}px`; ghost.style.top = `${e.clientY}px`;
-      const t = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.br-row[data-slot]') ?? null;
-      if (t !== over) { clear(); if (t && root()?.contains(t) && t !== srcRow) { over = t; t.classList.add('is-drop'); } }
+      // the target is the seat the lifted box overlaps the most (any edge of the box catches a row), not the single point under the finger
+      let t: HTMLElement | null = null;
+      { const g = ghost.getBoundingClientRect(); let best = 0;
+        root()?.querySelectorAll<HTMLElement>('.br-row[data-slot]').forEach((r) => {
+          if (r === srcRow) return;
+          const b = r.getBoundingClientRect();
+          const w = Math.min(g.right, b.right) - Math.max(g.left, b.left), h = Math.min(g.bottom, b.bottom) - Math.max(g.top, b.top);
+          if (w <= 0 || h <= 0) return;
+          const a = w * h; if (a > best && a >= 0.2 * Math.min(g.width * g.height, b.width * b.height)) { best = a; t = r; }
+        }); }
+      if (t !== over) { clear(); if (t) { over = t; (t as HTMLElement).classList.add('is-drop'); } }
       // edge auto-scroll: the page up/down, the bracket sideways
       const sc = root(); const r = sc?.getBoundingClientRect();
       if (e.clientY < 70) window.scrollBy(0, -14); else if (e.clientY > window.innerHeight - 70) window.scrollBy(0, 14);
